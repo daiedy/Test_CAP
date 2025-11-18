@@ -1,0 +1,16 @@
+ID;name;description;price;currency;stock;category;imageUrl
+4b7e1d2a-3c9f-4e5d-8b6a-1f2e3d4c5b6a;Laptop Pro 15;High-performance laptop with 15-inch display, 16GB RAM, and 512GB SSD;1299.99;USD;45;Electronics;https://images.unsplash.com/photo-1517336714731-489689fd1ca8
+5c8f2e3b-4d0a-5f6e-9c7b-2a3f4e5d6c7b;Wireless Mouse;Ergonomic wireless mouse with precision tracking and long battery life;29.99;USD;150;Electronics;https://images.unsplash.com/photo-1527864550417-7fd91fc51a46
+6d9a3f4c-5e1b-6a7f-0d8c-3b4a5f6e7d8c;Office Chair;Comfortable ergonomic office chair with lumbar support and adjustable height;249.99;USD;32;Furniture;https://images.unsplash.com/photo-1580480055273-228ff5388ef8
+7e0b4a5d-6f2c-7b8a-1e9d-4c5b6a7f8e9d;Coffee Maker;Automatic drip coffee maker with programmable timer and thermal carafe;89.99;USD;78;Kitchen;https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6
+8f1c5b6e-7a3d-8c9b-2f0e-5d6c7b8a9f0e;Desk Lamp;LED desk lamp with adjustable brightness and USB charging port;39.99;USD;120;Furniture;https://images.unsplash.com/photo-1507473885765-e6ed057f782c
+9a2d6c7f-8b4e-9d0c-3a1f-6e7d8c9b0a1f;Bluetooth Speaker;Portable Bluetooth speaker with 360-degree sound and 12-hour battery;79.99;USD;95;Electronics;https://images.unsplash.com/photo-1608043152269-423dbba4e7e1
+0b3e7d8a-9c5f-0e1d-4b2a-7f8e9d0c1b2a;Notebook Set;Premium notebook set with 3 ruled journals and elastic closure;24.99;USD;200;Stationery;https://images.unsplash.com/photo-1531346878377-a5be20888e57
+1c4f8e9b-0d6a-1f2e-5c3b-8a9f0e1d2c3b;Water Bottle;Insulated stainless steel water bottle, keeps drinks cold for 24 hours;19.99;USD;300;Kitchen;https://images.unsplash.com/photo-1602143407151-7111542de6e8
+2d5a9f0c-1e7b-2a3f-6d4c-9b0a1f2e3d4c;Backpack;Durable laptop backpack with multiple compartments and USB port;59.99;USD;85;Accessories;https://images.unsplash.com/photo-1553062407-98eeb64c6a62
+3e6b0a1d-2f8c-3b4a-7e5d-0c1b2a3f4e5d;Smartphone Stand;Adjustable aluminum smartphone stand for desk use;14.99;USD;250;Accessories;https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb
+4f7c1b2e-3a9d-4c5b-8f6e-1d2c3b4a5f6e;Yoga Mat;Non-slip exercise yoga mat with carrying strap, 6mm thick;34.99;USD;110;Sports;https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f
+5a8d2c3f-4b0e-5d6c-9a7f-2e3d4c5b6a7b;Wireless Earbuds;True wireless earbuds with noise cancellation and charging case;129.99;USD;67;Electronics;https://images.unsplash.com/photo-1590658268037-6bf12165a8df
+6b9e3d4a-5c1f-6e7d-0b8a-3f4e5d6c7b8c;Reading Lamp;Clip-on reading lamp with 3 brightness levels and flexible neck;22.99;USD;180;Furniture;https://images.unsplash.com/photo-1513506003901-1e6a229e2d15
+7c0f4e5b-6d2a-7f8e-1c9b-4a5f6e7d8c9d;Kitchen Knife Set;Professional 5-piece stainless steel knife set with wooden block;149.99;USD;42;Kitchen;https://images.unsplash.com/photo-1593618998160-e34014e67546
+8d1a5f6c-7e3b-8a9f-2d0c-5b6a7f8e9d0e;Monitor Stand;Wooden monitor stand with storage drawer for desk organization;44.99;USD;93;Furniture;https://images.unsplash.com/photo-1527443195645-1133f7f28990

@@ -1,0 +1,36 @@
+{
+  "name": "product-catalog",
+  "version": "1.0.0",
+  "description": "SAP CAP Product Catalog Application",
+  "repository": "<Add your repository here>",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@sap/cds": "^8",
+    "express": "^4"
+  },
+  "devDependencies": {
+    "@cap-js/sqlite": "^1",
+    "@sap/cds-dk": "^9.4.3",
+    "@sap/ux-specification": "^1.139.0"
+  },
+  "scripts": {
+    "start": "cds-serve",
+    "watch": "cds-serve --watch",
+    "build": "cds build --production",
+    "deploy": "cds deploy"
+  },
+  "cds": {
+    "requires": {
+      "db": {
+        "kind": "sqlite",
+        "credentials": {
+          "url": "db.sqlite"
+        }
+      }
+    }
+  },
+  "sapux": [
+    "app/products"
+  ]
+}

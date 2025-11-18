@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Catalog - Fiori Launchpad</title>
+    
+    <script>
+        window["sap-ushell-config"] = {
+            defaultRenderer: "fiori2",
+            bootstrapPlugins: {
+                RuntimeAuthoringPlugin: {
+                    component: "sap.ushell.plugins.rta",
+                    config: {
+                        validateAppVersion: false
+                    }
+                }
+            },
+            renderers: {
+                fiori2: {
+                    componentData: {
+                        config: {
+                            enableSearch: false,
+                            rootIntent: "Shell-home"
+                        }
+                    }
+                }
+            },
+            services: {
+                LaunchPage: {
+                    adapter: {
+                        config: {
+                            groups: [{
+                                tiles: [{
+                                    tileType: "sap.ushell.ui.tile.StaticTile",
+                                    properties: {
+                                        title: "Product Catalog",
+                                        subtitle: "Manage Products",
+                                        icon: "sap-icon://product",
+                                        targetURL: "#products-display"
+                                    }
+                                }]
+                            }]
+                        }
+                    }
+                },
+                ClientSideTargetResolution: {
+                    adapter: {
+                        config: {
+                            inbounds: {
+                                "products-display": {
+                                    semanticObject: "products",
+                                    action: "display",
+                                    title: "Product Catalog",
+                                    signature: {
+                                        parameters: {},
+                                        additionalParameters: "allowed"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+
+    <script src="https://ui5.sap.com/1.120.0/test-resources/sap/ushell/bootstrap/sandbox.js"></script>
+    <script
+        id="sap-ui-bootstrap"
+        src="https://ui5.sap.com/1.120.0/resources/sap-ui-core.js"
+        data-sap-ui-libs="sap.m,sap.ushell,sap.fe.templates"
+        data-sap-ui-theme="sap_horizon"
+        data-sap-ui-compatVersion="edge"
+        data-sap-ui-async="true"
+        data-sap-ui-frameOptions="allow"
+        data-sap-ui-resourceroots='{
+            "products": "./products/webapp/"
+        }'
+    ></script>
+    
+    <script>
+        sap.ui.getCore().attachInit(function() {
+            sap.ushell.Container.createRenderer().placeAt("content");
+        });
+    </script>
+</head>
+<body class="sapUiBody" id="content">
+</body>
+</html>

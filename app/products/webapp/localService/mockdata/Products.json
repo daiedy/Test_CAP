@@ -1,0 +1,74 @@
+{
+    "Products": [
+        {
+            "ID": "11111111-1111-1111-1111-111111111111",
+            "name": "Laptop Pro 15",
+            "description": "High-performance laptop with 15-inch display",
+            "price": "1299.99",
+            "currency_code": "USD",
+            "stock": 25,
+            "category": "Electronics",
+            "imageUrl": "https://via.placeholder.com/150",
+            "createdAt": "2024-01-15T10:00:00Z",
+            "createdBy": "admin",
+            "modifiedAt": "2024-01-15T10:00:00Z",
+            "modifiedBy": "admin"
+        },
+        {
+            "ID": "22222222-2222-2222-2222-222222222222",
+            "name": "Wireless Mouse",
+            "description": "Ergonomic wireless mouse with long battery life",
+            "price": "29.99",
+            "currency_code": "USD",
+            "stock": 150,
+            "category": "Electronics",
+            "imageUrl": "https://via.placeholder.com/150",
+            "createdAt": "2024-01-15T10:00:00Z",
+            "createdBy": "admin",
+            "modifiedAt": "2024-01-15T10:00:00Z",
+            "modifiedBy": "admin"
+        },
+        {
+            "ID": "33333333-3333-3333-3333-333333333333",
+            "name": "Office Chair Deluxe",
+            "description": "Comfortable office chair with lumbar support",
+            "price": "249.99",
+            "currency_code": "USD",
+            "stock": 45,
+            "category": "Furniture",
+            "imageUrl": "https://via.placeholder.com/150",
+            "createdAt": "2024-01-15T10:00:00Z",
+            "createdBy": "admin",
+            "modifiedAt": "2024-01-15T10:00:00Z",
+            "modifiedBy": "admin"
+        },
+        {
+            "ID": "44444444-4444-4444-4444-444444444444",
+            "name": "Mechanical Keyboard",
+            "description": "RGB backlit mechanical gaming keyboard",
+            "price": "89.99",
+            "currency_code": "USD",
+            "stock": 80,
+            "category": "Electronics",
+            "imageUrl": "https://via.placeholder.com/150",
+            "createdAt": "2024-01-15T10:00:00Z",
+            "createdBy": "admin",
+            "modifiedAt": "2024-01-15T10:00:00Z",
+            "modifiedBy": "admin"
+        },
+        {
+            "ID": "55555555-5555-5555-5555-555555555555",
+            "name": "USB-C Hub",
+            "description": "7-in-1 USB-C multiport adapter",
+            "price": "49.99",
+            "currency_code": "USD",
+            "stock": 200,
+            "category": "Electronics",
+            "imageUrl": "https://via.placeholder.com/150",
+            "createdAt": "2024-01-15T10:00:00Z",
+            "createdBy": "admin",
+            "modifiedAt": "2024-01-15T10:00:00Z",
+            "modifiedBy": "admin"
+        }
+    ]
+}

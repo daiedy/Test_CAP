@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Product Catalog</title>
+    <title>Product Catalog - Mock Mode</title>
 
     <style>
         html, body, body > div, #container, #container-uiarea {
@@ -65,17 +65,24 @@
         data-sap-ui-theme="sap_horizon"
         data-sap-ui-frameOptions="allow"
         data-sap-ui-async="true"
-        data-sap-ui-resourceroots='{"products": "./"}'
+        data-sap-ui-resourceroots='{"products": "../"}'
     ></script>
 
     <script>
         sap.ui.getCore().attachInit(function () {
-            sap.ushell.Container.createRenderer(null, true).then(function(renderer) {
-                renderer.placeAt("content");
+            // Initialize mock server first
+            sap.ui.require([
+                "products/test/initMockServer"
+            ], function () {
+                // Mock server is now initialized, start the app
+                sap.ushell.Container.createRenderer(null, true).then(function (renderer) {
+                    renderer.placeAt("content");
 
-                if (!globalThis.location.hash || globalThis.location.hash === "#" || globalThis.location.hash === "#Shell-home") {
-                    globalThis.location.hash = "#products-display";
-                }
+                    // Navigate to the app if no hash is present
+                    if (!globalThis.location.hash || globalThis.location.hash === "#" || globalThis.location.hash === "#Shell-home") {
+                        globalThis.location.hash = "#products-display";
+                    }
+                });
             });
         });
     </script>

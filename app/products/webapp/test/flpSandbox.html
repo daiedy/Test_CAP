@@ -21,12 +21,6 @@
                     config: {
                         validateAppVersion: false
                     }
-                },
-                "PersonalizePlugin": {
-                    component: "sap.ushell.plugins.rta-personalize",
-                    config: {
-                        validateAppVersion: false
-                    }
                 }
             },
             renderers: {
@@ -105,7 +99,9 @@
     ></script>
     <script>
         sap.ui.getCore().attachInit(function() {
-            sap.ushell.Container.createRenderer().placeAt("content");
+            sap.ushell.Container.createRenderer(null, true).then(function(renderer) {
+                renderer.placeAt("content");
+            });
         });
     </script>
 </head>

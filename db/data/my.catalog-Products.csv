@@ -1,4 +1,4 @@
-ID;name;description;price;currency;stock;category;imageUrl
+ID;name;description;price;currency_code;stock;category;imageUrl
 4b7e1d2a-3c9f-4e5d-8b6a-1f2e3d4c5b6a;Laptop Pro 15;High-performance laptop with 15-inch display, 16GB RAM, and 512GB SSD;1299.99;USD;45;Electronics;https://images.unsplash.com/photo-1517336714731-489689fd1ca8
 5c8f2e3b-4d0a-5f6e-9c7b-2a3f4e5d6c7b;Wireless Mouse;Ergonomic wireless mouse with precision tracking and long battery life;29.99;USD;150;Electronics;https://images.unsplash.com/photo-1527864550417-7fd91fc51a46
 6d9a3f4c-5e1b-6a7f-0d8c-3b4a5f6e7d8c;Office Chair;Comfortable ergonomic office chair with lumbar support and adjustable height;249.99;USD;32;Furniture;https://images.unsplash.com/photo-1580480055273-228ff5388ef8

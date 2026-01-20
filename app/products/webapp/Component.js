@@ -9,10 +9,8 @@ sap.ui.define(
             },
 
             init: function() {
-                // Вызов родительского init
                 Component.prototype.init.apply(this, arguments);
 
-                // Исправление клавиатурной навигации для кнопки Explore в shell header
                 setTimeout(function() {
                     const oExploreBtn = sap.ui.getCore().byId("uh-explore-button");
                     if (oExploreBtn && !oExploreBtn._keyboardFixed) {
@@ -28,7 +26,7 @@ sap.ui.define(
                             oExploreBtn._keyboardFixed = true;
                         }
                     }
-                }, 1500); // Задержка для загрузки shell
+                }, 1500);
             }
         });
     }

@@ -1,0 +1,68 @@
+# Weekly framework release check.
+#
+# This job is deliberately non-agentic: it only runs scripts/watch-releases.mjs,
+# publishes the Markdown diff as a build artifact and, when something changed,
+# opens or updates a GitHub issue. The agentic part (assessing impact and writing
+# docs/framework/UPDATES.md) is done by the `release-check` skill, run locally in
+# Claude Code or by a scheduled Claude routine, never in CI.
+#
+# The run is read-only: docs/framework/versions.json is not committed from CI.
+# The committed state stays the source of truth for the local agent run.
+name: release-check
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+
+      - name: Collect release diff
+        id: diff
+        run: |
+          node scripts/watch-releases.mjs --dry-run --out release-diff.md
+          if grep -q 'No changes since the last run.' release-diff.md; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload diff artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-diff
+          path: release-diff.md
+          retention-days: 30
+
+      - name: Open or update issue
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          DATE="$(date -u +%Y-%m-%d)"
+          TITLE="Framework updates $DATE"
+          # Reuse an open issue with the same label if one exists, otherwise create a new one.
+          EXISTING="$(gh issue list --label framework-updates --state open --limit 1 --json number --jq '.[0].number // empty')"
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body-file release-diff.md
+            gh issue edit "$EXISTING" --title "$TITLE"
+          else
+            gh label create framework-updates --description "Weekly framework release diff" --color 0A5DC2 --force
+            gh issue create --title "$TITLE" --label framework-updates --body-file release-diff.md
+          fi

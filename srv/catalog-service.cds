@@ -1,9 +1,8 @@
-using my.catalog from '../db/schema';
+using { my.catalog as catalog } from '../db/schema';
 
+/** Public catalog API. UI annotations live in app/products/annotations. */
 service CatalogService {
   entity Products as projection on catalog.Products;
 }
 
-using from './annotations/Products/ui';
-using from './annotations/Products/valuehelps';
-using from './annotations/Products/constraints';
+using from './annotations/Products';

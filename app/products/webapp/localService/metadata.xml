@@ -12,6 +12,9 @@
   <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/UI.xml">
     <edmx:Include Alias="UI" Namespace="com.sap.vocabularies.UI.v1"/>
   </edmx:Reference>
+  <edmx:Reference Uri="https://oasis-tcs.github.io/odata-vocabularies/vocabularies/Org.OData.Validation.V1.xml">
+    <edmx:Include Alias="Validation" Namespace="Org.OData.Validation.V1"/>
+  </edmx:Reference>
   <edmx:DataServices>
     <Schema Namespace="CatalogService" xmlns="http://docs.oasis-open.org/odata/ns/edm">
       <Annotation Term="Core.Links">
@@ -36,11 +39,11 @@
         <Key>
           <PropertyRef Name="ID"/>
         </Key>
+        <Property Name="ID" Type="Edm.Guid" Nullable="false"/>
         <Property Name="createdAt" Type="Edm.DateTimeOffset" Precision="7"/>
         <Property Name="createdBy" Type="Edm.String" MaxLength="255"/>
         <Property Name="modifiedAt" Type="Edm.DateTimeOffset" Precision="7"/>
         <Property Name="modifiedBy" Type="Edm.String" MaxLength="255"/>
-        <Property Name="ID" Type="Edm.Guid" Nullable="false"/>
         <Property Name="name" Type="Edm.String" MaxLength="100"/>
         <Property Name="description" Type="Edm.String" MaxLength="500"/>
         <Property Name="price" Type="Edm.Decimal" Precision="10" Scale="2"/>
@@ -78,170 +81,36 @@
         <Property Name="descr" Type="Edm.String" MaxLength="1000"/>
         <Property Name="code" Type="Edm.String" MaxLength="3" Nullable="false"/>
       </EntityType>
-      <Annotations Target="CatalogService.Products">
-        <Annotation Term="UI.SelectionFields">
-          <Collection>
-            <PropertyPath>name</PropertyPath>
-            <PropertyPath>category</PropertyPath>
-            <PropertyPath>price</PropertyPath>
-          </Collection>
-        </Annotation>
-        <Annotation Term="UI.LineItem">
-          <Collection>
-            <Record Type="UI.DataField">
-              <PropertyValue Property="Value" Path="name"/>
-              <PropertyValue Property="Label" String="Product Name"/>
-            </Record>
-            <Record Type="UI.DataField">
-              <PropertyValue Property="Value" Path="category"/>
-              <PropertyValue Property="Label" String="Category"/>
-            </Record>
-            <Record Type="UI.DataField">
-              <PropertyValue Property="Value" Path="price"/>
-              <PropertyValue Property="Label" String="Price"/>
-            </Record>
-            <Record Type="UI.DataField">
-              <PropertyValue Property="Value" Path="currency_code"/>
-              <PropertyValue Property="Label" String="Currency"/>
-            </Record>
-            <Record Type="UI.DataField">
-              <PropertyValue Property="Value" Path="stock"/>
-              <PropertyValue Property="Label" String="Stock"/>
-            </Record>
-          </Collection>
-        </Annotation>
-        <Annotation Term="UI.HeaderInfo">
-          <Record Type="UI.HeaderInfoType">
-            <PropertyValue Property="TypeName" String="Product"/>
-            <PropertyValue Property="TypeNamePlural" String="Products"/>
-            <PropertyValue Property="Title">
-              <Record Type="UI.DataField">
-                <PropertyValue Property="Value" Path="name"/>
-              </Record>
-            </PropertyValue>
-            <PropertyValue Property="Description">
-              <Record Type="UI.DataField">
-                <PropertyValue Property="Value" Path="category"/>
-              </Record>
-            </PropertyValue>
-            <PropertyValue Property="ImageUrl" Path="imageUrl"/>
-          </Record>
-        </Annotation>
-        <Annotation Term="UI.Facets">
-          <Collection>
-            <Record Type="UI.ReferenceFacet">
-              <PropertyValue Property="Label" String="General Information"/>
-              <PropertyValue Property="Target" AnnotationPath="@UI.FieldGroup#GeneralInfo"/>
-            </Record>
-            <Record Type="UI.ReferenceFacet">
-              <PropertyValue Property="Label" String="Pricing &amp; Stock"/>
-              <PropertyValue Property="Target" AnnotationPath="@UI.FieldGroup#PricingStock"/>
-            </Record>
-            <Record Type="UI.ReferenceFacet">
-              <PropertyValue Property="Label" String="Administrative Data"/>
-              <PropertyValue Property="Target" AnnotationPath="@UI.FieldGroup#AdminData"/>
-            </Record>
-          </Collection>
-        </Annotation>
-        <Annotation Term="UI.FieldGroup" Qualifier="GeneralInfo">
-          <Record Type="UI.FieldGroupType">
-            <PropertyValue Property="Data">
-              <Collection>
-                <Record Type="UI.DataField">
-                  <PropertyValue Property="Value" Path="name"/>
-                  <PropertyValue Property="Label" String="Product Name"/>
-                </Record>
-                <Record Type="UI.DataField">
-                  <PropertyValue Property="Value" Path="description"/>
-                  <PropertyValue Property="Label" String="Description"/>
-                </Record>
-                <Record Type="UI.DataField">
-                  <PropertyValue Property="Value" Path="category"/>
-                  <PropertyValue Property="Label" String="Category"/>
-                </Record>
-                <Record Type="UI.DataField">
-                  <PropertyValue Property="Value" Path="imageUrl"/>
-                  <PropertyValue Property="Label" String="Image URL"/>
-                </Record>
-              </Collection>
-            </PropertyValue>
-          </Record>
-        </Annotation>
-        <Annotation Term="UI.FieldGroup" Qualifier="PricingStock">
-          <Record Type="UI.FieldGroupType">
-            <PropertyValue Property="Data">
-              <Collection>
-                <Record Type="UI.DataField">
-                  <PropertyValue Property="Value" Path="price"/>
-                  <PropertyValue Property="Label" String="Price"/>
-                </Record>
-                <Record Type="UI.DataField">
-                  <PropertyValue Property="Value" Path="currency_code"/>
-                  <PropertyValue Property="Label" String="Currency"/>
-                </Record>
-                <Record Type="UI.DataField">
-                  <PropertyValue Property="Value" Path="stock"/>
-                  <PropertyValue Property="Label" String="Stock Quantity"/>
-                </Record>
-              </Collection>
-            </PropertyValue>
-          </Record>
-        </Annotation>
-        <Annotation Term="UI.FieldGroup" Qualifier="AdminData">
-          <Record Type="UI.FieldGroupType">
-            <PropertyValue Property="Data">
-              <Collection>
-                <Record Type="UI.DataField">
-                  <PropertyValue Property="Value" Path="createdAt"/>
-                  <PropertyValue Property="Label" String="Created At"/>
-                </Record>
-                <Record Type="UI.DataField">
-                  <PropertyValue Property="Value" Path="createdBy"/>
-                  <PropertyValue Property="Label" String="Created By"/>
-                </Record>
-                <Record Type="UI.DataField">
-                  <PropertyValue Property="Value" Path="modifiedAt"/>
-                  <PropertyValue Property="Label" String="Modified At"/>
-                </Record>
-                <Record Type="UI.DataField">
-                  <PropertyValue Property="Value" Path="modifiedBy"/>
-                  <PropertyValue Property="Label" String="Modified By"/>
-                </Record>
-              </Collection>
-            </PropertyValue>
-          </Record>
-        </Annotation>
+      <Annotations Target="CatalogService.Products/ID">
+        <Annotation Term="Core.ComputedDefaultValue" Bool="true"/>
       </Annotations>
       <Annotations Target="CatalogService.Products/createdAt">
         <Annotation Term="UI.HiddenFilter" Bool="true"/>
         <Annotation Term="UI.ExcludeFromNavigationContext" Bool="true"/>
         <Annotation Term="Core.Immutable" Bool="true"/>
         <Annotation Term="Core.Computed" Bool="true"/>
-        <Annotation Term="Common.Label" String="Дата создания"/>
+        <Annotation Term="Common.Label" String="Created On"/>
       </Annotations>
       <Annotations Target="CatalogService.Products/createdBy">
         <Annotation Term="UI.HiddenFilter" Bool="true"/>
         <Annotation Term="UI.ExcludeFromNavigationContext" Bool="true"/>
         <Annotation Term="Core.Immutable" Bool="true"/>
         <Annotation Term="Core.Computed" Bool="true"/>
-        <Annotation Term="Core.Description" String="Уникальный ид. пользователя"/>
-        <Annotation Term="Common.Label" String="Создал"/>
+        <Annotation Term="Core.Description" String="User's unique ID"/>
+        <Annotation Term="Common.Label" String="Created By"/>
       </Annotations>
       <Annotations Target="CatalogService.Products/modifiedAt">
         <Annotation Term="UI.HiddenFilter" Bool="true"/>
         <Annotation Term="UI.ExcludeFromNavigationContext" Bool="true"/>
         <Annotation Term="Core.Computed" Bool="true"/>
-        <Annotation Term="Common.Label" String="Дата изменения"/>
+        <Annotation Term="Common.Label" String="Changed On"/>
       </Annotations>
       <Annotations Target="CatalogService.Products/modifiedBy">
         <Annotation Term="UI.HiddenFilter" Bool="true"/>
         <Annotation Term="UI.ExcludeFromNavigationContext" Bool="true"/>
         <Annotation Term="Core.Computed" Bool="true"/>
-        <Annotation Term="Core.Description" String="Уникальный ид. пользователя"/>
-        <Annotation Term="Common.Label" String="Автор изменения"/>
-      </Annotations>
-      <Annotations Target="CatalogService.Products/ID">
-        <Annotation Term="Core.ComputedDefaultValue" Bool="true"/>
+        <Annotation Term="Core.Description" String="User's unique ID"/>
+        <Annotation Term="Common.Label" String="Changed By"/>
       </Annotations>
       <Annotations Target="CatalogService.Products/name">
         <Annotation Term="Common.Label" String="Product Name"/>
@@ -251,13 +120,15 @@
         <Annotation Term="Common.Label" String="Description"/>
       </Annotations>
       <Annotations Target="CatalogService.Products/price">
+        <Annotation Term="Measures.ISOCurrency" Path="currency_code"/>
         <Annotation Term="Common.Label" String="Price"/>
         <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
-        <Annotation Term="Measures.ISOCurrency" Path="currency_code"/>
+        <Annotation Term="Validation.Minimum" Int="0"/>
+        <Annotation Term="Validation.Maximum" Float="99999999.99"/>
       </Annotations>
       <Annotations Target="CatalogService.Products/currency">
         <Annotation Term="Common.Label" String="Currency"/>
-        <Annotation Term="Core.Description" String="Код валюты в соответствии с ISO 4217"/>
+        <Annotation Term="Core.Description" String="Currency code as specified by ISO 4217"/>
       </Annotations>
       <Annotations Target="CatalogService.Products/currency_code">
         <Annotation Term="Common.Label" String="Currency"/>
@@ -279,26 +150,15 @@
             </PropertyValue>
           </Record>
         </Annotation>
-        <Annotation Term="Core.Description" String="Код валюты в соответствии с ISO 4217"/>
+        <Annotation Term="Core.Description" String="Currency code as specified by ISO 4217"/>
       </Annotations>
       <Annotations Target="CatalogService.Products/stock">
         <Annotation Term="Common.Label" String="Stock Quantity"/>
         <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
+        <Annotation Term="Validation.Minimum" Int="0"/>
+        <Annotation Term="Validation.Maximum" Int="1000000"/>
       </Annotations>
       <Annotations Target="CatalogService.Products/category">
-        <Annotation Term="Common.ValueList">
-          <Record Type="Common.ValueListType">
-            <PropertyValue Property="CollectionPath" String="Products"/>
-            <PropertyValue Property="Parameters">
-              <Collection>
-                <Record Type="Common.ValueListParameterInOut">
-                  <PropertyValue Property="LocalDataProperty" PropertyPath="category"/>
-                  <PropertyValue Property="ValueListProperty" String="category"/>
-                </Record>
-              </Collection>
-            </PropertyValue>
-          </Record>
-        </Annotation>
         <Annotation Term="Common.Label" String="Category"/>
         <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
       </Annotations>
@@ -315,33 +175,33 @@
         </Annotation>
       </Annotations>
       <Annotations Target="CatalogService.Currencies/name">
-        <Annotation Term="Common.Label" String="Имя"/>
+        <Annotation Term="Common.Label" String="Name"/>
       </Annotations>
       <Annotations Target="CatalogService.Currencies/descr">
-        <Annotation Term="Common.Label" String="Описание"/>
+        <Annotation Term="Common.Label" String="Description"/>
       </Annotations>
       <Annotations Target="CatalogService.Currencies/code">
         <Annotation Term="Common.Text" Path="name"/>
-        <Annotation Term="Common.Label" String="Код валюты"/>
+        <Annotation Term="Common.Label" String="Currency Code"/>
       </Annotations>
       <Annotations Target="CatalogService.Currencies/symbol">
-        <Annotation Term="Common.Label" String="Символ валюты"/>
+        <Annotation Term="Common.Label" String="Currency Symbol"/>
       </Annotations>
       <Annotations Target="CatalogService.Currencies/minorUnit">
-        <Annotation Term="Common.Label" String="Доли вспомогательной валютной единицы"/>
+        <Annotation Term="Common.Label" String="Currency Minor Unit Fractions"/>
       </Annotations>
       <Annotations Target="CatalogService.Currencies_texts/locale">
-        <Annotation Term="Common.Label" String="Код языка"/>
+        <Annotation Term="Common.Label" String="Language Code"/>
       </Annotations>
       <Annotations Target="CatalogService.Currencies_texts/name">
-        <Annotation Term="Common.Label" String="Имя"/>
+        <Annotation Term="Common.Label" String="Name"/>
       </Annotations>
       <Annotations Target="CatalogService.Currencies_texts/descr">
-        <Annotation Term="Common.Label" String="Описание"/>
+        <Annotation Term="Common.Label" String="Description"/>
       </Annotations>
       <Annotations Target="CatalogService.Currencies_texts/code">
         <Annotation Term="Common.Text" Path="name"/>
-        <Annotation Term="Common.Label" String="Код валюты"/>
+        <Annotation Term="Common.Label" String="Currency Code"/>
       </Annotations>
     </Schema>
   </edmx:DataServices>

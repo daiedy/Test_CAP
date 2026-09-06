@@ -1,0 +1,83 @@
+{
+  "enabledPlugins": {
+    "ui5@claude-plugins-official": true,
+    "cap-developer@cap": true
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PATH=\"/opt/homebrew/opt/node@22/bin:/opt/homebrew/bin:$PATH\" node scripts/hooks/session-start.mjs",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PATH=\"/opt/homebrew/opt/node@22/bin:/opt/homebrew/bin:$PATH\" node scripts/hooks/protect-files.mjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PATH=\"/opt/homebrew/opt/node@22/bin:/opt/homebrew/bin:$PATH\" node scripts/hooks/post-edit.mjs",
+            "timeout": 90
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PATH=\"/opt/homebrew/opt/node@22/bin:/opt/homebrew/bin:$PATH\" node scripts/hooks/subagent-stop.mjs",
+            "timeout": 180
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PATH=\"/opt/homebrew/opt/node@22/bin:/opt/homebrew/bin:$PATH\" node scripts/hooks/stop-gate.mjs",
+            "timeout": 700
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PATH=\"/opt/homebrew/opt/node@22/bin:/opt/homebrew/bin:$PATH\" node scripts/hooks/pre-compact.mjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./default-env.json)"
+    ]
+  }
+}

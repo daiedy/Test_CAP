@@ -1,0 +1,126 @@
+/**
+ * Stop hook: the session may not end with changed code unless
+ *   1. docs/registry is fresh (auto-regenerated via scripts/check-docs-fresh.mjs --fix),
+ *   2. docs/STATE.md and docs/CHANGELOG.md were updated,
+ *   3. `npm test` passes (skipped with a note while test/ does not exist).
+ * Gate state (hash of the porcelain status at the last successful gate) lives in
+ * .claude/.gate-state.json so an unchanged tree passes instantly.
+ * Bypass: PIPELINE_SKIP_GATE=1. Loop guard: stop_hook_active.
+ */
+import path from 'node:path';
+import fs from 'node:fs';
+import {
+  readStdinJson,
+  repoRoot,
+  run,
+  sha256,
+  lastLines,
+  exists,
+  truncate,
+} from '../lib/hook-utils.mjs';
+
+const CODE_PATHS = ['db', 'srv', 'app', 'test', '_i18n'];
+const TEST_TIMEOUT = 10 * 60 * 1000;
+
+function porcelain(root, paths) {
+  const res = run('git', ['status', '--porcelain', '-uall', '--', ...paths], {
+    cwd: root,
+    timeoutMs: 20_000,
+  });
+  return res.code === 0 ? res.stdout : '';
+}
+
+function block(msg) {
+  process.stderr.write(msg.trimEnd() + '\n');
+  process.exit(2);
+}
+
+try {
+  const input = readStdinJson();
+  if (input.stop_hook_active === true) process.exit(0);
+  if (process.env.PIPELINE_SKIP_GATE === '1') {
+    process.stdout.write('Stop gate пропущен (PIPELINE_SKIP_GATE=1).\n');
+    process.exit(0);
+  }
+
+  const root = repoRoot();
+  const stateFile = path.join(root, '.claude', '.gate-state.json');
+  const codeStatus = porcelain(root, CODE_PATHS);
+  const hash = sha256(codeStatus);
+  let saved = null;
+  try {
+    saved = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
+  } catch {
+    saved = null;
+  }
+
+  if (!codeStatus.trim() || saved?.hash === hash) {
+    process.exit(0);
+  }
+
+  const notes = [];
+
+  // 1. Registry freshness
+  const checker = path.join(root, 'scripts', 'check-docs-fresh.mjs');
+  if (exists(checker)) {
+    const fresh = run('node', [checker], { cwd: root, timeoutMs: 120_000 });
+    if (fresh.code !== 0) {
+      const fix = run('node', [checker, '--fix'], { cwd: root, timeoutMs: 180_000 });
+      if (fix.code !== 0) {
+        block(
+          `Реестр документации устарел, и автоматическая регенерация не удалась:\n${truncate(fix.stderr || fix.stdout, 1200)}\nВыполни \`npm run docs:registry\` и устрани ошибку.`
+        );
+      }
+      notes.push('Реестр docs/registry перегенерирован автоматически.');
+    }
+  } else {
+    notes.push('scripts/check-docs-fresh.mjs отсутствует: проверка свежести реестра пропущена.');
+  }
+
+  // 2. STATE.md and CHANGELOG.md must be touched when code changed
+  const docsStatus = porcelain(root, ['docs/STATE.md', 'docs/CHANGELOG.md']);
+  const touched = new Set(
+    docsStatus
+      .split('\n')
+      .filter(Boolean)
+      .map((l) => l.slice(3).trim())
+  );
+  const missing = ['docs/STATE.md', 'docs/CHANGELOG.md'].filter((f) => !touched.has(f));
+  if (missing.length) {
+    block(
+      `Код изменён (db/, srv/, app/, test/, _i18n/), но не обновлены: ${missing.join(', ')}.\n` +
+        'Обнови docs/STATE.md (текущее положение, открытый долг) и docs/CHANGELOG.md (что изменилось), затем заверши работу.'
+    );
+  }
+
+  // 3. Tests
+  const testDir = path.join(root, 'test');
+  const hasTests =
+    exists(testDir) && fs.readdirSync(testDir).some((f) => /\.test\.(m?js|ts)$/.test(f));
+  if (hasTests) {
+    const tests = run('npm', ['test', '--silent'], { cwd: root, timeoutMs: TEST_TIMEOUT });
+    if (tests.timedOut)
+      block('npm test не завершился за 10 минут. Разберись с зависшими тестами и заверши снова.');
+    if (tests.code !== 0) {
+      block(
+        `npm test завершился с ошибкой (код ${tests.code}). Последние строки вывода:\n${lastLines(tests.stdout + '\n' + tests.stderr, 40)}\nИсправь тесты или код и заверши снова.`
+      );
+    }
+    notes.push('npm test: успешно.');
+  } else {
+    notes.push(
+      'Каталог test/ без тестов: запуск тестов пропущен. Добавь тесты для изменённого кода.'
+    );
+  }
+
+  fs.mkdirSync(path.dirname(stateFile), { recursive: true });
+  fs.writeFileSync(
+    stateFile,
+    JSON.stringify({ hash, at: new Date().toISOString() }, null, 2) + '\n'
+  );
+  process.stdout.write(`Stop gate пройден. ${notes.join(' ')}\n`);
+  process.exit(0);
+} catch (e) {
+  process.stderr.write(`stop-gate hook: внутренняя ошибка (${e.message}); ворота пропущены.\n`);
+  process.exit(0);
+}

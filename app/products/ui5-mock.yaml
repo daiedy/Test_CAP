@@ -1,3 +1,5 @@
+# Mock mode: serves /odata/v4/catalog from webapp/localService without a CAP backend.
+# Run: npm run start-mock
 specVersion: '3.1'
 metadata:
   name: products
@@ -13,12 +15,19 @@ server:
             - /resources
             - /test-resources
           url: https://ui5.sap.com
-        backend:
-          - path: /odata
-            url: http://localhost:4004
     - name: fiori-tools-appreload
       afterMiddleware: compression
       configuration:
         port: 35729
         path: webapp
         delay: 300
+    - name: sap-fe-mockserver
+      mountPath: /
+      afterMiddleware: compression
+      configuration:
+        services:
+          - urlPath: /odata/v4/catalog
+            metadataPath: ./webapp/localService/metadata.xml
+            mockdataPath: ./webapp/localService/mockdata
+            generateMockData: true
+        annotations: []

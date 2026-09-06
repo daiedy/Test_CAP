@@ -2,6 +2,7 @@
 _out
 *.db
 *.sqlite
+*.sqlite-*
 connection.properties
 default-*.json
 gen/
@@ -61,3 +62,12 @@ build/
 # Fiori tools
 fiori-tools.json
 .pipeline/
+
+# Claude Code (personal)
+.claude/settings.local.json
+.claude/.gate-state.json
+CLAUDE.local.md
+.claude/agent-memory/**/scratch/
+
+# CAP tooling output
+.cds-upgrade/

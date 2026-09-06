@@ -2,33 +2,44 @@
   "name": "product-catalog",
   "version": "1.0.0",
   "description": "SAP CAP Product Catalog Application",
-  "repository": "<Add your repository here>",
+  "repository": "https://github.com/daiedy/Test_CAP",
   "license": "UNLICENSED",
   "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
-    "@sap/cds": "^8",
+    "@sap/cds": "^10",
+    "@sap/cds-common-content": "^3.2.0",
     "express": "^4"
   },
   "devDependencies": {
-    "@cap-js/sqlite": "^1",
-    "@sap/cds-dk": "^9.4.3",
-    "@sap/ux-specification": "^1.139.0"
+    "@cap-js/cds-test": "^1",
+    "@cap-js/sqlite": "^3",
+    "@sap/cds-dk": "^10",
+    "@sap/eslint-plugin-cds": "^4",
+    "@sap/ux-specification": "^1.144.0",
+    "@vitest/coverage-v8": "^5",
+    "eslint": "^10",
+    "prettier": "^3",
+    "vitest": "^5"
   },
   "scripts": {
     "start": "cds-serve",
     "watch": "cds-serve --watch",
     "build": "cds build --production",
-    "deploy": "cds deploy"
+    "deploy": "cds deploy",
+    "test": "vitest run --silent",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "cds lint",
+    "format": "prettier --write --no-error-on-unmatched-pattern \"srv/**/*.js\" \"test/**/*.js\" \"scripts/**/*.mjs\"",
+    "docs:registry": "node scripts/gen-registry.mjs",
+    "format:check": "prettier --check --no-error-on-unmatched-pattern \"srv/**/*.js\" \"test/**/*.js\" \"scripts/**/*.mjs\""
   },
   "cds": {
-    "requires": {
-      "db": {
-        "kind": "sqlite",
-        "credentials": {
-          "url": "db.sqlite"
-        }
-      }
-    }
+    "requires": {}
   },
   "sapux": [
     "app/products"

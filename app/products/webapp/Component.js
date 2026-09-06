@@ -1,6 +1,6 @@
 sap.ui.define(
-    ["sap/fe/core/AppComponent"],
-    function (Component) {
+    ["sap/fe/core/AppComponent", "sap/ui/core/Element"],
+    function (Component, Element) {
         "use strict";
 
         return Component.extend("products.Component", {
@@ -12,7 +12,7 @@ sap.ui.define(
                 Component.prototype.init.apply(this, arguments);
 
                 setTimeout(function() {
-                    const oExploreBtn = sap.ui.getCore().byId("uh-explore-button");
+                    const oExploreBtn = Element.getElementById("uh-explore-button");
                     if (oExploreBtn && !oExploreBtn._keyboardFixed) {
                         const oDomRef = oExploreBtn.getDomRef();
                         if (oDomRef) {

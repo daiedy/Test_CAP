@@ -1,141 +1,69 @@
 # Product Catalog
 
-Full-stack SAP CAP Application with Fiori Elements UI
+Full-stack приложение на SAP CAP (Node.js, OData V4) с интерфейсом SAP Fiori Elements V4. Одновременно площадка для агентного конвейера разработки CAP-приложений на Claude Code (см. `docs/ai-pipeline-plan.md` и `CLAUDE.md`).
 
-## Project Structure
+## Требования
 
-```
-├── app/                        # UI Applications
-│   └── products/              # Fiori Elements App
-│       ├── webapp/            # Application code
-│       │   ├── localService/  # Mock server for development
-│       │   │   ├── metadata.xml
-│       │   │   ├── mockserver.js
-│       │   │   └── mockdata/  # JSON mock data
-│       │   ├── test/          # Test pages
-│       │   │   ├── flpSandbox.html  # Launchpad (recommended)
-│       │   │   ├── mockServer.html   # Standalone with mock
-│       │   │   └── initMockServer.js
-│       │   ├── index.html     # Standalone entry point
-│       │   └── manifest.json  # App descriptor
-│       └── package.json       # UI dependencies
-├── db/                        # Database layer
-│   ├── schema.cds            # Data model (Products entity)
-│   └── data/                 # CSV seed data
-├── srv/                       # Service layer
-│   ├── catalog-service.cds   # OData V4 service
-│   └── annotations/          # UI annotations
-│       └── Products/         # Entity-specific annotations
-│           ├── ui.cds
-│           ├── valuehelps.cds
-│           └── constraints.cds
-├── package.json              # Backend dependencies
-└── mta.yaml                  # Cloud Foundry deployment
-```
+- Node.js 22 LTS, npm 10
+- `@sap/cds-dk` 10 глобально: `npm i -g @sap/cds-dk@10`
 
-## Features
-
-- **OData V4 Service**: Modern protocol with full CRUD support
-- **Fiori Elements**: List Report + Object Page patterns
-- **Managed Aspects**: Built-in createdAt, modifiedAt, createdBy, modifiedBy
-- **Currency Integration**: Price with currency code (USD)
-- **Mock Server**: Frontend development without backend
-- **SQLite Database**: Local development with 15 sample products
-
-## Running the Application
-
-### Option 1: Full Stack (Backend + Frontend)
-
-1. Install dependencies:
-
-   ```bash
-   npm install
-   cd app/products && npm install && cd ../..
-   ```
-
-2. Start the CAP server:
-
-   ```bash
-   npm run watch
-   ```
-
-3. Access the application:
-   - Service endpoint: <http://localhost:4004>
-   - Metadata: <http://localhost:4004/odata/v4/catalog/$metadata>
-   - Fiori Launchpad: <http://localhost:4004/products/webapp/test/flpSandbox.html>
-
-### Option 2: Frontend Only (Mock Server)
-
-Run without backend using mock data:
+## Быстрый старт
 
 ```bash
-cd app/products
-npm run start-mock
+npm install
+cd app/products && npm install && cd ../..
+npm run watch
 ```
 
-Opens: <http://localhost:8080/test/mockServer.html>
+Откройте http://localhost:4004/products/webapp/test/flpSandbox.html#products-display. Сервис: http://localhost:4004/odata/v4/catalog/, метаданные: `/odata/v4/catalog/$metadata`.
 
-## Available Scripts
+## Режимы запуска UI
 
-### Backend (from root)
+| Режим | Команда | Адрес |
+|---|---|---|
+| Через CAP | `npm run watch` в корне | http://localhost:4004/products/webapp/test/flpSandbox.html |
+| UI5 tooling с прокси на CAP | `npm start` в `app/products` при запущенном `npm run watch` | http://localhost:8080/test/flpSandbox.html |
+| Без бэкенда (мок) | `npm run start-mock` в `app/products` | http://localhost:8080/test/flpSandbox.html |
 
-- `npm run watch` - Start CAP server with auto-reload
-- `npm run build` - Build for production
-- `npm run deploy` - Deploy database schema
+Мок-режим использует `@sap-ux/ui5-middleware-fe-mockserver` с `webapp/localService/metadata.xml` и `webapp/localService/mockdata/*.json`. После изменения модели обновите снимок: `cds compile srv --to edmx-v4 -l en > app/products/webapp/localService/metadata.xml`.
 
-### Frontend (from app/products)
+## Команды
 
-- `npm run start-mock` - Run with mock server (no backend needed)
+Корень:
 
-## Entry Points
+| Команда | Что делает |
+|---|---|
+| `npm run watch` | CAP-сервер с автоперезапуском, SQLite in-memory |
+| `npm test` | Тесты бэкенда (Vitest + @cap-js/cds-test) |
+| `npm run lint` | `cds lint` |
+| `npm run docs:registry` | Регенерация `docs/registry/*.md` из модели и исходников |
+| `npm run build` | `cds build --production` |
 
-1. **flpSandbox.html** (Recommended) - Full Fiori Launchpad sandbox
-2. **mockServer.html** - Standalone with mock data
-3. **index.html** - Standalone with Launchpad shell
+`app/products`:
 
-## Technologies
+| Команда | Что делает |
+|---|---|
+| `npm start` | UI5 dev server с прокси на :4004 |
+| `npm run start-mock` | UI5 dev server с мок-сервером |
+| `npm run lint` | `ui5lint` |
+| `npm run build` | Сборка в `dist/` |
 
-### Backend
+## Структура
 
-- **SAP CAP** - Cloud Application Programming Model v8
-- **Node.js** - Runtime with Express
-- **SQLite** - Development database (@cap-js/sqlite)
-- **OData V4** - Protocol for REST APIs
-
-### Frontend
-
-- **SAP Fiori Elements** - Template-based UI (sap.fe.templates)
-- **SAPUI5** - Latest version from CDN
-- **UI5 Tooling** - Build and development tools
-- **Sinon.js** - HTTP mocking for testing (built-in UI5)
-
-## Mock Server Details
-
-The mock server (`localService/mockserver.js`) uses **Sinon.js** to intercept OData V4 requests:
-
-- Metadata served from `metadata.xml`
-- Data loaded from `mockdata/Products.json`
-- Supports GET requests for collections and single entities
-- No backend required for frontend development
-
-**Note**: `sap.ui.core.util.MockServer` does not support OData V4, so we use Sinon.js fake server instead.
-
-## Data Model
-
-```cds
-entity Products : managed {
-  key ID          : UUID;
-  name            : String(100);
-  description     : String(500);
-  price           : Decimal(10,2);
-  currency        : Currency;
-  stock           : Integer;
-  category        : String(50);
-  imageUrl        : String(255);
-}
+```
+db/            модель данных (my.catalog) и тестовые данные CSV
+srv/           сервис CatalogService, семантические аннотации, хендлеры
+app/products/  Fiori Elements приложение и его UI-аннотации
+_i18n/         тексты бэкенда (en, ru)
+test/          тесты бэкенда
+docs/          архитектура, паттерны, реестр, решения, состояние
+templates/     эталонные файлы для новых артефактов
+scripts/       скрипты конвейера (реестр, хуки, наблюдатель релизов)
+.claude/       агенты, скиллы, правила, хуки Claude Code
 ```
 
-### Built-in Fields (managed aspect)
+Подробности в `docs/architecture/`, правила работы в `CLAUDE.md`.
 
-- `createdAt` / `createdBy`
-- `modifiedAt` / `modifiedBy`
+## Деплой
+
+`mta.yaml` и `xs-security.json` являются черновиками под Cloud Foundry и пока не пригодны для деплоя. См. `docs/architecture/ARCHITECTURE.md`.

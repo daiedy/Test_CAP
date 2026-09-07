@@ -7,13 +7,13 @@
 | Задача | Способ | Пример | Решение |
 |---|---|---|---|
 | Новая сущность | `entity X : cuid, managed { ... }` в `db/schema.cds`; проекция в сервисе; labels в `srv/annotations/X.cds`; UI в `app/<app>/annotations/X.cds`; данные `cds add data --filter X --records N`; тест `test/<service>.test.js` | `db/schema.cds` → `Products` | ADR-0003 |
-| Справочник с выбором из списка | Сущность `: sap.common.CodeList` с ключом `code`, ассоциация из основной сущности, `@Common.ValueList` и `@Common.Text` в UI-аннотациях | паттерн `Currency` из `@sap/cds/common` | ADR-0003 |
+| Справочник с выбором из списка | Сущность `: sap.common.CodeList` с ключом `code : String(20)`, код `UPPER_SNAKE`; ассоциация из основной сущности; value help — см. «Выбор значения из справочника» | `db/schema.cds` → `Categories`, ассоциация `Products.category` | ADR-0003, ADR-0010 |
 | Внутренний статус без выбора пользователем | `enum` в типе элемента, значения UPPER_SNAKE | нет в коде | |
 | Денежная сумма | `Decimal(15, 2)` + `currency : Currency` + `@Measures.ISOCurrency: currency_code` | `Products.price` (историческое `Decimal(10, 2)`) | |
 | Вычисляемое значение | Calculated element `total : Decimal = price * quantity` в схеме; `virtual` + `after READ` только если выражение невозможно в SQL | нет в коде | |
 | Связь родитель–дети (документ) | `Composition of many Items on items.parent = $self` в родителе, `parent : Association to Parent` в детях | нет в коде | |
 | Ссылка на другую сущность | `Association to Target` в единственном числе | `Products.currency` | |
-| Переводимые тексты данных | `localized String(N)`, CSV `<Entity>.texts` | нет в коде | |
+| Переводимые тексты данных | `localized String(N)`, CSV `<Entity>.texts` | `Categories.name`, `db/data/my.catalog-Categories.texts.csv` | |
 
 ## Сервис и логика
 
@@ -21,7 +21,7 @@
 |---|---|---|---|
 | Обязательное поле | `@mandatory` в `srv/annotations/<Entity>.cds` | `srv/annotations/Products.cds` | ADR-0004 |
 | Проверка формата или диапазона | `@assert.format`, `@assert.range` в `srv/annotations/<Entity>.cds`; хендлер `before` только если аннотацией не выразить | `Products.stock @assert.range: [0, 1000000]` | ADR-0004 |
-| Проверка существования цели ассоциации | `@assert.target` | | |
+| Проверка существования цели ассоциации | `@assert.target` | `Products.category` | |
 | Только чтение | `@readonly` на проекции в сервисе | | |
 | Авторизация | `@requires: 'authenticated-user'` на сервисе, `@restrict` на сущности; мок-пользователи в `package.json` → `cds.requires.auth.users` | `srv/catalog-service.cds` | |
 | Действие над одной записью | Bound action в проекции: `actions { action reorder(amount: Integer) }`; хендлер `this.on('reorder', 'Products', ...)`; в UI `DataFieldForAction` | нет в коде, шаблон `templates/service.cds` | |
@@ -38,7 +38,7 @@
 |---|---|---|---|
 | Новое приложение | Fiori MCP `generate_fiori_app_cap`; никогда вручную | `app/products` | ADR-0007 |
 | Колонки таблицы, фильтры, шапка, секции | `@UI.LineItem`, `@UI.SelectionFields`, `@UI.HeaderInfo`, `@UI.Facets` + `@UI.FieldGroup` в `app/<app>/annotations/<Entity>.cds` | `app/products/annotations/Products.cds` | ADR-0004 |
-| Выбор значения из справочника | `@Common.ValueList` с `CollectionPath` на CodeList, `@Common.Text` + `@Common.TextArrangement: #TextOnly`, чтобы не показывать UUID | `Products.currency_code` | |
+| Выбор значения из справочника | ValueList генерируется компилятором из `sap.common.CodeList` (`@cds.odata.valuelist`), руками не пишется; в `app/<app>/annotations/<Entity>.cds` на ассоциации `@Common.Text: <assoc>.name`, `@Common.TextArrangement: #TextOnly`, `@Common.ValueListWithFixedValues: true` для коротких справочников без экрана ведения; на ключе собственного справочника в `app/<app>/annotations/<CodeList>.cds` `@Common.Text: name` + `#TextOnly` | `app/products/annotations/Products.cds`, `Categories.cds` | ADR-0011 |
 | Кнопка действия | `DataFieldForAction` в LineItem или Identification на bound action; controller extension только для чисто клиентского поведения | | |
 | Изменение manifest (FCL, initialLoad, страницы) | Fiori MCP `list_functionality` → `get_functionality_details` → `execute_functionality`; затем `run_manifest_validation` | `app/products/webapp/manifest.json` | ADR-0007 |
 | Кастомная секция или колонка | `ext/fragment/<Name>.fragment.xml` + `controlConfiguration` через Fiori MCP | | |
@@ -62,7 +62,7 @@
 | Тест сервиса | `test/<service>.test.js`, `cds.test(import.meta.dirname + '/..')`, HTTP через `GET/POST`, проверки `expect(...).to...` | `test/catalog-service.test.js` | ADR-0002 |
 | Контракт OData | `test/metadata.test.js` со снапшотом edmx | `test/metadata.test.js` | ADR-0002 |
 | Форматтер или extension | QUnit в `webapp/test/unit/` | | |
-| Сценарий пользователя | OPA5-журней в `webapp/test/integration/`, страницы на `sap.fe.test.*` | | |
+| Сценарий пользователя | OPA5-журней в `webapp/test/integration/`, страницы на `sap.fe.test.*`; запуск `npm run test:ui` в `app/<app>` при `npm run watch` в корне | `app/products/webapp/test/integration/` | |
 | Сквозной сценарий | wdi5 против `cds watch`, минимум сценариев | | |
 
 ## Инфраструктура

@@ -38,6 +38,8 @@
 | `@ui5/linter` | ^1 (1.23.5) | `ui5lint`, устаревшие API, CSP, manifest |
 | `@sap-ux/eslint-plugin-fiori-tools` | ^10 | ESLint для Fiori-приложений (подключается на этапе 3) |
 | `@sap/ux-specification` | ^1.144 | Схемы для Fiori tools и page editor |
+| `@sap-ux/ui5-test-writer` | 1.9.6 | Генерация каркаса OPA5 page objects (`app/products`, фича `categories-code-list`) |
+| `ui5-test-runner` | 5.14.0 | Запуск QUnit/OPA5 без браузера через `npm run test:ui` (`app/products`) |
 
 ## Инструменты агентов
 
@@ -54,4 +56,4 @@
 
 ## Планируется на этапах 3–4
 
-`@sap-ux/ui5-test-writer` (генерация OPA5), `ui5-test-runner` (запуск QUnit/OPA5 без браузера), `wdio-ui5-service` (E2E), Renovate.
+`wdio-ui5-service` (E2E), Renovate.

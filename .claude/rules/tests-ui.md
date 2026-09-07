@@ -13,7 +13,7 @@ paths:
 - Структура: `test/testsuite.qunit.html` + `testsuite.qunit.js` (Test Starter), `test/unit/` для QUnit, `test/integration/` для OPA5-журнеев, `test/e2e/` для wdi5.
 - OPA5 для Fiori Elements: page objects на `sap.fe.test.ListReport` и `sap.fe.test.ObjectPage`, генерируются `@sap-ux/ui5-test-writer`; руками правятся только журнеи.
 - QUnit: `const`/`let`, `async/await`, `assert.expect(N)` в каждом асинхронном тесте, `sinon.createSandbox()`.
-- Запуск без браузера: `npx ui5-test-runner --url http://localhost:8080/test/testsuite.qunit.html` при запущенном `npm start`.
+- Запуск без браузера: `npm run test:ui` в `app/products` при запущенном `npm run watch` в корне (раннер идёт на `http://localhost:4004/products/webapp/test/testsuite.qunit.html`). Через `npm start` на :8080 приложение из FLP-песочницы не поднимается, см. LESSONS.
 - `test/flpSandbox.html` это точка входа приложения, не тест; менять только через скилл `modernize-flp-sandbox`.
 
 ## После правки

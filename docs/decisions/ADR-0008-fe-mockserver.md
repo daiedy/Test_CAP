@@ -9,7 +9,7 @@
 - Пакет `@sap-ux/ui5-middleware-fe-mockserver` ^2 в devDependencies и `ui5.dependencies`.
 - Отдельный `app/products/ui5-mock.yaml` с мок-сервером (`generateMockData: true`, данные из `webapp/localService/mockdata/<EntitySet>.json` как массивы). `ui5.yaml` содержит только прокси на `:4004`.
 - Скрипты: `npm start` (прокси), `npm run start-mock` (мок). Файлы `mockserver.js`, `initMockServer.js`, `mockServer.html`, `ui5-local.yaml` удалены.
-- Снимок `metadata.xml` регенерируется командой `cds compile srv --to edmx-v4`.
+- Снимок `metadata.xml` регенерируется командой `cds compile '*' --to edmx-v4 -s CatalogService -l en`.
 
 ## Альтернативы
 | Вариант | Почему отклонён |

@@ -8,7 +8,7 @@
 | Контракт OData | Vitest снапшот EDMX объединённой модели (`cds compile '*' --to edmx-v4 -s CatalogService`) | `test/metadata.test.js` | `npm test`, Stop-хук, CI |
 | Сервис | `@cap-js/cds-test` + Vitest, SQLite in-memory | `test/<service>.test.js` | `npm test`, Stop-хук, CI |
 | Юнит UI | QUnit | `app/products/webapp/test/unit/` | `ui5-test-runner`, CI (этап 3) |
-| Сценарии UI | OPA5-журнеи на `sap.fe.test` | `app/products/webapp/test/integration/` | `ui5-test-runner`, CI (этап 3) |
+| Сценарии UI | OPA5-журнеи на `sap.fe.test`, запуск `npm run test:ui` в `app/products` при `npm run watch` в корне | `app/products/webapp/test/integration/` | `ui5-test-runner`, CI (этап 3) |
 | Сквозные | wdi5 против `cds watch` | `app/products/webapp/test/e2e/` | по расписанию и перед релизом (этап 3) |
 
 ## Правила
@@ -36,3 +36,4 @@ cd app/products && npm run lint   # ui5lint
 - Decimal и Int64 из SQLite приходят строками: `expect(product.price).to.equal('1299.99')`.
 - Операции записи возвращают `{ affected }`, а не изменённые строки.
 - `srv.entities` это геттер, не функция.
+- Тесты UI (`ui5-test-runner`) идут только против живого стека (`npm run watch` на :4004): `fiori run` (`npm start`, :8080) не отдаёт `/products/webapp` из FLP-песочницы, а мок-сервер (`npm run start-mock`) не учитывает `Accept-Language`/`sap-ui-language` и непригоден для проверки `ru`.

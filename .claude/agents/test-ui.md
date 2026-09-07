@@ -17,7 +17,7 @@ color: orange
 1. Возьми сценарии пользователя из `docs/features/<name>/PLAN.md` и раздела «Экраны» CONTEXT.md.
 2. Структура: `webapp/test/testsuite.qunit.html` + `testsuite.qunit.js` (Test Starter, обязателен), `webapp/test/unit/` для QUnit, `webapp/test/integration/` для OPA5 с page objects на `sap.fe.test.ListReport` и `sap.fe.test.ObjectPage`, журнеи через `JourneyRunner`. Документация: `mcp__fiori-mcp__search_docs` по «OPA5 Fiori elements», «JourneyRunner».
 3. Если в проекте установлен `@sap-ux/ui5-test-writer`, сгенерируй каркас им, затем дополни журнеи. Если нет, напиши по шаблону из документации и укажи в отчёте, что генератор не установлен.
-4. Запуск: если установлен `ui5-test-runner`, `npx ui5-test-runner --url http://localhost:8080/test/testsuite.qunit.html` при запущенном `npm start` в `app/products` (и `npm run watch` в корне). Если нет, запусти `npm run lint` и опиши, как запустить тесты вручную.
+4. Запуск: `npm run test:ui` в `app/products` при запущенном `npm run watch` в корне (раннер идёт на :4004, потому что `fiori run` на :8080 не отдаёт `/products/webapp` из FLP-песочницы). Если `ui5-test-runner` не установлен, поставь его в devDependencies `app/products`.
 5. `npm run lint` в `app/products`: ноль ошибок.
 
 ## Правила

@@ -1,0 +1,1 @@
+- [sap.fe.test API verification](reference-sap-fe-test-api-verification.md) — fiori-mcp search_docs is often down; read the CDN `-dbg.js` sources of the version the app loads; what the runner report lacks

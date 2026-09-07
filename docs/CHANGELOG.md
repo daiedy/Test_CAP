@@ -10,6 +10,7 @@ Format: date, area, what changed. Maintained by `docs-keeper`, all agents add to
 - `app/products/eslint.config.mjs` with `@sap-ux/eslint-plugin-fiori-tools`; scripts `lint:js`, `lint:js:fix`. Baseline: 1 warning (the deliberate `setTimeout` in `Component.js`).
 
 ### app
+- FLP sandbox home shows only the Product Catalog tile: `appconfig/fioriSandboxConfig.json` now declares the application and an empty tile-group list, overriding the SAP demo tiles that the fixed bootstrap path started to load; the duplicate `LaunchPage` block left `flpSandboxConfig.js`; `<title>` placeholder replaced.
 - FLP sandbox works through `npm start` on :8080: `id="sap-ushell-bootstrap"` on the bootstrap tag (livereload was picked as the last script and broke the config URL), relative app URL in the sandbox config, inline scripts moved to `test/flpSandboxConfig.js`, `test/flpSandboxInit.js`, `sandboxConfig.js`, `sandboxInit.js` (CSP warnings gone). `Container.createRenderer` calls carry `ui5lint-disable-next-line` until the New Sandbox migration.
 
 

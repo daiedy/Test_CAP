@@ -1,3 +1,20 @@
 {
-  "applications": {}
+  "applications": {
+    "products-display": {
+      "additionalInformation": "SAPUI5.Component=products",
+      "applicationType": "URL",
+      "url": "../",
+      "title": "Product Catalog",
+      "description": "Manage Products"
+    }
+  },
+  "services": {
+    "LaunchPage": {
+      "adapter": {
+        "config": {
+          "groups": []
+        }
+      }
+    }
+  }
 }

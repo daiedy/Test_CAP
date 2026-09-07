@@ -1,4 +1,5 @@
-// FLP sandbox configuration (externalized for CSP compliance). Intent products-display resolves
+// FLP sandbox configuration (externalized for CSP compliance). Tiles live in ../appconfig/fioriSandboxConfig.json,
+// which sandbox.js merges last and which therefore overrides the SAP demo tiles. Intent products-display resolves
 // the app relative to this page so it works behind CAP (:4004) and the UI5 dev server (:8080).
 window["sap-ushell-config"] = {
     defaultRenderer: "fiori2",
@@ -21,25 +22,6 @@ window["sap-ushell-config"] = {
         }
     },
     services: {
-        "LaunchPage": {
-            "adapter": {
-                "config": {
-                    "groups": [{
-                        "tiles": [{
-                            "tileType": "sap.ushell.ui.tile.StaticTile",
-                            "properties": {
-                                "title": "Product Catalog",
-                                "subtitle": "Manage Products",
-                                "infoState": "Neutral",
-                                "info": "",
-                                "icon": "sap-icon://product",
-                                "targetURL": "#products-display"
-                            }
-                        }]
-                    }]
-                }
-            }
-        },
         "ClientSideTargetResolution": {
             "adapter": {
                 "config": {

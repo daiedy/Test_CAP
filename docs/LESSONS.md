@@ -2,6 +2,12 @@
 
 Entries are added by all agents through the `retro` skill and by the human. Format: date, what happened, why, how to avoid it, source. New entries on top. The list of typical agent mistakes in CAP and Fiori from publications: `docs/ai-pipeline-plan.md`, section 3.4.
 
+## 2026-09-07. The FLP sandbox home showed 30 SAP demo tiles
+
+What: after the bootstrap tag got its `id`, `sandbox.js` could resolve `test-resources/sap/ushell/shells/sandbox/fioriSandboxConfig.json` on the CDN and merged SAP's demo applications and tile groups into the config. Before the fix that request went to the wrong host and failed, which is the only reason the demo tiles were never visible. Merge order in `sandbox.js`: `window["sap-ushell-config"]` first, then the CDN demo config, then `appconfig/fioriSandboxConfig.json`; arrays are replaced whole, not merged.
+Fix: declare the project's `applications` and an empty `LaunchPage` groups array in `webapp/appconfig/fioriSandboxConfig.json`, which is applied last and overrides the demo groups. The sandbox derives one "My Home" tile per application entry, so no explicit tile is needed. The `LaunchPage` block was removed from `flpSandboxConfig.js` to keep one source of truth.
+Rule: tiles and intents of the sandbox belong in `appconfig/fioriSandboxConfig.json`; `flpSandboxConfig.js` only carries renderer and plugin settings.
+
 ## 2026-09-07. The FLP sandbox on :8080 failed because livereload was the last script tag
 
 What: `npm start` (`fiori run`) loaded `flpSandbox.html` but the app never appeared; the sandbox requested `fioriSandboxConfig.json` from port 35729. `sandbox.js` locates its own script tag by `id="sap-ushell-bootstrap"` and, when the id is missing, falls back to the last `<script>` on the page. `fiori-tools-appreload` injects `livereload.js` as the last tag, so the base URL pointed at the livereload port. On :4004 (CAP) there is no livereload, so it worked there.

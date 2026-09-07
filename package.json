@@ -12,7 +12,7 @@
   "dependencies": {
     "@sap/cds": "^10",
     "@sap/cds-common-content": "^3.2.0",
-    "express": "^4"
+    "express": "^5"
   },
   "devDependencies": {
     "@cap-js/cds-test": "^1",

@@ -71,6 +71,6 @@
 |---|---|---|---|
 | Запуск для разработки | `npm run watch` в корне, UI на http://localhost:4004/products/webapp/test/flpSandbox.html | | |
 | UI без бэкенда | `npm run start-mock` в `app/products`, мок из `localService` | `app/products/ui5-mock.yaml` | ADR-0008 |
-| Обновление снимка metadata.xml | `cds compile srv --to edmx-v4 > app/products/webapp/localService/metadata.xml` после любого изменения модели | | |
+| Обновление снимка metadata.xml | `cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/localService/metadata.xml` после любого изменения модели | | |
 | Обновление зависимостей | Только через `release-check` и Renovate, версии MCP закреплены | | ADR-0009 |
 | Деплой | Не настроен; `mta.yaml` черновик. Любая работа по деплою начинается с ADR | | |

@@ -23,7 +23,7 @@ paths:
 ## После правки
 - `cds compile db --to json` без ошибок, затем `npm run lint`.
 - Сгенерировать или обновить CSV: `cds add data --filter <Entity> --records 10`, затем заменить плейсхолдеры реальными значениями (см. `data.md`).
-- Обновить снимок `cds compile srv --to edmx-v4 > app/products/webapp/localService/metadata.xml`.
+- Обновить снимок `cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/localService/metadata.xml`.
 - Обновить или добавить тест сервиса и снапшот metadata (`npx vitest -u` только осознанно).
 - `npm run docs:registry`.
 

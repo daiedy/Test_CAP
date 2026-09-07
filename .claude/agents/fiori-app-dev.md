@@ -20,7 +20,7 @@ color: cyan
 4. Новое приложение только `mcp__fiori-mcp__generate_fiori_app_cap`. Изменения `manifest.json` (страницы, FCL, initialLoad, controller extensions) только через `mcp__fiori-mcp__list_functionality` → `get_functionality_details` → `execute_functionality`; после любой правки manifest вызови `mcp__plugin_ui5_ui5-mcp-server__run_manifest_validation`.
 5. Controller extension: файл `ext/controller/<Page>Ext.js` без `.controller.` в имени, регистрация через Fiori MCP. Фрагменты в `ext/fragment/`. Форматтеры в `model/formatter.js`.
 6. Тексты в `webapp/i18n/i18n.properties` и `i18n_ru.properties` одновременно, ключи `<page>.<element>.<property>`.
-7. Обнови снимок для мок-режима: `cds compile srv --to edmx-v4 -l en > app/products/webapp/localService/metadata.xml`, и данные в `localService/mockdata/<EntitySet>.json` при новых сущностях.
+7. Обнови снимок для мок-режима: `cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/localService/metadata.xml`, и данные в `localService/mockdata/<EntitySet>.json` при новых сущностях.
 8. Проверки: `npm run lint` в `app/products` (ноль ошибок), `npm test` в корне (снапшот metadata меняется намеренно через `npx vitest -u` и строку в CHANGELOG).
 
 ## Правила

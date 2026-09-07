@@ -12,6 +12,10 @@
 Что: `@cap-js/cds-test` 1.0.2 бросает `Object.assign(new Error, { response, status }, response.data.error)`: сообщение вида `400 - Provide the missing value.`, поля `code` (`ASSERT_MANDATORY`, `ASSERT_TARGET`, `ENTITY_IS_READ_ONLY`), `target` (`category_code`). `rejectedWith(/400/)` chai-as-promised резолвится в саму ошибку.
 Как применять: `const err = await expect(POST(...)).to.be.rejectedWith(/400/); expect(err).to.containSubset({ code: 'ASSERT_TARGET', target: 'category_code' })`. Так негативный тест привязан к конкретной аннотации, а не к любому 400.
 
+## 2026-09-07. Снимок metadata.xml нужно собирать из всей модели, а не из `srv`
+
+Что: команда `cds compile srv --to edmx-v4` включает только `db` и `srv`, поэтому UI-аннотации из `app/products/annotations/` в снимок не попадали, и мок-режим показывал таблицу без колонок. Правильно: `cds compile '*' --to edmx-v4 -s CatalogService -l en`. То же относится к контрактному тесту: `cds.load('*')` берёт всю модель. Замечено агентом `test-backend` на первом прогоне фичи; команда исправлена в CLAUDE.md, PATTERNS, правилах и агентах.
+
 ## 2026-09-07. CAP MCP компилирует все `.cds` проекта, включая `templates/`
 
 Что: `mcp__cds-mcp__search_model` падал с «Duplicate definition of artifact my.catalog.template.Orders»: четыре шаблона в `templates/*.cds` объявляли один namespace и одинаковые сущности. `cds compile srv` и тесты этого не видели, потому что берут только корни `db`, `srv`, `app`.

@@ -82,7 +82,7 @@ docs/                             документация, см. ARCHITECTURE.m
 ## 6. Тесты
 
 - Бэкенд: `test/<service>.test.js`, Vitest, `const { GET, POST, expect, defaults } = cds.test(import.meta.dirname + '/..')` первой строкой после импорта cds. Один `describe` на сущность или действие. Данные для тестов из `db/data`.
-- Снапшот контракта: `test/metadata.test.js` сравнивает `cds compile srv --to edmx-v4` со снапшотом. Меняется осознанно через `vitest -u` с записью в CHANGELOG.
+- Снапшот контракта: `test/metadata.test.js` сравнивает EDMX объединённой модели (`cds.load('*')`, эквивалент `cds compile '*' --to edmx-v4 -s CatalogService`) со снапшотом. Меняется осознанно через `vitest -u` с записью в CHANGELOG.
 - UI: QUnit для форматтеров и extensions в `webapp/test/unit/`, OPA5-журнеи в `webapp/test/integration/`, Test Starter обязателен.
 - Имя теста описывает поведение: `rejects negative stock`, а не `test1`.
 

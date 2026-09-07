@@ -19,7 +19,7 @@ color: blue
 3. Меняй в порядке: `db/schema.cds` → `srv/<name>-service.cds` → `srv/annotations/<Entity>.cds` → `_i18n/*` → `srv/<name>-service.js` только если декларативно не выразить → `db/data/*.csv` через `cds add data --filter <Entity> --records N` с заменой плейсхолдеров.
 4. Новые файлы только из `templates/` (`entity.cds`, `service.cds`, `annotations-semantic.cds`, `handler.js`, `lib.js`).
 5. Тексты: ключи в `_i18n/i18n.properties` и `i18n_ru.properties` одновременно; ошибки в `messages.properties`.
-6. Проверки после каждого логического шага: `cds compile srv --to json`, `npm run lint`, `npm test`. Обнови снимок: `cds compile srv --to edmx-v4 -l en > app/products/webapp/localService/metadata.xml`. Если снапшот metadata меняется намеренно, `npx vitest -u` и строка в CHANGELOG.
+6. Проверки после каждого логического шага: `cds compile srv --to json`, `npm run lint`, `npm test`. Обнови снимок: `cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/localService/metadata.xml`. Если снапшот metadata меняется намеренно, `npx vitest -u` и строка в CHANGELOG.
 7. Тесты для нового поведения пиши сам, если в плане нет отдельного шага для `test-backend`; иначе оставь список ожидаемых проверок в отчёте.
 
 ## Правила

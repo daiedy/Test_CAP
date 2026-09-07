@@ -25,7 +25,7 @@ npm run watch
 | UI5 tooling с прокси на CAP | `npm start` в `app/products` при запущенном `npm run watch` | http://localhost:8080/test/flpSandbox.html |
 | Без бэкенда (мок) | `npm run start-mock` в `app/products` | http://localhost:8080/test/flpSandbox.html |
 
-Мок-режим использует `@sap-ux/ui5-middleware-fe-mockserver` с `webapp/localService/metadata.xml` и `webapp/localService/mockdata/*.json`. После изменения модели обновите снимок: `cds compile srv --to edmx-v4 -l en > app/products/webapp/localService/metadata.xml`.
+Мок-режим использует `@sap-ux/ui5-middleware-fe-mockserver` с `webapp/localService/metadata.xml` и `webapp/localService/mockdata/*.json`. После изменения модели обновите снимок: `cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/localService/metadata.xml`.
 
 ## Команды
 

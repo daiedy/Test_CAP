@@ -56,7 +56,7 @@ user-invocable: false
 
 | Изменил | Запусти |
 |---|---|
-| `*.cds` | `cds compile srv --to json`, `npm run lint`, обнови `app/products/webapp/localService/metadata.xml` командой `cds compile srv --to edmx-v4 -l en > app/products/webapp/localService/metadata.xml` |
+| `*.cds` | `cds compile srv --to json`, `npm run lint`, обнови `app/products/webapp/localService/metadata.xml` командой `cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/localService/metadata.xml` |
 | `srv/**/*.js`, `test/**` | `npm run lint`, `npm test` |
 | `app/**/webapp/**` | `npm run lint` в `app/products` (ui5lint) |
 | `manifest.json` | `mcp__plugin_ui5_ui5-mcp-server__run_manifest_validation`; при ошибке схемы инструмента (известный дефект) `npm run lint` в `app/products` |

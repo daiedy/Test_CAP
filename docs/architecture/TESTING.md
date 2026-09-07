@@ -5,7 +5,7 @@
 | Уровень | Инструмент | Где | Когда запускается |
 |---|---|---|---|
 | Статика | `cds lint`, `ui5lint`, `prettier --check` | корень, `app/products` | PostToolUse-хук на каждом изменённом файле, CI |
-| Контракт OData | Vitest снапшот `cds compile srv --to edmx-v4` | `test/metadata.test.js` | `npm test`, Stop-хук, CI |
+| Контракт OData | Vitest снапшот EDMX объединённой модели (`cds compile '*' --to edmx-v4 -s CatalogService`) | `test/metadata.test.js` | `npm test`, Stop-хук, CI |
 | Сервис | `@cap-js/cds-test` + Vitest, SQLite in-memory | `test/<service>.test.js` | `npm test`, Stop-хук, CI |
 | Юнит UI | QUnit | `app/products/webapp/test/unit/` | `ui5-test-runner`, CI (этап 3) |
 | Сценарии UI | OPA5-журнеи на `sap.fe.test` | `app/products/webapp/test/integration/` | `ui5-test-runner`, CI (этап 3) |

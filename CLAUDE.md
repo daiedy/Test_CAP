@@ -59,7 +59,7 @@ node scripts/check-docs-fresh.mjs
 cd app/products && npm start     # UI5 dev server с прокси на :4004
 cd app/products && npm run start-mock   # UI без бэкенда (sap-fe-mockserver)
 cd app/products && npm run lint  # ui5lint
-cds compile srv --to edmx-v4 -l en > app/products/webapp/localService/metadata.xml   # снимок после изменения модели
+cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/localService/metadata.xml   # снимок после изменения модели
 ```
 
 PATH в GUI-сессиях может не содержать Node: `export PATH="/opt/homebrew/opt/node@22/bin:$PATH"`.

@@ -14,7 +14,7 @@ disable-model-invocation: true
 3. `srv/catalog-service.cds`: проекция; `srv/annotations/<Name>.cds` по `templates/annotations-semantic.cds`; ключи в `_i18n/i18n.properties` и `i18n_ru.properties`.
 4. Данные: `cds add data --filter <Name> --records 10`, затем замени плейсхолдеры реальными значениями, UUID оставь.
 5. UI: `app/products/annotations/<Name>.cds` по `templates/annotations-ui.cds`, подключи в `app/products/annotations.cds`. Страницу для новой сущности добавляй только через Fiori MCP (`list_functionality` → `execute_functionality`), затем `run_manifest_validation`.
-6. Проверки: `cds compile srv --to json`, `npm run lint`, обновление снимка `cds compile srv --to edmx-v4 -l en > app/products/webapp/localService/metadata.xml`, тест в `test/catalog-service.test.js` (список, создание, обязательные поля), `npx vitest -u` для снапшота metadata с записью в CHANGELOG, `npm test`, `npm run lint` в `app/products`.
+6. Проверки: `cds compile srv --to json`, `npm run lint`, обновление снимка `cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/localService/metadata.xml`, тест в `test/catalog-service.test.js` (список, создание, обязательные поля), `npx vitest -u` для снапшота metadata с записью в CHANGELOG, `npm test`, `npm run lint` в `app/products`.
 7. `npm run docs:registry`, строки в `docs/CHANGELOG.md`, обновление `docs/STATE.md`.
 
 Отчёт по форме протокола.

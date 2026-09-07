@@ -1,6 +1,6 @@
 # ADR-0012: Editing Products in the Fiori app through drafts on `CatalogService.Products`
 
-Date: 2026-09-07. Status: proposed (feature `products-draft-edit`; decision by the user pending).
+Date: 2026-09-07. Status: accepted (user, 2026-09-07, feature `products-draft-edit`).
 
 ## Context
 
@@ -41,13 +41,15 @@ Facts established for the decision (`docs/features/products-draft-edit/CONTEXT.m
 
 ## Consequences
 
-- OData contract: `Products` gets the key part `IsActiveEntity` and the draft properties, actions and `Common.DraftRoot`; the snapshot `test/__snapshots__/metadata.test.js.snap` and `app/products/webapp/localService/metadata.xml` are regenerated once; `docs/CHANGELOG.md` records the contract change.
-- Tests: every request to an active `Products` record carries `IsActiveEntity` explicitly; a `POST` without it is by definition a draft. `docs/architecture/TESTING.md`, section "cds 10 specifics", gets the sentence "on a draft-enabled entity `POST` without `IsActiveEntity: true` creates a draft and skips `@mandatory`; address active data with `IsActiveEntity=true`". `templates/service.test.js` shows the explicit form (and drops the stale `category: 'Furniture'`).
-- `PATTERNS.md`, row "Drafts": example `CatalogService.Products` (`srv/catalog-service.cds`), decision ADR-0012, and the note "non-Fiori clients and tests address active data with `IsActiveEntity=true`; validations are enforced on `draftActivate`".
-- `PATTERNS.md`, section "Tests", row "Service test": add "for draft-enabled entities see ADR-0012".
-- `docs/STATE.md`: the debt row about the missing edit mode is removed; ADR-0012 joins the accumulated decisions.
+- [x] OData contract: `Products` gets the key part `IsActiveEntity` and the draft properties, actions and `Common.DraftRoot`; the snapshot `test/__snapshots__/metadata.test.js.snap` and `app/products/webapp/localService/metadata.xml` are regenerated once; `docs/CHANGELOG.md` records the contract change.
+- [x] Tests: every request to an active `Products` record carries `IsActiveEntity` explicitly; a `POST` without it is by definition a draft. `docs/architecture/TESTING.md`, section "cds 10 specifics", gets the sentence "on a draft-enabled entity `POST` without `IsActiveEntity: true` creates a draft and skips `@mandatory`; address active data with `IsActiveEntity=true`". `templates/service.test.js` shows the explicit form (and drops the stale `category: 'Furniture'`).
+- [x] `PATTERNS.md`, row "Drafts": example `CatalogService.Products` (`srv/catalog-service.cds`), decision ADR-0012, and the note "non-Fiori clients and tests address active data with `IsActiveEntity=true`; validations are enforced on `draftActivate`".
+- [x] `PATTERNS.md`, section "Tests", row "Service test": add "for draft-enabled entities see ADR-0012".
+- [x] `docs/STATE.md`: the debt row about the missing edit mode is removed; ADR-0012 joins the accumulated decisions.
+- [x] Journey: `EditCategoryOnObjectPageJourney.js` runs again (`opaTest`, not `.skip`), with a Cancel/discard test added; `npm run test:ui` 17/17, 0 skipped.
 - Data hygiene: drafts live in `CatalogService.Products.drafts` (SQLite in-memory, recreated on every `cds watch` start); OPA journeys restore what they change and `npm run watch` is restarted before a run so the List Report row count stays 15.
-- Reviewer checks: no handler file, the annotation only in `srv/catalog-service.cds`, no `Common.Draft*` written by hand, no manifest diff, no `IsActiveEntity` in `mockdata`, tests explicit about `IsActiveEntity`.
+- Reviewer checks: no handler file, the annotation only in `srv/catalog-service.cds`, no `Common.Draft*` written by hand, no manifest diff, no `IsActiveEntity` in `mockdata`, tests explicit about `IsActiveEntity`. Done: `reviewer` confirmed all 12 checks with zero blocking findings (`docs/features/products-draft-edit/VERIFICATION.md`, `PLAN.md` step 10).
+- Follow-up, not part of this decision: the List Report shows no draft or lock marker in the row because `Products` has no `Common.SemanticKey` (verified 2026-09-07, `ui-verifier`, `VERIFICATION.md` scenarios 4 and 6); the Editing Status filter and the Object Page lock popover work regardless. Adding a semantic key is a separate user decision, tracked in `docs/STATE.md` "Open debt".
 - Follow-ups enabled by this decision, each with its own plan: inline edit for single fields (option C), `hideDraft`, a Create journey, `@restrict` on `Products` once real users exist (draft lock and `InProcessByUser` then become meaningful).
 
 ## Sources

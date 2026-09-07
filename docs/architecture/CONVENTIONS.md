@@ -89,7 +89,7 @@ Annotation split rule: everything that describes the meaning of data and validat
 ## 7. Git
 
 - Branch `feature/<kebab-name>`, one feature. Commits in conventional commits style: `feat(srv): add Categories code list`. Scopes: `db`, `srv`, `app`, `test`, `docs`, `pipeline`, `deps`.
-- One commit per phase of the feature workflow. No `git add -A`; only the files of the phase.
+- One commit per phase of the feature workflow. No `git add -A` over the project; only the files of the phase. Exception: `.claude/agent-memory/**` (shared agent memory, versioned on purpose) is committed together with the phase in which the agent wrote it.
 - Not committed: `node_modules/`, `gen/`, `dist/`, `*.sqlite*`, `.claude/settings.local.json`, `.env`.
 
 ## 8. Documentation

@@ -37,3 +37,9 @@ cd app/products && npm run lint   # ui5lint
 - Write operations return `{ affected }`, not the changed rows.
 - `srv.entities` is a getter, not a function.
 - UI tests (`ui5-test-runner`) run only against the live stack (`npm run watch` on :4004): `fiori run` (`npm start`, :8080) does not serve `/products/webapp` from the FLP sandbox, and the mock server ignores `Accept-Language`, so the `ru` journey cannot pass there.
+- On a draft-enabled entity (ADR-0012), `POST` without `IsActiveEntity: true` creates a draft and skips `@mandatory`; address active data explicitly with `IsActiveEntity=true` in payloads and keys.
+- On `draftActivate`, the `ASSERT_MANDATORY`/`ASSERT_RANGE` targets are prefixed `in/<field>` (for example `in/name`), while `ASSERT_TARGET` on a new draft is the plain field path (for example `category_code`); match `target` by a suffix regex (`/category_code$/`) and assert `code` exactly instead.
+- `DraftMessages` is `[]` on a clean draft `PATCH`; a violated `@assert.*` rule appears there with HTTP 200 and only turns into a 400 on `draftActivate`.
+- `DELETE` of a draft that does not exist answers 404.
+- `DELETE /Entity(<id>)` (addressed as active, no `IsActiveEntity`) of a record that has an open draft answers 403 `DRAFT_ACTIVE_DELETE_FORBIDDEN_DRAFT_EXISTS`; discard the draft with `DELETE /Entity(ID=<id>,IsActiveEntity=false)` instead.
+- OPA5 runs need a fresh `npm run watch` before every run: a leftover draft from a previous run changes the List Report row count and breaks `iCheckRows(15)`.

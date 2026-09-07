@@ -1,6 +1,6 @@
 # products-draft-edit: context
 
-Date: 2026-09-07. Author: `architect`. Branch: `feature/products-draft-edit` (not created yet, `/spec` only).
+Date: 2026-09-07. Author: `architect`. Branch: `feature/products-draft-edit`.
 
 ## Request
 
@@ -135,7 +135,7 @@ From `mcp__fiori-mcp__search_docs` (snapshot of the SAPUI5 / SAP Fiori elements 
 3. **Inline edit: follow-up only (option C of ADR-0012), not in this feature.** Candidates for a later evaluation on the running app: `stock` and `price` in the List Report table for quick corrections. The documentation lists restrictions (no inline edit while a draft exists, no FCL) that need explanation to the user, and the manifest change needs `execute_functionality`; that is a separate plan.
 4. **Create flow: acceptable as-is (New Page), verified manually, no journey in this feature.** A product has seven business fields in two sections; the empty Object Page in create mode reuses the same form the user already knows from Edit, mandatory markers included. A creation dialog would need a manifest change, does not keep a draft, and would duplicate the form for eight fields. The Create journey is a follow-up (listed in ADR-0012 consequences).
 5. **Editing Status filter: kept.** Not disabled via `NavigationRestrictions` (guideline above); it stays as the fourth filter, within the "no more than 5" rule.
-6. **No `Common.SemanticKey` in this feature.** `Products` has no business key besides the UUID; `name` is not unique. The draft indicator is expected in the "Product Name" column via the HeaderInfo Title fallback (not verified, see Screen 1). If `ui-verifier` finds no indicator in any column, that is a question for the architect (a semantic key would be a UI annotation change outside this plan), not a reason for the verifier to change annotations.
+6. **No `Common.SemanticKey` in this feature.** `Products` has no business key besides the UUID; `name` is not unique. The draft indicator is expected in the "Product Name" column via the HeaderInfo Title fallback (not verified, see Screen 1). If `ui-verifier` finds no indicator in any column, that is a question for the architect (a semantic key would be a UI annotation change outside this plan), not a reason for the verifier to change annotations. Verified outcome 2026-09-07 (`ui-verifier`, `VERIFICATION.md` scenarios 4 and 6): confirmed, no draft or lock marker text renders in the List Report row without a `Common.SemanticKey`, in either the own-draft or the locked-by-another-user case; the Object Page compensates for the lock case (header "Locked" button and popover) but there is no List Report row indicator today. Escalated to `docs/STATE.md` "Open debt" as a follow-up decision for the user, not fixed in this feature.
 
 ### Screen 1. List Report "Products" (`ProductsList`)
 
@@ -203,7 +203,7 @@ Behavior:
 | Save | all client-side checks first (required fields, technical parse errors): if any fail, the fields get the error state, the message popover opens and no request is sent; otherwise activation; on success the page returns to display mode on the same product, the header shows the new values, no toast of ours (FE shows none for Save) | `POST Products(ID=...,IsActiveEntity=false)/CatalogService.draftActivate` → 200; on a server rule 400 with `code` `ASSERT_*`, target `in/<field>` mapped by FE to the field |
 | Cancel with a persisted change | a popover anchored to the Cancel button asks to discard; its primary button discards the draft and returns to display mode with the saved values (header included); Esc or a click outside keeps the draft and the edit mode | `DELETE Products(ID=...,IsActiveEntity=false)` → 204 |
 | Cancel without any change | returns to display mode directly; FE skips the confirmation when the draft has no changes (PLAN risk for the journey's `iConfirmCancel`; the test-ui note applies: make sure the PATCH was sent before Cancel) | same DELETE |
-| Back navigation (shell Back, browser Back) while in edit mode | no data-loss dialog: the draft is kept and the List Report shows the row with the "Draft" marker (FE draft principle: leaving does not lose data) | none beyond the list refresh |
+| Back navigation (shell Back, browser Back) while in edit mode | corrected 2026-09-07 (verified by `ui-verifier`): a persisted draft change triggers an FE V4 1.152 "Warning" dialog with Save / Keep Draft / Discard Draft, not a silent keep; choosing Keep Draft returns to the List Report with the draft intact (FE draft principle: leaving does not lose data, but the user is asked first) | the dialog itself is client-side; "Keep Draft" causes none beyond the list refresh, "Save" and "Discard Draft" trigger the corresponding requests |
 | Reload of the page in edit mode | the URL points to the draft key (`IsActiveEntity=false`); the page reopens in edit mode with the draft | `GET` of the draft |
 | Delete (display mode) | confirmation dialog (FE text); on confirm the record is deleted and the app navigates back to the List Report | `DELETE Products(ID=...,IsActiveEntity=true)` → 204 |
 

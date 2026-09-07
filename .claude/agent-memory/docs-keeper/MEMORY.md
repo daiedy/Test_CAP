@@ -1,0 +1,3 @@
+- [Write tool blocks SUMMARY.md](feedback_write_tool_blocks_summary.md) — use a Bash heredoc when Write refuses a legitimate docs/features/<name>/SUMMARY.md
+- [ADR status line must be replaced, not appended](feedback_adr_status_line_format.md) — full-sentence replace on acceptance; template form from ADR-0010/0011
+- [docs-keeper's step-11 scope](project_docs_keeper_step11_scope.md) — the fixed checklist per /feature run, and which pending files belong to other agents (ui-verifier, reviewer)

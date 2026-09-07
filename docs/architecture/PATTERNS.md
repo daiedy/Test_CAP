@@ -29,7 +29,7 @@ For every recurring task there is exactly one approved way here. An agent that m
 | Business logic error | `req.reject(400, 'KEY', [args])`, key in `_i18n/messages.properties` | `templates/handler.js` | |
 | Logging | `const LOG = cds.log('catalog')`; `LOG.info`, `LOG.warn`, `LOG.error` | `templates/handler.js` | |
 | Shared function for several handlers | `srv/lib/<topic>.js`, named export, JSDoc, unit test; check `docs/registry/REUSE-CATALOG.md` before creating | | |
-| Drafts | `@odata.draft.enabled` only on the root projection of the FE application that edits the data; never on the parent and the children of a composition at the same time | | |
+| Drafts | `@odata.draft.enabled` only on the root projection of the FE application that edits the data; never on the parent and the children of a composition at the same time; non-Fiori clients and tests address active data explicitly with `IsActiveEntity=true` | `CatalogService.Products` (`srv/catalog-service.cds`) | ADR-0012 |
 | Side effect after write | `this.after('CREATE', 'Entity', ...)` or an `srv.emit` event; no manual transactions | | |
 
 ## UI Fiori Elements
@@ -59,10 +59,10 @@ For every recurring task there is exactly one approved way here. An agent that m
 
 | Task | Way | Example | Decision |
 |---|---|---|---|
-| Service test | `test/<service>.test.js`, `cds.test(import.meta.dirname + '/..')`, HTTP via `GET/POST`, assertions `expect(...).to...` | `test/catalog-service.test.js` | ADR-0002 |
-| OData contract | `test/metadata.test.js` with an edmx snapshot | `test/metadata.test.js` | ADR-0002 |
+| Service test | `test/<service>.test.js`, `cds.test(import.meta.dirname + '/..')`, HTTP via `GET/POST`, assertions `expect(...).to...`; for draft-enabled entities see ADR-0012 and the `describe('CatalogService.Products drafts')` block in `test/catalog-service.test.js` (helpers `active()`/`activeKey()`/`draftKey()`) as the reference idiom | `test/catalog-service.test.js` | ADR-0002, ADR-0012 |
+| OData contract | `test/metadata.test.js` with an edmx snapshot; regenerate `app/products/webapp/localService/metadata.xml` in the same change (see "metadata.xml snapshot update" below), the sync test in `test/metadata.test.js` enforces it | `test/metadata.test.js` | ADR-0002 |
 | Formatter or extension | QUnit in `webapp/test/unit/` | | |
-| User scenario | OPA5 journey in `webapp/test/integration/`, pages on `sap.fe.test.*`; run `npm run test:ui` in `app/<app>` while `npm run watch` runs in the root | `app/products/webapp/test/integration/` | |
+| User scenario | OPA5 journey in `webapp/test/integration/`, pages on `sap.fe.test.*`; run `npm run test:ui` in `app/<app>` while `npm run watch` runs in the root; in FE V4 edit mode commit the field (dropdown select + `iCheckField`) before `iExecuteCancel`, otherwise no discard popover appears; journeys restore data and leave no draft behind | `app/products/webapp/test/integration/` | |
 | End-to-end scenario | wdi5 against `cds watch`, a minimum of scenarios | | |
 
 ## Infrastructure

@@ -2,10 +2,24 @@
 
 This file is an inbox, not an archive. A lesson lives here only until `/retro` turns it into something that acts on its own: a hook check, a test, a path rule, a PATTERNS row, an ADR or a line in an agent prompt. Transferred lessons are removed; their destination is recorded in `docs/CHANGELOG.md`. The Stop hook warns when more than 10 entries remain. Format: date, title, status, why it is still here.
 
+## New on 2026-09-07 (`products-draft-edit`)
+
+- A `POST` to a draft-enabled entity without `IsActiveEntity: true` creates a draft (201, `IsActiveEntity: false`) and skips `@mandatory`/`@assert.target`; address active data explicitly. Source: `test-backend`, ADR-0012.
+- `DELETE /Entity(<id>)` (addressed as active) of a record that has an open draft answers 403 `DRAFT_ACTIVE_DELETE_FORBIDDEN_DRAFT_EXISTS`; discard with `DELETE /Entity(ID=<id>,IsActiveEntity=false)` instead. Source: `test-backend`.
+- `@assert.*` violations on a draft `PATCH` surface as `DraftMessages` with HTTP 200 and are only enforced (400) on `draftActivate`; the `target` on activation is prefixed `in/<field>` (e.g. `in/name`) except `ASSERT_TARGET` on a new draft, which stays a plain field path (e.g. `category_code`) — match by a suffix regex, assert `code` exactly. Source: `test-backend`.
+- The registry generator (`scripts/gen-registry.mjs`) renders the contained `DraftAdministrativeData` entity type as a CRUD projection in `SERVICES.md`, although it has no `EntitySet`. Not fixed in this feature (`scripts/` is code, needs a user request); recorded as debt in `docs/STATE.md`. Source: `reviewer`, `docs-keeper`.
+- FE V4 1.152: shell/browser Back navigation with a persisted (PATCHed) draft change opens a "Warning" dialog (Save / Keep Draft / Discard Draft), not a silent keep as the CAP draft principle alone would suggest. Source: `ui-verifier`, corrected in `CONTEXT.md`.
+- Chrome DevTools MCP: clearing a required `sap.m.Input` with `fill("")` or `Ctrl+A`+`Backspace` immediately before a button click may not reliably fire the `change` event UI5 needs to mark the bound property dirty, so a subsequent Save can read the last committed (non-empty) value. Blur the field and confirm the PATCH landed in `$batch` before pressing the button. Source: `ui-verifier`, `VERIFICATION.md` scenario 7.
+- Pipeline: a contract (OData model) change must schedule `npx vitest -u` and the `metadata.xml` regeneration in the same phase as the model change, not a later one; PLAN steps 4 and 6 had to be rewritten mid-run when the phase-2 gate needed `npm test` green before the UI phase started. Source: orchestrator, `PLAN.md` step 4 note.
+- Pipeline: accepting an ADR must replace the whole `Status:` sentence, not append to it — an earlier edit left a concatenated, self-contradicting sentence ("accepted ... decision by the user pending"). Source: `reviewer` finding, fixed in ADR-0012 by `docs-keeper`.
+- Pipeline: `ui-verifier` needed three 80-turn sessions to cover 10 scenarios end to end; write `VERIFICATION.md` incrementally (a table row per scenario as it completes) and budget turns per scenario up front rather than discovering the shortfall mid-run. Source: `ui-verifier`, `VERIFICATION.md`.
+
 ## Pending upstream
 
 - 2026-09-07. `run_manifest_validation` of UI5 MCP 0.2.18 fails with "schema with key or id http://json-schema.org/draft-06/schema already exists". Status: `Pending upstream @ui5/mcp-server`. Workaround in `.claude/rules/ui5-webapp.md` (ui5lint checks the manifest); `upstream-check` reports new versions.
 - 2026-09-07. `sap.ushell.Container.createRenderer` is deprecated since 1.120 without a successor; the replacement is the New Sandbox (`SandboxBootTask`). Status: `Pending upstream migration`, tracked as open debt in `docs/STATE.md` (`modernize-flp-sandbox` skill, UI5 >= 1.147). The two calls carry `ui5lint-disable-next-line` with this reason.
+- 2026-09-07. `fiori-mcp` `search_docs` hit an embeddings outage during `products-draft-edit`, affecting `architect`, `ux-designer` and `test-ui`. Fallback used: CDN `-dbg.js` sources of the loaded UI5 version (`sap-ui-version.json`), findings marked "not verified by MCP". Status: `Pending upstream @sap-ux/fiori-mcp-server` (pinned 1.12.2); `upstream-check` reports new versions.
+- 2026-09-07. `DRAFT_ALREADY_EXISTS` and `DRAFT_ACTIVE_DELETE_FORBIDDEN_DRAFT_EXISTS` are untranslated (English) in `@sap/cds/_i18n/messages_ru.properties`, unlike `ASSERT_MANDATORY`/`ASSERT_RANGE`/`ASSERT_TARGET`, which are translated. Status: `Pending upstream @sap/cds`; not a project defect, no local patch planned.
 
 ## Transferred on 2026-09-07 (kept for one release as a pointer, then delete)
 

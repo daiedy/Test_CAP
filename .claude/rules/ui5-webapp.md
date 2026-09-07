@@ -5,30 +5,30 @@ paths:
   - "app/**/webapp/manifest.json"
   - "app/**/webapp/**/*.html"
 ---
-# Код приложения UI5 (app/<app>/webapp/)
+# UI5 application code (app/<app>/webapp/)
 
-## Перед правкой
-1. `manifest.json`: сначала `mcp__fiori-mcp__list_functionality` для приложения. Если функция есть, менять только через `get_functionality_details` → `execute_functionality`. Ручная правка допустима лишь при отсутствии функции.
-2. Контролы, события, API: `mcp__plugin_ui5_ui5-mcp-server__get_api_reference`. Гайдлайны: скилл `ui5-best-practices` из плагина `ui5`.
-3. Fiori Elements расширения: `mcp__fiori-mcp__search_docs` по «controller extension», «custom section», «custom column».
-4. `docs/registry/UI-ARTIFACTS.md`: существующие extensions, фрагменты, форматтеры.
+## Before editing
+1. `manifest.json`: first `mcp__fiori-mcp__list_functionality` for the application. If a functionality exists, change it only through `get_functionality_details` → `execute_functionality`. Manual editing is allowed only when no functionality exists.
+2. Controls, events, API: `mcp__plugin_ui5_ui5-mcp-server__get_api_reference`. Guidelines: the `ui5-best-practices` skill from the `ui5` plugin.
+3. Fiori Elements extensions: `mcp__fiori-mcp__search_docs` for "controller extension", "custom section", "custom column".
+4. `docs/registry/UI-ARTIFACTS.md`: existing extensions, fragments, formatters.
 
-## Правила
-- Только XML-вью. `sap.ui.define` со списком зависимостей, без глобальных `sap.*`, `jQuery.sap.*`, `sap.ui.getCore()`.
-- Controller extension FE: файл `ext/controller/<Page>Ext.js`, без `.controller.` в имени. Модульный путь в manifest должен совпадать с файлом.
-- Фрагменты: `ext/fragment/<Name>.fragment.xml`. Форматтеры: `model/formatter.js`, в XML через `core:require`.
-- Тексты только через `i18n`. Ключи `<page>.<element>.<property>`.
-- Bootstrap-параметры в html в дефисной записи (`data-sap-ui-compat-version`), `data-sap-ui-async="true"`.
-- `Component.js`: наследует `sap/fe/core/AppComponent`; там есть осознанный обработчик клавиатуры для кнопки шелла, не удалять без запроса пользователя.
-- Известный долг: CSP inline scripts в `index.html` и `test/flpSandbox.html`. Устраняется скиллом `modernize-flp-sandbox`, отдельной задачей.
+## Rules
+- XML views only. `sap.ui.define` with a dependency list, no global `sap.*`, `jQuery.sap.*`, `sap.ui.getCore()`.
+- FE controller extension: file `ext/controller/<Page>Ext.js`, without `.controller.` in the name. The module path in the manifest must match the file.
+- Fragments: `ext/fragment/<Name>.fragment.xml`. Formatters: `model/formatter.js`, in XML through `core:require`.
+- Texts only through `i18n`. Keys `<page>.<element>.<property>`.
+- Bootstrap parameters in html in dashed notation (`data-sap-ui-compat-version`), `data-sap-ui-async="true"`.
+- `Component.js`: inherits from `sap/fe/core/AppComponent`; it contains a deliberate keyboard handler for the shell button, do not remove it without a request from the user.
+- Known debt: CSP inline scripts in `index.html` and `test/flpSandbox.html`. Removed by the `modernize-flp-sandbox` skill, as a separate task.
 
-## После правки
-- `mcp__plugin_ui5_ui5-mcp-server__run_ui5_linter` или `npx ui5lint <file>` в `app/<app>`: ноль ошибок в изменённых файлах.
-- После правки `manifest.json`: `mcp__plugin_ui5_ui5-mcp-server__run_manifest_validation`. Если инструмент отвечает ошибкой схемы (дефект UI5 MCP 0.2.18, см. LESSONS), достаточно `npx ui5lint` в каталоге приложения: он проверяет manifest своими правилами.
-- Тест: QUnit для форматтера или extension (`tests-ui.md`).
+## After editing
+- `mcp__plugin_ui5_ui5-mcp-server__run_ui5_linter` or `npx ui5lint <file>` in `app/<app>`: zero errors in the changed files.
+- After editing `manifest.json`: `mcp__plugin_ui5_ui5-mcp-server__run_manifest_validation`. If the tool responds with a schema error (a defect of UI5 MCP 0.2.18, see LESSONS), `npx ui5lint` in the application directory is enough: it checks the manifest with its own rules.
+- Test: QUnit for the formatter or extension (`tests-ui.md`).
 - `npm run docs:registry`.
 
-## Запрещено
-- Создавать приложение или страницы руками. Только Fiori MCP `generate_fiori_app_cap` и `execute_functionality`.
-- Использовать screen personalization вместо правки кода.
-- TypeScript до пересмотра ADR-0005.
+## Forbidden
+- Creating an application or pages by hand. Only Fiori MCP `generate_fiori_app_cap` and `execute_functionality`.
+- Using screen personalization instead of editing the code.
+- TypeScript until ADR-0005 is revisited.

@@ -33,9 +33,8 @@ function markStale(root, r) {
 
 function checkCds(root, r) {
   const res = run('npx', ['cds', 'compile', r, '--to', 'json'], { cwd: root, timeoutMs: TIMEOUT });
-  if (res.timedOut) return `cds compile ${r}: превышен лимит 60 с.`;
-  if (res.code !== 0)
-    return `cds compile ${r} завершился с ошибкой:\n${truncate(res.stderr || res.stdout)}`;
+  if (res.timedOut) return `cds compile ${r}: 60 s limit exceeded.`;
+  if (res.code !== 0) return `cds compile ${r} failed:\n${truncate(res.stderr || res.stdout)}`;
   return null;
 }
 
@@ -44,7 +43,7 @@ function checkJs(root, r) {
   const fmt = run('npx', ['prettier', '--write', r], { cwd: root, timeoutMs: TIMEOUT });
   if (fmt.code !== 0) notes.push(`prettier ${r}: ${truncate(fmt.stderr || fmt.stdout, 600)}`);
   const lint = run('npx', ['eslint', '--format', 'json', r], { cwd: root, timeoutMs: TIMEOUT });
-  if (lint.timedOut) return notes.concat('eslint: превышен лимит 60 с.');
+  if (lint.timedOut) return notes.concat('eslint: 60 s limit exceeded.');
   try {
     const report = JSON.parse(lint.stdout || '[]');
     const msgs = report.flatMap((f) => f.messages || []);
@@ -55,7 +54,7 @@ function checkJs(root, r) {
           (m) =>
             `  ${m.severity === 2 ? 'error' : 'warn '} ${m.line}:${m.column} ${m.message} (${m.ruleId || 'parse'})`
         );
-      notes.push(`eslint ${r}: ${msgs.length} замечаний\n${lines.join('\n')}`);
+      notes.push(`eslint ${r}: ${msgs.length} findings\n${lines.join('\n')}`);
     }
   } catch {
     if (lint.code !== 0) notes.push(`eslint ${r}: ${truncate(lint.stderr || lint.stdout, 800)}`);
@@ -72,7 +71,7 @@ function checkUi5(root, r) {
     cwd: appDir,
     timeoutMs: TIMEOUT,
   });
-  if (res.timedOut) return `ui5lint ${r}: превышен лимит 60 с.`;
+  if (res.timedOut) return `ui5lint ${r}: 60 s limit exceeded.`;
   try {
     const report = JSON.parse(res.stdout || '[]');
     const files = Array.isArray(report) ? report : report.files || [];
@@ -85,7 +84,7 @@ function checkUi5(root, r) {
         (m) =>
           `  ${m.severity === 2 ? 'error' : 'warn '} ${m.line ?? '?'}:${m.column ?? '?'} ${m.message} (${m.ruleId})`
       );
-    return `ui5lint ${r}: ${errors} ошибок, ${msgs.length - errors} предупреждений\n${lines.join('\n')}`;
+    return `ui5lint ${r}: ${errors} errors, ${msgs.length - errors} warnings\n${lines.join('\n')}`;
   } catch {
     return res.code !== 0 ? `ui5lint ${r}: ${truncate(res.stderr || res.stdout, 800)}` : null;
   }
@@ -112,13 +111,13 @@ function checkI18n(root, r) {
   const en = readKeys(path.join(dir, `${family}.properties`));
   const ru = readKeys(path.join(dir, `${family}_ru.properties`));
   if (!en || !ru)
-    return `i18n: в ${path.relative(root, dir)} нет пары ${family}.properties и ${family}_ru.properties.`;
+    return `i18n: ${path.relative(root, dir)} lacks the pair ${family}.properties and ${family}_ru.properties.`;
   const missingRu = [...en].filter((k) => !ru.has(k));
   const missingEn = [...ru].filter((k) => !en.has(k));
   if (!missingRu.length && !missingEn.length) return null;
   const parts = [];
-  if (missingRu.length) parts.push(`нет в ${family}_ru.properties: ${missingRu.join(', ')}`);
-  if (missingEn.length) parts.push(`нет в ${family}.properties: ${missingEn.join(', ')}`);
+  if (missingRu.length) parts.push(`missing in ${family}_ru.properties: ${missingRu.join(', ')}`);
+  if (missingEn.length) parts.push(`missing in ${family}.properties: ${missingEn.join(', ')}`);
   return `i18n ${path.relative(root, dir)}: ${parts.join('; ')}`;
 }
 
@@ -148,7 +147,7 @@ try {
   if (isUnder(r, STALE_SCOPE) && !isUnder(r, STALE_EXCLUDE)) {
     markStale(root, r);
     notes.push(
-      'Реестр docs/registry помечен устаревшим; перед завершением задачи выполни `npm run docs:registry` и обнови docs/STATE.md и docs/CHANGELOG.md.'
+      'The docs/registry registry is marked stale; before finishing the task run `npm run docs:registry` and update docs/STATE.md and docs/CHANGELOG.md.'
     );
   }
 

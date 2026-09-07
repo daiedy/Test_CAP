@@ -2,32 +2,32 @@
 paths:
   - "db/**/*.cds"
 ---
-# Доменная модель (db/)
+# Domain model (db/)
 
-Применяется к `db/schema.cds`, `db/common.cds`, `db/<module>.cds`. Данные CSV см. `data.md`.
+Applies to `db/schema.cds`, `db/common.cds`, `db/<module>.cds`. For CSV data see `data.md`.
 
-## Перед правкой
-1. `mcp__cds-mcp__search_model` по каждой затрагиваемой сущности и ассоциации: что уже есть, кто на неё ссылается.
-2. `mcp__cds-mcp__search_docs` по конструкции, которую собираешься использовать (aspect, composition, localized, calculated element).
-3. Прочитать `docs/registry/DOMAIN-MODEL.md`: не дублировать сущности и типы, переиспользовать существующие.
-4. Убедиться, что для задачи есть спецификация `docs/features/<name>/PLAN.md`.
+## Before editing
+1. `mcp__cds-mcp__search_model` for every affected entity and association: what already exists, who references it.
+2. `mcp__cds-mcp__search_docs` for the construct you are about to use (aspect, composition, localized, calculated element).
+3. Read `docs/registry/DOMAIN-MODEL.md`: do not duplicate entities and types, reuse existing ones.
+4. Make sure the task has a specification `docs/features/<name>/PLAN.md`.
 
-## Правила
-- `CONVENTIONS.md` раздел 3 полностью. Ключевое: `cuid, managed`, PascalCase множественное число для сущностей, camelCase элементы, длины у всех строк, `Association to` в единственном числе, `Composition of many` во множественном.
-- Справочники для пользователя: `sap.common.CodeList`, не `enum` (PATTERNS: «Справочник с выбором из списка»).
-- Деньги: `Decimal(15, 2)` + `currency : Currency`.
-- Никаких аннотаций `@UI.*`, `@Common.*`, `@title`, `@mandatory` в `db/`. Семантика в `srv/annotations/<Entity>.cds`, представление в `app/<app>/annotations/`.
-- Новый модуль домена: отдельный файл `db/<module>.cds` с `namespace my.catalog.<module>;`.
-- Шаблон: `templates/entity.cds`.
+## Rules
+- `CONVENTIONS.md` section 3 in full. Key points: `cuid, managed`, PascalCase plural for entities, camelCase elements, lengths on all strings, `Association to` in singular, `Composition of many` in plural.
+- Code lists for the user: `sap.common.CodeList`, not `enum` (PATTERNS: "Code list with selection from a list").
+- Money: `Decimal(15, 2)` + `currency : Currency`.
+- No `@UI.*`, `@Common.*`, `@title`, `@mandatory` annotations in `db/`. Semantics in `srv/annotations/<Entity>.cds`, presentation in `app/<app>/annotations/`.
+- New domain module: a separate file `db/<module>.cds` with `namespace my.catalog.<module>;`.
+- Template: `templates/entity.cds`.
 
-## После правки
-- `cds compile db --to json` без ошибок, затем `npm run lint`.
-- Сгенерировать или обновить CSV: `cds add data --filter <Entity> --records 10`, затем заменить плейсхолдеры реальными значениями (см. `data.md`).
-- Обновить снимок `cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/localService/metadata.xml`.
-- Обновить или добавить тест сервиса и снапшот metadata (`npx vitest -u` только осознанно).
+## After editing
+- `cds compile db --to json` without errors, then `npm run lint`.
+- Generate or update the CSV: `cds add data --filter <Entity> --records 10`, then replace the placeholders with real values (see `data.md`).
+- Update the snapshot `cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/localService/metadata.xml`.
+- Update or add the service test and the metadata snapshot (`npx vitest -u` only deliberately).
 - `npm run docs:registry`.
 
-## Запрещено
-- Менять тип или удалять существующий элемент без ADR и записи в `docs/CHANGELOG.md`.
-- Выставлять сущности `db/` напрямую без проекции в сервисе.
+## Forbidden
+- Changing the type of an existing element or deleting it without an ADR and an entry in `docs/CHANGELOG.md`.
+- Exposing `db/` entities directly without a projection in the service.
 - `cds add sample`.

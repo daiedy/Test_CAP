@@ -1,27 +1,27 @@
-# ADR-0007: Fiori Elements V4 по умолчанию; приложения и manifest только через Fiori MCP
+# ADR-0007: Fiori Elements V4 by default; applications and manifest only via Fiori MCP
 
-Дата: 2026-09-07. Статус: принято.
+Date: 2026-09-07. Status: accepted.
 
-## Контекст
-Типичные ошибки агентов в UI: ручная сборка структуры Fiori-приложения, битые ссылки на модули в `manifest.json`, правки через персонализацию. SAP поставляет `@sap-ux/fiori-mcp-server` с генерацией приложений в CAP-проекте и трёхшаговой модификацией (`list_functionality`, `get_functionality_details`, `execute_functionality`).
+## Context
+Typical agent mistakes in the UI: manual assembly of the Fiori application structure, broken module references in `manifest.json`, edits via personalization. SAP ships `@sap-ux/fiori-mcp-server` with application generation in a CAP project and a three-step modification (`list_functionality`, `get_functionality_details`, `execute_functionality`).
 
-## Решение
-- Экраны реализуются на Fiori Elements V4 (List Report, Object Page, при необходимости другие floorplans). Свободный UI5 только когда экран не выражается floorplan-ами, решение фиксируется в `docs/features/<name>/CONTEXT.md`.
-- Новые приложения создаёт только `generate_fiori_app_cap`. `manifest.json` меняется только через `execute_functionality`; ручная правка допустима при отсутствии функции с последующей `run_manifest_validation`.
-- Поведение задаётся аннотациями; controller extensions только для чисто клиентской логики.
+## Decision
+- Screens are implemented in Fiori Elements V4 (List Report, Object Page, other floorplans when needed). Freestyle UI5 only when the screen cannot be expressed with floorplans, the decision is recorded in `docs/features/<name>/CONTEXT.md`.
+- New applications are created only by `generate_fiori_app_cap`. `manifest.json` is changed only via `execute_functionality`; a manual edit is acceptable when no functionality exists, followed by `run_manifest_validation`.
+- Behavior is defined by annotations; controller extensions only for purely client-side logic.
 
-## Альтернативы
-| Вариант | Почему отклонён |
+## Alternatives
+| Option | Why rejected |
 |---|---|
-| Ручная правка manifest по документации | Главный источник ошибок агентов по публикациям SAP и сообщества |
-| Свободный UI5 как основа | Больше кода, тестов и линтера; FE даёт стандартное поведение бесплатно |
-| Fiori Elements V2 | Проект на OData V4, V2 не рассматривается |
+| Manual manifest editing based on the documentation | The main source of agent errors according to SAP and community publications |
+| Freestyle UI5 as the foundation | More code, tests and linting; FE gives standard behavior for free |
+| Fiori Elements V2 | The project is on OData V4, V2 is not considered |
 
-## Последствия
-- Правило `.claude/rules/ui5-webapp.md`, паттерны раздела «UI Fiori Elements».
-- Агент `fiori-app-dev` получает инструменты `mcp__fiori-mcp__*`.
+## Consequences
+- The `.claude/rules/ui5-webapp.md` rule, patterns of the "UI Fiori Elements" section.
+- The `fiori-app-dev` agent receives the `mcp__fiori-mcp__*` tools.
 
-## Источники
+## Sources
 - https://github.com/SAP/open-ux-tools/tree/main/packages/fiori-mcp-server
 - https://architecture.learning.sap.com/news/2026/04/27/agentic-engineering
 - https://community.sap.com/t5/sap-cap-blog-posts/from-zero-to-fiori-building-sap-apps-with-ai-agents-and-why-i-use-markdown/ba-p/14288142

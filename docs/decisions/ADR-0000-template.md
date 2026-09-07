@@ -1,20 +1,20 @@
-# ADR-NNNN: <Краткое название решения>
+# ADR-NNNN: <Short title of the decision>
 
-Дата: YYYY-MM-DD. Статус: предложено | принято | заменено ADR-NNNN.
+Date: YYYY-MM-DD. Status: proposed | accepted | superseded by ADR-NNNN.
 
-## Контекст
-Какая задача или проблема требует решения. Ссылки на фичу, урок, источник.
+## Context
+Which task or problem requires a decision. Links to the feature, lesson, source.
 
-## Решение
-Что выбрано, одним абзацем. Как это выражается в коде и конфигурации.
+## Decision
+What was chosen, in one paragraph. How it is expressed in code and configuration.
 
-## Альтернативы
-| Вариант | Почему отклонён |
+## Alternatives
+| Option | Why rejected |
 |---|---|
 | ... | ... |
 
-## Последствия
-Что становится проще, что сложнее, что нужно поменять в `CONVENTIONS.md`, `PATTERNS.md`, правилах или шаблонах.
+## Consequences
+What becomes simpler, what becomes harder, what needs to change in `CONVENTIONS.md`, `PATTERNS.md`, rules or templates.
 
-## Источники
-Ссылки на документацию и обсуждения.
+## Sources
+Links to documentation and discussions.

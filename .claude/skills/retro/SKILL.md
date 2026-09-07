@@ -1,13 +1,13 @@
 ---
 name: retro
-description: Ретроспектива в конце сессии: что агенты сделали не так или неочевидно, какое правило, паттерн или скилл стоит уточнить. Пишет в docs/LESSONS.md и предлагает правки правил. Используй при словах «ретро», «подведи итоги сессии», «что улучшить в конвейере».
+description: Retrospective at the end of a session: what the agents did wrong or non-obviously, which rule, pattern or skill should be clarified. Writes to docs/LESSONS.md and proposes rule edits. Use when the user says "retro", "sum up the session", "what to improve in the pipeline" (Russian: «ретро», «подведи итоги сессии», «что улучшить в конвейере»).
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash(git *)
 ---
 
-1. Собери факты: `git log --oneline -20`, `git diff --stat HEAD~5`, отчёты агентов в этой сессии, красные проверки и повторные круги.
-2. Для каждого сбоя ответь: причина в знаниях (не хватило документации или MCP), в правилах (правило отсутствовало или было неясным), в инструментах (хук, скрипт, шаблон) или в задаче (нечёткий план).
-3. Запиши уроки в `docs/LESSONS.md` сверху: дата, что случилось, почему, как избежать, источник.
-4. Предложи конкретные правки: строка в `PATTERNS.md`, уточнение в `.claude/rules/<file>.md`, абзац в скилле, новый шаблон. Правки в `.claude/**` не применяй сам, покажи diff-предложение пользователю (файлы защищены).
-5. Обнови `docs/STATE.md`: открытый долг и следующий шаг.
+1. Collect the facts: `git log --oneline -20`, `git diff --stat HEAD~5`, the agents' reports in this session, red checks and repeated rounds.
+2. For each failure answer: was the cause in knowledge (documentation or MCP was insufficient), in rules (a rule was missing or unclear), in tools (hook, script, template) or in the task (unclear plan).
+3. Write the lessons to `docs/LESSONS.md` at the top: date, what happened, why, how to avoid it, source.
+4. Propose concrete edits: a line in `PATTERNS.md`, a clarification in `.claude/rules/<file>.md`, a paragraph in a skill, a new template. Do not apply edits in `.claude/**` yourself, show the user a diff proposal (the files are protected).
+5. Update `docs/STATE.md`: open debt and next step.
 
-Итог: три самых важных урока и одно действие, которое сэкономит больше всего времени в следующей сессии.
+Summary: the three most important lessons and one action that will save the most time in the next session.

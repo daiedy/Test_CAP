@@ -2,21 +2,21 @@
 paths:
   - "db/data/**"
 ---
-# Тестовые данные (db/data/)
+# Test data (db/data/)
 
-## Правила
-- Имя файла `<namespace>-<Entity>.csv`, например `my.catalog-Products.csv`. Для текстов: `<namespace>-<Entity>.texts.csv`.
-- Файлы создаются командой `cds add data --filter <Entity> --records <N>`, затем плейсхолдеры (`name-29894036`) заменяются осмысленными значениями. Сгенерированные ID и внешние ключи сохраняются.
-- Разделитель `;`, как в существующем файле. Заголовок точно совпадает с именами элементов; внешние ключи в форме `<assoc>_<key>` (`currency_code`, `category_ID`).
-- Все ключи и внешние ключи в формате UUID (`4b7e1d2a-3c9f-4e5d-8b6a-1f2e3d4c5b6a`), кроме кодовых таблиц с ключом `code`.
-- Даты в ISO 8601, десятичные с точкой, булевы `true`/`false`, пустое значение это пустая ячейка.
-- Поля `managed` (`createdAt`, `createdBy`, `modifiedAt`, `modifiedBy`) в CSV не задаются.
-- Данные должны согласовываться между файлами: каждый внешний ключ ссылается на существующую строку.
-- Перед правкой проверить `docs/registry/DOMAIN-MODEL.md` на актуальный список элементов.
+## Rules
+- File name `<namespace>-<Entity>.csv`, for example `my.catalog-Products.csv`. For texts: `<namespace>-<Entity>.texts.csv`.
+- Files are created with the command `cds add data --filter <Entity> --records <N>`, then the placeholders (`name-29894036`) are replaced with meaningful values. Generated IDs and foreign keys are kept.
+- Separator `;`, as in the existing file. The header matches the element names exactly; foreign keys in the form `<assoc>_<key>` (`currency_code`, `category_ID`).
+- All keys and foreign keys in UUID format (`4b7e1d2a-3c9f-4e5d-8b6a-1f2e3d4c5b6a`), except code lists with the key `code`.
+- Dates in ISO 8601, decimals with a dot, booleans `true`/`false`, an empty value is an empty cell.
+- `managed` fields (`createdAt`, `createdBy`, `modifiedAt`, `modifiedBy`) are not set in CSV.
+- Data must be consistent across files: every foreign key references an existing row.
+- Before editing, check `docs/registry/DOMAIN-MODEL.md` for the current list of elements.
 
-## После правки
-- `cds deploy --to sqlite::memory:` или `npm test`: CSV загружается без предупреждений `valid-csv-header`.
-- Обновить `app/<app>/webapp/localService/mockdata/<EntitySet>.json`, если фронтенд-мок должен отражать данные (массив объектов, ключи как в OData).
+## After editing
+- `cds deploy --to sqlite::memory:` or `npm test`: the CSV loads without `valid-csv-header` warnings.
+- Update `app/<app>/webapp/localService/mockdata/<EntitySet>.json` if the frontend mock should reflect the data (an array of objects, keys as in OData).
 
-## Запрещено
-- Ручные UUID «11111111-...» в CSV; продуктивные или персональные данные.
+## Forbidden
+- Hand-made UUIDs "11111111-..." in CSV; production or personal data.

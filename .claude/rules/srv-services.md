@@ -2,32 +2,32 @@
 paths:
   - "srv/**/*.cds"
 ---
-# Сервисы и семантические аннотации (srv/*.cds, srv/annotations/*.cds)
+# Services and semantic annotations (srv/*.cds, srv/annotations/*.cds)
 
-Файл `srv/<name>-service.cds`: проекции, действия, функции, авторизация. Файл `srv/annotations/<Entity>.cds`: `@title`, `@mandatory`, `@assert.*`, `@readonly`, `@Measures.ISOCurrency`. Определи, к какой части относится правка, и применяй соответствующий блок.
+File `srv/<name>-service.cds`: projections, actions, functions, authorization. File `srv/annotations/<Entity>.cds`: `@title`, `@mandatory`, `@assert.*`, `@readonly`, `@Measures.ISOCurrency`. Determine which part the edit belongs to and apply the corresponding block.
 
-## Перед правкой
-1. `mcp__cds-mcp__search_model` по сервису и сущности: существующие проекции, действия, аннотации.
-2. `mcp__cds-mcp__search_docs` по конкретной аннотации или конструкции (`@restrict`, bound action, `excluding`, `@assert.range`).
-3. `docs/registry/SERVICES.md`: нет ли уже действия или проекции с такой задачей.
-4. Проверить строку в `docs/architecture/PATTERNS.md`, раздел «Сервис и логика».
+## Before editing
+1. `mcp__cds-mcp__search_model` for the service and entity: existing projections, actions, annotations.
+2. `mcp__cds-mcp__search_docs` for the specific annotation or construct (`@restrict`, bound action, `excluding`, `@assert.range`).
+3. `docs/registry/SERVICES.md`: check whether an action or projection for this task already exists.
+4. Check the row in `docs/architecture/PATTERNS.md`, section "Service and logic".
 
-## Сервис (`srv/<name>-service.cds`)
-- Одна проекция на сущность, выставлять только нужные поля.
-- Bound action предпочтительнее unbound. Имена действий camelCase глаголом: `reorder`, `publish`.
-- `@requires` на сервисе, `@restrict` на проекциях. Мок-пользователи в `package.json` → `cds.requires.auth.users`.
-- Аннотации UI в этом файле запрещены. Ничего, кроме `using`, `service`, проекций, действий, `@requires`, `@restrict`, `@readonly`, `@odata.draft.enabled`.
-- Импорт семантики: `using from './annotations/<Entity>';` в конце файла.
-- Шаблон: `templates/service.cds`.
+## Service (`srv/<name>-service.cds`)
+- One projection per entity, expose only the needed fields.
+- Bound action is preferred over unbound. Action names are camelCase verbs: `reorder`, `publish`.
+- `@requires` on the service, `@restrict` on projections. Mock users in `package.json` → `cds.requires.auth.users`.
+- UI annotations are forbidden in this file. Nothing but `using`, `service`, projections, actions, `@requires`, `@restrict`, `@readonly`, `@odata.draft.enabled`.
+- Import of semantics: `using from './annotations/<Entity>';` at the end of the file.
+- Template: `templates/service.cds`.
 
-## Семантика (`srv/annotations/<Entity>.cds`)
-- `annotate CatalogService.<Entity> with { ... }`, только `@title: '{i18n>Entity.element}'`, `@mandatory`, `@assert.format`, `@assert.range`, `@assert.target`, `@readonly`, `@Measures.ISOCurrency`, `@Core.Description`.
-- Ключи i18n добавляются в `_i18n/i18n.properties` и `_i18n/i18n_ru.properties` в том же изменении.
-- Шаблон: `templates/annotations-semantic.cds`.
+## Semantics (`srv/annotations/<Entity>.cds`)
+- `annotate CatalogService.<Entity> with { ... }`, only `@title: '{i18n>Entity.element}'`, `@mandatory`, `@assert.format`, `@assert.range`, `@assert.target`, `@readonly`, `@Measures.ISOCurrency`, `@Core.Description`.
+- i18n keys are added to `_i18n/i18n.properties` and `_i18n/i18n_ru.properties` in the same change.
+- Template: `templates/annotations-semantic.cds`.
 
-## После правки
-- `cds compile srv --to json`, `npm run lint`, обновить `metadata.xml` снимок, `npm test`, `npm run docs:registry`.
+## After editing
+- `cds compile srv --to json`, `npm run lint`, update the `metadata.xml` snapshot, `npm test`, `npm run docs:registry`.
 
-## Запрещено
-- `@UI.*`, `@Common.ValueList`, `@Common.Text` здесь. Их место: `app/<app>/annotations/`.
-- Второй сервис ради одной сущности. Новый сервис только при другом круге пользователей (ADR).
+## Forbidden
+- `@UI.*`, `@Common.ValueList`, `@Common.Text` here. Their place: `app/<app>/annotations/`.
+- A second service for the sake of one entity. A new service only for a different set of users (ADR).

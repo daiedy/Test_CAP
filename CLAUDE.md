@@ -1,84 +1,84 @@
 # CLAUDE.md
 
-Конституция проекта Test_CAP. Короткая по замыслу: инварианты и указатели. Детали в `docs/`, правила по типам файлов в `.claude/rules/` (подгружаются автоматически), рабочие потоки в `.claude/skills/`.
+Constitution of the Test_CAP project. Short by design: invariants and pointers. Details live in `docs/`, per-file-type rules in `.claude/rules/` (loaded automatically), workflows in `.claude/skills/`.
 
-## Что это
+## What this is
 
-Product Catalog: SAP CAP (Node.js 22, `@sap/cds` 10, OData V4, SQLite in-memory в разработке) плюс Fiori Elements V4 (List Report + Object Page). Одна сущность `my.catalog.Products`, сервис `CatalogService` на `/odata/v4/catalog`. Проект одновременно является площадкой агентного конвейера, план в `docs/ai-pipeline-plan.md`.
+Product Catalog: SAP CAP (Node.js 22, `@sap/cds` 10, OData V4, SQLite in-memory in development) plus Fiori Elements V4 (List Report + Object Page). One entity `my.catalog.Products`, service `CatalogService` at `/odata/v4/catalog`. The project is at the same time a testbed for the agentic pipeline, the plan is in `docs/ai-pipeline-plan.md`.
 
-## Карта документации
+## Documentation map
 
-| Вопрос | Файл |
+| Question | File |
 |---|---|
-| Где мы сейчас, открытый долг | `docs/STATE.md` |
-| Как устроено и почему | `docs/architecture/ARCHITECTURE.md` |
-| Как называть, где что лежит, стиль | `docs/architecture/CONVENTIONS.md` |
-| Единственный способ решить типовую задачу | `docs/architecture/PATTERNS.md` |
-| Версии и инструменты | `docs/architecture/STACK.md` |
-| Как тестировать | `docs/architecture/TESTING.md` |
-| Что уже есть в коде (генерируется) | `docs/registry/*.md` |
-| Почему так решили | `docs/decisions/ADR-*.md` |
-| Спецификации фич | `docs/features/<name>/` |
-| Выученные уроки, типовые ошибки | `docs/LESSONS.md` |
-| Что изменилось | `docs/CHANGELOG.md` |
-| Что нового во фреймворках | `docs/framework/UPDATES.md` |
-| Эталонные файлы | `templates/` |
+| Where we are, open debt | `docs/STATE.md` |
+| How it is built and why | `docs/architecture/ARCHITECTURE.md` |
+| How to name things, where things live, style | `docs/architecture/CONVENTIONS.md` |
+| The single way to solve a typical task | `docs/architecture/PATTERNS.md` |
+| Versions and tools | `docs/architecture/STACK.md` |
+| How to test | `docs/architecture/TESTING.md` |
+| What already exists in the code (generated) | `docs/registry/*.md` |
+| Why it was decided this way | `docs/decisions/ADR-*.md` |
+| Feature specifications | `docs/features/<name>/` |
+| Lessons learned, typical mistakes | `docs/LESSONS.md` |
+| What changed | `docs/CHANGELOG.md` |
+| What is new in the upstream dependencies | `docs/upstream/UPDATES.md` |
+| Reference files | `templates/` |
 
-## Инварианты
+## Invariants
 
-1. **MCP-first.** Перед созданием или изменением любого SAP-артефакта запроси нужный сервер. Если MCP противоречит твоим знаниям, прав MCP.
+1. **MCP-first.** Before creating or changing any SAP artifact, query the relevant server. If MCP contradicts your knowledge, MCP is right.
 
-   | Меняешь | Сервер и инструменты |
+   | You change | Server and tools |
    |---|---|
-   | CDS: сущности, проекции, действия, хендлеры | `cds-mcp`: `search_model`, затем `search_docs` |
-   | `@UI.*`, `@Common.*`, Fiori Elements, `manifest.json` | `fiori-mcp`: `search_docs`; manifest только через `list_functionality` → `execute_functionality` |
-   | Контролы, XML-вью, контроллеры UI5 | UI5 MCP из плагина `ui5`: `get_api_reference`, `get_guidelines`, `run_ui5_linter`, `run_manifest_validation` |
-   | Версии, «что нового» | не MCP: `cds version`, `npm view`, `docs/framework/UPDATES.md` |
+   | CDS: entities, projections, actions, handlers | `cds-mcp`: `search_model`, then `search_docs` |
+   | `@UI.*`, `@Common.*`, Fiori Elements, `manifest.json` | `fiori-mcp`: `search_docs`; manifest only via `list_functionality` → `execute_functionality` |
+   | Controls, XML views, UI5 controllers | UI5 MCP from the `ui5` plugin: `get_api_reference`, `get_guidelines`, `run_ui5_linter`, `run_manifest_validation` |
+   | Versions, "what's new" | not MCP: `cds version`, `npm view`, `docs/upstream/UPDATES.md` |
 
-2. **Спецификация раньше кода.** Изменение кода начинается с `docs/features/<name>/PLAN.md`, утверждённого пользователем. Оркестратор: `/feature`, только план: `/spec`.
-3. **Реестр раньше реализации.** Перед новой функцией, хендлером, фрагментом, типом: `docs/registry/` и `search_model`. Дубликат существующего это блокирующая ошибка ревью.
-4. **Одна задача, один способ.** Способ берётся из `PATTERNS.md`. Нет строки, значит нужен ADR, а не второй способ.
-5. **Слои аннотаций.** Семантика (`@title`, `@mandatory`, `@assert.*`, `@readonly`) в `srv/annotations/<Entity>.cds`; представление (`@UI.*`, `@Common.ValueList`, `@Common.Text`) в `app/<app>/annotations/<Entity>.cds`; в `db/` аннотаций нет.
-6. **Декларативно раньше императивно.** Хендлер пишется, когда аннотации не хватает.
-7. **Тексты через i18n.** `en` и `ru` в одном изменении. Строк для пользователя в коде нет.
-8. **Ворота, а не доверие.** Хуки запускают линтеры после правок, а тесты и проверку документации перед завершением. «Тесты проходят» без свежего вывода не принимается.
-9. **Документация в том же изменении.** `npm run docs:registry`, строка в `docs/CHANGELOG.md`, актуальный `docs/STATE.md`.
+2. **Specification before code.** A code change starts with `docs/features/<name>/PLAN.md` approved by the user. Orchestrator: `/feature`, plan only: `/spec`.
+3. **Registry before implementation.** Before a new function, handler, fragment, type: `docs/registry/` and `search_model`. A duplicate of something existing is a blocking review error.
+4. **One task, one way.** The way is taken from `PATTERNS.md`. No row means an ADR is needed, not a second way.
+5. **Annotation layers.** Semantics (`@title`, `@mandatory`, `@assert.*`, `@readonly`) in `srv/annotations/<Entity>.cds`; presentation (`@UI.*`, `@Common.ValueList`, `@Common.Text`) in `app/<app>/annotations/<Entity>.cds`; no annotations in `db/`.
+6. **Declarative before imperative.** A handler is written when an annotation is not enough.
+7. **Texts through i18n.** `en` and `ru` in the same change. No user-facing strings in code.
+8. **Gates, not trust.** Hooks run linters after edits, and tests and the documentation check before finishing. "Tests pass" without fresh output is not accepted.
+9. **Documentation in the same change.** `npm run docs:registry`, a line in `docs/CHANGELOG.md`, an up-to-date `docs/STATE.md`.
 
-## Стиль в двух строках
+## Style in two lines
 
-CDS: PascalCase сущности во множественном числе, camelCase элементы, `cuid, managed`, длины у строк, CodeList вместо enum. JS: ESM, `extends cds.ApplicationService`, `cds.log`, `req.reject(code, 'KEY')`, `cds.ql`, Prettier. UI: только XML, `sap.ui.define`, без глобальных `sap.*`, JavaScript, Fiori Elements по умолчанию, manifest только через Fiori MCP.
+CDS: PascalCase plural entities, camelCase elements, `cuid, managed`, lengths on strings, CodeList instead of enum. JS: ESM, `extends cds.ApplicationService`, `cds.log`, `req.reject(code, 'KEY')`, `cds.ql`, Prettier. UI: XML only, `sap.ui.define`, no global `sap.*`, JavaScript, Fiori Elements by default, manifest only via Fiori MCP.
 
-## Команды
+## Commands
 
 ```bash
-npm run watch                    # CAP на :4004, UI http://localhost:4004/products/webapp/test/flpSandbox.html
-npm test                         # Vitest + @cap-js/cds-test, снапшот $metadata в test/__snapshots__
+npm run watch                    # CAP on :4004, UI http://localhost:4004/products/webapp/test/flpSandbox.html
+npm test                         # Vitest + @cap-js/cds-test, $metadata snapshot in test/__snapshots__
 npm run lint                     # cds lint
-npm run docs:registry            # регенерация docs/registry
+npm run docs:registry            # regenerate docs/registry
 node scripts/check-docs-fresh.mjs
-cd app/products && npm start     # UI5 dev server с прокси на :4004
-cd app/products && npm run start-mock   # UI без бэкенда (sap-fe-mockserver)
+cd app/products && npm start     # UI5 dev server with proxy to :4004
+cd app/products && npm run start-mock   # UI without backend (sap-fe-mockserver)
 cd app/products && npm run lint  # ui5lint
-cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/localService/metadata.xml   # снимок после изменения модели
+cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/localService/metadata.xml   # snapshot after a model change
 ```
 
-PATH в GUI-сессиях может не содержать Node: `export PATH="/opt/homebrew/opt/node@22/bin:$PATH"`.
+PATH in GUI sessions may lack Node: `export PATH="/opt/homebrew/opt/node@22/bin:$PATH"`.
 
-## Конвейер
+## Pipeline
 
-- Субагенты в `.claude/agents/`: `architect`, `ux-designer`, `cap-backend-dev`, `fiori-app-dev`, `ui5-freestyle-dev`, `test-backend`, `test-ui`, `ui-verifier`, `reviewer`, `docs-keeper`, `release-watcher`. Все предзагружают скилл `project-protocol` и работают по нему.
-- Скиллы: `/feature`, `/spec`, `/add-entity`, `/gen-docs`, `/run-app`, `/test-all`, `/review`, `/retro`, `/release-check`, `/debug-after-upgrade`, `/upgrade-cds`. Внешние: `cap-developer`, `cap-upgrade` (плагин `cap`), `ui5-best-practices*` (плагин `ui5`).
-- Хуки (`.claude/settings.json`, скрипты в `scripts/hooks/`): SessionStart выводит STATE и проверяет окружение; PreToolUse запрещает правку защищённых файлов; PostToolUse запускает компиляцию и линтеры по типу файла и помечает реестр устаревшим; SubagentStop блокирует сдачу с ошибками линтера; Stop требует свежий реестр, обновлённые STATE и CHANGELOG и зелёный `npm test`. Обход только по решению пользователя: `PIPELINE_SKIP_GATE=1`, `PIPELINE_ALLOW_PROTECTED=1`.
-- MCP в `.mcp.json` с закреплёнными версиями: `cds-mcp` 0.0.5, `fiori-mcp` 1.12.2, `chrome-devtools` 1.8.0. UI5 MCP приходит с плагином `ui5`.
+- Subagents in `.claude/agents/`: `architect`, `ux-designer`, `cap-backend-dev`, `fiori-app-dev`, `ui5-freestyle-dev`, `test-backend`, `test-ui`, `ui-verifier`, `reviewer`, `docs-keeper`, `upstream-watcher`. All preload the `project-protocol` skill and work by it.
+- Skills: `/feature`, `/spec`, `/add-entity`, `/gen-docs`, `/run-app`, `/test-all`, `/review`, `/retro`, `/upstream-check`, `/debug-after-upgrade`, `/upgrade-cds`. External: `cap-developer`, `cap-upgrade` (plugin `cap`), `ui5-best-practices*` (plugin `ui5`).
+- Hooks (`.claude/settings.json`, scripts in `scripts/hooks/`): SessionStart prints STATE and checks the environment; PreToolUse forbids editing protected files; PostToolUse runs compilation and linters by file type and marks the registry stale; SubagentStop blocks handing over with linter errors; Stop requires a fresh registry, updated STATE and CHANGELOG and a green `npm test`. Bypass only by user decision: `PIPELINE_SKIP_GATE=1`, `PIPELINE_ALLOW_PROTECTED=1`.
+- MCP in `.mcp.json` with pinned versions: `cds-mcp` 0.0.5, `fiori-mcp` 1.12.2, `chrome-devtools` 1.8.0. UI5 MCP comes with the `ui5` plugin.
 
-## Не делать без явного запроса пользователя
+## Do not do without an explicit user request
 
-- Править `mta.yaml`, `xs-security.json`, `ui5-deploy.yaml`, `package-lock.json`, `.claude/**`, `.mcp.json`, `scripts/hooks/**`, `docs/registry/**`, `docs/ai-pipeline-plan.md`.
-- Менять хак клавиатуры в `app/products/webapp/Component.js`.
-- Поднимать версии `@sap/cds`, `@sap/cds-dk`, MCP-серверов; это делают `/release-check` и `/upgrade-cds` с решением пользователя.
-- Создавать Fiori-приложение или `manifest.json` руками; `cds add sample`; TypeScript в UI (ADR-0005).
-- Коммитить и пушить. Коммиты делает оркестратор `/feature` по фазам или пользователь.
+- Edit `mta.yaml`, `xs-security.json`, `ui5-deploy.yaml`, `package-lock.json`, `.claude/**`, `.mcp.json`, `scripts/hooks/**`, `docs/registry/**`, `docs/ai-pipeline-plan.md`.
+- Change the keyboard hack in `app/products/webapp/Component.js`.
+- Bump versions of `@sap/cds`, `@sap/cds-dk`, MCP servers; this is done by `/upstream-check` and `/upgrade-cds` with a user decision.
+- Create a Fiori application or `manifest.json` by hand; `cds add sample`; TypeScript in the UI (ADR-0005).
+- Commit and push. Commits are made by the `/feature` orchestrator per phase or by the user.
 
-## Известный долг
+## Known debt
 
-Смотри `docs/STATE.md`, раздел «Открытый долг». Ключевое на сегодня: CSP inline-скрипты в тестовых html (снимается скиллом `modernize-flp-sandbox` из плагина `ui5-modernization`), `Products.price` Decimal(10, 2) вместо конвенции, деплой не настроен.
+See `docs/STATE.md`, section "Open debt". Key items today: CSP inline scripts in the test html files (removed by the `modernize-flp-sandbox` skill from the `ui5-modernization` plugin), `Products.price` Decimal(10, 2) instead of the convention, deployment not configured.

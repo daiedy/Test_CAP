@@ -1,104 +1,104 @@
 ---
 name: project-protocol
-description: Общий протокол работы всех агентов проекта Test_CAP (SAP CAP + Fiori Elements). Предзагружается в каждого субагента через поле skills. Определяет порядок работы, маршрутизацию к MCP-серверам, правило «одна задача, один способ», защиту от дублирования, формат отчёта и запреты.
+description: Common working protocol of all agents of the Test_CAP project (SAP CAP + Fiori Elements). Preloaded into every subagent through the skills field. Defines the order of work, routing to the MCP servers, the "one task, one way" rule, protection against duplication, the report format and the prohibitions.
 user-invocable: false
 ---
 
-# Протокол агента Test_CAP
+# Test_CAP agent protocol
 
-Ты часть конвейера из специализированных агентов. Все агенты работают по этому протоколу, поэтому результат одной сессии совместим с результатом другой. Отклонение от протокола допустимо только по явному указанию пользователя.
+You are part of a pipeline of specialized agents. All agents work by this protocol, so the result of one session is compatible with the result of another. Deviating from the protocol is allowed only on an explicit instruction from the user.
 
-## 1. Источники истины, в порядке приоритета
+## 1. Sources of truth, in order of priority
 
-1. Слова пользователя в текущей задаче.
-2. `docs/features/<name>/PLAN.md` текущей фичи: что именно делать и критерии готовности.
-3. `CLAUDE.md`, `docs/architecture/CONVENTIONS.md`, `docs/architecture/PATTERNS.md`: как делать.
-4. `docs/registry/*.md`: что уже существует (генерируется, руками не правится).
-5. MCP-серверы SAP: как это делается во фреймворке сегодня.
-6. Собственные знания модели: только если пункты выше молчат, и с пометкой «не проверено».
+1. The user's words in the current task.
+2. `docs/features/<name>/PLAN.md` of the current feature: what exactly to do and the acceptance criteria.
+3. `CLAUDE.md`, `docs/architecture/CONVENTIONS.md`, `docs/architecture/PATTERNS.md`: how to do it.
+4. `docs/registry/*.md`: what already exists (generated, not edited by hand).
+5. SAP MCP servers: how it is done in the framework today.
+6. The model's own knowledge: only if the items above are silent, and marked "not verified".
 
-Если MCP или документация проекта противоречат твоим знаниям, прав документ и MCP.
+If MCP or the project documentation contradicts your knowledge, the document and MCP are right.
 
-## 2. Обязательный порядок работы
+## 2. Mandatory order of work
 
-1. Прочитай задачу и `PLAN.md` фичи. Если плана нет, а задача меняет код, остановись и сообщи: нужен `architect`.
-2. Прочитай первые 40 строк `docs/STATE.md` и раздел «Открытый долг».
-3. Найди существующее: соответствующий файл `docs/registry/` плюс `mcp__cds-mcp__search_model` по каждой сущности, сервису, действию, которых касается задача. Запиши в отчёт, что переиспользуешь.
-4. Найди утверждённый способ в `PATTERNS.md`. Один способ. Если нет подходящего, остановись и предложи ADR, не изобретай второй.
-5. Сверься с MCP по таблице маршрутизации ниже до первой правки.
-6. Возьми шаблон из `templates/`, если создаёшь новый файл такого типа.
-7. Выполни правки. Правила по путям (`.claude/rules/`) подгружаются автоматически, следуй им.
-8. Проверь: линтеры и тесты из раздела 5. Не пиши «проверено», если не запускал.
-9. Обнови документацию, за которую отвечаешь (раздел 6), и отчитайся по форме (раздел 7).
+1. Read the task and the feature `PLAN.md`. If there is no plan and the task changes code, stop and report: `architect` is needed.
+2. Read the first 40 lines of `docs/STATE.md` and the "Open debt" section.
+3. Find what exists: the corresponding `docs/registry/` file plus `mcp__cds-mcp__search_model` for every entity, service, action the task touches. Write into the report what you reuse.
+4. Find the approved way in `PATTERNS.md`. One way. If none fits, stop and propose an ADR, do not invent a second one.
+5. Check with MCP according to the routing table below before the first edit.
+6. Take a template from `templates/` if you create a new file of that type.
+7. Make the edits. Path rules (`.claude/rules/`) are loaded automatically, follow them.
+8. Check: linters and tests from section 5. Do not write "checked" if you did not run them.
+9. Update the documentation you are responsible for (section 6) and report in the form (section 7).
 
-## 3. Маршрутизация к MCP
+## 3. Routing to MCP
 
-| Меняешь | Сначала спроси |
+| You change | Ask first |
 |---|---|
-| CDS сущности, типы, аспекты, проекции, действия, `srv/**/*.cds` | `mcp__cds-mcp__search_model`, затем `mcp__cds-mcp__search_docs` |
-| Хендлеры `srv/**/*.js`, API `cds.ql`, `req`, события | `mcp__cds-mcp__search_docs` |
-| UI-аннотации `@UI.*`, `@Common.*`, страницы Fiori Elements, `manifest.json` | `mcp__fiori-mcp__search_docs`; правки manifest только через `mcp__fiori-mcp__list_functionality` → `get_functionality_details` → `execute_functionality` |
-| Новое Fiori-приложение | `mcp__fiori-mcp__generate_fiori_app_cap` |
-| Контролы, XML-вью, контроллеры, биндинги свободного UI5 | `mcp__plugin_ui5_ui5-mcp-server__get_api_reference`, `get_guidelines`; после правок `run_ui5_linter`; после правки manifest `run_manifest_validation` |
-| Тесты UI (OPA5, QUnit) | скиллы `ui5-best-practices-opa5`, `ui5-best-practices-qunit`, `mcp__fiori-mcp__search_docs` |
-| Версии пакетов, «что нового», совместимость | не MCP: `cds version`, `npm view <pkg> version`, `docs/framework/UPDATES.md`. Снапшоты документации в MCP могут быть устаревшими |
+| CDS entities, types, aspects, projections, actions, `srv/**/*.cds` | `mcp__cds-mcp__search_model`, then `mcp__cds-mcp__search_docs` |
+| Handlers `srv/**/*.js`, `cds.ql` API, `req`, events | `mcp__cds-mcp__search_docs` |
+| UI annotations `@UI.*`, `@Common.*`, Fiori Elements pages, `manifest.json` | `mcp__fiori-mcp__search_docs`; manifest edits only through `mcp__fiori-mcp__list_functionality` → `get_functionality_details` → `execute_functionality` |
+| New Fiori application | `mcp__fiori-mcp__generate_fiori_app_cap` |
+| Controls, XML views, controllers, bindings of freestyle UI5 | `mcp__plugin_ui5_ui5-mcp-server__get_api_reference`, `get_guidelines`; after edits `run_ui5_linter`; after a manifest edit `run_manifest_validation` |
+| UI tests (OPA5, QUnit) | skills `ui5-best-practices-opa5`, `ui5-best-practices-qunit`, `mcp__fiori-mcp__search_docs` |
+| Package versions, "what's new", compatibility | not MCP: `cds version`, `npm view <pkg> version`, `docs/upstream/UPDATES.md`. Documentation snapshots in MCP may be outdated |
 
-Если задача затрагивает несколько слоёв, спроси все соответствующие серверы.
+If the task touches several layers, ask all the corresponding servers.
 
-## 4. Защита от дублирования и разнобоя
+## 4. Protection against duplication and inconsistency
 
-- Новая функция, хендлер, фрагмент, форматтер, тип: сначала `docs/registry/REUSE-CATALOG.md`, `HANDLERS.md`, `UI-ARTIFACTS.md`. Найденное переиспользуй или расширяй.
-- Одинаковые задачи решаются одинаково. Ориентир: существующий код и `PATTERNS.md`, а не «более красивый» вариант.
-- Имена, структура файлов, форматирование: только по `CONVENTIONS.md`. Prettier и линтеры решают спор о стиле.
-- Тексты только через i18n, ключи по конвенции, `en` и `ru` в одном изменении.
+- New function, handler, fragment, formatter, type: first `docs/registry/REUSE-CATALOG.md`, `HANDLERS.md`, `UI-ARTIFACTS.md`. Reuse or extend what you find.
+- Identical tasks are solved identically. The reference is the existing code and `PATTERNS.md`, not a "prettier" variant.
+- Names, file structure, formatting: only by `CONVENTIONS.md`. Prettier and the linters settle style disputes.
+- Texts only through i18n, keys by convention, `en` and `ru` in the same change.
 
-## 5. Проверки перед сдачей
+## 5. Checks before handing over
 
-| Изменил | Запусти |
+| You changed | Run |
 |---|---|
-| `*.cds` | `cds compile srv --to json`, `npm run lint`, обнови `app/products/webapp/localService/metadata.xml` командой `cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/localService/metadata.xml` |
+| `*.cds` | `cds compile srv --to json`, `npm run lint`, update `app/products/webapp/localService/metadata.xml` with `cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/localService/metadata.xml` |
 | `srv/**/*.js`, `test/**` | `npm run lint`, `npm test` |
-| `app/**/webapp/**` | `npm run lint` в `app/products` (ui5lint) |
-| `manifest.json` | `mcp__plugin_ui5_ui5-mcp-server__run_manifest_validation`; при ошибке схемы инструмента (известный дефект) `npm run lint` в `app/products` |
-| Что угодно в `db/`, `srv/`, `app/` | `npm run docs:registry`, затем `node scripts/check-docs-fresh.mjs` |
+| `app/**/webapp/**` | `npm run lint` in `app/products` (ui5lint) |
+| `manifest.json` | `mcp__plugin_ui5_ui5-mcp-server__run_manifest_validation`; on a tool schema error (known defect) `npm run lint` in `app/products` |
+| Anything in `db/`, `srv/`, `app/` | `npm run docs:registry`, then `node scripts/check-docs-fresh.mjs` |
 
-Приложи к отчёту команды и их вывод (последние строки). Красный тест или ошибка линтера означают, что задача не завершена.
+Attach the commands and their output (last lines) to the report. A red test or a linter error means the task is not finished.
 
-## 6. Документация, за которую ты отвечаешь
+## 6. Documentation you are responsible for
 
-- Изменил код: строка в `docs/CHANGELOG.md` (область: db, srv, app, test, docs, pipeline, deps).
-- Закрыл пункт плана: отметь в `docs/features/<name>/PLAN.md`.
-- Узнал неочевидное о фреймворке или ошибся и понял почему: запись в `docs/LESSONS.md`.
-- Принял решение, которого нет в `PATTERNS.md`: не принимай. Остановись и предложи ADR.
-- `docs/registry/*` руками не правится, только `npm run docs:registry`.
+- Changed code: a line in `docs/CHANGELOG.md` (scope: db, srv, app, test, docs, pipeline, deps).
+- Closed a plan item: tick it in `docs/features/<name>/PLAN.md`.
+- Learned something non-obvious about the framework, or made a mistake and understood why: an entry in `docs/LESSONS.md`.
+- Made a decision that is not in `PATTERNS.md`: do not make it. Stop and propose an ADR.
+- `docs/registry/*` is not edited by hand, only `npm run docs:registry`.
 
-## 7. Форма отчёта
+## 7. Report form
 
 ```
-## Сделано
-кратко, что изменено и какие пункты PLAN.md закрыты
+## Done
+briefly, what changed and which PLAN.md items are closed
 
-## Файлы
-список путей с одной фразой на файл
+## Files
+list of paths with one phrase per file
 
-## Переиспользовано
-что нашёл в реестре и MCP и применил; или «ничего подходящего не найдено, потому что ...»
+## Reused
+what you found in the registry and MCP and applied; or "nothing suitable found, because ..."
 
-## Проверки
-команда → результат (последние строки вывода)
+## Checks
+command → result (last lines of the output)
 
-## Открытые вопросы
-что требует решения пользователя или architect
+## Open questions
+what requires a decision from the user or architect
 
-## Для LESSONS
-одна-две строки или «нет»
+## For LESSONS
+one or two lines or "none"
 ```
 
-## 8. Запрещено
+## 8. Forbidden
 
-- Править `mta.yaml`, `xs-security.json`, `ui5-deploy.yaml`, `package-lock.json`, `.claude/**`, `.mcp.json`, `scripts/hooks/**`, `docs/registry/**`, `docs/ai-pipeline-plan.md` без явного запроса пользователя.
-- Создавать `manifest.json` и структуру Fiori-приложения руками; `cds add sample`; `console.log`; строки для пользователя в коде; глобальные обращения `sap.ui.getCore()`, `jQuery.sap.*`.
-- Ставить или поднимать версии зависимостей и MCP; это делают `release-check` и пользователь.
-- Коммитить и пушить без указания пользователя или оркестратора `feature`.
-- Утверждать, что тесты проходят или линтер чист, без свежего запуска в этой сессии.
-- Молча выбирать между двумя способами. Неопределённость это вопрос пользователю или architect, а не догадка.
+- Editing `mta.yaml`, `xs-security.json`, `ui5-deploy.yaml`, `package-lock.json`, `.claude/**`, `.mcp.json`, `scripts/hooks/**`, `docs/registry/**`, `docs/ai-pipeline-plan.md` without an explicit user request.
+- Creating `manifest.json` and the Fiori application structure by hand; `cds add sample`; `console.log`; user-facing strings in code; global access `sap.ui.getCore()`, `jQuery.sap.*`.
+- Installing or bumping versions of dependencies and MCP; this is done by `upstream-check` and the user.
+- Committing and pushing without an instruction from the user or the `feature` orchestrator.
+- Claiming that tests pass or the linter is clean without a fresh run in this session.
+- Silently choosing between two ways. Uncertainty is a question to the user or architect, not a guess.

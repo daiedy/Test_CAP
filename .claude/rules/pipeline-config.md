@@ -4,18 +4,18 @@ paths:
   - ".mcp.json"
   - "scripts/hooks/**"
 ---
-# Конфигурация агентного конвейера (защищена)
+# Agentic pipeline configuration (protected)
 
-Файлы `.claude/settings.json`, `.claude/agents/`, `.claude/skills/`, `.claude/rules/`, `.mcp.json`, `scripts/hooks/` исполняются автоматически и равны по риску CI-скриптам (ADR-0009, инцидент Shai Hulud 2026-04-29).
+The files `.claude/settings.json`, `.claude/agents/`, `.claude/skills/`, `.claude/rules/`, `.mcp.json`, `scripts/hooks/` are executed automatically and carry the same risk as CI scripts (ADR-0009, the Shai Hulud incident of 2026-04-29).
 
-## Правила
-- Агенты не редактируют эти файлы в рамках фич. Изменения вносит человек или отдельная задача по явному запросу пользователя с ревью diff.
-- Версии в `.mcp.json` и в `npx`-командах закреплены точно; поднимаются только скиллом `release-check` после чтения changelog.
-- Хуки не читают и не отправляют наружу `~/.claude.json`, `.env`, service keys. Сетевые обращения только к доменам из `docs/framework/versions.json`.
-- Любой новый скрипт хука проходит `node --check` и запускается вручную с тестовым JSON на stdin до включения в `settings.json`.
-- `settings.local.json` личный и в `.gitignore`; общие настройки только в `settings.json`.
-- Внешние скиллы и плагины ставятся из официальных источников SAP и `claude-plugins-official`.
+## Rules
+- Agents do not edit these files as part of features. Changes are made by a human or by a separate task on an explicit request from the user, with a diff review.
+- Versions in `.mcp.json` and in `npx` commands are pinned exactly; they are raised only by the `upstream-check` skill after reading the changelog.
+- Hooks do not read or send out `~/.claude.json`, `.env`, service keys. Network calls only to the domains from `docs/upstream/versions.json`.
+- Every new hook script passes `node --check` and is run manually with a test JSON on stdin before it is enabled in `settings.json`.
+- `settings.local.json` is personal and in `.gitignore`; shared settings only in `settings.json`.
+- External skills and plugins are installed from official SAP sources and `claude-plugins-official`.
 
-## Запрещено
-- `@latest` в командах запуска MCP и инструментов.
-- Хук с `bypassPermissions` или отключением проверок.
+## Forbidden
+- `@latest` in the commands that start MCP servers and tools.
+- A hook with `bypassPermissions` or with checks disabled.

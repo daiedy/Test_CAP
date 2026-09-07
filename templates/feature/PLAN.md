@@ -1,27 +1,27 @@
-# <Имя фичи>: план
+# <Feature name>: plan
 
-Дата: YYYY-MM-DD. Статус: черновик | утверждён | выполнен. Режим ворот: полуавтономный | автономный | ручной.
+Date: YYYY-MM-DD. Status: draft | approved | done. Gate mode: semi-autonomous | autonomous | manual.
 
-## Критерии готовности
-- [ ] Поведение 1, проверяется тестом `test/<service>.test.js` «...»
-- [ ] Поведение 2, проверяется сценарием OPA5 «...»
-- [ ] Документация обновлена: реестр, STATE, CHANGELOG
+## Acceptance criteria
+- [ ] Behavior 1, verified by test `test/<service>.test.js` "..."
+- [ ] Behavior 2, verified by OPA5 scenario "..."
+- [ ] Documentation updated: registry, STATE, CHANGELOG
 
-## Шаги
+## Steps
 
-| # | Фаза | Агент | Файлы | Паттерн | Проверка |
+| # | Phase | Agent | Files | Pattern | Check |
 |---|---|---|---|---|---|
-| 1 | Бэкенд: модель | `cap-backend-dev` | `db/schema.cds`, `db/data/...csv` | Новая сущность | `cds compile`, `npm run lint` |
-| 2 | Бэкенд: сервис | `cap-backend-dev` | `srv/catalog-service.cds`, `srv/annotations/<Entity>.cds`, `_i18n/*` | Обязательное поле | `npm test` |
-| 3 | Бэкенд: логика | `cap-backend-dev` | `srv/catalog-service.js` | Действие над одной записью | `npm test` |
-| 4 | UI | `fiori-app-dev` | `app/products/annotations/<Entity>.cds`, `webapp/i18n/*` | Колонки таблицы | `ui5lint`, metadata snapshot |
-| 5 | Тесты UI | `test-ui` | `webapp/test/...` | Сценарий пользователя | `ui5-test-runner` |
-| 6 | Верификация | `ui-verifier` | `VERIFICATION.md` | | скриншоты, консоль без ошибок |
-| 7 | Ревью | `reviewer` | | | ноль блокирующих замечаний |
-| 8 | Документация | `docs-keeper` | `docs/registry`, `STATE.md`, `CHANGELOG.md`, `SUMMARY.md` | | `check-docs-fresh` |
+| 1 | Backend: model | `cap-backend-dev` | `db/schema.cds`, `db/data/...csv` | New entity | `cds compile`, `npm run lint` |
+| 2 | Backend: service | `cap-backend-dev` | `srv/catalog-service.cds`, `srv/annotations/<Entity>.cds`, `_i18n/*` | Mandatory field | `npm test` |
+| 3 | Backend: logic | `cap-backend-dev` | `srv/catalog-service.js` | Action on a single record | `npm test` |
+| 4 | UI | `fiori-app-dev` | `app/products/annotations/<Entity>.cds`, `webapp/i18n/*` | Table columns | `ui5lint`, metadata snapshot |
+| 5 | UI tests | `test-ui` | `webapp/test/...` | User scenario | `ui5-test-runner` |
+| 6 | Verification | `ui-verifier` | `VERIFICATION.md` | | screenshots, console without errors |
+| 7 | Review | `reviewer` | | | zero blocking findings |
+| 8 | Documentation | `docs-keeper` | `docs/registry`, `STATE.md`, `CHANGELOG.md`, `SUMMARY.md` | | `check-docs-fresh` |
 
-## Решения, требующие ADR
-Список или «нет».
+## Decisions that require an ADR
+List or "none".
 
-## Риски
-Что может пойти не так и как это обнаружится.
+## Risks
+What can go wrong and how it will be detected.

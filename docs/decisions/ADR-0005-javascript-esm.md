@@ -1,26 +1,26 @@
-# ADR-0005: JavaScript для UI5, ESM для бэкенда, TypeScript отложен
+# ADR-0005: JavaScript for UI5, ESM for the backend, TypeScript postponed
 
-Дата: 2026-09-07. Статус: принято, пересмотр при первом свободном UI5-приложении.
+Date: 2026-09-07. Status: accepted, to be revisited with the first freestyle UI5 application.
 
-## Контекст
-Существующее приложение `app/products` на JavaScript. SAP рекомендует TypeScript для новых UI5-приложений и даёт плагин конверсии. Бэкенд без кода; `cds init` в cds 10 создаёт ESM-проекты по умолчанию.
+## Context
+The existing `app/products` application is in JavaScript. SAP recommends TypeScript for new UI5 applications and provides a conversion plugin. The backend has no code; `cds init` in cds 10 creates ESM projects by default.
 
-## Решение
-- Бэкенд: ESM (`"type": "module"`), хендлеры как классы `extends cds.ApplicationService`, скрипты конвейера `.mjs`.
-- UI: JavaScript с `sap.ui.define`, как в существующем приложении. Один язык на весь `app/`, чтобы правила, шаблоны и линтер были едины.
-- TypeScript для UI пересматривается, когда появится первое свободное UI5-приложение (не Fiori Elements): тогда конверсия через плагин `ui5-typescript-conversion` и новый ADR.
+## Decision
+- Backend: ESM (`"type": "module"`), handlers as classes `extends cds.ApplicationService`, pipeline scripts `.mjs`.
+- UI: JavaScript with `sap.ui.define`, as in the existing application. One language for the whole `app/`, so that rules, templates and the linter are uniform.
+- TypeScript for the UI is revisited when the first freestyle UI5 application (not Fiori Elements) appears: then conversion via the `ui5-typescript-conversion` plugin and a new ADR.
 
-## Альтернативы
-| Вариант | Почему отклонён |
+## Alternatives
+| Option | Why rejected |
 |---|---|
-| TypeScript сразу | Fiori Elements приложение почти не содержит кода; конверсия существующего кода ради двух файлов не окупается |
-| CommonJS на бэкенде | cds 10 и cds-test ориентированы на ESM; `import.meta.dirname` удобнее `__dirname` |
+| TypeScript right away | A Fiori Elements application contains almost no code; converting the existing code for the sake of two files does not pay off |
+| CommonJS on the backend | cds 10 and cds-test target ESM; `import.meta.dirname` is more convenient than `__dirname` |
 
-## Последствия
-- `templates/handler.js`, `lib.js`, `service.test.js` в ESM.
-- `eslint.config.mjs` от `cds add lint` работает без изменений.
-- Шаблон `templates/handler.js` и правило `ui5-webapp.md` запрещают TypeScript до пересмотра.
+## Consequences
+- `templates/handler.js`, `lib.js`, `service.test.js` in ESM.
+- `eslint.config.mjs` from `cds add lint` works without changes.
+- The `templates/handler.js` template and the `ui5-webapp.md` rule forbid TypeScript until the revision.
 
-## Источники
+## Sources
 - https://cap.cloud.sap/docs/releases/2026/jun26
 - https://github.com/UI5/plugins-coding-agents (ui5-typescript-conversion)

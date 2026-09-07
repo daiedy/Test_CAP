@@ -1,22 +1,22 @@
-# <Имя фичи>: верификация
+# <Feature name>: verification
 
-Дата: YYYY-MM-DD. Агент: `ui-verifier` и `test-backend`.
+Date: YYYY-MM-DD. Agent: `ui-verifier` and `test-backend`.
 
-## Автотесты
+## Automated tests
 ```
-<вывод npm test>
+<npm test output>
 ```
 ```
-<вывод ui5lint / ui5-test-runner>
+<ui5lint / ui5-test-runner output>
 ```
 
-## Ручная проверка сценариев
-| Сценарий из PLAN | Шаги | Результат | Скриншот |
+## Manual scenario check
+| Scenario from PLAN | Steps | Result | Screenshot |
 |---|---|---|---|
-| ... | ... | пройден / не пройден | `screenshots/<name>.png` |
+| ... | ... | passed / failed | `screenshots/<name>.png` |
 
-## Консоль браузера
-Ошибок: N. Предупреждений: N. Список значимых сообщений.
+## Browser console
+Errors: N. Warnings: N. List of significant messages.
 
-## Вердикт
-Готово к ревью | требуется доработка (список).
+## Verdict
+Ready for review | rework required (list).

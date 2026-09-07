@@ -1,6 +1,6 @@
 # products-draft-edit: plan
 
-Date: 2026-09-07. Status: draft (awaiting user approval). Gate mode: semi-autonomous.
+Date: 2026-09-07. Status: approved (user, 2026-09-07, recommended options). Gate mode: semi-autonomous.
 
 Context and research: `CONTEXT.md` in this folder (including "Verified by experiment"); decision draft: `docs/decisions/ADR-0012-products-draft-editing.md` (proposed). Feature name `products-draft-edit`, branch `feature/products-draft-edit` (created by `/feature`, not by this spec). Phases and commits follow the `feature` skill; agents report per protocol section 8. The plan is written for the recommended answers in "Decisions for the user"; if the user picks another option the architect rewrites the affected rows before phase 2 starts.
 

@@ -1,6 +1,6 @@
 # ADR-0012: Editing Products in the Fiori app through drafts on `CatalogService.Products`
 
-Date: 2026-09-07. Status: proposed (feature `products-draft-edit`; decision by the user pending).
+Date: 2026-09-07. Status: accepted (user, 2026-09-07, feature products-draft-edit) (feature `products-draft-edit`; decision by the user pending).
 
 ## Context
 

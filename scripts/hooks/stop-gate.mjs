@@ -39,7 +39,7 @@ try {
   const input = readStdinJson();
   if (input.stop_hook_active === true) process.exit(0);
   if (process.env.PIPELINE_SKIP_GATE === '1') {
-    process.stdout.write('Stop gate пропущен (PIPELINE_SKIP_GATE=1).\n');
+    process.stdout.write('Stop gate skipped (PIPELINE_SKIP_GATE=1).\n');
     process.exit(0);
   }
 
@@ -68,13 +68,13 @@ try {
       const fix = run('node', [checker, '--fix'], { cwd: root, timeoutMs: 180_000 });
       if (fix.code !== 0) {
         block(
-          `Реестр документации устарел, и автоматическая регенерация не удалась:\n${truncate(fix.stderr || fix.stdout, 1200)}\nВыполни \`npm run docs:registry\` и устрани ошибку.`
+          `The documentation registry is stale and automatic regeneration failed:\n${truncate(fix.stderr || fix.stdout, 1200)}\nRun \`npm run docs:registry\` and fix the error.`
         );
       }
-      notes.push('Реестр docs/registry перегенерирован автоматически.');
+      notes.push('The docs/registry registry was regenerated automatically.');
     }
   } else {
-    notes.push('scripts/check-docs-fresh.mjs отсутствует: проверка свежести реестра пропущена.');
+    notes.push('scripts/check-docs-fresh.mjs is missing: registry freshness check skipped.');
   }
 
   // 2. STATE.md and CHANGELOG.md must be touched when code changed
@@ -88,8 +88,8 @@ try {
   const missing = ['docs/STATE.md', 'docs/CHANGELOG.md'].filter((f) => !touched.has(f));
   if (missing.length) {
     block(
-      `Код изменён (db/, srv/, app/, test/, _i18n/), но не обновлены: ${missing.join(', ')}.\n` +
-        'Обнови docs/STATE.md (текущее положение, открытый долг) и docs/CHANGELOG.md (что изменилось), затем заверши работу.'
+      `Code changed (db/, srv/, app/, test/, _i18n/), but not updated: ${missing.join(', ')}.\n` +
+        'Update docs/STATE.md (current position, open debt) and docs/CHANGELOG.md (what changed), then finish the work.'
     );
   }
 
@@ -100,16 +100,18 @@ try {
   if (hasTests) {
     const tests = run('npm', ['test', '--silent'], { cwd: root, timeoutMs: TEST_TIMEOUT });
     if (tests.timedOut)
-      block('npm test не завершился за 10 минут. Разберись с зависшими тестами и заверши снова.');
+      block(
+        'npm test did not finish within 10 minutes. Sort out the hanging tests and finish again.'
+      );
     if (tests.code !== 0) {
       block(
-        `npm test завершился с ошибкой (код ${tests.code}). Последние строки вывода:\n${lastLines(tests.stdout + '\n' + tests.stderr, 40)}\nИсправь тесты или код и заверши снова.`
+        `npm test failed (exit code ${tests.code}). Last lines of the output:\n${lastLines(tests.stdout + '\n' + tests.stderr, 40)}\nFix the tests or the code and finish again.`
       );
     }
-    notes.push('npm test: успешно.');
+    notes.push('npm test: passed.');
   } else {
     notes.push(
-      'Каталог test/ без тестов: запуск тестов пропущен. Добавь тесты для изменённого кода.'
+      'The test/ directory has no tests: test run skipped. Add tests for the changed code.'
     );
   }
 
@@ -118,9 +120,9 @@ try {
     stateFile,
     JSON.stringify({ hash, at: new Date().toISOString() }, null, 2) + '\n'
   );
-  process.stdout.write(`Stop gate пройден. ${notes.join(' ')}\n`);
+  process.stdout.write(`Stop gate passed. ${notes.join(' ')}\n`);
   process.exit(0);
 } catch (e) {
-  process.stderr.write(`stop-gate hook: внутренняя ошибка (${e.message}); ворота пропущены.\n`);
+  process.stderr.write(`stop-gate hook: internal error (${e.message}); gate skipped.\n`);
   process.exit(0);
 }

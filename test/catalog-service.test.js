@@ -6,6 +6,21 @@ const { GET, POST, PATCH, DELETE, expect, defaults } = cds.test(import.meta.dirn
 defaults.auth = { username: 'alice' };
 const base = '/odata/v4/catalog';
 
+// Valid payload for POST /Products; negative tests drop or replace one field at a time.
+const newProduct = {
+  name: 'Test Lamp',
+  price: '10.00',
+  currency_code: 'USD',
+  stock: 5,
+  category_code: 'FURNITURE',
+};
+// Copy of the valid payload without one field, for the @mandatory tests.
+const without = (field) => {
+  const payload = { ...newProduct };
+  delete payload[field];
+  return payload;
+};
+
 describe('CatalogService.Products', () => {
   it('lists the 15 seeded products', async () => {
     const { data } = await GET(`${base}/Products?$count=true&$top=1`);
@@ -22,8 +37,8 @@ describe('CatalogService.Products', () => {
     ]);
   });
 
-  it('filters by category', async () => {
-    const { data } = await GET(`${base}/Products?$filter=category eq 'Kitchen'&$select=name`);
+  it('filters products by category code', async () => {
+    const { data } = await GET(`${base}/Products?$filter=category_code eq 'KITCHEN'&$select=name`);
     expect(data.value.map((p) => p.name).sort()).to.deep.equal([
       'Coffee Maker',
       'Kitchen Knife Set',
@@ -31,24 +46,46 @@ describe('CatalogService.Products', () => {
     ]);
   });
 
+  it('expands the category of a product', async () => {
+    const { data } = await GET(
+      `${base}/Products?$filter=name eq 'Backpack'&$expand=category($select=code,name)`
+    );
+    expect(data.value).to.have.length(1);
+    expect(data.value).to.containSubset([
+      { name: 'Backpack', category: { code: 'ACCESSORIES', name: 'Accessories' } },
+    ]);
+  });
+
   it('creates a product with the mandatory fields and fills managed fields', async () => {
-    const { status, data } = await POST(`${base}/Products`, {
-      name: 'Test Lamp',
-      price: '10.00',
-      currency_code: 'USD',
-      stock: 5,
-      category: 'Furniture',
-    });
+    const { status, data } = await POST(`${base}/Products`, newProduct);
     expect(status).to.equal(201);
-    expect(data).to.containSubset({ name: 'Test Lamp', stock: 5, createdBy: 'alice' });
+    expect(data).to.containSubset({
+      name: 'Test Lamp',
+      stock: 5,
+      category_code: 'FURNITURE',
+      createdBy: 'alice',
+    });
     expect(data.ID).to.be.a('string');
     await DELETE(`${base}/Products(${data.ID})`);
   });
 
   it('rejects a product without a name (@mandatory)', async () => {
-    await expect(
-      POST(`${base}/Products`, { price: '1.00', currency_code: 'USD', stock: 1, category: 'Other' })
+    const err = await expect(POST(`${base}/Products`, without('name'))).to.be.rejectedWith(/400/);
+    expect(err).to.containSubset({ code: 'ASSERT_MANDATORY', target: 'name' });
+  });
+
+  it('rejects a product without a category (@mandatory)', async () => {
+    const err = await expect(POST(`${base}/Products`, without('category_code'))).to.be.rejectedWith(
+      /400/
+    );
+    expect(err).to.containSubset({ code: 'ASSERT_MANDATORY', target: 'category_code' });
+  });
+
+  it('rejects an unknown category code (@assert.target)', async () => {
+    const err = await expect(
+      POST(`${base}/Products`, { ...newProduct, category_code: 'UNKNOWN' })
     ).to.be.rejectedWith(/400/);
+    expect(err).to.containSubset({ code: 'ASSERT_TARGET', target: 'category_code' });
   });
 
   it('rejects negative stock (@assert.range)', async () => {
@@ -61,5 +98,40 @@ describe('CatalogService.Products', () => {
   it('exposes Currencies as a code list for the value help', async () => {
     const { data } = await GET(`${base}/Currencies?$filter=code eq 'USD'&$select=code,name`);
     expect(data.value).to.containSubset([{ code: 'USD' }]);
+  });
+});
+
+describe('CatalogService.Categories', () => {
+  it('lists the 6 seeded categories', async () => {
+    const { data } = await GET(`${base}/Categories?$select=code&$orderby=code`);
+    expect(data.value.map((c) => c.code)).to.deep.equal([
+      'ACCESSORIES',
+      'ELECTRONICS',
+      'FURNITURE',
+      'KITCHEN',
+      'SPORTS',
+      'STATIONERY',
+    ]);
+  });
+
+  it('returns localized category names with English fallback', async () => {
+    const url = `${base}/Categories?$filter=code eq 'KITCHEN'&$select=code,name`;
+    const inLocale = (locale) => GET(url, { headers: { 'Accept-Language': locale } });
+
+    const ru = await inLocale('ru');
+    expect(ru.data.value).to.containSubset([{ code: 'KITCHEN', name: 'Кухня' }]);
+
+    const en = await inLocale('en');
+    expect(en.data.value).to.containSubset([{ code: 'KITCHEN', name: 'Kitchen' }]);
+
+    // No German texts in Categories.texts.csv: the default (English) name is served.
+    const de = await inLocale('de');
+    expect(de.data.value).to.containSubset([{ code: 'KITCHEN', name: 'Kitchen' }]);
+  });
+
+  it('does not allow creating categories (@readonly)', async () => {
+    await expect(POST(`${base}/Categories`, { code: 'OTHER', name: 'Other' })).to.be.rejectedWith(
+      /405/
+    );
   });
 });

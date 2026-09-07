@@ -1,0 +1,2 @@
+- [Project run setup](project-run-setup.md) — how to start the CAP server and reach the List Report/ru locale for Test_CAP UI verification
+- [FE V4 dropdown value help verification](fe-v4-dropdown-valuehelp-verification.md) — Chrome DevTools MCP steps to drive fixed-value dropdowns via keyboard and read the real OData $filter from $batch bodies

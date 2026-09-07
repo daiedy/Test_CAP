@@ -146,7 +146,7 @@ export function sha256(text) {
 export function truncate(text, max = 1500) {
   if (!text) return '';
   return text.length > max
-    ? text.slice(0, max) + `\n… (обрезано, всего ${text.length} символов)`
+    ? text.slice(0, max) + `\n... (truncated, ${text.length} characters total)`
     : text;
 }
 

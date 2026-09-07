@@ -4,16 +4,16 @@ paths:
   - "xs-security.json"
   - "app/**/ui5-deploy.yaml"
 ---
-# Файлы деплоя (защищены)
+# Deployment files (protected)
 
-`mta.yaml`, `xs-security.json`, `ui5-deploy.yaml` являются черновиками под Cloud Foundry и не готовы к использованию (нет `@cap-js/hana`, `@sap/xssec`, профиля `[production]`).
+`mta.yaml`, `xs-security.json`, `ui5-deploy.yaml` are drafts for Cloud Foundry and are not ready for use (no `@cap-js/hana`, `@sap/xssec`, `[production]` profile).
 
-## Правила
-- Правки только по явному запросу пользователя в текущей сессии. Задача «сделать фичу» никогда не включает эти файлы.
-- Любая работа по деплою начинается с ADR в `docs/decisions/` (целевая платформа, БД, аутентификация) и отдельной ветки.
-- Перед правкой: `mcp__cds-mcp__search_docs` по `cds add hana`, `cds add xsuaa`, `cds add mta`, `cds build --production`. Предпочитать `cds add <feature>` ручному редактированию.
-- После правки: `cds build --production` без ошибок, `mbt build` при наличии.
+## Rules
+- Edits only on an explicit request from the user in the current session. The task "make a feature" never includes these files.
+- Any deployment work starts with an ADR in `docs/decisions/` (target platform, database, authentication) and a separate branch.
+- Before editing: `mcp__cds-mcp__search_docs` for `cds add hana`, `cds add xsuaa`, `cds add mta`, `cds build --production`. Prefer `cds add <feature>` to manual editing.
+- After editing: `cds build --production` without errors, `mbt build` if available.
 
-## Запрещено
-- Хранить учётные данные, service keys, URL тенантов в этих файлах.
-- Менять `xs-security.json` без описания ролей в `docs/architecture/ARCHITECTURE.md`.
+## Forbidden
+- Storing credentials, service keys, tenant URLs in these files.
+- Changing `xs-security.json` without describing the roles in `docs/architecture/ARCHITECTURE.md`.

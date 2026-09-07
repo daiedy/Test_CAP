@@ -1,9 +1,9 @@
 ---
 name: review
-description: Ревью текущих изменений против конвенций, паттернов и реестров силами агента reviewer. Используй при словах «проверь код», «ревью», «что не так с изменениями», перед коммитом.
+description: Review of the current changes against conventions, patterns and registries by the reviewer agent. Use when the user says "check the code", "review", "what is wrong with the changes" (Russian: «проверь код», «ревью», «что не так с изменениями»), before a commit.
 disable-model-invocation: true
 ---
 
-Делегируй `reviewer` через Agent: ревью текущего diff (`git diff`, новые файлы) против `docs/architecture/CONVENTIONS.md`, `PATTERNS.md`, `docs/registry/*` и, если есть, `docs/features/<name>/PLAN.md`. Передай имя фичи, если известно.
+Delegate to `reviewer` via Agent: a review of the current diff (`git diff`, new files) against `docs/architecture/CONVENTIONS.md`, `PATTERNS.md`, `docs/registry/*` and, if present, `docs/features/<name>/PLAN.md`. Pass the feature name if known.
 
-Покажи пользователю результат ревью без изменений. Если есть блокирующие замечания, предложи, какому агенту их передать, и жди решения.
+Show the user the review result without changes. If there are blocking findings, propose which agent to hand them to, and wait for the decision.

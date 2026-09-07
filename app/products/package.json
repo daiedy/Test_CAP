@@ -11,6 +11,7 @@
   "scripts": {
     "start": "fiori run --open \"test/flpSandbox.html?sap-ui-xx-viewCache=false#products-display\"",
     "start-mock": "fiori run --config ./ui5-mock.yaml --open \"test/flpSandbox.html?sap-ui-xx-viewCache=false#products-display\"",
+    "test:ui": "ui5-test-runner --url http://localhost:4004/products/webapp/test/testsuite.qunit.html --parallel 1 --page-timeout 900000",
     "build": "ui5 build --config=ui5.yaml --clean-dest --dest dist",
     "build:cf": "ui5 build preload --clean-dest --config ui5-deploy.yaml --include-task=generateCachebusterInfo",
     "lint": "ui5lint",
@@ -19,9 +20,11 @@
   "devDependencies": {
     "@sap-ux/eslint-plugin-fiori-tools": "^10",
     "@sap-ux/ui5-middleware-fe-mockserver": "^2",
+    "@sap-ux/ui5-test-writer": "^1.9.6",
     "@sap/ux-ui5-tooling": "^1.32.0",
     "@ui5/cli": "^4",
-    "@ui5/linter": "^1"
+    "@ui5/linter": "^1",
+    "ui5-test-runner": "^5.14.0"
   },
   "ui5": {
     "dependencies": [

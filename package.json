@@ -27,7 +27,7 @@
   },
   "scripts": {
     "start": "cds-serve",
-    "watch": "cds-serve --watch",
+    "watch": "cds watch",
     "build": "cds build --production",
     "deploy": "cds deploy",
     "test": "vitest run --silent",

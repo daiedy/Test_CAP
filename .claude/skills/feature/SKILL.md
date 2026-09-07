@@ -1,54 +1,54 @@
 ---
 name: feature
-description: Оркестратор фичи от исследования до документации с воротами между фазами. Используй при запросах «сделай фичу», «добавь сущность/экран/действие», «реализуй ...». Делегирует субагентам architect, ux-designer, cap-backend-dev, fiori-app-dev или ui5-freestyle-dev, test-backend, test-ui, ui-verifier, reviewer, docs-keeper.
-argument-hint: <описание фичи>
+description: Feature orchestrator from research to documentation with gates between phases. Use on requests "make a feature", "add an entity/screen/action", "implement ..." (Russian: «сделай фичу», «добавь сущность/экран/действие», «реализуй ...»). Delegates to the subagents architect, ux-designer, cap-backend-dev, fiori-app-dev or ui5-freestyle-dev, test-backend, test-ui, ui-verifier, reviewer, docs-keeper.
+argument-hint: <feature description>
 disable-model-invocation: true
 ---
 
-# Фича: $ARGUMENTS
+# Feature: $ARGUMENTS
 
-Ты оркестратор. Сам код не пишешь, делегируешь субагентам через инструмент Agent, передавая каждому имя фичи и путь к `docs/features/<name>/`. Между фазами ворота. Режим ворот выбери один раз в начале и не переспрашивай.
+You are the orchestrator. You do not write code yourself, you delegate to subagents through the Agent tool, passing each one the feature name and the path to `docs/features/<name>/`. There are gates between phases. Choose the gate mode once at the start and do not ask again.
 
-## Фаза 0. Подготовка
+## Phase 0. Preparation
 
-1. Придумай kebab-name фичи из описания, подтверди его пользователю вместе с режимом ворот:
-   - **полуавтономный** (по умолчанию): после каждой фазы показать результат и ждать «дальше»;
-   - **автономный**: останавливаться только на утверждении плана и при красных проверках;
-   - **ручной**: после каждой фазы ждать, проверки не запускать автоматически.
-2. Проверь чистоту дерева: `git status --porcelain`. Если есть чужие изменения, спроси, продолжать ли.
-3. Создай ветку `feature/<name>` и каталог `docs/features/<name>/`.
+1. Come up with a kebab-name for the feature from the description, confirm it with the user together with the gate mode:
+   - **semi-autonomous** (default): after each phase show the result and wait for "next";
+   - **autonomous**: stop only at plan approval and on red checks;
+   - **manual**: wait after each phase, do not run checks automatically.
+2. Check that the tree is clean: `git status --porcelain`. If there are foreign changes, ask whether to continue.
+3. Create the branch `feature/<name>` and the directory `docs/features/<name>/`.
 
-## Фаза 1. Исследование и план
+## Phase 1. Research and plan
 
-Делегируй `architect`: написать CONTEXT.md и PLAN.md. Если у фичи есть UI, после architect делегируй `ux-designer` для раздела «Экраны». Ворота: покажи пользователю план и открытые вопросы; без явного «утверждаю» дальше не идти (во всех режимах).
+Delegate to `architect`: write CONTEXT.md and PLAN.md. If the feature has a UI, after architect delegate to `ux-designer` for the "Screens" section. Gate: show the user the plan and the open questions; do not proceed without an explicit "approved" (in all modes).
 
-## Фаза 2. Бэкенд
+## Phase 2. Backend
 
-Делегируй `cap-backend-dev` с указанием шагов плана, относящихся к db/srv/_i18n. Затем `test-backend` для критериев готовности бэкенда. Ворота: `npm run lint` и `npm test` зелёные, в отчётах приложен вывод. Коммит `feat(srv): <name> backend`.
+Delegate to `cap-backend-dev` with the plan steps that relate to db/srv/_i18n. Then `test-backend` for the backend acceptance criteria. Gate: `npm run lint` and `npm test` are green, the output is attached in the reports. Commit `feat(srv): <name> backend`.
 
-## Фаза 3. UI
+## Phase 3. UI
 
-Если в плане есть UI: делегируй `fiori-app-dev` (или `ui5-freestyle-dev`, если план выбрал freestyle), затем `test-ui`. Ворота: `npm run lint` в `app/products` без ошибок, `npm test` зелёный (снапшот metadata обновлён осознанно). Коммит `feat(app): <name> ui`.
+If the plan has a UI: delegate to `fiori-app-dev` (or `ui5-freestyle-dev` if the plan chose freestyle), then `test-ui`. Gate: `npm run lint` in `app/products` without errors, `npm test` green (the metadata snapshot updated deliberately). Commit `feat(app): <name> ui`.
 
-## Фаза 4. Верификация
+## Phase 4. Verification
 
-Делегируй `ui-verifier`. Ворота: `VERIFICATION.md` с вердиктом «готово к ревью». При дефектах вернись к фазе 2 или 3 с точным списком дефектов (не более двух кругов, затем спроси пользователя).
+Delegate to `ui-verifier`. Gate: `VERIFICATION.md` with the verdict "ready for review". On defects go back to phase 2 or 3 with an exact list of defects (no more than two rounds, then ask the user).
 
-## Фаза 5. Ревью
+## Phase 5. Review
 
-Делегируй `reviewer`. Ворота: ноль блокирующих замечаний. Замечания отправляй соответствующему разработчику, затем повторное ревью только по исправленным пунктам.
+Delegate to `reviewer`. Gate: zero blocking findings. Send the findings to the corresponding developer, then a repeated review only of the fixed items.
 
-## Фаза 6. Документация
+## Phase 6. Documentation
 
-Делегируй `docs-keeper`: реестр, CHANGELOG, STATE, SUMMARY, LESSONS, при новом паттерне строка в PATTERNS. Ворота: `node scripts/check-docs-fresh.mjs` зелёный. Коммит `docs: <name> summary and registry`.
+Delegate to `docs-keeper`: registry, CHANGELOG, STATE, SUMMARY, LESSONS, and a line in PATTERNS for a new pattern. Gate: `node scripts/check-docs-fresh.mjs` green. Commit `docs: <name> summary and registry`.
 
-## Фаза 7. Завершение
+## Phase 7. Completion
 
-Покажи пользователю: список коммитов, что закрыто из критериев готовности, что осталось в открытом долге. Push и pull request только по указанию пользователя.
+Show the user: the list of commits, what is closed from the acceptance criteria, what remains in the open debt. Push and pull request only on the user's instruction.
 
-## Правила оркестратора
+## Orchestrator rules
 
-- Каждому агенту передавай: имя фичи, путь к каталогу фичи, номера шагов плана, режим ворот, и требование отчёта по форме протокола.
-- Никогда не пропускай фазу ревью и документации, даже в автономном режиме.
-- Если агент вернул «нужен ADR» или «нет паттерна», останови конвейер и передай вопрос пользователю.
-- Коммиты только по файлам фазы (`git add <файлы>`), сообщение в стиле conventional commits, без `git add -A`.
+- Pass to every agent: the feature name, the path to the feature directory, the plan step numbers, the gate mode, and the requirement of a report in the protocol format.
+- Never skip the review and documentation phases, even in autonomous mode.
+- If an agent returned "ADR needed" or "no pattern", stop the pipeline and hand the question to the user.
+- Commits only for the files of the phase (`git add <files>`), message in conventional commits style, no `git add -A`.

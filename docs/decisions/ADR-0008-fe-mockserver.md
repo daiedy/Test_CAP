@@ -1,26 +1,26 @@
-# ADR-0008: Мок-сервер @sap-ux/ui5-middleware-fe-mockserver вместо sap.ui.core.util.MockServer
+# ADR-0008: Mock server @sap-ux/ui5-middleware-fe-mockserver instead of sap.ui.core.util.MockServer
 
-Дата: 2026-09-07. Статус: принято.
+Date: 2026-09-07. Status: accepted.
 
-## Контекст
-Режим без бэкенда был реализован на `sap.ui.core.util.MockServer`, который не поддерживает OData V4, и не работал. В `ui5.yaml` был объявлен middleware `sap-fe-mockserver` без установленного пакета и с неверным путём к данным, из-за чего `npm start` падал и перехватывал `/odata`.
+## Context
+The mode without a backend was implemented on `sap.ui.core.util.MockServer`, which does not support OData V4, and did not work. `ui5.yaml` declared the `sap-fe-mockserver` middleware without the package installed and with a wrong path to the data, because of which `npm start` crashed and intercepted `/odata`.
 
-## Решение
-- Пакет `@sap-ux/ui5-middleware-fe-mockserver` ^2 в devDependencies и `ui5.dependencies`.
-- Отдельный `app/products/ui5-mock.yaml` с мок-сервером (`generateMockData: true`, данные из `webapp/localService/mockdata/<EntitySet>.json` как массивы). `ui5.yaml` содержит только прокси на `:4004`.
-- Скрипты: `npm start` (прокси), `npm run start-mock` (мок). Файлы `mockserver.js`, `initMockServer.js`, `mockServer.html`, `ui5-local.yaml` удалены.
-- Снимок `metadata.xml` регенерируется командой `cds compile srv --to edmx-v4`.
+## Decision
+- The `@sap-ux/ui5-middleware-fe-mockserver` ^2 package in devDependencies and `ui5.dependencies`.
+- A separate `app/products/ui5-mock.yaml` with the mock server (`generateMockData: true`, data from `webapp/localService/mockdata/<EntitySet>.json` as arrays). `ui5.yaml` contains only the proxy to `:4004`.
+- Scripts: `npm start` (proxy), `npm run start-mock` (mock). The files `mockserver.js`, `initMockServer.js`, `mockServer.html`, `ui5-local.yaml` are removed.
+- The `metadata.xml` snapshot is regenerated with the `cds compile '*' --to edmx-v4 -s CatalogService -l en` command.
 
-## Альтернативы
-| Вариант | Почему отклонён |
+## Alternatives
+| Option | Why rejected |
 |---|---|
-| Дописать Sinon fake server | Собственная реализация OData V4 ($filter, $expand, $count) не окупается |
-| Только реальный бэкенд | `cds watch` быстрый, но мок нужен для OPA5-журнеев и офлайна |
+| Finish the Sinon fake server | A custom OData V4 implementation ($filter, $expand, $count) does not pay off |
+| Real backend only | `cds watch` is fast, but the mock is needed for OPA5 journeys and offline work |
 
-## Последствия
-- Мок-данные поддерживаются вручную; правило `data.md` требует обновлять их вместе с CSV, если они должны совпадать.
-- Проверено 2026-09-07: `$metadata`, `Products`, автогенерация `Currencies`, FLP-страница в мок-режиме отвечают 200.
+## Consequences
+- Mock data is maintained by hand; the `data.md` rule requires updating it together with the CSV if they must match.
+- Verified 2026-09-07: `$metadata`, `Products`, auto-generated `Currencies`, the FLP page in mock mode respond with 200.
 
-## Источники
+## Sources
 - https://github.com/SAP/open-ux-odata/tree/main/packages/ui5-middleware-fe-mockserver
 - https://github.com/SAP/open-ux-odata/blob/main/docs/DefiningMockdata.md

@@ -2,6 +2,75 @@
 
 Записи добавляют все агенты через скилл `retro` и человек. Формат: дата, что случилось, почему, как избежать, источник. Новые записи сверху. Список типовых ошибок агентов в CAP и Fiori из публикаций: `docs/ai-pipeline-plan.md`, раздел 3.4.
 
+## 2026-09-07. Ретро первого прогона `/feature` (categories-code-list)
+
+Факты: 7 коммитов, 8 агентов, 3 ворот пройдены, ревью без блокирующих, 15 тестов бэкенда и 11 OPA5 зелёные. Сбои и их причины:
+
+1. **Три агента из восьми упёрлись в `maxTurns`** (`test-ui` 40, `ui-verifier` 40, `docs-keeper` 30 дважды) и потребовали ручного продолжения. Причина: инструменты. Лимиты выставлены до первого реального прогона; задачи с запуском серверов, браузером и многофайловой документацией требуют 60–80 ходов. Как избежать: поднять `maxTurns` для `test-ui`, `ui-verifier`, `docs-keeper` до 80, для `reviewer` до 50; в промптах оркестратора давать агентам список «одна проверка, один вызов».
+2. **Команда снимка metadata.xml была неверной с этапа 1** (`cds compile srv` без `app/`). Причина: знания. Ошибку не заметили ни линтеры, ни тесты, потому что снимок никто не читал автоматически. Обнаружил `test-backend`, сверяя снапшот с критерием плана. Как избежать: проверяемые критерии в PLAN с grep по EDMX (сработало); тест «metadata.xml равен `cds compile '*'`» в `test/`.
+3. **`npm run watch` был сломан с момента перехода на cds 10**, но никто не запускал его: все агенты и хуки использовали `cds serve` или `cds.test`. Причина: инструменты и правила. Как избежать: smoke-шаг в `test-all` («`npm run watch` поднимается за 10 с»); `ui-verifier` запускает приложение штатной командой из README, а не своей.
+4. **`npm start` на :8080 не поднимает приложение через FLP-песочницу**, хотя на этапе 0 проверка `curl` на `$count` через прокси прошла. Причина: инструменты. Проверялся OData, а не загрузка компонента по `/products/webapp`. Как избежать: проверка запуска UI это загрузка страницы приложения в браузере, а не HTTP 200 на HTML; закрыть вместе с `modernize-flp-sandbox`.
+5. **Ручной ValueList в `templates/annotations-ui.cds` и строка PATTERNS противоречили автогенерации из CodeList.** Причина: правила. Шаблон писался по общей документации, а не по образцу из кода (`Currencies`). Как избежать: шаблоны и паттерны выводить из существующего работающего примера, ADR-0011 это закрепил.
+6. **Фаза дизайна изменила план** (обязательный `Common.Text` на ключе собственного CodeList). Причина: знания, закрыто конвейером штатно: `ux-designer` нашёл, `architect` внёс в план до кода. Это подтверждение ценности фазы, не сбой.
+7. **Stop-хук срабатывал трижды** на неактуальный STATE. Причина: правила. Оркестратор обновляет STATE только в конце, а хук требует после каждого изменения кода. Как избежать: оркестратор `feature` обновляет строку «Активная фича» в STATE после каждой фазы (добавить в скилл `feature`).
+8. **Object Page без draft не имеет режима редактирования.** Причина: задача. План отметил как риск, а не как решение до начала. Как избежать: `architect` при UI с редактированием проверяет `@odata.draft.enabled` до плана и выносит в «Решения пользователя».
+
+Что сработало: спецификация до кода, критерии готовности с именами тестов, ворота с реальными блокировками, ревью нашло 7 документационных расхождений, `search_model` перед правками, форма отчёта агентов.
+
+## 2026-09-07. `$filter` при мультивыборе в фильтре FE V4 виден только внутри `$batch`
+
+Что: при выборе нескольких значений в выпадающем фильтре (MultiComboBox) FE V4 отправляет запрос через `POST .../$batch`; отдельного GET с `$filter` в сети нет, итоговое выражение (`category_code eq 'KITCHEN' or category_code eq 'SPORTS'`) видно только в multipart-теле batch-запроса. Замечено `ui-verifier` при проверке фильтра категорий в фиче `categories-code-list`.
+Как избежать: проверять сеть через `list_network_requests` (фильтр `resourceTypes: ["xhr","fetch"]`) и `get_network_request` на найденный `$batch`, а не искать отдельный GET с `$filter` в URL.
+
+## 2026-09-07. Фаза дизайна дала реальные правки плана: `Common.Text` на ключе собственного CodeList обязателен
+
+Что: при подготовке экранов `ux-designer` через `mcp__cds-mcp__search_model` по `CatalogService.Currencies` обнаружил, что `@Common.Text: name` у `sap.common.Currencies.code` задан в самом определении `@sap/cds/common`, а не наследуется от аспекта `CodeList`; у новой `Categories : CodeList { key code }` такой аннотации не будет, и без неё выпадающий список и колонки диалога value help покажут код (`ELECTRONICS`), а не название. `PLAN.md` дополнен обязательным шагом: `app/products/annotations/Categories.cds` с `Common.Text: name` + `Common.TextArrangement: #TextOnly` на `code`.
+Как избежать: для любого нового собственного `CodeList` явно проверять и добавлять `Common.Text` на его ключ в `app/<app>/annotations/<CodeList>.cds`, не полагаться на то, что аспект `CodeList` даёт эту аннотацию сам. Закреплено в ADR-0011, часть 1.
+
+## 2026-09-07. Выпадающий список `ValueListWithFixedValues` в FE V4 это typeahead-таблица, а не `sap.m.List`
+
+Что: в OPA-журнее проверка элементов выпадающего списка категорий (`sap.m.List` + `sap.m.DisplayListItem`, как в `sap.fe.test.api.FilterBarActions#iSelectDropDownOption`) 60 секунд не находила контролы, хотя список на скриншоте открыт. Дамп через `sap/ui/test/OpaPlugin` в кадре приложения показал: SAP Fiori elements для OData V4 (1.152) рендерит фиксированный список как typeahead `sap.m.Table` с id `...::FilterFieldValueHelp::category_code::Popover::qualifier::::SuggestTable` (родители `sap.ui.mdc.valuehelp.content.MTable` → `sap.ui.mdc.valuehelp.Popover`), строки `sap.m.ColumnListItem` в режиме `MultiSelect` (чекбокс с суффиксом `-selectMulti`), ячейка `sap.fe.macros.Field` → `FieldWrapper` → `sap.m.Text`, причём один и тот же текст рендерится двумя `sap.m.Text` (pop-in), а кода в строке нет. Заметил `test-ui` в фиче `categories-code-list`.
+Как избежать: для проверок списка искать `sap.m.Table` по regex id `category_code::Popover::.*SuggestTable$` с `isDialogElement(true)`, брать `ColumnListItem`, сравнивать множество уникальных видимых текстов строки с названием; выбор в фильтре нажатием `Press({ idSuffix: 'selectMulti' })` на строке. Стандартный `iSelectDropDownOption` для этой конструкции не подходит. Page object: `app/products/webapp/test/integration/pages/CategoryDropdown.js`.
+
+## 2026-09-07. `fiori run` (:8080) не поднимает приложение через FLP-интент, OPA гоняется против `cds watch` (:4004)
+
+Что: `flpSandbox.html` и `index.html` резолвят компонент по `url: "/products/webapp"` и грузят UI5 абсолютными ссылками на `https://ui5.sap.com`. `fiori run` (`npm start`, `ui5.yaml`) отдаёт webapp в корне (`/Component.js` 200, `/products/webapp/Component.js` 404), поэтому в headless Chrome на `http://localhost:8080/test/flpSandbox.html#products-display` List Report не появляется за 3 минуты; на `http://localhost:4004/products/webapp/test/flpSandbox.html#products-display` (`cds watch` отдаёт `app/` статикой) таблица появляется. Кроме того, прокси `fiori-tools-proxy` закрепляет `/resources` на `minUI5Version` 1.136.0, а html-страницы приложения берут CDN «latest» (1.152.0): тестовый кадр с `../resources/` и кадр приложения работали бы на разных версиях `sap.fe`.
+Как избежать: тестовые страницы Test Starter бутстрапятся с того же CDN, что и приложение (`https://ui5.sap.com/resources/sap/ui/test/starter/createSuite.js` и `runTest.js`; `prefer-test-starter` принимает абсолютный путь, оканчивающийся на `/resources/sap/ui/test/starter/...`), а `npm run test:ui` целится в `:4004/products/webapp/test/testsuite.qunit.html` при `npm run watch`. Флаг `--page-timeout 900000` в скрипте ограничивает страницу 15 минутами (по умолчанию 0, то есть без лимита), чтобы зависший OPA-прогон не держал раннер бесконечно; `--parallel 1`, потому что страница одна и живой бэкенд общий. Дефект самого `npm start` (URL `/products/webapp` в sandbox-конфиге и абсолютный CDN вместо `resources/`) закрывается вместе с долгом `modernize-flp-sandbox`, решает `fiori-app-dev`/пользователь.
+
+## 2026-09-07. Каркас `@sap-ux/ui5-test-writer` 1.9.6 нужно доводить до Test Starter, journeys генератора непригодны
+
+Что: `generateOPAFiles(projectPath, { htmlTarget: 'test/flpSandbox.html' })` создаёт page objects `pages/<Target>.gen.js` (годятся как есть: `appId`, `componentId`, `contextPath` из manifest) и `pages/JourneyRunner.js`, но `testsuite.qunit.html/js` в legacy-формате `parent.jsUnitTestSuite`, `integration/opaTests.qunit.html` с собственным bootstrap (`sap_fiori_3`) и `QUnit.start()` в `opaTests.qunit.js`, что ловит `ui5lint` `prefer-test-starter`. Журнеи `*Journey.gen.js` вызывают `Given.iStartMyApp()` без интента (в FLP sandbox это домашняя страница шелла, не List Report); с `scriptName` журней ссылается на `onTheProductsList`, а раннер регистрирует `onTheProductsListGenerated`. При чтении аннотаций генератор печатает «UI.LineItem annotation has not been defined» (аннотации в `metadata.xml`, локальных файлов в manifest нет), поэтому проверок колонок в журнеях нет.
+Как избежать: брать у генератора только `pages/*.gen.js`; `testsuite.qunit.*`, `Test.qunit.html`, `opaTests.qunit.js` писать по Test Starter (журнеи экспортируют функции, `runner.run([...])` один раз); интент передавать в `iStartMyApp('products-display', { 'sap-ui-language': 'ru' })`.
+
+## 2026-09-07. Teardown OPA-журнея должен быть отдельным последним `opaTest`
+
+Что: `Given.iTearDownMyApp()` в конце последнего содержательного теста не выполняется, если тест упал раньше (OPA останавливает очередь), и следующий журней падает с «sap.ui.test.launchers.iFrameLauncher: Launch was called twice without teardown», превращая одну ошибку в каскад. У `sap.fe.test.BaseArrangements#iTearDownMyApp` есть `.description('Tearing down my app')`, то есть свой assertion, поэтому отдельный `opaTest('Teardown', function (Given) { Given.iTearDownMyApp(); })` (шаблон Fiori tools) не даёт «Expected at least one assertion».
+Как избежать: в каждом журнее последний тест только teardown; данные, изменённые журнеем, восстанавливать до него.
+
+## 2026-09-07. `npm run watch` (`cds-serve --watch`) падает, `npx cds watch` работает
+
+Что: `cds-serve --watch` из `@sap/cds` 10.0.6 упал с `TypeError: this.load is not a function` (`bin/serve.js:333`), хотя `@sap/cds-dk` стоит локально; `npx cds watch` (cds-dk 10.0.7) поднимает сервер. Замечено `test-ui` при запуске живого стека для OPA.
+Исправлено в коммите `ce05c8a`: `npm run watch` теперь `cds watch`; `npm start` остаётся `cds-serve` по документации CAP (работает без cds-dk).
+
+## 2026-09-07. Ссылка на ассоциацию в `UI.DataField.Value` не переписывается на внешний ключ
+
+Что: в `app/products/annotations/Products.cds` после перевода `category` на `Association to Categories` записи `{ $Type: 'UI.DataField', Value: category }` и `UI.SelectionFields: [ category ]` компилировались без предупреждений, но в EDMX давали `Path="category"` и `<PropertyPath>category</PropertyPath>`, то есть путь на NavigationProperty, а не на свойство; Fiori Elements ожидает в DataField путь на свойство. Аннотации самого элемента (`@title`, `@Common.Text`, `@Common.ValueListWithFixedValues`) компилятор с ассоциации на `category_code` копирует, а пути внутри `@UI.*` не трогает. Замечено агентом `fiori-app-dev` на базовой компиляции перед шагом 9 фичи `categories-code-list`.
+Как избежать: в `@UI.LineItem`, `SelectionFields`, `HeaderInfo`, `FieldGroup` ссылаться на внешний ключ `<assoc>_<key>` (как в `templates/annotations-ui.cds`), а `@Common.Text`, `TextArrangement`, `ValueListWithFixedValues` ставить на ассоциацию. Проверка: `cds compile '*' --to edmx-v4 -s CatalogService | grep -n 'Path="category'` не должен показывать голый `Path="category"` вне `NavigationPropertyBinding`.
+
+## 2026-09-07. Явный `@Common.ValueList` на ассоциации подавляет ValueList, сгенерированный из CodeList
+
+Что: после перевода `Products.category` на `Association to Categories : CodeList` снапшот `$metadata` (`cds.load('*')`, то есть с `app/`) показал на `category_code` старый `Common.ValueList` с `CollectionPath="Products"` из `app/products/annotations/Products.cds`, а сгенерированного `CollectionPath="Categories"` не было. `cds compile srv --to edmx-v4` (без `app/`) показывает сгенерированный. Компилятор не генерирует ValueList из `@cds.odata.valuelist`, если на элементе уже есть явный `@Common.ValueList`, и явная аннотация с ассоциации копируется на внешний ключ.
+Как избежать: при переводе поля на CodeList удалять старый `@Common.ValueList` в `app/` в том же изменении; проверять `cds compile '*' --to edmx-v4 | grep -A 6 'Products/category_code'`, а не `cds compile srv`. Второй позиционный аргумент CLI (`cds compile srv app`) игнорируется, слои объединяет только `'*'`.
+
+## 2026-09-07. Ошибка `cds.test` (fetch) несёт `code` и `target` OData-ошибки
+
+Что: `@cap-js/cds-test` 1.0.2 бросает `Object.assign(new Error, { response, status }, response.data.error)`: сообщение вида `400 - Provide the missing value.`, поля `code` (`ASSERT_MANDATORY`, `ASSERT_TARGET`, `ENTITY_IS_READ_ONLY`), `target` (`category_code`). `rejectedWith(/400/)` chai-as-promised резолвится в саму ошибку.
+Как применять: `const err = await expect(POST(...)).to.be.rejectedWith(/400/); expect(err).to.containSubset({ code: 'ASSERT_TARGET', target: 'category_code' })`. Так негативный тест привязан к конкретной аннотации, а не к любому 400.
+
+## 2026-09-07. Снимок metadata.xml нужно собирать из всей модели, а не из `srv`
+
+Что: команда `cds compile srv --to edmx-v4` включает только `db` и `srv`, поэтому UI-аннотации из `app/products/annotations/` в снимок не попадали, и мок-режим показывал таблицу без колонок. Правильно: `cds compile '*' --to edmx-v4 -s CatalogService -l en`. То же относится к контрактному тесту: `cds.load('*')` берёт всю модель. Замечено агентом `test-backend` на первом прогоне фичи; команда исправлена в CLAUDE.md, PATTERNS, правилах и агентах.
+
 ## 2026-09-07. CAP MCP компилирует все `.cds` проекта, включая `templates/`
 
 Что: `mcp__cds-mcp__search_model` падал с «Duplicate definition of artifact my.catalog.template.Orders»: четыре шаблона в `templates/*.cds` объявляли один namespace и одинаковые сущности. `cds compile srv` и тесты этого не видели, потому что берут только корни `db`, `srv`, `app`.

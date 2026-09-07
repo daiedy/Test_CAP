@@ -1,13 +1,13 @@
 # Product Catalog
 
-Full-stack приложение на SAP CAP (Node.js, OData V4) с интерфейсом SAP Fiori Elements V4. Одновременно площадка для агентного конвейера разработки CAP-приложений на Claude Code (см. `docs/ai-pipeline-plan.md` и `CLAUDE.md`).
+Full-stack application on SAP CAP (Node.js, OData V4) with an SAP Fiori Elements V4 user interface. At the same time a testbed for an agentic pipeline for developing CAP applications with Claude Code (see `docs/ai-pipeline-plan.md` and `CLAUDE.md`).
 
-## Требования
+## Requirements
 
 - Node.js 22 LTS, npm 10
-- `@sap/cds-dk` 10 глобально: `npm i -g @sap/cds-dk@10`
+- `@sap/cds-dk` 10 globally: `npm i -g @sap/cds-dk@10`
 
-## Быстрый старт
+## Quick start
 
 ```bash
 npm install
@@ -15,55 +15,55 @@ cd app/products && npm install && cd ../..
 npm run watch
 ```
 
-Откройте http://localhost:4004/products/webapp/test/flpSandbox.html#products-display. Сервис: http://localhost:4004/odata/v4/catalog/, метаданные: `/odata/v4/catalog/$metadata`.
+Open http://localhost:4004/products/webapp/test/flpSandbox.html#products-display. Service: http://localhost:4004/odata/v4/catalog/, metadata: `/odata/v4/catalog/$metadata`.
 
-## Режимы запуска UI
+## UI run modes
 
-| Режим | Команда | Адрес |
+| Mode | Command | Address |
 |---|---|---|
-| Через CAP | `npm run watch` в корне | http://localhost:4004/products/webapp/test/flpSandbox.html |
-| UI5 tooling с прокси на CAP | `npm start` в `app/products` при запущенном `npm run watch` | http://localhost:8080/test/flpSandbox.html |
-| Без бэкенда (мок) | `npm run start-mock` в `app/products` | http://localhost:8080/test/flpSandbox.html |
+| Through CAP | `npm run watch` in the root | http://localhost:4004/products/webapp/test/flpSandbox.html |
+| UI5 tooling with proxy to CAP | `npm start` in `app/products` while `npm run watch` is running | http://localhost:8080/test/flpSandbox.html |
+| Without backend (mock) | `npm run start-mock` in `app/products` | http://localhost:8080/test/flpSandbox.html |
 
-Мок-режим использует `@sap-ux/ui5-middleware-fe-mockserver` с `webapp/localService/metadata.xml` и `webapp/localService/mockdata/*.json`. После изменения модели обновите снимок: `cds compile srv --to edmx-v4 -l en > app/products/webapp/localService/metadata.xml`.
+Mock mode uses `@sap-ux/ui5-middleware-fe-mockserver` with `webapp/localService/metadata.xml` and `webapp/localService/mockdata/*.json`. After a model change update the snapshot: `cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/localService/metadata.xml`.
 
-## Команды
+## Commands
 
-Корень:
+Root:
 
-| Команда | Что делает |
+| Command | What it does |
 |---|---|
-| `npm run watch` | CAP-сервер с автоперезапуском, SQLite in-memory |
-| `npm test` | Тесты бэкенда (Vitest + @cap-js/cds-test) |
+| `npm run watch` | CAP server with auto restart, SQLite in-memory |
+| `npm test` | Backend tests (Vitest + @cap-js/cds-test) |
 | `npm run lint` | `cds lint` |
-| `npm run docs:registry` | Регенерация `docs/registry/*.md` из модели и исходников |
+| `npm run docs:registry` | Regenerate `docs/registry/*.md` from the model and sources |
 | `npm run build` | `cds build --production` |
 
 `app/products`:
 
-| Команда | Что делает |
+| Command | What it does |
 |---|---|
-| `npm start` | UI5 dev server с прокси на :4004 |
-| `npm run start-mock` | UI5 dev server с мок-сервером |
+| `npm start` | UI5 dev server with proxy to :4004 |
+| `npm run start-mock` | UI5 dev server with mock server |
 | `npm run lint` | `ui5lint` |
-| `npm run build` | Сборка в `dist/` |
+| `npm run build` | Build into `dist/` |
 
-## Структура
+## Structure
 
 ```
-db/            модель данных (my.catalog) и тестовые данные CSV
-srv/           сервис CatalogService, семантические аннотации, хендлеры
-app/products/  Fiori Elements приложение и его UI-аннотации
-_i18n/         тексты бэкенда (en, ru)
-test/          тесты бэкенда
-docs/          архитектура, паттерны, реестр, решения, состояние
-templates/     эталонные файлы для новых артефактов
-scripts/       скрипты конвейера (реестр, хуки, наблюдатель релизов)
-.claude/       агенты, скиллы, правила, хуки Claude Code
+db/            data model (my.catalog) and CSV test data
+srv/           CatalogService service, semantic annotations, handlers
+app/products/  Fiori Elements application and its UI annotations
+_i18n/         backend texts (en, ru)
+test/          backend tests
+docs/          architecture, patterns, registry, decisions, state
+templates/     reference files for new artifacts
+scripts/       pipeline scripts (registry, hooks, release watcher)
+.claude/       Claude Code agents, skills, rules, hooks
 ```
 
-Подробности в `docs/architecture/`, правила работы в `CLAUDE.md`.
+Details in `docs/architecture/`, working rules in `CLAUDE.md`.
 
-## Деплой
+## Deployment
 
-`mta.yaml` и `xs-security.json` являются черновиками под Cloud Foundry и пока не пригодны для деплоя. См. `docs/architecture/ARCHITECTURE.md`.
+`mta.yaml` and `xs-security.json` are drafts for Cloud Foundry and are not yet usable for deployment. See `docs/architecture/ARCHITECTURE.md`.

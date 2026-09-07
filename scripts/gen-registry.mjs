@@ -64,7 +64,7 @@ const table = (head, rows) =>
     ? `| ${head.join(' | ')} |\n| ${head.map(() => '---').join(' | ')} |\n` +
       rows.map((r) => `| ${r.map(esc).join(' | ')} |`).join('\n') +
       '\n'
-    : '_нет_\n';
+    : '_none_\n';
 function typeOf(el) {
   if (el.type === 'cds.Association' || el.type === 'cds.Composition') {
     const kind = el.type === 'cds.Composition' ? 'Composition of' : 'Association to';
@@ -101,8 +101,8 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
 // ---------- DOMAIN-MODEL.md ----------
 {
   let md = header(
-    'Доменная модель',
-    'Эффективная модель после компиляции: сущности, элементы, типы и аспекты проекта. Источник истины это `db/*.cds` и `srv/annotations/*.cds`; здесь только их отражение. Для точечного поиска используй `mcp__cds-mcp__search_model`.'
+    'Domain model',
+    'Effective model after compilation: entities, elements, types and aspects of the project. The source of truth is `db/*.cds` and `srv/annotations/*.cds`; this is only their reflection. For a targeted lookup use `mcp__cds-mcp__search_model`.'
   );
   const mermaid = spawnSync('npx', ['cds', 'compile', 'db', '--to', 'mermaid'], {
     cwd: ROOT,
@@ -112,9 +112,7 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
   if (mermaid.status === 0 && mermaid.stdout.trim()) {
     const body = mermaid.stdout.trim();
     md +=
-      '## Диаграмма\n\n' +
-      (body.startsWith('```') ? body : '```mermaid\n' + body + '\n```') +
-      '\n\n';
+      '## Diagram\n\n' + (body.startsWith('```') ? body : '```mermaid\n' + body + '\n```') + '\n\n';
   }
   const entities = Object.values(m.definitions).filter(
     (d) => d.kind === 'entity' && !isForeign(d.name) && !inService(d.name)
@@ -130,15 +128,15 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
     const p = projectionOf[e.name]?.elements?.[el.name];
     return text(el['@title'] ?? el['@Common.Label'] ?? p?.['@title'] ?? p?.['@Common.Label']);
   };
-  md += '## Сущности\n\n';
+  md += '## Entities\n\n';
   for (const e of entities) {
     const includes = (e.includes || []).join(', ');
     md += `### ${e.name}\n\n`;
     if (e.doc) md += `${e.doc.trim()}\n\n`;
-    md += `Аспекты: ${includes || 'нет'}. Ключи: ${Object.values(e.elements)
+    md += `Aspects: ${includes || 'none'}. Keys: ${Object.values(e.elements)
       .filter((x) => x.key)
       .map((x) => x.name)
-      .join(', ')}. Проекции: ${
+      .join(', ')}. Projections: ${
       Object.values(m.definitions)
         .filter(
           (d) =>
@@ -147,11 +145,11 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
             (d.query?.SELECT?.from?.ref?.join('.') ?? d.projection?.from?.ref?.join('.')) === e.name
         )
         .map((d) => d.name)
-        .join(', ') || 'нет'
+        .join(', ') || 'none'
     }.\n\n`;
     md +=
       table(
-        ['Элемент', 'Тип', 'Название (en)', 'Аннотации'],
+        ['Element', 'Type', 'Title (en)', 'Annotations'],
         Object.values(e.elements).map((el) => [
           el.name,
           typeOf(el),
@@ -164,9 +162,9 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
     (d) => (d.kind === 'type' || d.kind === 'aspect') && !isForeign(d.name) && !inService(d.name)
   );
   md +=
-    '## Типы и аспекты проекта\n\n' +
+    '## Project types and aspects\n\n' +
     table(
-      ['Имя', 'Вид', 'Определение'],
+      ['Name', 'Kind', 'Definition'],
       types.map((t) => [
         t.name,
         t.kind,
@@ -175,15 +173,15 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
     ) +
     '\n';
   md +=
-    '## Переиспользуемые аспекты из @sap/cds/common\n\n`cuid` (key ID : UUID), `managed` (createdAt, createdBy, modifiedAt, modifiedBy), `temporal`, `Currency`, `Country`, `Language`, `sap.common.CodeList`. Использовать их, а не свои копии.\n';
+    '## Reusable aspects from @sap/cds/common\n\n`cuid` (key ID : UUID), `managed` (createdAt, createdBy, modifiedAt, modifiedBy), `temporal`, `Currency`, `Country`, `Language`, `sap.common.CodeList`. Use them, not your own copies.\n';
   writeFileSync(join(OUT, 'DOMAIN-MODEL.md'), md);
 }
 
 // ---------- SERVICES.md ----------
 {
   let md = header(
-    'Сервисы и контракт OData',
-    'Что выставлено наружу: сервисы, проекции, действия, функции, UI-аннотации по сущностям. Перед добавлением проекции или действия проверь, нет ли уже подходящего.'
+    'Services and OData contract',
+    'What is exposed: services, projections, actions, functions, UI annotations per entity. Before adding a projection or an action check whether a suitable one already exists.'
   );
   for (const s of services) {
     const path =
@@ -193,15 +191,15 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
           .replace(/^.*\./, '')
           .replace(/Service$/, '')
           .replace(/^./, (c) => c.toLowerCase());
-    md += `## ${s.name}\n\nПуть: \`${path}\`. Файл: \`${s.$location?.file ?? 'srv/'}\`. `;
-    md += `Авторизация: ${s['@requires'] ? '@requires ' + JSON.stringify(s['@requires']) : 'не задана (по умолчанию открыт при mocked auth)'}.\n\n`;
+    md += `## ${s.name}\n\nPath: \`${path}\`. File: \`${s.$location?.file ?? 'srv/'}\`. `;
+    md += `Authorization: ${s['@requires'] ? '@requires ' + JSON.stringify(s['@requires']) : 'not set (open by default with mocked auth)'}.\n\n`;
     const ents = Object.values(m.definitions).filter(
       (d) => d.kind === 'entity' && d.name.startsWith(s.name + '.')
     );
     md +=
-      '### Сущности\n\n' +
+      '### Entities\n\n' +
       table(
-        ['Проекция', 'Источник', 'Режим', 'UI', 'Value help', 'Ограничения'],
+        ['Projection', 'Source', 'Mode', 'UI', 'Value help', 'Restrictions'],
         ents.map((e) => {
           const from =
             e.query?.SELECT?.from?.ref?.join('.') ?? e.projection?.from?.ref?.join('.') ?? '';
@@ -249,15 +247,15 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
         (d) => (d.kind === 'action' || d.kind === 'function') && d.name.startsWith(s.name + '.')
       )
       .map((a) => [
-        '(сервис)',
+        '(service)',
         a.name.slice(s.name.length + 1),
         a.kind,
         Object.keys(a.params || {}).join(', '),
         a.returns ? typeOf(a.returns) : '',
       ]);
     md +=
-      '### Действия и функции\n\n' +
-      table(['Сущность', 'Имя', 'Вид', 'Параметры', 'Возвращает'], [...bound, ...unbound]) +
+      '### Actions and functions\n\n' +
+      table(['Entity', 'Name', 'Kind', 'Parameters', 'Returns'], [...bound, ...unbound]) +
       '\n';
   }
   writeFileSync(join(OUT, 'SERVICES.md'), md);
@@ -266,8 +264,8 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
 // ---------- HANDLERS.md ----------
 {
   let md = header(
-    'Хендлеры',
-    'Программная логика в `srv/**/*.js`: какие события и сущности уже обрабатываются. Перед новым хендлером проверь, нет ли обработчика того же события.'
+    'Handlers',
+    'Programmatic logic in `srv/**/*.js`: which events and entities are already handled. Before a new handler check whether a handler for the same event already exists.'
   );
   const files = walk(join(ROOT, 'srv')).filter((f) => f.endsWith('.js') && !f.includes('/lib/'));
   const rows = [];
@@ -282,22 +280,22 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
         rel(f) + ':' + line,
         mm[1],
         mm[2].replace(/['"`]/g, ''),
-        (mm[3] || '(сервис)').replace(/['"`]/g, ''),
+        (mm[3] || '(service)').replace(/['"`]/g, ''),
       ]);
     }
     const cdsOn = /\bcds\.on\s*\(\s*['"`]([^'"`]+)['"`]/g;
-    while ((mm = cdsOn.exec(src))) rows.push([rel(f), 'cds.on', mm[1], '(сервер)']);
+    while ((mm = cdsOn.exec(src))) rows.push([rel(f), 'cds.on', mm[1], '(server)']);
   }
-  md += table(['Файл:строка', 'Фаза', 'Событие', 'Сущность'], rows) + '\n';
-  md += `Файлы хендлеров: ${files.length ? files.map((f) => '`' + rel(f) + '`').join(', ') : 'нет, вся логика декларативная'}.\n`;
+  md += table(['File:line', 'Phase', 'Event', 'Entity'], rows) + '\n';
+  md += `Handler files: ${files.length ? files.map((f) => '`' + rel(f) + '`').join(', ') : 'none, all logic is declarative'}.\n`;
   writeFileSync(join(OUT, 'HANDLERS.md'), md);
 }
 
 // ---------- REUSE-CATALOG.md ----------
 {
   let md = header(
-    'Каталог переиспользования',
-    'Утилиты `srv/lib`, общие типы и аспекты, наборы текстов. Правило: прежде чем писать новую функцию, найди её здесь и через `mcp__cds-mcp__search_model`.'
+    'Reuse catalog',
+    'Utilities in `srv/lib`, shared types and aspects, text bundles. Rule: before writing a new function, look for it here and via `mcp__cds-mcp__search_model`.'
   );
   const libFiles = walk(join(ROOT, 'srv/lib')).filter((f) => f.endsWith('.js'));
   const rows = [];
@@ -326,14 +324,14 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
           '',
         ]);
   }
-  md += '## Функции srv/lib\n\n' + table(['Файл', 'Экспорт', 'Назначение'], rows) + '\n';
+  md += '## Functions in srv/lib\n\n' + table(['File', 'Export', 'Purpose'], rows) + '\n';
   const types = Object.values(m.definitions).filter(
     (d) => (d.kind === 'type' || d.kind === 'aspect') && !isForeign(d.name) && !inService(d.name)
   );
   md +=
-    '## Общие типы и аспекты проекта\n\n' +
+    '## Shared project types and aspects\n\n' +
     table(
-      ['Имя', 'Вид'],
+      ['Name', 'Kind'],
       types.map((t) => [t.name, t.kind])
     ) +
     '\n';
@@ -342,9 +340,9 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
     ...walk(join(ROOT, 'app')).filter((f) => /webapp\/i18n\/i18n(_\w+)?\.properties$/.test(f)),
   ].filter((f) => f.endsWith('.properties'));
   md +=
-    '## Наборы текстов (i18n)\n\n' +
+    '## Text bundles (i18n)\n\n' +
     table(
-      ['Файл', 'Ключей'],
+      ['File', 'Keys'],
       bundles.map((f) => [rel(f), String(Object.keys(loadProps(f)).length)])
     ) +
     '\n';
@@ -354,8 +352,8 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
 // ---------- UI-ARTIFACTS.md ----------
 {
   let md = header(
-    'UI-артефакты',
-    'Приложения в `app/`: шаблоны страниц, источники данных, расширения, фрагменты, форматтеры, тесты. Перед созданием extension или фрагмента проверь, нет ли уже подходящего.'
+    'UI artifacts',
+    'Applications in `app/`: page templates, data sources, extensions, fragments, formatters, tests. Before creating an extension or a fragment check whether a suitable one already exists.'
   );
   const appDir = join(ROOT, 'app');
   const apps = existsSync(appDir)
@@ -367,11 +365,11 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
     const i18n = loadProps(join(base, 'webapp/i18n/i18n.properties'));
     const t = (v) => String(v ?? '').replace(/\{\{(\w+)\}\}/g, (_, k) => i18n[k] ?? k);
     md += `## app/${app}\n\n`;
-    md += `Id: \`${mf['sap.app']?.id}\`. Название: ${t(mf['sap.app']?.title)}. manifest \`_version\`: ${mf._version}. minUI5Version: ${mf['sap.ui5']?.dependencies?.minUI5Version}. Библиотеки: ${Object.keys(mf['sap.ui5']?.dependencies?.libs || {}).join(', ')}.\n\n`;
+    md += `Id: \`${mf['sap.app']?.id}\`. Title: ${t(mf['sap.app']?.title)}. manifest \`_version\`: ${mf._version}. minUI5Version: ${mf['sap.ui5']?.dependencies?.minUI5Version}. Libraries: ${Object.keys(mf['sap.ui5']?.dependencies?.libs || {}).join(', ')}.\n\n`;
     md +=
-      '### Источники данных\n\n' +
+      '### Data sources\n\n' +
       table(
-        ['Имя', 'URI', 'OData'],
+        ['Name', 'URI', 'OData'],
         Object.entries(mf['sap.app']?.dataSources || {}).map(([k, v]) => [
           k,
           v.uri,
@@ -382,9 +380,9 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
     const targets = mf['sap.ui5']?.routing?.targets || {};
     const routes = mf['sap.ui5']?.routing?.routes || [];
     md +=
-      '### Страницы\n\n' +
+      '### Pages\n\n' +
       table(
-        ['Target', 'Шаблон', 'contextPath', 'Маршрут', 'Настройки'],
+        ['Target', 'Template', 'contextPath', 'Route', 'Settings'],
         Object.entries(targets).map(([k, v]) => {
           const r = routes.find(
             (x) => x.target === k || (Array.isArray(x.target) && x.target.includes(k))
@@ -410,9 +408,9 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
     const frags = files.filter((f) => f.endsWith('.fragment.xml')).map((f) => rel(f));
     const views = files.filter((f) => f.endsWith('.view.xml')).map((f) => rel(f));
     md +=
-      '### Расширения и фрагменты\n\n' +
+      '### Extensions and fragments\n\n' +
       table(
-        ['Вид', 'Файл или ключ'],
+        ['Kind', 'File or key'],
         [
           ...Object.keys(ctrlExt).map((k) => ['controllerExtension (manifest)', k]),
           ...exts.map((f) => ['ext/', f]),
@@ -427,22 +425,22 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
       const names = [...src.matchAll(/^\s*(\w+)\s*(?::\s*function|\()/gm)]
         .map((x) => x[1])
         .filter((n) => !['return', 'function'].includes(n));
-      md += '### Форматтеры\n\n' + names.map((n) => `- \`${n}\``).join('\n') + '\n\n';
+      md += '### Formatters\n\n' + names.map((n) => `- \`${n}\``).join('\n') + '\n\n';
     }
     const comp = join(base, 'webapp/Component.js');
     if (existsSync(comp)) {
       const src = readFileSync(comp, 'utf8');
       const custom =
-        src.split('\n').length > 12 ? 'содержит кастомную логику (см. файл)' : 'стандартный';
+        src.split('\n').length > 12 ? 'contains custom logic (see the file)' : 'standard';
       md += `### Component.js\n\n${custom}.\n\n`;
     }
     const tests = ['unit', 'integration', 'e2e'].filter((d) =>
       existsSync(join(base, 'webapp/test', d))
     );
-    md += `### Тесты\n\n${tests.length ? tests.map((d) => '`webapp/test/' + d + '`').join(', ') : 'нет'}. Мок-режим: ${existsSync(join(base, 'ui5-mock.yaml')) ? '`ui5-mock.yaml` + `webapp/localService`' : 'нет'}.\n\n`;
+    md += `### Tests\n\n${tests.length ? tests.map((d) => '`webapp/test/' + d + '`').join(', ') : 'none'}. Mock mode: ${existsSync(join(base, 'ui5-mock.yaml')) ? '`ui5-mock.yaml` + `webapp/localService`' : 'none'}.\n\n`;
   }
   writeFileSync(join(OUT, 'UI-ARTIFACTS.md'), md);
 }
 
 rmSync(join(OUT, '.stale'), { force: true });
-console.log(`docs/registry обновлён (sources ${HASH}).`);
+console.log(`docs/registry updated (sources ${HASH}).`);

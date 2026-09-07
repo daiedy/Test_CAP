@@ -21,12 +21,12 @@ function status() {
   const current = sourcesHash(ROOT);
   const reasons = [];
   if (existsSync(join(REGISTRY, '.stale')))
-    reasons.push('присутствует маркер docs/registry/.stale');
+    reasons.push('the docs/registry/.stale marker is present');
   for (const f of FILES) {
     const rec = recordedHash(join(REGISTRY, f));
-    if (!rec) reasons.push(`${f}: файл отсутствует или без заголовка генератора`);
+    if (!rec) reasons.push(`${f}: file is missing or has no generator header`);
     else if (rec !== current)
-      reasons.push(`${f}: хеш ${rec} не совпадает с текущими исходниками ${current}`);
+      reasons.push(`${f}: hash ${rec} does not match the current sources ${current}`);
   }
   return reasons;
 }
@@ -38,15 +38,15 @@ if (reasons.length && fix) {
     cwd: ROOT,
   });
   if (r.status !== 0) {
-    console.error('Регенерация реестра не удалась.');
+    console.error('Registry regeneration failed.');
     process.exit(1);
   }
   reasons = status();
 }
 if (reasons.length) {
-  console.error('Реестр документации устарел:');
+  console.error('The documentation registry is stale:');
   for (const r of reasons) console.error(`  - ${r}`);
-  console.error('Запусти: npm run docs:registry (или node scripts/check-docs-fresh.mjs --fix)');
+  console.error('Run: npm run docs:registry (or node scripts/check-docs-fresh.mjs --fix)');
   process.exit(1);
 }
-console.log('docs/registry актуален.');
+console.log('docs/registry is fresh.');

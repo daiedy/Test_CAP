@@ -8,6 +8,6 @@ annotate CatalogService.Products with {
               @assert.range: [0, 99999999.99];
   currency    @title: '{i18n>Products.currency}'     @mandatory;
   stock       @title: '{i18n>Products.stock}'        @mandatory  @assert.range: [0, 1000000];
-  category    @title: '{i18n>Products.category}'     @mandatory;
+  category    @title: '{i18n>Products.category}'     @mandatory  @assert.target;
   imageUrl    @title: '{i18n>Products.imageUrl}';
 };

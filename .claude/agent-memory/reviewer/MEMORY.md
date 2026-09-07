@@ -1,0 +1,1 @@
+- [Pipeline review conventions](pipeline-review-conventions.md) — what is intentionally unfinished at step 16 (registry, STATE) and where OPA runner output lives

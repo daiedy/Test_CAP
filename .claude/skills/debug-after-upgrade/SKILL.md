@@ -1,68 +1,68 @@
 ---
 name: debug-after-upgrade
-description: Разбор поломки после обновления зависимостей CAP, UI5 или Fiori tools по changelog за диапазон версий. Используй при словах «после обновления сломалось», «тесты упали после апдейта», «разобраться с обновлением», «после bump не работает», «regression after upgrade», а также когда CI покраснел на коммите с изменением lockfile.
+description: Investigation of a breakage after upgrading CAP, UI5 or Fiori tools dependencies using the changelog for the version range. Use when the user says "it broke after the upgrade", "tests failed after the update", "figure out the upgrade", "not working after the bump", "regression after upgrade" (Russian: «после обновления сломалось», «тесты упали после апдейта», «разобраться с обновлением», «после bump не работает»), and also when CI went red on a commit that changed the lockfile.
 allowed-tools: Bash, Read, Grep, WebFetch, mcp__cds-mcp__search_docs
 ---
 
-# Отладка после обновления зависимостей
+# Debugging after a dependency upgrade
 
-Принцип: сначала найти запись в changelog, объясняющую поломку, и только потом править код. Патч без ссылки на источник не принимается.
+Principle: first find the changelog entry that explains the breakage, and only then fix the code. A patch without a reference to the source is not accepted.
 
-## Шаг 1. Зафиксировать симптом
+## Step 1. Capture the symptom
 
-Собери текст ошибки и стек в переменную поиска: имена функций, ключи конфигурации, имена аннотаций, коды HTTP. Запусти падающую команду один раз сам (`npm test`, `npm run lint`, `cd app/products && npm run lint`, `cds compile srv --to json`), чтобы иметь свежий вывод.
+Collect the error text and the stack trace into a search variable: function names, configuration keys, annotation names, HTTP codes. Run the failing command once yourself (`npm test`, `npm run lint`, `cd app/products && npm run lint`, `cds compile srv --to json`) to have fresh output.
 
-## Шаг 2. Определить диапазон версий
+## Step 2. Determine the version range
 
 ```bash
 git diff HEAD -- package-lock.json app/products/package-lock.json | grep -E '^[-+]\s+"(version|resolved)"' -B2 | head -80
 ```
 
-Если lockfile уже закоммичен, найди коммит: `git log -5 --oneline -- package-lock.json app/products/package-lock.json` и возьми `git show <sha> -- package-lock.json`. Составь таблицу «пакет: было → стало». Учти транзитивные пакеты `@sap/cds-compiler`, `@cap-js/db-service`, `@sap/ux-specification`.
+If the lockfile is already committed, find the commit: `git log -5 --oneline -- package-lock.json app/products/package-lock.json` and take `git show <sha> -- package-lock.json`. Build a table "package: was → became". Take into account the transitive packages `@sap/cds-compiler`, `@cap-js/db-service`, `@sap/ux-specification`.
 
-## Шаг 3. Чеклист известных изменений cds 10
+## Step 3. Checklist of known cds 10 changes
 
-Проверь первым делом, до чтения changelog:
+Check these first, before reading the changelog:
 
-| Симптом | Причина в cds 10 | Исправление |
+| Symptom | Cause in cds 10 | Fix |
 |---|---|---|
-| Тест ожидал число, пришла строка `'1299.99'` | Decimal и Int64 из SQLite приходят строками (`cds.features.ieee754compatible: true`) | Сравнивать со строкой или парсить в тесте, не отключать флаг |
-| `INSERT`/`UPDATE` вернул `{ affected: 1 }` вместо строки | Результаты операций записи унифицированы | Делать `SELECT` после записи, если нужны данные |
-| `srv.entities()` is not a function | `srv.entities` стал геттером | Убрать скобки |
-| Ошибки SQLite, отсутствие `better-sqlite3` | Драйвер по умолчанию `node:sqlite`, Node ≥ 22 | Проверить `node -v`; `better-sqlite3` только через `cds.requires.db.driver` |
-| `cds.test` не найден в `@sap/cds` | Тесты в отдельном пакете `@cap-js/cds-test` | `npm add -D @cap-js/cds-test` |
-| Предупреждения про annotations without targets, duplicate elements | Ужесточённые проверки компилятора | Исправить модель, не подавлять |
+| A test expected a number, the string `'1299.99'` arrived | Decimal and Int64 from SQLite arrive as strings (`cds.features.ieee754compatible: true`) | Compare with a string or parse in the test, do not disable the flag |
+| `INSERT`/`UPDATE` returned `{ affected: 1 }` instead of a row | Results of write operations are unified | Do a `SELECT` after the write if the data is needed |
+| `srv.entities()` is not a function | `srv.entities` became a getter | Remove the parentheses |
+| SQLite errors, missing `better-sqlite3` | Default driver is `node:sqlite`, Node ≥ 22 | Check `node -v`; `better-sqlite3` only via `cds.requires.db.driver` |
+| `cds.test` not found in `@sap/cds` | Tests live in the separate package `@cap-js/cds-test` | `npm add -D @cap-js/cds-test` |
+| Warnings about annotations without targets, duplicate elements | Stricter compiler checks | Fix the model, do not suppress |
 
-Полный список: `https://cap.cloud.sap/docs/releases/migration/cds10.md`.
+Full list: `https://cap.cloud.sap/docs/releases/migration/cds10.md`.
 
-## Шаг 4. Найти запись в changelog
+## Step 4. Find the changelog entry
 
-Для каждого изменившегося пакета возьми источник и найди в нём термины из шага 1 (WebFetch страницы, затем поиск по тексту):
+For each changed package take its source and search it for the terms from step 1 (WebFetch the page, then search the text):
 
-| Пакет | Источник |
+| Package | Source |
 |---|---|
-| `@sap/cds`, `@sap/cds-dk`, `@sap/cds-compiler` | `https://cap.cloud.sap/docs/releases/<год>/changelog.md`; для мажоров и минор-релизов `https://cap.cloud.sap/docs/releases/<год>/<mon><yy>.md`, например `jun26.md` |
-| `@cap-js/sqlite`, `@cap-js/cds-test`, `@cap-js/mcp-server` | `https://github.com/cap-js/<repo>/releases` и `CHANGELOG.md` в репозитории |
-| SAPUI5 (`sap.ui.core`, `sap.m`, `sap.fe.core`, `sap.fe.macros`) | `https://ui5.sap.com/test-resources/<lib/path>/relnotes/changes-<версия>.json`, например `sap/fe/core/relnotes/changes-1.152.json` |
+| `@sap/cds`, `@sap/cds-dk`, `@sap/cds-compiler` | `https://cap.cloud.sap/docs/releases/<year>/changelog.md`; for major and minor releases `https://cap.cloud.sap/docs/releases/<year>/<mon><yy>.md`, for example `jun26.md` |
+| `@cap-js/sqlite`, `@cap-js/cds-test`, `@cap-js/mcp-server` | `https://github.com/cap-js/<repo>/releases` and `CHANGELOG.md` in the repository |
+| SAPUI5 (`sap.ui.core`, `sap.m`, `sap.fe.core`, `sap.fe.macros`) | `https://ui5.sap.com/test-resources/<lib/path>/relnotes/changes-<version>.json`, for example `sap/fe/core/relnotes/changes-1.152.json` |
 | `@sap/ux-ui5-tooling`, `@sap-ux/*` | `https://github.com/SAP/open-ux-tools/blob/main/packages/<package>/CHANGELOG.md` |
 | `@ui5/cli`, `@ui5/linter` | `https://github.com/UI5/<repo>/releases` |
 
-Дополнительно `mcp__cds-mcp__search_docs` по формулировке ошибки, но помни: документация в MCP может отставать от установленной версии; версия проверяется командой `npm ls <pkg>`.
+Additionally `mcp__cds-mcp__search_docs` by the error wording, but remember: the documentation in MCP may lag behind the installed version; the version is checked with `npm ls <pkg>`.
 
-## Шаг 5. Исправить минимально
+## Step 5. Fix minimally
 
-1. Процитируй найденную запись с URL в отчёте.
-2. Предложи минимальный патч, который следует рекомендации из записи. Не откатывай версию и не включай kill switch, если запись предлагает миграцию кода; kill switch допустим только как временная мера с задачей на исправление.
-3. Примени патч, повтори падающую команду, приложи вывод.
-4. Если это мажор CAP: сначала `npx -p @sap/cds-dk cds upgrade` для отчёта в `.cds-upgrade/`, затем скилл `cap-upgrade`; правки руками только после его отчёта.
+1. Quote the found entry with its URL in the report.
+2. Propose a minimal patch that follows the recommendation from the entry. Do not roll back the version and do not enable a kill switch if the entry proposes a code migration; a kill switch is acceptable only as a temporary measure with a task to fix it.
+3. Apply the patch, repeat the failing command, attach the output.
+4. If this is a CAP major: first `npx -p @sap/cds-dk cds upgrade` for the report in `.cds-upgrade/`, then the `cap-upgrade` skill; manual edits only after its report.
 
-## Шаг 6. Записать урок
+## Step 6. Record the lesson
 
-Добавь запись в `docs/LESSONS.md`:
+Add an entry to `docs/LESSONS.md`:
 
 ```markdown
-## <YYYY-MM-DD> <пакет> a.b.c → x.y.z: <симптом в одну фразу>
-Причина: <запись changelog с URL>. Исправление: <что сделано>. Проверка: <команда>.
+## <YYYY-MM-DD> <package> a.b.c → x.y.z: <symptom in one phrase>
+Cause: <changelog entry with URL>. Fix: <what was done>. Check: <command>.
 ```
 
-Если запись объясняет поведение, о котором должны знать все агенты, предложи правку в соответствующее правило `.claude/rules/*.md` или в `docs/architecture/PATTERNS.md`.
+If the entry explains behavior that all agents should know about, propose an edit to the corresponding rule in `.claude/rules/*.md` or to `docs/architecture/PATTERNS.md`.

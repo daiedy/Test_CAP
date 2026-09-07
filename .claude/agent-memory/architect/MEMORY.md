@@ -1,0 +1,3 @@
+- [CodeList ValueList is auto-generated](codelist-valuelist-autogen.md) — explicit @Common.ValueList on CodeList FKs is redundant; ADR-0011 accepted
+- [cds add data for localized entities](cds-add-data-localized.md) — generator writes comma CSV and random locales; plans need a cleanup step
+- [First pipeline feature status](pipeline-first-feature.md) — categories-code-list open decisions and doc inconsistencies to raise in retro

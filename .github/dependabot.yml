@@ -1,0 +1,43 @@
+# Weekly dependency update pull requests. Nothing is merged automatically: CI (ci.yml) must be
+# green and a human merges. Major CAP upgrades are excluded here; they go through /upgrade-cds
+# (ADR-0001) because they need the migration guide and a snapshot review.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directories:
+      - "/"
+      - "/app/products"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+    open-pull-requests-limit: 5
+    labels: [dependencies]
+    commit-message:
+      prefix: "chore(deps)"
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
+    groups:
+      sap-cap:
+        patterns: ["@sap/cds*", "@cap-js/*", "@sap/eslint-plugin-cds", "@sap/cds-common-content"]
+      sap-ui5-fiori:
+        patterns: ["@ui5/*", "@sap/ux-*", "@sap-ux/*", "ui5-test-runner", "wdio-ui5-service"]
+      tooling:
+        patterns: ["vitest", "@vitest/*", "eslint", "prettier"]
+    ignore:
+      - dependency-name: "@sap/cds"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@sap/cds-dk"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@sap/cds-compiler"
+        update-types: ["version-update:semver-major"]
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+    labels: [dependencies]
+    commit-message:
+      prefix: "chore(ci)"

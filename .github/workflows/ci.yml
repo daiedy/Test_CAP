@@ -1,0 +1,102 @@
+# Continuous integration: the same gates the Claude Code hooks run locally.
+# Backend: cds lint, Vitest (incl. the OData contract snapshot), Prettier, registry freshness.
+# UI: ui5lint and the Fiori ESLint rules. OPA5 journeys need a browser and a live stack; they
+# run in the separate `ui-tests` job against `cds serve` on :4004 with ui5-test-runner.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend lint, tests, docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            app/products/package-lock.json
+      - name: Install root dependencies
+        run: npm ci --ignore-scripts
+      - name: cds lint
+        run: npm run lint
+      - name: Prettier check
+        run: npm run format:check
+      - name: Tests (Vitest + @cap-js/cds-test)
+        run: npm test
+      - name: Registry freshness
+        run: node scripts/check-docs-fresh.mjs
+      - name: Model incl. templates compiles
+        run: npx cds compile db srv app templates --to json > /dev/null
+
+  ui:
+    name: UI lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: app/products
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/products/package-lock.json
+      - name: Install UI dependencies
+        run: npm ci --ignore-scripts
+      - name: ui5lint
+        run: npm run lint
+      - name: ESLint (Fiori tools rules)
+        run: npm run lint:js
+
+  ui-tests:
+    name: OPA5 journeys
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: [backend, ui]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            app/products/package-lock.json
+      - name: Install dependencies
+        run: |
+          npm ci --ignore-scripts
+          npm ci --ignore-scripts --prefix app/products
+      - name: Start CAP server
+        run: |
+          npx cds serve --in-memory --port 4004 > cds.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf 'http://localhost:4004/odata/v4/catalog/$metadata' > /dev/null && break
+            sleep 1
+          done
+          curl -sf 'http://localhost:4004/odata/v4/catalog/$metadata' > /dev/null || { cat cds.log; exit 1; }
+      - name: Run OPA5 journeys with ui5-test-runner
+        working-directory: app/products
+        run: npm run test:ui -- --report-dir ../../ui-test-report
+      - name: Upload UI test report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ui-test-report
+          path: ui-test-report
+          retention-days: 14

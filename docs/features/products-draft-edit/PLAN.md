@@ -1,0 +1,159 @@
+# products-draft-edit: plan
+
+Date: 2026-09-07. Status: draft (awaiting user approval). Gate mode: semi-autonomous.
+
+Context and research: `CONTEXT.md` in this folder (including "Verified by experiment"); decision draft: `docs/decisions/ADR-0012-products-draft-editing.md` (proposed). Feature name `products-draft-edit`, branch `feature/products-draft-edit` (created by `/feature`, not by this spec). Phases and commits follow the `feature` skill; agents report per protocol section 8. The plan is written for the recommended answers in "Decisions for the user"; if the user picks another option the architect rewrites the affected rows before phase 2 starts.
+
+## Key decisions of the plan
+
+| Question | Decision | Rationale |
+|---|---|---|
+| How editing is enabled | `@odata.draft.enabled` on `CatalogService.Products` (full draft: Edit, Save, Cancel, Create, Delete, Editing Status filter) | ADR-0012, part 1; PATTERNS "Drafts"; the parked journey was written for exactly this flow |
+| Where the annotation lives | inline on the projection in `srv/catalog-service.cds`: `@odata.draft.enabled entity Products as projection on catalog.Products;` | ADR-0012, part 2; rule `srv-services.md` allows it there; same style as `@readonly entity Categories` |
+| Compositions / children | none; `Products` is the only draft root | PATTERNS "Drafts": never parent and children at once; `Categories` stays `@readonly`, no draft |
+| CAP configuration | none; cds 10.0.6 defaults (`lean_draft`, `bypass_draft: true`, `draft_new_action: false`, lock 15 min, deletion 30 d) | ADR-0012, part 4; verified in CONTEXT |
+| Handlers | none; `srv/catalog-service.js` is not created | validations `@mandatory`, `@assert.range`, `@assert.target` fire on `draftActivate` (verified); ADR-0012, part 5 |
+| How tests address active data | `POST` payloads include `IsActiveEntity: true`; keys of active records `(ID=<id>,IsActiveEntity=true)`; drafts `IsActiveEntity=false`, actions `CatalogService.draftEdit` / `CatalogService.draftActivate`, discard by `DELETE ...IsActiveEntity=false` | ADR-0012, part 3; without it three negative POST tests go red (CONTEXT, runtime table) |
+| Contract snapshot | `test/__snapshots__/metadata.test.js.snap` updated once with `npx vitest -u` in step 4; CHANGELOG line names the draft artifacts | PATTERNS "OData contract"; the `app/` layer does not change, so one update suffices |
+| UI annotations | `app/products/annotations/Products.cds` unchanged | edit mode reuses the FieldGroups; the category dropdown was designed in `categories-code-list` |
+| `manifest.json` | unchanged: `editableHeaderContent: false` stays, no `inlineEdit`, no `hideDraft` | ADR-0012, part 6; if the user or designer decides otherwise, `fiori-app-dev` uses Fiori MCP `list_functionality` → `get_functionality_details` → `execute_functionality` (`ProductsObjectPage`/`ProductsList` > `inlineEdit`, `settings` > `hideDraft`), then `ui5lint` (UI5 MCP `run_manifest_validation` is defective, LESSONS) |
+| Mock mode | `localService/metadata.xml` regenerated; `mockdata/Products.json` unchanged | `fe-mockserver-core` 1.7.15 defaults `IsActiveEntity`/`HasActiveEntity`/`HasDraftEntity` and emulates `draftEdit`/`draftActivate` (CONTEXT) |
+| i18n | no new keys in `_i18n/*` or `webapp/i18n/*` | Draft labels ship with `@sap/cds/_i18n` (en, ru present); FE texts from `sap.fe` bundles; confirmed in step 9 for `ru` |
+| OPA5 | `EditCategoryOnObjectPageJourney.js`: `const editTest = opaTest;`, header comment rewritten, a Cancel/discard test added before the restore test; other journeys unchanged | PATTERNS "User scenario"; page objects and `CategoryDropdown` reused |
+| Create flow | comes with draft; verified manually by `ui-verifier` (step 9), no OPA journey in this feature | keeps scope on "edit existing"; Decision 4 for the user |
+| Data hygiene for UI runs | `test-ui` and `ui-verifier` start a fresh `npm run watch` before a run; journeys restore changed values and end with a teardown-only test | a leftover draft of a new record appears in the List Report (FE query `IsActiveEntity eq false or SiblingEntity/IsActiveEntity eq null`) and breaks `iCheckRows(15)` |
+
+## Acceptance criteria
+
+Backend, verified by `npm test` (`test/catalog-service.test.js` unless stated otherwise); target 21 tests green (13 existing, 6 new, 2 contract):
+
+- [ ] `test/metadata.test.js` "matches the EDMX snapshot": snapshot updated deliberately and contains in `EntityType Products` a `<PropertyRef Name="IsActiveEntity"/>`, properties `IsActiveEntity`, `HasActiveEntity`, `HasDraftEntity`, `DraftMessages`, `NavigationProperty Name="DraftAdministrativeData" ... ContainsTarget="true"`, `NavigationProperty Name="SiblingEntity"`; an `EntityType Name="DraftAdministrativeData"`; bound actions `draftPrepare`, `draftActivate`, `draftEdit` with parameter `in` of type `CatalogService.Products`; on `CatalogService.EntityContainer/Products` a `Common.DraftRoot` with `ActivationAction="CatalogService.draftActivate"`, `EditAction="CatalogService.draftEdit"`, `PreparationAction="CatalogService.draftPrepare"`; `UI.Hidden` on `Products/IsActiveEntity`, `HasActiveEntity`, `HasDraftEntity`, `DraftAdministrativeData`; no `EntitySet Name="DraftAdministrativeData"`; `EntityType Categories`, the `Capabilities.*Restrictions` on `EntityContainer/Categories` and the single `Common.ValueList` (`CollectionPath="Categories"`) on `Products/category_code` unchanged versus the previous snapshot. "serves $metadata over HTTP with English labels" passes.
+- [ ] "lists the 15 seeded products" unchanged and green (`GET /Products?$count=true` counts active records only).
+- [ ] "returns price as a string with its currency code", "filters products by category code", "expands the category of a product", "exposes Currencies as a code list for the value help" unchanged and green.
+- [ ] "creates a product with the mandatory fields and fills managed fields": payload `{ IsActiveEntity: true, ...newProduct }`, expects 201, `IsActiveEntity: true`, `createdBy: 'alice'`, `category_code: 'FURNITURE'`; cleanup `DELETE /Products(ID=<id>,IsActiveEntity=true)`.
+- [ ] "rejects a product without a name (@mandatory)", "rejects a product without a category (@mandatory)", "rejects an unknown category code (@assert.target)": payloads carry `IsActiveEntity: true`; assertions `400` with `code` `ASSERT_MANDATORY` (targets `name`, `category_code`) and `ASSERT_TARGET` (target `category_code`) unchanged.
+- [ ] "rejects negative stock (@assert.range)": `PATCH /Products(ID=<id>,IsActiveEntity=true)` on the seeded Yoga Mat answers 400 with `code: 'ASSERT_RANGE'`.
+- [ ] New `describe('CatalogService.Products drafts')` with a `beforeAll` that creates an active product (`IsActiveEntity: true`) and an `afterAll` that deletes it, and the tests:
+  - [ ] "creates a draft when POST omits IsActiveEntity": `POST /Products` with `newProduct` (no `IsActiveEntity`) answers 201 with `IsActiveEntity: false`, `HasActiveEntity: false`; `GET /Products?$count=true&$top=0` still reports 16 (15 seeded plus the `beforeAll` record); `DELETE /Products(<id>)` (addressed as active) answers 403 with `code: 'DRAFT_ACTIVE_DELETE_FORBIDDEN_DRAFT_EXISTS'`; `DELETE /Products(ID=<id>,IsActiveEntity=false)` answers 204.
+  - [ ] "edits an active product through draftEdit, PATCH and draftActivate": `POST /Products(ID=<id>,IsActiveEntity=true)/CatalogService.draftEdit { PreserveChanges: true }` answers 201 with `IsActiveEntity: false`, `HasActiveEntity: true`; `GET /Products(ID=<id>,IsActiveEntity=true)?$select=HasDraftEntity&$expand=DraftAdministrativeData($select=InProcessByUser)` shows `HasDraftEntity: true`, `InProcessByUser: 'alice'`; `PATCH /Products(ID=<id>,IsActiveEntity=false) { category_code: 'KITCHEN' }` answers 200; `POST .../CatalogService.draftActivate` answers 200 with `IsActiveEntity: true`, `category_code: 'KITCHEN'`, `modifiedBy: 'alice'`; `GET` of the active record shows `category_code: 'KITCHEN'`, `HasDraftEntity: false`.
+  - [ ] "reports an unknown category on the draft and rejects activation (@assert.target)": after `draftEdit`, `PATCH` draft `{ category_code: 'UNKNOWN' }` answers 200 and `data.DraftMessages` contains `{ code: 'ASSERT_TARGET' }`; `draftActivate` is rejected with 400, `code: 'ASSERT_TARGET'`, `target` matching `/category_code$/`; the draft is discarded afterwards.
+  - [ ] "rejects activation of a draft without a name (@mandatory)": `PATCH` draft `{ name: null }` answers 200 (no message); `draftActivate` is rejected with 400, `code: 'ASSERT_MANDATORY'`, `target` matching `/name$/`; discard afterwards.
+  - [ ] "locks the active product while another user's draft exists": with `alice`'s draft open, `POST .../CatalogService.draftEdit` as `bob` (`{ auth: { username: 'bob' } }`) is rejected with 409, `code: 'DRAFT_ALREADY_EXISTS'`; `PATCH /Products(ID=<id>,IsActiveEntity=true) { stock: 7 }` as `bob` is rejected with 409, `code: 'DRAFT_ALREADY_EXISTS'`; discard afterwards.
+  - [ ] "discards a draft and leaves the active product unchanged": `draftEdit`, `PATCH` draft `{ stock: 1 }`, `DELETE /Products(ID=<id>,IsActiveEntity=false)` answers 204; `GET` of the active record shows the original `stock` and `HasDraftEntity: false`.
+- [ ] `describe('CatalogService.Categories')`: all three tests unchanged and green (`@readonly` unaffected by drafts).
+- [ ] `npm run lint` (cds lint) without errors; `npx prettier --check test/` clean; no `srv/**/*.js` file exists (`docs/registry/HANDLERS.md` still "none").
+
+UI, verified by OPA5 (`test-ui`, step 7), `ui-verifier` (step 9, `VERIFICATION.md` with screenshots) and linters:
+
+- [ ] Journey "Edit category on the object page" (`EditCategoryOnObjectPageJourney.js`) runs with `opaTest` (no `skip`) and passes: the Object Page of Laptop Pro 15 offers Edit (`iCheckEdit({ visible: true, enabled: true })`); after Edit the page is in edit mode; the Category field is a mandatory dropdown of the six names; selecting Furniture and Save returns to display mode with "Furniture" in the field and in the header description; restoring Electronics and Save leaves the data as seeded; teardown is the last test.
+- [ ] New test in the same journey, placed before the restore test: "Cancel discards the change": Edit, choose Kitchen in the Category dropdown, `onFooter().iExecuteCancel()`, `onFooter().iConfirmCancel()`, the page is in display mode and shows the previous name (Furniture at that point) in the field and header.
+- [ ] Journeys "Filter products by category", "Category is shown as a name", "Russian locale shows translated categories" pass unchanged; `iCheckRows(15)` holds because the run starts on a fresh `npm run watch`. `npm run test:ui` reports 0 skipped; the runner output is attached to the `test-ui` report and copied into `VERIFICATION.md`.
+- [ ] `ui-verifier`, `en`: Object Page header shows Edit and Delete; Edit switches to edit mode; `name`, `description`, `imageUrl`, `price`, `currency_code`, `stock`, `category_code` editable, Administrative Data read-only, header content not editable; Cancel with a changed field opens the discard confirmation, Cancel without changes returns directly; Save persists and the header description follows the category; List Report shows the Editing Status filter and the Create and Delete actions; after Edit without Save and navigation back, the row shows the draft indicator and the Editing Status option "Own Draft" lists it; opening it offers the draft; discarding it clears the indicator. Screenshots: OP display with Edit, OP edit mode, discard popover, LR with Editing Status and draft indicator.
+- [ ] `ui-verifier`, `en`, Create flow (manual only): Create on the List Report opens a new draft in the Object Page in edit mode; Cancel discards it and the table still has 15 rows; a Save with Category empty is blocked client-side (required); a complete Save adds the product; the product is deleted afterwards so the data stays as seeded.
+- [ ] `ui-verifier`, `ru` (`?sap-ui-language=ru`): Edit, Save, Cancel, the discard confirmation, the Editing Status filter label and its options are Russian (`sap.fe` bundles); the Draft Administrative Data labels reachable through the Editing Status filter or the table settings are Russian (`@sap/cds/_i18n`); no i18n key is visible.
+- [ ] Network (`$batch` bodies): Edit sends `POST Products(ID=...,IsActiveEntity=true)/CatalogService.draftEdit`; a field change sends `PATCH Products(ID=...,IsActiveEntity=false)`; Save sends `POST Products(ID=...,IsActiveEntity=false)/CatalogService.draftActivate`; Cancel sends `DELETE Products(ID=...,IsActiveEntity=false)`. All 2xx.
+- [ ] Browser console free of errors that mention `Products`, `draft`, `DraftAdministrativeData`, `IsActiveEntity` or the edit flow (the known sandbox 404s and the ushell deprecation warning are pre-existing, see `categories-code-list/VERIFICATION.md`).
+- [ ] Keyboard and accessibility (scenarios from `ux-designer`): Edit reachable by keyboard; in edit mode the Category field is announced as required combobox; Save and Cancel reachable; focus lands on a sensible control after Save and after Cancel.
+- [ ] `metadata.xml` regenerated and identical to `cds compile '*' --to edmx-v4 -s CatalogService -l en`; `npm run start-mock` starts, the List Report shows 15 products, Edit → change Category → Save works against the mockserver, `mockdata/Products.json` unchanged (`git diff --quiet app/products/webapp/localService/mockdata/`).
+- [ ] `npm run lint` in `app/products` (ui5lint) without errors; `git diff --quiet app/products/webapp/manifest.json` (no manifest change with the recommended option).
+
+Documentation:
+
+- [ ] `npm run docs:registry` executed, `node scripts/check-docs-fresh.mjs` green; `docs/registry/SERVICES.md` shows `Products` with draft (or the draft actions `draftEdit`, `draftActivate`, `draftPrepare` under "Actions and functions"); `HANDLERS.md` still "none".
+- [ ] `docs/CHANGELOG.md`: lines for `srv` (draft enabled, contract change with the list of new artifacts), `test` (snapshot update, four adapted tests, six new tests, journey un-skipped), `app` (metadata snapshot), `docs` (ADR-0012, PATTERNS, TESTING, template).
+- [ ] `docs/STATE.md`: debt row "Object Page without draft ..." removed; ADR-0012 in the accumulated decisions; test counts updated (21 backend, OPA 0 skipped).
+- [ ] `docs/architecture/PATTERNS.md`: row "Drafts" gets the example `CatalogService.Products` (`srv/catalog-service.cds`), decision ADR-0012 and the note on `IsActiveEntity=true` for non-Fiori clients; row "Service test" points to ADR-0012 for draft-enabled entities. `docs/architecture/TESTING.md`, "cds 10 specifics": `POST` to a draft-enabled entity without `IsActiveEntity: true` creates a draft and skips `@mandatory`. `templates/service.test.js`: explicit `IsActiveEntity: true` in the create test and `category_code` instead of the stale `category`.
+- [ ] `docs/decisions/ADR-0012-products-draft-editing.md`: status "accepted" with the user's date (set by `architect` after the decision), consequences ticked by `docs-keeper`.
+- [ ] `docs/features/products-draft-edit/SUMMARY.md` and `VERIFICATION.md` written; this `PLAN.md` marked done; `docs/LESSONS.md` entries for the non-obvious behavior (see step 11).
+
+## Steps
+
+| # | Phase | Agent | Files | Pattern | Check |
+|---|---|---|---|---|---|
+| 1 | Research | `architect` | `CONTEXT.md`, `PLAN.md`, `docs/decisions/ADR-0012-products-draft-editing.md` | | done 2026-09-07; awaiting user decisions |
+| 2 | Design | `ux-designer` | `CONTEXT.md`, section "Screens" | Fiori draft handling, Object Page edit mode (`mcp__fiori-mcp__search_docs`: "Draft Handling", "Object Page edit mode", "Editing Status", "Toggling the Editability of Header Fields", "Inline Edit") | section filled: edit-mode field list, standard draft UI elements, error and discard behavior, `en`/`ru` texts, keyboard and accessibility scenarios, verifier scenarios; explicit yes/no on keeping `editableHeaderContent: false`, on `hideDraft`, on inline edit as follow-up; deviations from this plan listed for `architect` |
+| 3 | Backend: service | `cap-backend-dev` | `srv/catalog-service.cds` | Drafts (ADR-0012) | `mcp__cds-mcp__search_model` for `CatalogService.Products` and `search_docs` "@odata.draft.enabled" before the edit; `cds compile srv --to json` without errors; `npm run lint`; `cds compile '*' --to edmx-v4 -s CatalogService -l en` shows exactly one `Common.DraftRoot`, actions `draftEdit`/`draftActivate`/`draftPrepare`, and `grep -c 'IsActiveEntity' ` on the `Categories` entity type is 0; no `package.json` change; no `srv/*.js` created |
+| 4 | Backend: tests and contract | `test-backend` | `test/catalog-service.test.js`, `test/__snapshots__/metadata.test.js.snap` (via `npx vitest -u`), line in `docs/CHANGELOG.md` | Service test; OData contract (ADR-0002, ADR-0012) | `mcp__cds-mcp__search_docs` "draft-enabled entity IsActiveEntity draftEdit draftActivate" before the edit; `npm test` green with 21 tests, full output in the report; the snapshot diff contains only the artifacts listed in the criteria (reviewer re-checks); `npx prettier --write test/` |
+| 5 | Gate phase 2 | orchestrator | | | `npm run lint`, `npm test`; commit `feat(srv): enable draft editing for Products` (files of steps 3–4) |
+| 6 | UI: snapshot and mock | `fiori-app-dev` | `app/products/webapp/localService/metadata.xml`; `manifest.json` only if the user picks inline edit or `hideDraft` | metadata.xml snapshot update; UI without backend (ADR-0008); Manifest change (ADR-0007) if needed | `cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/localService/metadata.xml`; `npm run start-mock` starts, `GET /odata/v4/catalog/Products?$count=true` answers 15, in the browser Edit → Save works in mock mode; `git diff --quiet app/products/webapp/manifest.json` and `mockdata/`; if a manifest change is decided: `list_functionality` → `get_functionality_details` → `execute_functionality`, then `npm run lint` in `app/products` |
+| 7 | UI tests | `test-ui` | `app/products/webapp/test/integration/EditCategoryOnObjectPageJourney.js` | User scenario (OPA5 on `sap.fe.test.*`); rule `tests-ui.md` | skills `ui5-best-practices-opa5` and `mcp__fiori-mcp__search_docs` "sap.fe.test.api.FooterActionsOP" before the edit; fresh `npm run watch` in the root, then `npm run test:ui` in `app/products`: all journeys pass, 0 skipped, output in the report; `npm run lint` in `app/products` without errors; if a run fails midway, restart `npm run watch` before re-running (leftover draft) |
+| 8 | Gate phase 3 | orchestrator | | | `npm run lint` in `app/products`; `npm test` in the root green; commit `feat(app): enable object page editing journey for Products` (files of steps 6–7) |
+| 9 | Verification | `ui-verifier` | `docs/features/products-draft-edit/VERIFICATION.md`, `screenshots/` | | fresh `npm run watch`; UI criteria in `en` and `ru`, the Create flow manually, network inside `$batch` (`draftEdit`, `PATCH ...IsActiveEntity=false`, `draftActivate`, `DELETE ...IsActiveEntity=false`), console, keyboard and accessibility scenarios from step 2; data restored to seeded state; verdict "ready for review" |
+| 10 | Review | `reviewer` | | | zero blocking findings; check specifically: annotation only in `srv/catalog-service.cds`, no handler file, no hand-written `Common.Draft*`/`IsActiveEntity` in `srv/` or `app/`, no manifest diff (recommended option), `mockdata` unchanged, every active-data request in tests explicit about `IsActiveEntity`, snapshot diff limited to draft artifacts, journey has no `skip`, English-only docs, CHANGELOG lines present |
+| 11 | Documentation | `docs-keeper` | `docs/registry/*` (generated), `docs/CHANGELOG.md`, `docs/STATE.md`, `docs/architecture/PATTERNS.md`, `docs/architecture/TESTING.md`, `templates/service.test.js`, `docs/features/products-draft-edit/SUMMARY.md`, `docs/LESSONS.md` | | `node scripts/check-docs-fresh.mjs` green; LESSONS entries: (a) `POST` to a draft-enabled entity without `IsActiveEntity` creates a draft and skips `@mandatory`; (b) `DELETE /Entity(<id>)` of a draft-only record answers 403 `DRAFT_ACTIVE_DELETE_FORBIDDEN_DRAFT_EXISTS`; (c) `@assert.*` on a draft PATCH are `DraftMessages` with 200, enforced with 400 on `draftActivate`, `target` prefixed with `in/`; commit `docs: products-draft-edit summary and registry` |
+
+### Details for the developers
+
+Step 3, `srv/catalog-service.cds`. The service block becomes:
+
+```cds
+service CatalogService {
+  @odata.draft.enabled entity Products as projection on catalog.Products;
+  @readonly entity Categories as projection on catalog.Categories;
+}
+```
+
+Nothing else changes in the file; `using from './annotations/...'` lines stay. No `cds` block is added to `package.json`. Sanity check after the edit: `cds compile '*' --to edmx-v4 -s CatalogService -l en | grep -c 'Term="Common.DraftRoot"'` prints `1`; `cds compile '*' --to edmx-v4 -s CatalogService -l en | grep -A 12 '<EntityType Name="Categories">' | grep -c IsActiveEntity` prints `0`.
+
+Step 4, `test/catalog-service.test.js`. Keep the file structure (one `describe` per entity plus one for drafts). Introduce two helpers next to `newProduct`:
+
+```js
+// Draft-enabled entity (ADR-0012): active records are addressed explicitly.
+const active = (payload) => ({ IsActiveEntity: true, ...payload });
+const activeKey = (id) => `${base}/Products(ID=${id},IsActiveEntity=true)`;
+const draftKey = (id) => `${base}/Products(ID=${id},IsActiveEntity=false)`;
+```
+
+Changed tests: "creates a product ..." posts `active(newProduct)`, asserts `IsActiveEntity: true`, deletes via `activeKey(data.ID)`; the three negative POST tests post `active(without('name'))`, `active(without('category_code'))`, `active({ ...newProduct, category_code: 'UNKNOWN' })`; "rejects negative stock" patches `activeKey(id)`. New `describe('CatalogService.Products drafts')`: `beforeAll` creates `active({ ...newProduct, name: 'Draft Lamp' })` and stores the ID, `afterAll` deletes `activeKey(id)`; every test that opens a draft discards it (`DELETE draftKey(id)`) before it ends, including the failure path where practical (`try/finally`). Draft actions are called as `POST(`${activeKey(id)}/CatalogService.draftEdit`, { PreserveChanges: true })` and `POST(`${draftKey(id)}/CatalogService.draftActivate`, {})`. For `bob` pass `{ auth: { username: 'bob' } }` as the request option (rule `tests-backend.md`: a different user in its own `it`). Assertion style from LESSONS: `const err = await expect(...).to.be.rejectedWith(/409/); expect(err).to.containSubset({ code: 'DRAFT_ALREADY_EXISTS' })`. Snapshot: run `npx vitest -u` once, then `npm test`; the CHANGELOG line reads "OData contract: `Products` is draft-enabled (`IsActiveEntity` key, `HasActiveEntity`, `HasDraftEntity`, `DraftMessages`, `DraftAdministrativeData`, `SiblingEntity`, actions `draftEdit`/`draftActivate`/`draftPrepare`, `Common.DraftRoot`); `Categories` unchanged".
+
+Step 6, snapshot. Only `metadata.xml` changes. Compare with the contract snapshot: both are produced by the same compile, so `diff <(cds compile '*' --to edmx-v4 -s CatalogService -l en) app/products/webapp/localService/metadata.xml` is empty. Mock smoke: `npm run start-mock`, open `test/flpSandbox.html#products-display`, open Laptop Pro 15, Edit, change Category, Save; the mockserver answers the draft actions itself (`draftEntitySet.js`). If the mockserver rejects a draft action, record it in the report and in STATE as a mock limitation; do not add fields to `mockdata/Products.json` without a documented reason.
+
+Step 7, journey. Replace `const editTest = opaTest.skip;` with `const editTest = opaTest;`; rewrite the header comment (drop the "SKIPPED" paragraph, reference this PLAN and ADR-0012). Insert after "Saving shows the new name in the field and in the header":
+
+```js
+editTest('Cancel discards the change', function (Given, When, Then) {
+  When.onTheProductsObjectPage.onHeader().iExecuteEdit();
+  Then.onTheProductsObjectPage.iSeeObjectPageInEditMode();
+  When.onTheProductsObjectPage.onForm(generalInfo).iOpenValueHelp(categoryField);
+  When.onTheCategoryDropdown.iSelectItem(names.KITCHEN);
+  When.onTheProductsObjectPage.onFooter().iExecuteCancel();
+  When.onTheProductsObjectPage.onFooter().iConfirmCancel();
+  Then.onTheProductsObjectPage.iSeeObjectPageInDisplayMode();
+  Then.onTheProductsObjectPage.onForm(generalInfo).iCheckField(categoryField, names.FURNITURE);
+  Then.onTheProductsObjectPage.onHeader().iCheckTitle('Laptop Pro 15', names.FURNITURE);
+});
+```
+
+The existing restore test then brings the category back to Electronics; teardown stays the last test. If `iConfirmCancel` does not find the popover because FE V4 skips the confirmation for a draft without persisted changes, first make sure the PATCH was sent (choose the item and let the field lose focus), then report; do not replace the `sap.fe.test` API with raw `Opa5.waitFor`. Journeys are run against a freshly started `npm run watch` (in-memory DB recreated).
+
+Step 9, verification. Order: first the Edit button on the Object Page (the item that failed last time), then the journey scenarios by hand, then the draft indicator and Editing Status filter, then the Create flow, then `ru`, then keyboard. Everything changed is restored: drafts discarded, created products deleted. Network evidence is taken from `$batch` bodies (`list_network_requests` with `resourceTypes: ["xhr","fetch"]`, then `get_network_request`).
+
+## Decisions that require an ADR
+
+`docs/decisions/ADR-0012-products-draft-editing.md` (proposed): approach (full draft vs inline edit vs both), location of the annotation, addressing of active data by non-Fiori clients and tests, default runtime configuration, standard draft UI. Consequences for `PATTERNS.md`, `TESTING.md`, `templates/service.test.js` are executed by `docs-keeper` in step 11 after acceptance; the status is set by `architect` when the user decides.
+
+## Decisions for the user
+
+1. **Editing approach.** A) Full draft on `CatalogService.Products` (recommended: matches the request and the parked journey, verified end to end in the experiment, no manifest change). B) Inline edit only (`inlineEdit` in the manifest, field-level PATCH on the active record; not confirmed for a non-draft CAP entity, no Save of the whole object, journey does not fit). C) Draft now, inline edit for single fields as a follow-up after the designer sees the app (recommended follow-up, not in this feature).
+2. **How tests and non-Fiori clients address active data.** Explicit `IsActiveEntity: true` in payloads and keys (recommended, verified, no configuration) versus `cds.fiori.draft_new_action: true` (plain `POST` creates active records; not verified, needs `package.json` and FE/mockserver support for `NewAction`) versus `cds.fiori.direct_crud: true` (Beta).
+3. **Draft UI.** Standard FE draft UI (recommended: Editing Status filter, draft indicator, Create/Delete on the List Report) versus `hideDraft` through Fiori MCP `settings > hideDraft` (manifest change).
+4. **Scope of the Create flow.** Verify manually only (recommended) versus adding an OPA journey "create and delete a product" in this feature.
+5. **Header editing.** Keep `editableHeaderContent: false` (recommended, no manifest change) versus switching to the FE V4 default `true` via `execute_functionality`.
+
+## Risks
+
+| Risk | How it is detected | What to do |
+|---|---|---|
+| Existing POST tests create drafts instead of failing (`bypass_draft: true`, `draft_new_action: false`) | `npm test` in step 4: three negative tests red, the create test leaves a draft | Explicit `IsActiveEntity: true` (ADR-0012, part 3); verified in CONTEXT |
+| Snapshot diff contains more than the draft artifacts (for example an accidental annotation move) | reviewer compares the diff with the criteria list | Revert anything outside the list; the `app/` layer must not change |
+| A leftover draft (failed journey or manual test) changes the List Report row count or blocks Edit with "draft exists" | `iCheckRows(15)` red; `iExecuteEdit` behaves differently (opens the existing draft) | Fresh `npm run watch` before every run; journeys restore values and discard drafts; `test-ui` notes the restart in the report |
+| `iConfirmCancel` finds no discard popover (FE skips confirmation when the draft has no persisted change) | step 7, the new Cancel test | Ensure the dropdown selection is committed (PATCH visible in `$batch`) before Cancel; if FE still skips, drop `iConfirmCancel` and assert display mode only; report to `architect` |
+| The mockserver does not emulate a draft action correctly (version 1.7.15) | step 6 smoke: Edit or Save fails in `npm run start-mock` | Record as mock limitation in STATE (like the missing `ru`); do not change `mockdata` or `ui5-mock.yaml` without a reason; journeys run against the live stack anyway |
+| Draft lock semantics in the sandbox (`cds watch` serves anonymous users, all drafts belong to `anonymous`) | `ui-verifier` cannot reproduce "Locked by Another User" | Cover the lock in the backend test (bob vs alice); the UI scenario is limited to own drafts; note in VERIFICATION |
+| `DELETE /Products(<id>)` on a record that only exists as a draft answers 403 | step 4 (deliberately tested) | Discard with `IsActiveEntity=false`; LESSONS entry (c) |
+| Activation error `target` differs between a new draft (`category_code`) and a draft of an active record (`in/name`, `in/stock`) | negative draft tests | Match `target` by suffix regex, assert `code` exactly |
+| `draft_new_action` alternative is chosen by the user but the compiler ignores the environment override | not applicable for the recommended option | If chosen, `cap-backend-dev` sets `cds.fiori.draft_new_action: true` in `package.json` and re-runs the CONTEXT experiment before the tests are written; `architect` rewrites steps 3–4 |
+| FE V4 List Report shows a "Draft" indicator column or the Editing Status filter that OPA page objects did not expect | step 7: `iCheckColumns`, `iCheckFilterField` still pass (they check named columns/fields only) | If a check fails, adjust the assertion to the named column, not to a column count |
+| UI5 CDN "latest" (1.152 at the time of writing) changes FE draft UI details between runs | `ui-verifier` screenshots differ from the designer's expectations | Describe behavior, not pixels; ADR-0006 accepted the unpinned CDN |
+| Registry generator does not render draft actions or the draft flag for `Products` | step 11: `SERVICES.md` shows no change | Report as generator debt for `architect`/user (the generator is code, outside `docs-keeper`'s mandate), as was done for the value list column in `categories-code-list` |
+| Hooks: PostToolUse marks the registry stale after each edit, Stop hook demands `npm test` green and STATE/CHANGELOG updated between phases | hook messages in agent sessions | Orchestrator updates the STATE "active feature" line after every phase (retro item 7); `docs-keeper` regenerates the registry in step 11 |

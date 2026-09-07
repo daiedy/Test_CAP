@@ -1,6 +1,6 @@
 /**
  * SubagentStop hook: a subagent may not finish while changed files have lint ERRORS.
- * Warnings pass. Exit 2 blocks with a Russian summary on stderr.
+ * Warnings pass. Exit 2 blocks with a summary on stderr.
  */
 import path from 'node:path';
 import fs from 'node:fs';
@@ -23,7 +23,7 @@ function eslintErrors(root, files) {
     cwd: root,
     timeoutMs: TIMEOUT,
   });
-  if (res.timedOut) return ['eslint: превышен лимит времени'];
+  if (res.timedOut) return ['eslint: time limit exceeded'];
   try {
     const report = JSON.parse(res.stdout || '[]');
     return report.flatMap((f) =>
@@ -56,7 +56,7 @@ function ui5Errors(root, files) {
       timeoutMs: TIMEOUT,
     });
     if (res.timedOut) {
-      errors.push(`ui5lint (${path.relative(root, appDir)}): превышен лимит времени`);
+      errors.push(`ui5lint (${path.relative(root, appDir)}): time limit exceeded`);
       continue;
     }
     try {
@@ -98,15 +98,13 @@ try {
   const errors = [...eslintErrors(root, cdsAndSrv), ...ui5Errors(root, ui5)];
   if (errors.length) {
     process.stderr.write(
-      `Субагент не может завершить работу: ${errors.length} ошибок линтера в изменённых файлах. Исправь их и заверши снова.\n` +
+      `The subagent cannot finish: ${errors.length} linter errors in changed files. Fix them and finish again.\n` +
         errors.slice(0, 30).join('\n') +
         '\n'
     );
     process.exit(2);
   }
 } catch (e) {
-  process.stderr.write(
-    `subagent-stop hook: внутренняя ошибка (${e.message}), проверка пропущена.\n`
-  );
+  process.stderr.write(`subagent-stop hook: internal error (${e.message}), check skipped.\n`);
 }
 process.exit(0);

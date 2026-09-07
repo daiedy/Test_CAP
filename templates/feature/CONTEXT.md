@@ -1,28 +1,28 @@
-# <Имя фичи>: контекст
+# <Feature name>: context
 
-Дата: YYYY-MM-DD. Автор: `architect`. Ветка: `feature/<kebab-name>`.
+Date: YYYY-MM-DD. Author: `architect`. Branch: `feature/<kebab-name>`.
 
-## Запрос
-Одним абзацем, словами пользователя: что нужно и зачем.
+## Request
+In one paragraph, in the user's words: what is needed and why.
 
-## Затронутые сущности и сервисы
-Результат `mcp__cds-mcp__search_model` и `docs/registry/DOMAIN-MODEL.md`, `SERVICES.md`:
+## Affected entities and services
+Result of `mcp__cds-mcp__search_model` and `docs/registry/DOMAIN-MODEL.md`, `SERVICES.md`:
 
-| Объект | Есть сейчас | Что меняется |
+| Object | Exists now | What changes |
 |---|---|---|
-| `CatalogService.Products` | проекция, поля ... | добавить ... |
+| `CatalogService.Products` | projection, fields ... | add ... |
 
-## Что уже существует и переиспользуется
-Из `docs/registry/HANDLERS.md`, `REUSE-CATALOG.md`, `UI-ARTIFACTS.md`. Если ничего, написать явно «ничего подходящего нет» и почему.
+## What already exists and is reused
+From `docs/registry/HANDLERS.md`, `REUSE-CATALOG.md`, `UI-ARTIFACTS.md`. If nothing, state explicitly "nothing suitable exists" and why.
 
-## Применимые паттерны
-Строки из `docs/architecture/PATTERNS.md` с названием паттерна. Если паттерна нет, отметить «нужен ADR».
+## Applicable patterns
+Rows from `docs/architecture/PATTERNS.md` with the pattern name. If there is no pattern, note "ADR needed".
 
-## Релевантные уроки
-Записи из `docs/LESSONS.md`, которые касаются задачи.
+## Relevant lessons
+Entries from `docs/LESSONS.md` that concern the task.
 
-## Экраны (если есть UI)
-Заполняет `ux-designer`: floorplan, список полей и действий, состояния, ссылки на гайдлайны из `mcp__fiori-mcp__search_docs`.
+## Screens (if there is a UI)
+Filled in by `ux-designer`: floorplan, list of fields and actions, states, links to guidelines from `mcp__fiori-mcp__search_docs`.
 
-## Открытые вопросы
-Что нужно решить пользователю до начала реализации.
+## Open questions
+What the user has to decide before implementation starts.

@@ -1,20 +1,20 @@
 ---
 name: add-entity
-description: Короткий рабочий поток для новой сущности CAP по паттерну «Новая сущность»: модель, проекция, семантические аннотации, i18n, данные, UI-аннотации, тесты, реестр. Используй для простых сущностей без сложной логики; для остального /feature.
-argument-hint: <Имя сущности и поля>
+description: Short workflow for a new CAP entity following the "New entity" pattern: model, projection, semantic annotations, i18n, data, UI annotations, tests, registry. Use for simple entities without complex logic; for everything else use /feature.
+argument-hint: <Entity name and fields>
 disable-model-invocation: true
 ---
 
-# Новая сущность: $ARGUMENTS
+# New entity: $ARGUMENTS
 
-Следуй паттерну «Новая сущность» из `docs/architecture/PATTERNS.md` и правилам `.claude/rules/db-model.md`.
+Follow the "New entity" pattern from `docs/architecture/PATTERNS.md` and the rules in `.claude/rules/db-model.md`.
 
-1. `mcp__cds-mcp__search_model` по имени сущности и похожим именам; `docs/registry/DOMAIN-MODEL.md`. Если сущность или её аналог есть, остановись и сообщи.
-2. `db/schema.cds`: `entity <Name> : cuid, managed { ... }` по `templates/entity.cds`. Справочники через `sap.common.CodeList`, деньги через `Decimal(15, 2)` + `Currency`.
-3. `srv/catalog-service.cds`: проекция; `srv/annotations/<Name>.cds` по `templates/annotations-semantic.cds`; ключи в `_i18n/i18n.properties` и `i18n_ru.properties`.
-4. Данные: `cds add data --filter <Name> --records 10`, затем замени плейсхолдеры реальными значениями, UUID оставь.
-5. UI: `app/products/annotations/<Name>.cds` по `templates/annotations-ui.cds`, подключи в `app/products/annotations.cds`. Страницу для новой сущности добавляй только через Fiori MCP (`list_functionality` → `execute_functionality`), затем `run_manifest_validation`.
-6. Проверки: `cds compile srv --to json`, `npm run lint`, обновление снимка `cds compile srv --to edmx-v4 -l en > app/products/webapp/localService/metadata.xml`, тест в `test/catalog-service.test.js` (список, создание, обязательные поля), `npx vitest -u` для снапшота metadata с записью в CHANGELOG, `npm test`, `npm run lint` в `app/products`.
-7. `npm run docs:registry`, строки в `docs/CHANGELOG.md`, обновление `docs/STATE.md`.
+1. `mcp__cds-mcp__search_model` by the entity name and similar names; `docs/registry/DOMAIN-MODEL.md`. If the entity or its analogue already exists, stop and report.
+2. `db/schema.cds`: `entity <Name> : cuid, managed { ... }` following `templates/entity.cds`. Code lists via `sap.common.CodeList`, money via `Decimal(15, 2)` + `Currency`.
+3. `srv/catalog-service.cds`: projection; `srv/annotations/<Name>.cds` following `templates/annotations-semantic.cds`; keys in `_i18n/i18n.properties` and `i18n_ru.properties`.
+4. Data: `cds add data --filter <Name> --records 10`, then replace the placeholders with real values, keep the UUIDs.
+5. UI: `app/products/annotations/<Name>.cds` following `templates/annotations-ui.cds`, include it in `app/products/annotations.cds`. Add a page for the new entity only via Fiori MCP (`list_functionality` → `execute_functionality`), then `run_manifest_validation`.
+6. Checks: `cds compile srv --to json`, `npm run lint`, snapshot update `cds compile srv --to edmx-v4 -l en > app/products/webapp/localService/metadata.xml`, a test in `test/catalog-service.test.js` (list, create, mandatory fields), `npx vitest -u` for the metadata snapshot with an entry in CHANGELOG, `npm test`, `npm run lint` in `app/products`.
+7. `npm run docs:registry`, lines in `docs/CHANGELOG.md`, update of `docs/STATE.md`.
 
-Отчёт по форме протокола.
+Report in the protocol format.

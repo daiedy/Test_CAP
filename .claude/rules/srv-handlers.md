@@ -2,29 +2,29 @@
 paths:
   - "srv/**/*.js"
 ---
-# Хендлеры и библиотеки (srv/*.js, srv/lib/*.js)
+# Handlers and libraries (srv/*.js, srv/lib/*.js)
 
-## Перед правкой
-1. Убедиться, что задача не решается аннотацией: PATTERNS «Обязательное поле», «Проверка формата или диапазона», «Только чтение», «Авторизация». Хендлер только когда аннотацией не выразить.
-2. `mcp__cds-mcp__search_model` по сущности и событию, `mcp__cds-mcp__search_docs` по API (`req.reject`, `srv.before`, `cds.ql`, `cds.log`).
-3. `docs/registry/HANDLERS.md`: нет ли уже обработчика этого события. Один обработчик на событие и сущность.
-4. `docs/registry/REUSE-CATALOG.md`: нужная функция может уже лежать в `srv/lib/`.
+## Before editing
+1. Make sure the task cannot be solved with an annotation: PATTERNS "Mandatory field", "Format or range check", "Read-only", "Authorization". A handler only when an annotation cannot express it.
+2. `mcp__cds-mcp__search_model` for the entity and event, `mcp__cds-mcp__search_docs` for the API (`req.reject`, `srv.before`, `cds.ql`, `cds.log`).
+3. `docs/registry/HANDLERS.md`: check whether a handler for this event already exists. One handler per event and entity.
+4. `docs/registry/REUSE-CATALOG.md`: the function you need may already live in `srv/lib/`.
 
-## Правила
-- ESM. `import cds from '@sap/cds'`. Класс `export default class <Service> extends cds.ApplicationService`, вся регистрация в `async init()`, в конце `return super.init()`.
-- Порядок в `init()`: `before` → `on` → `after`.
-- Ошибки: `req.reject(<status>, '<MESSAGE_KEY>', [args])`, ключ в `_i18n/messages.properties` и `_i18n/messages_ru.properties`.
-- Логи: `const LOG = cds.log('<module>')` на уровне модуля. `console.*` запрещён.
-- Запросы только через `cds.ql`. Никаких ручных транзакций, `cds.tx()` не открывать вручную.
-- Общий код: `srv/lib/<topic>.js`, именованные экспорты, JSDoc, без обращения к `req`.
-- Шаблоны: `templates/handler.js`, `templates/lib.js`.
+## Rules
+- ESM. `import cds from '@sap/cds'`. Class `export default class <Service> extends cds.ApplicationService`, all registration in `async init()`, `return super.init()` at the end.
+- Order in `init()`: `before` → `on` → `after`.
+- Errors: `req.reject(<status>, '<MESSAGE_KEY>', [args])`, the key in `_i18n/messages.properties` and `_i18n/messages_ru.properties`.
+- Logs: `const LOG = cds.log('<module>')` at module level. `console.*` is forbidden.
+- Queries only through `cds.ql`. No manual transactions, do not open `cds.tx()` manually.
+- Shared code: `srv/lib/<topic>.js`, named exports, JSDoc, no access to `req`.
+- Templates: `templates/handler.js`, `templates/lib.js`.
 
-## После правки
+## After editing
 - `npx prettier --write <file>`, `npx eslint <file>`.
-- Тест на каждый хендлер в `test/<service>.test.js`, запуск `npm test`, вывод в отчёт.
+- A test for every handler in `test/<service>.test.js`, run `npm test`, the output goes into the report.
 - `npm run docs:registry`.
 
-## Запрещено
-- Дублировать то, что делает generic service provider (CRUD, `@mandatory`, `@assert`).
-- Хардкод строк, URL, учётных данных, ID тенантов.
-- `await` внутри `cds.on('served', ...)` без обработки ошибок; `process.chdir`.
+## Forbidden
+- Duplicating what the generic service provider does (CRUD, `@mandatory`, `@assert`).
+- Hardcoded strings, URLs, credentials, tenant IDs.
+- `await` inside `cds.on('served', ...)` without error handling; `process.chdir`.

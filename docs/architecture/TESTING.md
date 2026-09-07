@@ -1,38 +1,38 @@
-# Стратегия тестирования
+# Testing strategy
 
-## Уровни
+## Levels
 
-| Уровень | Инструмент | Где | Когда запускается |
+| Level | Tool | Where | When it runs |
 |---|---|---|---|
-| Статика | `cds lint`, `ui5lint`, `prettier --check` | корень, `app/products` | PostToolUse-хук на каждом изменённом файле, CI |
-| Контракт OData | Vitest снапшот `cds compile srv --to edmx-v4` | `test/metadata.test.js` | `npm test`, Stop-хук, CI |
-| Сервис | `@cap-js/cds-test` + Vitest, SQLite in-memory | `test/<service>.test.js` | `npm test`, Stop-хук, CI |
-| Юнит UI | QUnit | `app/products/webapp/test/unit/` | `ui5-test-runner`, CI (этап 3) |
-| Сценарии UI | OPA5-журнеи на `sap.fe.test` | `app/products/webapp/test/integration/` | `ui5-test-runner`, CI (этап 3) |
-| Сквозные | wdi5 против `cds watch` | `app/products/webapp/test/e2e/` | по расписанию и перед релизом (этап 3) |
+| Static | `cds lint`, `ui5lint`, `prettier --check` | root, `app/products` | PostToolUse hook on every changed file, CI |
+| OData contract | Vitest snapshot of `cds compile srv --to edmx-v4` | `test/metadata.test.js` | `npm test`, Stop hook, CI |
+| Service | `@cap-js/cds-test` + Vitest, SQLite in-memory | `test/<service>.test.js` | `npm test`, Stop hook, CI |
+| UI unit | QUnit | `app/products/webapp/test/unit/` | `ui5-test-runner`, CI (phase 3) |
+| UI scenarios | OPA5 journeys on `sap.fe.test` | `app/products/webapp/test/integration/` | `ui5-test-runner`, CI (phase 3) |
+| End-to-end | wdi5 against `cds watch` | `app/products/webapp/test/e2e/` | on schedule and before a release (phase 3) |
 
-## Правила
+## Rules
 
-1. Каждое изменение в `db/` или `srv/` сопровождается тестом сервиса или обновлением существующего. Каждое изменение контракта фиксируется обновлением снапшота командой `npx vitest -u` и строкой в `docs/CHANGELOG.md`.
-2. Тесты используют данные из `db/data/*.csv`. Тест не создаёт данные, которые может взять из CSV.
-3. `cds.test()` вызывается первым, до любых импортов подмодулей cds. Папка проекта передаётся явно: `cds.test(import.meta.dirname + '/..')`.
-4. Проверяется поведение, а не полный ответ: `expect(data.value).to.containSubset([...])` вместо `deep.equal` целого ответа.
-5. Авторизация: `defaults.auth = { username: 'alice' }`; тест на отказ в доступе идёт отдельным `it`.
-6. Тест не считается выполненным, пока не запущен: агент прикладывает вывод `npm test` в отчёт.
-7. Заявление «тесты проходят» без свежего запуска запрещено протоколом.
+1. Every change in `db/` or `srv/` is accompanied by a service test or an update of an existing one. Every contract change is recorded by updating the snapshot with `npx vitest -u` and a line in `docs/CHANGELOG.md`.
+2. Tests use data from `db/data/*.csv`. A test does not create data it can take from CSV.
+3. `cds.test()` is called first, before any imports of cds submodules. The project folder is passed explicitly: `cds.test(import.meta.dirname + '/..')`.
+4. Behavior is checked, not the full response: `expect(data.value).to.containSubset([...])` instead of `deep.equal` of the whole response.
+5. Authorization: `defaults.auth = { username: 'alice' }`; the access-denied test is a separate `it`.
+6. A test does not count as done until it has been run: the agent attaches the `npm test` output to the report.
+7. Claiming "tests pass" without a fresh run is forbidden by the protocol.
 
-## Команды
+## Commands
 
 ```bash
-npm test                  # все тесты бэкенда, тихий вывод
-npm run test:watch        # в разработке
-npm run test:coverage     # покрытие v8 в coverage/
+npm test                  # all backend tests, quiet output
+npm run test:watch        # during development
+npm run test:coverage     # v8 coverage in coverage/
 npm run lint              # cds lint
 cd app/products && npm run lint   # ui5lint
 ```
 
-## Особенности cds 10
+## cds 10 specifics
 
-- Decimal и Int64 из SQLite приходят строками: `expect(product.price).to.equal('1299.99')`.
-- Операции записи возвращают `{ affected }`, а не изменённые строки.
-- `srv.entities` это геттер, не функция.
+- Decimal and Int64 from SQLite arrive as strings: `expect(product.price).to.equal('1299.99')`.
+- Write operations return `{ affected }`, not the changed rows.
+- `srv.entities` is a getter, not a function.

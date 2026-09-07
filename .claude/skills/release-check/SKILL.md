@@ -1,70 +1,70 @@
 ---
 name: release-check
-description: Еженедельная проверка обновлений фреймворков (CAP, UI5, Fiori tools, MCP-серверы SAP) и запись дайджеста в docs/framework/UPDATES.md. Используй при словах «обновления фреймворков», «release check», «что нового в CAP/UI5», «проверь релизы», «есть ли новые версии», а также по расписанию агента release-watcher.
+description: Weekly check of framework updates (CAP, UI5, Fiori tools, SAP MCP servers) and a digest entry in docs/framework/UPDATES.md. Use when the user says "framework updates", "release check", "what's new in CAP/UI5", "check the releases", "are there new versions" (Russian: «обновления фреймворков», «что нового в CAP/UI5», «проверь релизы», «есть ли новые версии»), and on the schedule of the release-watcher agent.
 allowed-tools: Bash, Read, Write, WebFetch
 ---
 
-# Проверка обновлений фреймворков
+# Framework update check
 
-Цель: за один проход понять, что изменилось у SAP CAP, SAPUI5, Fiori tools и MCP-серверов, и записать в `docs/framework/UPDATES.md` короткий дайджест с оценкой влияния на проект. Ничего не обновлять в `package.json` и `.mcp.json`, только рекомендовать.
+Goal: in one pass understand what changed in SAP CAP, SAPUI5, Fiori tools and the MCP servers, and write a short digest with an impact assessment for the project into `docs/framework/UPDATES.md`. Do not update anything in `package.json` and `.mcp.json`, only recommend.
 
-## Шаг 1. Собрать diff скриптом
+## Step 1. Collect the diff with the script
 
 ```bash
 export PATH="/opt/homebrew/opt/node@22/bin:$PATH"
 node scripts/watch-releases.mjs --out "$SCRATCHPAD/release-diff.md"
 ```
 
-`$SCRATCHPAD` это каталог scratchpad сессии. Скрипт сам обновляет `docs/framework/versions.json`. Если в выводе есть раздел `## Errors`, перечисли эти источники в дайджесте как «не проверено» и не делай по ним выводов.
+`$SCRATCHPAD` is the scratchpad directory of the session. The script updates `docs/framework/versions.json` itself. If the output contains an `## Errors` section, list those sources in the digest as "not checked" and draw no conclusions from them.
 
-Если diff пустой (`No changes since the last run.`), добавь в `UPDATES.md` раздел из одной строки «`<дата>` — изменений нет, проверено N источников» и закончи.
+If the diff is empty (`No changes since the last run.`), add a one-line section to `UPDATES.md`: "`<date>`: no changes, N sources checked", and finish.
 
-## Шаг 2. Оценить каждое изменение
+## Step 2. Assess every change
 
-Для каждого пункта в разделах diff определи, влияет ли он на проект:
+For every item in the diff sections decide whether it affects the project:
 
-1. Открой `docs/architecture/STACK.md` и `package.json` (корень и `app/products`), а также `.mcp.json`.
-2. Пакет есть в проекте и вышла новая версия → **влияет**. Мажор → влияет сильно, нужна отдельная задача.
-3. Пакет запланирован на будущий этап (см. STACK.md, раздел «Планируется») → влияет, пометка «учесть при установке».
-4. Пакет не используется и не запланирован → **не влияет**.
-5. Новые заголовки в CAP changelog: посмотри, упоминают ли они `@sap/cds`, `@sap/cds-dk`, `@cap-js/sqlite`, `@cap-js/cds-test`, аннотации или OData V4. Да → влияет.
-6. UI5: смена активной версии CDN влияет всегда, потому что CDN не зафиксирован (ADR-0006). Новая LTS → рекомендация зафиксировать версию.
-7. Ленты SAP/open-ux-tools и plugins-coding-agents: влияет только релиз `@sap-ux/fiori-mcp-server`, `@sap-ux/ui5-middleware-fe-mockserver`, `@sap-ux/ui5-test-writer` или плагина `ui5`.
+1. Open `docs/architecture/STACK.md` and `package.json` (root and `app/products`), as well as `.mcp.json`.
+2. The package is in the project and a new version is out → **affects**. A major → affects strongly, a separate task is needed.
+3. The package is planned for a future phase (see STACK.md, section "Planned") → affects, note "consider when installing".
+4. The package is not used and not planned → **does not affect**.
+5. New headings in the CAP changelog: check whether they mention `@sap/cds`, `@sap/cds-dk`, `@cap-js/sqlite`, `@cap-js/cds-test`, annotations or OData V4. Yes → affects.
+6. UI5: a change of the active CDN version always affects, because the CDN is not pinned (ADR-0006). A new LTS → recommendation to pin the version.
+7. Feeds SAP/open-ux-tools and plugins-coding-agents: only a release of `@sap-ux/fiori-mcp-server`, `@sap-ux/ui5-middleware-fe-mockserver`, `@sap-ux/ui5-test-writer` or the `ui5` plugin affects.
 
-## Шаг 3. Дочитать первоисточник для влияющих пунктов
+## Step 3. Read the primary source for the affecting items
 
-Только для пунктов «влияет»: WebFetch конкретной страницы, не всего сайта.
+Only for "affects" items: WebFetch the specific page, not the whole site.
 
-- CAP: `https://cap.cloud.sap/docs/releases/<год>/changelog.md`, ищи заголовок с версией; для мажоров `https://cap.cloud.sap/docs/releases/<год>/<mon><yy>.md`.
-- `@cap-js/*`, `@ui5/*`, wdi5: ссылка из diff на GitHub release.
-- UI5: `https://ui5.sap.com/test-resources/sap/fe/core/relnotes/changes-<версия>.json` и то же для `sap/m`, `sap/ui/core`.
+- CAP: `https://cap.cloud.sap/docs/releases/<year>/changelog.md`, look for the heading with the version; for majors `https://cap.cloud.sap/docs/releases/<year>/<mon><yy>.md`.
+- `@cap-js/*`, `@ui5/*`, wdi5: the GitHub release link from the diff.
+- UI5: `https://ui5.sap.com/test-resources/sap/fe/core/relnotes/changes-<version>.json` and the same for `sap/m`, `sap/ui/core`.
 - Fiori MCP: `https://github.com/SAP/open-ux-tools/blob/main/packages/fiori-mcp-server/CHANGELOG.md`.
 
-Правило версий: снапшоты документации в MCP-серверах могут отставать. Любое утверждение о версии сверяй с `npm view <pkg> version` или страницей релиза, а не с ответом `search_docs`.
+Version rule: documentation snapshots in the MCP servers may lag behind. Verify any statement about a version against `npm view <pkg> version` or the release page, not against the `search_docs` answer.
 
-## Шаг 4. Записать дайджест
+## Step 4. Write the digest
 
-Вставь новый раздел сразу после вводного текста в `docs/framework/UPDATES.md`, выше предыдущих разделов:
+Insert a new section right after the introductory text in `docs/framework/UPDATES.md`, above the previous sections:
 
 ```markdown
 ## <YYYY-MM-DD>
 
-Проверено N источников, ошибок K.
+N sources checked, K errors.
 
-### Влияет на проект
-- `<пакет>` a.b.c → x.y.z: <что изменилось в одну фразу>. Источник: <url>.
+### Affects the project
+- `<package>` a.b.c → x.y.z: <what changed, in one phrase>. Source: <url>.
 
-### Не влияет
-- <пункт>: <почему>.
+### Does not affect
+- <item>: <why>.
 
-### Рекомендуемые действия
-- [ ] поднять пин `<пакет>` в `.mcp.json` до x.y.z после проверки changelog
-- [ ] запустить `/upgrade-cds` (только при мажоре CAP)
-- [ ] зафиксировать UI5 <версия> LTS в ui5.yaml и manifest (при новой LTS)
+### Recommended actions
+- [ ] bump the `<package>` pin in `.mcp.json` to x.y.z after reading the changelog
+- [ ] run `/upgrade-cds` (only for a CAP major)
+- [ ] pin UI5 <version> LTS in ui5.yaml and manifest (on a new LTS)
 ```
 
-Действия формулируй так, чтобы их можно было выполнить без повторного исследования. Если рекомендация меняет зависимости, укажи, какой тест или команда подтвердит успех.
+Phrase the actions so that they can be executed without repeating the research. If a recommendation changes dependencies, state which test or command confirms success.
 
-## Шаг 5. Итог
+## Step 5. Summary
 
-Заверши одним абзацем: сколько источников проверено, сколько пунктов влияет, какое действие первое по приоритету. Никаких изменений в коде, `package.json` и `.mcp.json` в рамках этого скилла.
+Finish with one paragraph: how many sources were checked, how many items affect the project, which action is first by priority. No changes to code, `package.json` or `.mcp.json` within this skill.

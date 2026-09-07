@@ -1,76 +1,76 @@
-# Каталог паттернов: одна задача, один способ
+# Pattern catalogue: one task, one way
 
-Для каждой повторяющейся задачи здесь ровно один утверждённый способ. Агент, встретив задачу из таблицы, использует указанный способ и пример. Если способ не подходит, работа останавливается и создаётся ADR, а не второй способ. Ссылки на примеры указывают на текущий код; реестр в `docs/registry/` показывает, что уже существует.
+For every recurring task there is exactly one approved way here. An agent that meets a task from the table uses the specified way and example. If the way does not fit, work stops and an ADR is created, not a second way. Links to examples point to the current code; the registry in `docs/registry/` shows what already exists.
 
-## Модель данных
+## Data model
 
-| Задача | Способ | Пример | Решение |
+| Task | Way | Example | Decision |
 |---|---|---|---|
-| Новая сущность | `entity X : cuid, managed { ... }` в `db/schema.cds`; проекция в сервисе; labels в `srv/annotations/X.cds`; UI в `app/<app>/annotations/X.cds`; данные `cds add data --filter X --records N`; тест `test/<service>.test.js` | `db/schema.cds` → `Products` | ADR-0003 |
-| Справочник с выбором из списка | Сущность `: sap.common.CodeList` с ключом `code`, ассоциация из основной сущности, `@Common.ValueList` и `@Common.Text` в UI-аннотациях | паттерн `Currency` из `@sap/cds/common` | ADR-0003 |
-| Внутренний статус без выбора пользователем | `enum` в типе элемента, значения UPPER_SNAKE | нет в коде | |
-| Денежная сумма | `Decimal(15, 2)` + `currency : Currency` + `@Measures.ISOCurrency: currency_code` | `Products.price` (историческое `Decimal(10, 2)`) | |
-| Вычисляемое значение | Calculated element `total : Decimal = price * quantity` в схеме; `virtual` + `after READ` только если выражение невозможно в SQL | нет в коде | |
-| Связь родитель–дети (документ) | `Composition of many Items on items.parent = $self` в родителе, `parent : Association to Parent` в детях | нет в коде | |
-| Ссылка на другую сущность | `Association to Target` в единственном числе | `Products.currency` | |
-| Переводимые тексты данных | `localized String(N)`, CSV `<Entity>.texts` | нет в коде | |
+| New entity | `entity X : cuid, managed { ... }` in `db/schema.cds`; projection in the service; labels in `srv/annotations/X.cds`; UI in `app/<app>/annotations/X.cds`; data `cds add data --filter X --records N`; test `test/<service>.test.js` | `db/schema.cds` → `Products` | ADR-0003 |
+| Code list with selection from a list | Entity `: sap.common.CodeList` with key `code`, association from the main entity, `@Common.ValueList` and `@Common.Text` in UI annotations | `Currency` pattern from `@sap/cds/common` | ADR-0003 |
+| Internal status not chosen by the user | `enum` in the element type, UPPER_SNAKE values | not in code | |
+| Monetary amount | `Decimal(15, 2)` + `currency : Currency` + `@Measures.ISOCurrency: currency_code` | `Products.price` (historical `Decimal(10, 2)`) | |
+| Calculated value | Calculated element `total : Decimal = price * quantity` in the schema; `virtual` + `after READ` only if the expression is impossible in SQL | not in code | |
+| Parent-child relationship (document) | `Composition of many Items on items.parent = $self` in the parent, `parent : Association to Parent` in the children | not in code | |
+| Reference to another entity | `Association to Target` in the singular | `Products.currency` | |
+| Translatable data texts | `localized String(N)`, CSV `<Entity>.texts` | not in code | |
 
-## Сервис и логика
+## Service and logic
 
-| Задача | Способ | Пример | Решение |
+| Task | Way | Example | Decision |
 |---|---|---|---|
-| Обязательное поле | `@mandatory` в `srv/annotations/<Entity>.cds` | `srv/annotations/Products.cds` | ADR-0004 |
-| Проверка формата или диапазона | `@assert.format`, `@assert.range` в `srv/annotations/<Entity>.cds`; хендлер `before` только если аннотацией не выразить | `Products.stock @assert.range: [0, 1000000]` | ADR-0004 |
-| Проверка существования цели ассоциации | `@assert.target` | | |
-| Только чтение | `@readonly` на проекции в сервисе | | |
-| Авторизация | `@requires: 'authenticated-user'` на сервисе, `@restrict` на сущности; мок-пользователи в `package.json` → `cds.requires.auth.users` | `srv/catalog-service.cds` | |
-| Действие над одной записью | Bound action в проекции: `actions { action reorder(amount: Integer) }`; хендлер `this.on('reorder', 'Products', ...)`; в UI `DataFieldForAction` | нет в коде, шаблон `templates/service.cds` | |
-| Действие над набором или без контекста | Unbound `action` в сервисе, только если bound невозможен | | |
-| Ошибка бизнес-логики | `req.reject(400, 'KEY', [args])`, ключ в `_i18n/messages.properties` | `templates/handler.js` | |
-| Логирование | `const LOG = cds.log('catalog')`; `LOG.info`, `LOG.warn`, `LOG.error` | `templates/handler.js` | |
-| Общая функция для нескольких хендлеров | `srv/lib/<topic>.js`, именованный экспорт, JSDoc, unit-тест; перед созданием проверить `docs/registry/REUSE-CATALOG.md` | | |
-| Черновики (draft) | `@odata.draft.enabled` только на корневой проекции приложения FE, которое редактирует данные; никогда одновременно на родителе и детях композиции | | |
-| Побочный эффект после записи | `this.after('CREATE', 'Entity', ...)` или событие `srv.emit`; без ручных транзакций | | |
+| Mandatory field | `@mandatory` in `srv/annotations/<Entity>.cds` | `srv/annotations/Products.cds` | ADR-0004 |
+| Format or range check | `@assert.format`, `@assert.range` in `srv/annotations/<Entity>.cds`; a `before` handler only if it cannot be expressed with an annotation | `Products.stock @assert.range: [0, 1000000]` | ADR-0004 |
+| Association target existence check | `@assert.target` | | |
+| Read-only | `@readonly` on the projection in the service | | |
+| Authorization | `@requires: 'authenticated-user'` on the service, `@restrict` on the entity; mock users in `package.json` → `cds.requires.auth.users` | `srv/catalog-service.cds` | |
+| Action on a single record | Bound action in the projection: `actions { action reorder(amount: Integer) }`; handler `this.on('reorder', 'Products', ...)`; in the UI `DataFieldForAction` | not in code, template `templates/service.cds` | |
+| Action on a set or without context | Unbound `action` in the service, only if a bound one is impossible | | |
+| Business logic error | `req.reject(400, 'KEY', [args])`, key in `_i18n/messages.properties` | `templates/handler.js` | |
+| Logging | `const LOG = cds.log('catalog')`; `LOG.info`, `LOG.warn`, `LOG.error` | `templates/handler.js` | |
+| Shared function for several handlers | `srv/lib/<topic>.js`, named export, JSDoc, unit test; check `docs/registry/REUSE-CATALOG.md` before creating | | |
+| Drafts | `@odata.draft.enabled` only on the root projection of the FE application that edits the data; never on the parent and the children of a composition at the same time | | |
+| Side effect after write | `this.after('CREATE', 'Entity', ...)` or an `srv.emit` event; no manual transactions | | |
 
 ## UI Fiori Elements
 
-| Задача | Способ | Пример | Решение |
+| Task | Way | Example | Decision |
 |---|---|---|---|
-| Новое приложение | Fiori MCP `generate_fiori_app_cap`; никогда вручную | `app/products` | ADR-0007 |
-| Колонки таблицы, фильтры, шапка, секции | `@UI.LineItem`, `@UI.SelectionFields`, `@UI.HeaderInfo`, `@UI.Facets` + `@UI.FieldGroup` в `app/<app>/annotations/<Entity>.cds` | `app/products/annotations/Products.cds` | ADR-0004 |
-| Выбор значения из справочника | `@Common.ValueList` с `CollectionPath` на CodeList, `@Common.Text` + `@Common.TextArrangement: #TextOnly`, чтобы не показывать UUID | `Products.currency_code` | |
-| Кнопка действия | `DataFieldForAction` в LineItem или Identification на bound action; controller extension только для чисто клиентского поведения | | |
-| Изменение manifest (FCL, initialLoad, страницы) | Fiori MCP `list_functionality` → `get_functionality_details` → `execute_functionality`; затем `run_manifest_validation` | `app/products/webapp/manifest.json` | ADR-0007 |
-| Кастомная секция или колонка | `ext/fragment/<Name>.fragment.xml` + `controlConfiguration` через Fiori MCP | | |
-| Клиентская логика | `ext/controller/<Page>Ext.js` (без `.controller.`), регистрация через Fiori MCP | | |
-| Форматирование значения | `model/formatter.js`, в XML через `core:require` | | |
-| Тексты | `webapp/i18n/i18n.properties` + `i18n_ru.properties`, ключи `<page>.<element>.<property>` | `webapp/i18n/` | |
+| New application | Fiori MCP `generate_fiori_app_cap`; never by hand | `app/products` | ADR-0007 |
+| Table columns, filters, header, sections | `@UI.LineItem`, `@UI.SelectionFields`, `@UI.HeaderInfo`, `@UI.Facets` + `@UI.FieldGroup` in `app/<app>/annotations/<Entity>.cds` | `app/products/annotations/Products.cds` | ADR-0004 |
+| Value selection from a code list | `@Common.ValueList` with `CollectionPath` to the CodeList, `@Common.Text` + `@Common.TextArrangement: #TextOnly` so that the UUID is not shown | `Products.currency_code` | |
+| Action button | `DataFieldForAction` in LineItem or Identification on a bound action; controller extension only for purely client-side behavior | | |
+| Manifest change (FCL, initialLoad, pages) | Fiori MCP `list_functionality` → `get_functionality_details` → `execute_functionality`; then `run_manifest_validation` | `app/products/webapp/manifest.json` | ADR-0007 |
+| Custom section or column | `ext/fragment/<Name>.fragment.xml` + `controlConfiguration` via Fiori MCP | | |
+| Client-side logic | `ext/controller/<Page>Ext.js` (without `.controller.`), registration via Fiori MCP | | |
+| Value formatting | `model/formatter.js`, in XML via `core:require` | | |
+| Texts | `webapp/i18n/i18n.properties` + `i18n_ru.properties`, keys `<page>.<element>.<property>` | `webapp/i18n/` | |
 
-## UI свободный UI5
+## UI freestyle UI5
 
-| Задача | Способ | Пример | Решение |
+| Task | Way | Example | Decision |
 |---|---|---|---|
-| Новое приложение | UI5 MCP `create_ui5_app` внутри `app/`, JavaScript | | ADR-0005 |
-| Любой контрол | Сначала `get_api_reference` UI5 MCP, затем скилл `ui5-best-practices` | | |
-| Таблица | Матрица выбора из скилла `ui5-best-practices-tables`: `sap.m.Table` для ≤ 100 строк, `sap.ui.mdc.Table` для OData V4 с p13n | | |
-| Доступность | Чеклист `ui5-best-practices-accessibility` перед ревью | | |
+| New application | UI5 MCP `create_ui5_app` inside `app/`, JavaScript | | ADR-0005 |
+| Any control | First `get_api_reference` of the UI5 MCP, then the `ui5-best-practices` skill | | |
+| Table | Selection matrix from the `ui5-best-practices-tables` skill: `sap.m.Table` for ≤ 100 rows, `sap.ui.mdc.Table` for OData V4 with p13n | | |
+| Accessibility | `ui5-best-practices-accessibility` checklist before review | | |
 
-## Тесты
+## Tests
 
-| Задача | Способ | Пример | Решение |
+| Task | Way | Example | Decision |
 |---|---|---|---|
-| Тест сервиса | `test/<service>.test.js`, `cds.test(import.meta.dirname + '/..')`, HTTP через `GET/POST`, проверки `expect(...).to...` | `test/catalog-service.test.js` | ADR-0002 |
-| Контракт OData | `test/metadata.test.js` со снапшотом edmx | `test/metadata.test.js` | ADR-0002 |
-| Форматтер или extension | QUnit в `webapp/test/unit/` | | |
-| Сценарий пользователя | OPA5-журней в `webapp/test/integration/`, страницы на `sap.fe.test.*` | | |
-| Сквозной сценарий | wdi5 против `cds watch`, минимум сценариев | | |
+| Service test | `test/<service>.test.js`, `cds.test(import.meta.dirname + '/..')`, HTTP via `GET/POST`, assertions `expect(...).to...` | `test/catalog-service.test.js` | ADR-0002 |
+| OData contract | `test/metadata.test.js` with an edmx snapshot | `test/metadata.test.js` | ADR-0002 |
+| Formatter or extension | QUnit in `webapp/test/unit/` | | |
+| User scenario | OPA5 journey in `webapp/test/integration/`, pages on `sap.fe.test.*` | | |
+| End-to-end scenario | wdi5 against `cds watch`, a minimum of scenarios | | |
 
-## Инфраструктура
+## Infrastructure
 
-| Задача | Способ | Пример | Решение |
+| Task | Way | Example | Decision |
 |---|---|---|---|
-| Запуск для разработки | `npm run watch` в корне, UI на http://localhost:4004/products/webapp/test/flpSandbox.html | | |
-| UI без бэкенда | `npm run start-mock` в `app/products`, мок из `localService` | `app/products/ui5-mock.yaml` | ADR-0008 |
-| Обновление снимка metadata.xml | `cds compile srv --to edmx-v4 > app/products/webapp/localService/metadata.xml` после любого изменения модели | | |
-| Обновление зависимостей | Только через `release-check` и Renovate, версии MCP закреплены | | ADR-0009 |
-| Деплой | Не настроен; `mta.yaml` черновик. Любая работа по деплою начинается с ADR | | |
+| Run for development | `npm run watch` in the root, UI at http://localhost:4004/products/webapp/test/flpSandbox.html | | |
+| UI without backend | `npm run start-mock` in `app/products`, mock from `localService` | `app/products/ui5-mock.yaml` | ADR-0008 |
+| metadata.xml snapshot update | `cds compile srv --to edmx-v4 > app/products/webapp/localService/metadata.xml` after any model change | | |
+| Dependency update | Only via `release-check` and Renovate, MCP versions are pinned | | ADR-0009 |
+| Deployment | Not configured; `mta.yaml` is a draft. Any deployment work starts with an ADR | | |

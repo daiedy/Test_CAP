@@ -1,18 +1,18 @@
-# <Имя фичи>: итог
+# <Feature name>: summary
 
-Дата завершения: YYYY-MM-DD. Коммиты: `<hash>` ... `<hash>`.
+Completion date: YYYY-MM-DD. Commits: `<hash>` ... `<hash>`.
 
-## Что сделано
-Список изменений по слоям: модель, сервис, UI, тесты, документация.
+## What was done
+List of changes by layer: model, service, UI, tests, documentation.
 
-## Отклонения от плана
-Что изменилось относительно `PLAN.md` и почему.
+## Deviations from the plan
+What changed relative to `PLAN.md` and why.
 
-## Новые элементы для реестра
-Сущности, действия, хендлеры, утилиты, фрагменты, добавленные в этой фиче (реестр регенерируется, здесь для истории).
+## New items for the registry
+Entities, actions, handlers, utilities, fragments added in this feature (the registry is regenerated; this is for the record).
 
-## Уроки
-Что попало в `docs/LESSONS.md` и какие правила или скиллы стоит уточнить.
+## Lessons
+What went into `docs/LESSONS.md` and which rules or skills should be refined.
 
-## Открытый долг
-Что осознанно не сделано.
+## Open debt
+What was deliberately left undone.

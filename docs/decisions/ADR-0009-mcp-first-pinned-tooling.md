@@ -1,28 +1,28 @@
-# ADR-0009: MCP-first протокол и закреплённые версии инструментов агентов
+# ADR-0009: MCP-first protocol and pinned versions of agent tools
 
-Дата: 2026-09-07. Статус: принято.
+Date: 2026-09-07. Status: accepted.
 
-## Контекст
-LLM без опоры на актуальную документацию придумывает синтаксис CDS, смешивает OData V2 и V4, не видит существующую модель. SAP поставляет MCP-серверы для CAP, Fiori и UI5 и в README требует обращаться к ним перед любой правкой. Одновременно 2026-04-29 атака Shai Hulud внедряла вредоносные хуки в `settings.json` Claude Code в репозиториях CAP и собирала конфигурацию MCP из `~/.claude.json`.
+## Context
+An LLM without grounding in current documentation invents CDS syntax, mixes OData V2 and V4, does not see the existing model. SAP ships MCP servers for CAP, Fiori and UI5 and in the README requires consulting them before any edit. At the same time, on 2026-04-29 the Shai Hulud attack injected malicious hooks into Claude Code `settings.json` in CAP repositories and harvested the MCP configuration from `~/.claude.json`.
 
-## Решение
-- Протокол: перед созданием или изменением любого SAP-артефакта агент запрашивает соответствующий MCP (CDS и хендлеры → `cds-mcp`; аннотации, Fiori Elements, manifest → `fiori-mcp`; контролы и API UI5 → UI5 MCP из плагина `ui5`). Если MCP противоречит знаниям модели, следовать MCP. При вопросах о версиях доверять `cds version`, `npm view` и живым страницам, а не снапшоту в MCP.
-- Версии в `.mcp.json` закреплены точно (`@cap-js/mcp-server@0.0.5`, `@sap-ux/fiori-mcp-server@1.12.2`, `chrome-devtools-mcp@1.8.0`; UI5 MCP через плагин `ui5@claude-plugins-official` 0.1.8). Поднимаются только скиллом `release-check` после чтения changelog.
-- `.claude/**`, `.mcp.json`, `scripts/hooks/**` считаются security-sensitive: агенты их не редактируют (правило `pipeline-config.md`, PreToolUse-хук), правки проходят ревью человека, установка зависимостей с `--ignore-scripts` в CI.
-- Телеметрия Fiori MCP отключена переменной `SAP_UX_FIORI_TOOLS_DISABLE_TELEMETRY`.
+## Decision
+- Protocol: before creating or changing any SAP artifact, the agent queries the corresponding MCP (CDS and handlers → `cds-mcp`; annotations, Fiori Elements, manifest → `fiori-mcp`; UI5 controls and API → UI5 MCP from the `ui5` plugin). If MCP contradicts the model's knowledge, follow MCP. For version questions trust `cds version`, `npm view` and live pages, not the snapshot in MCP.
+- Versions in `.mcp.json` are pinned exactly (`@cap-js/mcp-server@0.0.5`, `@sap-ux/fiori-mcp-server@1.12.2`, `chrome-devtools-mcp@1.8.0`; UI5 MCP via the `ui5@claude-plugins-official` plugin 0.1.8). They are bumped only by the `release-check` skill after reading the changelog.
+- `.claude/**`, `.mcp.json`, `scripts/hooks/**` are considered security-sensitive: agents do not edit them (the `pipeline-config.md` rule, PreToolUse hook), edits go through human review, dependency installation with `--ignore-scripts` in CI.
+- Fiori MCP telemetry is disabled with the `SAP_UX_FIORI_TOOLS_DISABLE_TELEMETRY` variable.
 
-## Альтернативы
-| Вариант | Почему отклонён |
+## Alternatives
+| Option | Why rejected |
 |---|---|
-| Только Markdown-инструкции без MCP | Знания о фреймворках устаревают; SAP-документация слишком велика для контекста |
-| `@latest` в командах запуска MCP | Неконтролируемые изменения инструментов между сессиями; вектор атаки цепочки поставок |
+| Markdown instructions only, without MCP | Framework knowledge goes stale; SAP documentation is too large for the context |
+| `@latest` in MCP launch commands | Uncontrolled tool changes between sessions; a supply chain attack vector |
 
-## Последствия
-- Общий скилл `project-protocol` предзагружается во всех субагентов.
-- Правила по путям называют точные имена инструментов MCP.
+## Consequences
+- The shared `project-protocol` skill is preloaded into all subagents.
+- Path-based rules name the exact MCP tool names.
 
-## Источники
-- https://github.com/cap-js/mcp-server (раздел Rules)
-- https://github.com/SAP/open-ux-tools/tree/main/packages/fiori-mcp-server (раздел Rules)
+## Sources
+- https://github.com/cap-js/mcp-server (Rules section)
+- https://github.com/SAP/open-ux-tools/tree/main/packages/fiori-mcp-server (Rules section)
 - https://github.com/SAP-samples/cap-agentic-engineered (AGENTS.md)
 - https://www.mend.io/blog/shai-hulud-sap-cap-supply-chain-attack-claude-code/

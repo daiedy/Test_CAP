@@ -2,27 +2,27 @@
 paths:
   - "test/**"
 ---
-# Тесты бэкенда (test/)
+# Backend tests (test/)
 
-## Перед правкой
-1. `mcp__cds-mcp__search_docs` по `cds.test`, `defaults.auth`, `containSubset`, если API неочевиден.
-2. `mcp__cds-mcp__search_model`: точные имена сущностей, действий, полей.
-3. Прочитать `docs/architecture/TESTING.md`, раздел «Правила» и «Особенности cds 10».
+## Before editing
+1. `mcp__cds-mcp__search_docs` for `cds.test`, `defaults.auth`, `containSubset`, if the API is not obvious.
+2. `mcp__cds-mcp__search_model`: exact names of entities, actions, fields.
+3. Read `docs/architecture/TESTING.md`, sections "Rules" and "cds 10 specifics".
 
-## Правила
-- Один файл на сервис: `test/<service>.test.js`. Контракт: `test/metadata.test.js`.
-- Первая строка после импорта cds: `const { GET, POST, PATCH, DELETE, expect, defaults } = cds.test(import.meta.dirname + '/..')`. До этого никаких импортов подмодулей cds.
-- `defaults.auth = { username: 'alice' }`, отказ в доступе проверяется отдельным `it` с другим пользователем.
-- Данные из `db/data/*.csv`; проверять подмножество: `to.containSubset`, а не `deep.equal` целого ответа.
-- Decimal и Int64 приходят строками: `expect(price).to.equal('1299.99')`.
-- Имена тестов описывают поведение: `rejects negative stock`.
-- Снапшот metadata обновляется только `npx vitest -u` с записью причины в `docs/CHANGELOG.md`.
-- Шаблоны: `templates/service.test.js`, `templates/metadata.test.js`.
+## Rules
+- One file per service: `test/<service>.test.js`. Contract: `test/metadata.test.js`.
+- The first line after the cds import: `const { GET, POST, PATCH, DELETE, expect, defaults } = cds.test(import.meta.dirname + '/..')`. No imports of cds submodules before that.
+- `defaults.auth = { username: 'alice' }`, access denial is checked in a separate `it` with a different user.
+- Data from `db/data/*.csv`; check a subset: `to.containSubset`, not `deep.equal` of the whole response.
+- Decimal and Int64 arrive as strings: `expect(price).to.equal('1299.99')`.
+- Test names describe behavior: `rejects negative stock`.
+- The metadata snapshot is updated only with `npx vitest -u`, with the reason recorded in `docs/CHANGELOG.md`.
+- Templates: `templates/service.test.js`, `templates/metadata.test.js`.
 
-## После правки
-- `npm test`, полный вывод в отчёт. Заявление «тесты проходят» без запуска запрещено.
+## After editing
+- `npm test`, full output goes into the report. Claiming "tests pass" without running them is forbidden.
 - `npx prettier --write test/`.
 
-## Запрещено
-- Runner-специфичные функции (`vi.mock`, fake timers) внутри тестов cds.test.
-- `process.chdir`, запуск второго сервера, реальные внешние системы.
+## Forbidden
+- Runner-specific functions (`vi.mock`, fake timers) inside cds.test tests.
+- `process.chdir`, starting a second server, real external systems.

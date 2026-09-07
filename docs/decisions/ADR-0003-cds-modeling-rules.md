@@ -1,29 +1,29 @@
-# ADR-0003: Правила моделирования CDS
+# ADR-0003: CDS modeling rules
 
-Дата: 2026-09-07. Статус: принято.
+Date: 2026-09-07. Status: accepted.
 
-## Контекст
-Агенты в разных сессиях моделируют по-разному: явный `key ID : UUID` против `cuid`, `enum` против кодовых таблиц, разная точность десятичных. Нужен один способ на каждую ситуацию.
+## Context
+Agents in different sessions model differently: explicit `key ID : UUID` versus `cuid`, `enum` versus code tables, different decimal precision. One way per situation is needed.
 
-## Решение
-- Каждая сущность: `: cuid, managed`. Составные ключи только у текстовых и кодовых таблиц.
-- Пользовательские списки значений: сущность на основе `sap.common.CodeList` с ключом `code`; `enum` только для внутренних статусов.
-- Деньги: `Decimal(15, 2)` плюс `currency : Currency` и `@Measures.ISOCurrency`.
-- Строки всегда с длиной, локализуемые тексты `localized String`.
-- Namespace `my.catalog` сохраняется: переименование сломало бы имена CSV и снимок metadata без пользы.
-- Существующее `Products.price : Decimal(10, 2)` сохраняется как историческое исключение; смена точности требует миграции данных и отдельного ADR.
-- `Products` переведена с явного `key ID : UUID` на `cuid` (эквивалентно, без изменения контракта).
+## Decision
+- Every entity: `: cuid, managed`. Composite keys only for text and code tables.
+- User-facing value lists: an entity based on `sap.common.CodeList` with key `code`; `enum` only for internal statuses.
+- Money: `Decimal(15, 2)` plus `currency : Currency` and `@Measures.ISOCurrency`.
+- Strings always with a length, localizable texts `localized String`.
+- The `my.catalog` namespace is kept: renaming would break the CSV names and the metadata snapshot without benefit.
+- The existing `Products.price : Decimal(10, 2)` is kept as a historical exception; changing the precision requires a data migration and a separate ADR.
+- `Products` was switched from an explicit `key ID : UUID` to `cuid` (equivalent, no contract change).
 
-## Альтернативы
-| Вариант | Почему отклонён |
+## Alternatives
+| Option | Why rejected |
 |---|---|
-| `enum` для категорий товаров | Пользователь не может добавить значение без деплоя; нет переводов |
-| Переименовать namespace в `sap.catalog` или доменное | Ломает CSV, снимки, ничего не даёт |
+| `enum` for product categories | The user cannot add a value without a deployment; no translations |
+| Rename the namespace to `sap.catalog` or a domain one | Breaks CSV, snapshots, gives nothing |
 
-## Последствия
-- `Products.category : String(50)` станет ассоциацией на `Categories : CodeList` первой фичей конвейера (см. `docs/STATE.md`).
-- Шаблон `templates/entity.cds` и правило `.claude/rules/db-model.md` следуют этим правилам.
+## Consequences
+- `Products.category : String(50)` will become an association to `Categories : CodeList` in the first feature of the pipeline (see `docs/STATE.md`).
+- The `templates/entity.cds` template and the `.claude/rules/db-model.md` rule follow these rules.
 
-## Источники
+## Sources
 - https://cap.cloud.sap/docs/guides/domain/
-- Скилл `cap-developer` команды CAP: https://github.com/capire/skills
+- The `cap-developer` skill of the CAP team: https://github.com/capire/skills

@@ -1,10 +1,10 @@
 ---
 name: test-all
-description: Полный прогон проверок проекта: cds lint, тесты бэкенда, ui5lint, свежесть реестра. Используй перед коммитом, ревью и при словах «прогони все проверки», «всё зелёное?».
+description: Full run of the project checks: cds lint, backend tests, ui5lint, registry freshness. Use before a commit or review and when the user says "run all checks", "is everything green" (Russian: «прогони все проверки», «всё зелёное?»).
 allowed-tools: Bash, Read
 ---
 
-Выполни по порядку из корня (PATH с `/opt/homebrew/opt/node@22/bin`), не останавливаясь на первой ошибке, и собери таблицу «проверка → результат»:
+Run in order from the root (PATH with `/opt/homebrew/opt/node@22/bin`), without stopping at the first error, and build a table "check → result":
 
 1. `npm run lint`
 2. `npm test`
@@ -12,4 +12,4 @@ allowed-tools: Bash, Read
 4. `node scripts/check-docs-fresh.mjs`
 5. `npm run format:check`
 
-Для каждой красной проверки приведи последние 20 строк вывода и предложи, какой агент чинит (`cap-backend-dev`, `fiori-app-dev`, `test-backend`, `docs-keeper`). Не чини сам. Никогда не пиши «всё зелёное» без вывода команд.
+For each red check give the last 20 lines of the output and propose which agent fixes it (`cap-backend-dev`, `fiori-app-dev`, `test-backend`, `docs-keeper`). Do not fix it yourself. Never write "all green" without command output.

@@ -1,27 +1,27 @@
-# ADR-0001: Node.js 22 и cds 10 как базовая платформа
+# ADR-0001: Node.js 22 and cds 10 as the base platform
 
-Дата: 2026-09-07. Статус: принято.
+Date: 2026-09-07. Status: accepted.
 
-## Контекст
-Проект был на `@sap/cds` 8.9 при `@sap/cds-dk` 9.4, без установленного Node.js. cds 8 вышел из поддержки, а все актуальные инструменты SAP для агентной разработки (`@sap-ux/fiori-mcp-server`, `@cap-js/cds-test` 1.x, `@sap/cds-dk` 10) требуют Node ≥ 22. Мажорные версии CAP выходят раз в год, предыдущий мажор получает только критические исправления 12 месяцев.
+## Context
+The project was on `@sap/cds` 8.9 with `@sap/cds-dk` 9.4, without Node.js installed. cds 8 is out of support, and all current SAP tools for agentic development (`@sap-ux/fiori-mcp-server`, `@cap-js/cds-test` 1.x, `@sap/cds-dk` 10) require Node ≥ 22. Major CAP versions are released once a year, the previous major receives only critical fixes for 12 months.
 
-## Решение
-Node.js 22 LTS (Homebrew `node@22`), `@sap/cds` ^10, `@sap/cds-dk` ^10 глобально и в devDependencies, `@cap-js/sqlite` ^3. Проект переведён без `cds upgrade`, так как кастомного кода не было. Поле `engines.node: ">=22"` в package.json.
+## Decision
+Node.js 22 LTS (Homebrew `node@22`), `@sap/cds` ^10, `@sap/cds-dk` ^10 globally and in devDependencies, `@cap-js/sqlite` ^3. The project was migrated without `cds upgrade`, since there was no custom code. Field `engines.node: ">=22"` in package.json.
 
-## Альтернативы
-| Вариант | Почему отклонён |
+## Alternatives
+| Option | Why rejected |
 |---|---|
-| Остаться на cds 8 | Нет поддержки, инструменты SAP несовместимы, MCP-серверы ориентированы на cds 9+ |
-| cds 9 | Через год повторный переход; cds-dk уже 10 |
-| nvm вместо Homebrew | Лишний слой для одной версии; Homebrew уже установлен |
+| Stay on cds 8 | No support, SAP tools are incompatible, MCP servers target cds 9+ |
+| cds 9 | Another migration in a year; cds-dk is already 10 |
+| nvm instead of Homebrew | An extra layer for a single version; Homebrew is already installed |
 
-## Последствия
-- Драйвер SQLite по умолчанию `node:sqlite`; предупреждение ExperimentalWarning в логах допустимо.
-- `cds.features.ieee754compatible: true`: Decimal и Int64 из SQLite приходят строками, тесты сравнивают строки (TESTING.md).
-- Операции записи возвращают `{ affected }`; `srv.entities` это геттер.
-- Обновления мажоров планируются на июнь каждого года через `release-check` и скилл `cap-upgrade`.
+## Consequences
+- The default SQLite driver is `node:sqlite`; the ExperimentalWarning in the logs is acceptable.
+- `cds.features.ieee754compatible: true`: Decimal and Int64 from SQLite arrive as strings, tests compare strings (TESTING.md).
+- Write operations return `{ affected }`; `srv.entities` is a getter.
+- Major upgrades are planned for June of every year via `release-check` and the `cap-upgrade` skill.
 
-## Источники
+## Sources
 - https://cap.cloud.sap/docs/releases/schedule
 - https://cap.cloud.sap/docs/releases/migration/cds10
 - https://cap.cloud.sap/docs/releases/2026/jun26

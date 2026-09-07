@@ -5,12 +5,12 @@ Updated by the `docs-keeper` agent at the end of every task and by the PreCompac
 ## Where we are
 
 - Date: 2026-09-07
-- Branch: `chore/pipeline-debt` from `main` 8abc544. `main` holds the merged first feature run (`feature/categories-code-list`) and the English translation of the pipeline; pushed.
+- Branch: `main` 8ec176b, pushed; CI green on GitHub. `main` holds the merged first feature run (`feature/categories-code-list`) and the English translation of the pipeline; pushed.
 - Pipeline: stages 0–4 of the plan are implemented and exercised by one full `/feature` run. Not done: CI for tests and linters, Dependabot, packaging as a plugin (stage 5).
 - Retro follow-ups applied in this branch: `maxTurns` raised (test-ui, ui-verifier, docs-keeper 80; reviewer 50; architect, test-backend 60), `feature` skill updates STATE after every phase, `test-all` gained a dev-server smoke step and a Cyrillic scan, PostToolUse hook flags Cyrillic, `metadata.test.js` checks that `localService/metadata.xml` equals the compiled EDMX (16 tests), CLAUDE.md invariant 10 (English everywhere the AI reads) and a request-to-skill routing table.
 - All docs, agent memories, feature files and ADRs are English now; Russian remains only in i18n `ru` bundles, `.texts.csv`, asserted test values and the owner's plan `docs/ai-pipeline-plan.md`.
 - Active feature: none. Specification in progress: `products-draft-edit` (architect, `/spec`), see `docs/features/products-draft-edit/` and ADR-0012 draft.
-- Next steps: merge `chore/pipeline-debt` into `main` and push; watch the first CI run; user decision on ADR-0012 (draft vs inline edit); New Sandbox migration when the user wants it.
+- Next steps: user decisions on ADR-0012 (draft vs inline edit), `liveMode` for the List Report, New Sandbox migration; pipeline stage 5 (plugin packaging) when a second project appears.
 
 ## What works
 
@@ -28,7 +28,7 @@ Updated by the `docs-keeper` agent at the end of every task and by the PreCompac
 | Keyboard hack for the Explore button in `Component.js` (setTimeout, internal ushell id) | Deliberate decision of the author. Do not touch without a request; the alternative via `CommandExecution` is described in LESSONS | user |
 | `Products.price` Decimal(10, 2) instead of the convention Decimal(15, 2) | Kept, ADR-0003. Change at the first model migration | architect |
 | `mta.yaml`, `xs-security.json` are drafts without productive dependencies | Separate ADR before any deployment work | user |
-| CI and Dependabot added 2026-09-07 (`ci.yml`: backend, UI lint, OPA5 journeys; `dependabot.yml`: weekly, grouped, majors of CAP excluded). Not yet observed running on GitHub | Check the first runs after push; fix flaky steps | user |
+| CI and Dependabot added 2026-09-07 (`ci.yml`: backend, UI lint, OPA5 journeys; `dependabot.yml`: weekly, grouped, majors of CAP excluded). First run failed (root ESLint picked up the UI config, UI lockfile out of sync), fixed in `8ec176b`; run 34112716975 green: backend, UI lint, OPA5 journeys | Watch Dependabot PRs on Mondays | user |
 | `run_manifest_validation` of UI5 MCP 0.2.18 fails with a draft-06 schema error | Workaround via `ui5lint`; wait for a new `@ui5/mcp-server` version via `release-check` | release-watcher |
 | List Report needs the Go button before the table reloads (FE default, avoids server round trips on every filter change); the user finds it inconvenient for a 15-row catalog | Set `liveMode: true` on `ProductsList` via Fiori MCP `execute_functionality`; tiny feature, needs a PLAN because it changes `manifest.json` and the OPA5 filter journey | user |
 | The `Products` Object Page without draft has no edit mode; the category editing scenario in `EditCategoryOnObjectPageJourney.js` is under `opaTest.skip` | The draft decision is a separate feature with an ADR | user |

@@ -46,6 +46,8 @@ Root:
 | `npm start` | UI5 dev server with proxy to :4004 |
 | `npm run start-mock` | UI5 dev server with mock server |
 | `npm run lint` | `ui5lint` |
+| `npm run lint:js` | ESLint with the SAP Fiori tools rules |
+| `npm run test:ui` | OPA5 journeys via `ui5-test-runner` (needs `npm run watch` in the root) |
 | `npm run build` | Build into `dist/` |
 
 ## Structure

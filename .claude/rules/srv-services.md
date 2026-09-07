@@ -21,6 +21,7 @@ File `srv/<name>-service.cds`: projections, actions, functions, authorization. F
 - Template: `templates/service.cds`.
 
 ## Semantics (`srv/annotations/<Entity>.cds`)
+- Titles live on the projection, so tools reading `my.catalog.*` directly do not see them; the registry generator takes them from the first projection.
 - `annotate CatalogService.<Entity> with { ... }`, only `@title: '{i18n>Entity.element}'`, `@mandatory`, `@assert.format`, `@assert.range`, `@assert.target`, `@readonly`, `@Measures.ISOCurrency`, `@Core.Description`.
 - i18n keys are added to `_i18n/i18n.properties` and `_i18n/i18n_ru.properties` in the same change.
 - Template: `templates/annotations-semantic.cds`.

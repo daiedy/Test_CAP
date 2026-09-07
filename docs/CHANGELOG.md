@@ -5,6 +5,10 @@ Format: date, area, what changed. Maintained by `docs-keeper`, all agents add to
 ## 2026-09-07
 
 ### pipeline
+- LESSONS triage: `docs/LESSONS.md` is now an inbox. 21 of 23 entries were transferred: 4 became PostToolUse checks (`checkSandboxHtml`, `checkSandboxConfig`, `checkUi5Yaml`, `checkTemplateNamespace`), 1 a `test-all` step, 9 path rules (`ui-annotations`, `tests-backend`, `tests-ui`, `ui5-webapp`, `srv-services`), 3 agent prompt lines (`ui-verifier`, `fiori-app-dev`), the rest were already covered by tests, ADRs or CHANGELOG. 2 remain pending upstream (UI5 MCP manifest validation, New Sandbox migration). The `retro` skill now assigns a destination to every lesson; the Stop hook warns above 10 entries.
+
+
+### pipeline
 - First CI run on GitHub failed and was fixed (`8ec176b`): root ESLint now ignores `app/**` (the UI app has its own config and node_modules), `app/products/package-lock.json` regenerated. Run 34112716975 green in all three jobs.
 - CI: `.github/workflows/ci.yml` with three jobs (backend lint, tests, registry freshness and compile incl. templates; UI ui5lint and ESLint; OPA5 journeys with `ui5-test-runner` against `cds serve`). Dependabot: `.github/dependabot.yml`, weekly, grouped (sap-cap, sap-ui5-fiori, tooling), cooldown 7/14 days, CAP majors excluded (they go through `/upgrade-cds`), GitHub Actions updates included.
 - `app/products/eslint.config.mjs` with `@sap-ux/eslint-plugin-fiori-tools`; scripts `lint:js`, `lint:js:fix`. Baseline: 1 warning (the deliberate `setTimeout` in `Component.js`).

@@ -115,6 +115,16 @@ try {
     );
   }
 
+  // Lessons inbox size (advisory): docs/LESSONS.md should hold only untransferred lessons.
+  const lessons = path.join(root, 'docs', 'LESSONS.md');
+  if (exists(lessons)) {
+    const pending = (fs.readFileSync(lessons, 'utf8').match(/^## /gm) || []).length;
+    if (pending > 10)
+      notes.push(
+        `docs/LESSONS.md holds ${pending} entries; run /retro to move them into rules, hooks, tests or agent prompts.`
+      );
+  }
+
   fs.mkdirSync(path.dirname(stateFile), { recursive: true });
   fs.writeFileSync(
     stateFile,

@@ -21,7 +21,7 @@ You are a Fiori Elements V4 developer in the Test_CAP project. Work according to
 5. Controller extension: file `ext/controller/<Page>Ext.js` without `.controller.` in the name, registered via Fiori MCP. Fragments in `ext/fragment/`. Formatters in `model/formatter.js`.
 6. Texts in `webapp/i18n/i18n.properties` and `i18n_ru.properties` at the same time, keys `<page>.<element>.<property>`.
 7. Update the snapshot for mock mode: `cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/localService/metadata.xml`, and the data in `localService/mockdata/<EntitySet>.json` for new entities.
-8. Checks: `npm run lint` in `app/products` (zero errors), `npm test` in the root (the metadata snapshot changes intentionally via `npx vitest -u` and a line in CHANGELOG).
+8. Checks: `npm run lint` in `app/products` (zero errors; if you use `ui5lint --fix`, review its diff, it rewrites code), `npm test` in the root (the metadata snapshot changes intentionally via `npx vitest -u` and a line in CHANGELOG).
 
 ## Rules
 

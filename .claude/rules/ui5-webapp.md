@@ -20,6 +20,8 @@ paths:
 - Texts only through `i18n`. Keys `<page>.<element>.<property>`.
 - Bootstrap parameters in html in dashed notation (`data-sap-ui-compat-version`), `data-sap-ui-async="true"`.
 - `Component.js`: inherits from `sap/fe/core/AppComponent`; it contains a deliberate keyboard handler for the shell button, do not remove it without a request from the user.
+- FLP sandbox: tiles and intents live in `webapp/appconfig/fioriSandboxConfig.json` (merged last by `sandbox.js`, overrides the SAP demo tiles from the CDN); `test/flpSandboxConfig.js` carries only renderer and plugin settings. Arrays in the sandbox config replace, they do not merge.
+- `ui5lint --fix` rewrites code (for example `sap.ui.getCore().byId` to `Element.getElementById`): review the diff before committing; for new code use the modern API directly.
 - Known debt: the FLP sandbox uses the legacy bootstrap (`Container.createRenderer`, deprecated). Migration to the New Sandbox is a separate task via the `modernize-flp-sandbox` skill. Keep `id="sap-ushell-bootstrap"` on the bootstrap script tag and relative app URLs in the sandbox config, otherwise livereload breaks the sandbox on :8080 (LESSONS).
 
 ## After editing

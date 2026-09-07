@@ -132,6 +132,82 @@ function checkCyrillic(root, r) {
   return `Language rule: ${r} contains Cyrillic on line(s) ${shown}${hits.length > 10 ? ` and ${hits.length - 10} more` : ''}. Code, comments and docs must be English (CONVENTIONS, Languages); only i18n bundles, .texts.csv and asserted test values may hold Russian.`;
 }
 
+// Lessons turned into checks (docs/LESSONS.md triage, 2026-09-07).
+function checkSandboxHtml(root, r) {
+  if (!/webapp\/(test\/)?(flpSandbox|index)\.html$/.test(r)) return null;
+  const html = fs.readFileSync(path.resolve(root, r), 'utf8');
+  const notes = [];
+  if (/ushell\/bootstrap\/sandbox\.js/.test(html) && !/id="sap-ushell-bootstrap"/.test(html)) {
+    notes.push(
+      `${r}: the sandbox bootstrap <script> needs id="sap-ushell-bootstrap"; without it sandbox.js takes the last script tag (livereload) and the config URL breaks on :8080.`
+    );
+  }
+  return notes.length ? notes.join('\n') : null;
+}
+
+function checkSandboxConfig(root, r) {
+  if (!/webapp\/(test\/flpSandboxConfig|sandboxConfig)\.js$/.test(r)) return null;
+  const src = fs.readFileSync(path.resolve(root, r), 'utf8');
+  const notes = [];
+  if (/"url":\s*"\/products\/webapp"/.test(src))
+    notes.push(
+      `${r}: the app intent url must be relative ("../" or "./"), an absolute /products/webapp only works behind CAP.`
+    );
+  if (/"LaunchPage"/.test(src))
+    notes.push(
+      `${r}: tile groups belong in webapp/appconfig/fioriSandboxConfig.json (merged last); a LaunchPage block here is overridden by the SAP demo tiles.`
+    );
+  return notes.length ? notes.join('\n') : null;
+}
+
+function checkUi5Yaml(root, r) {
+  if (!/app\/[^/]+\/ui5[^/]*\.ya?ml$/.test(r)) return null;
+  const appDir = path.dirname(path.resolve(root, r));
+  const yaml = fs.readFileSync(path.resolve(root, r), 'utf8');
+  const known = {
+    'fiori-tools-proxy': '@sap/ux-ui5-tooling',
+    'fiori-tools-appreload': '@sap/ux-ui5-tooling',
+    'sap-fe-mockserver': '@sap-ux/ui5-middleware-fe-mockserver',
+  };
+  let pkg;
+  try {
+    pkg = JSON.parse(fs.readFileSync(path.join(appDir, 'package.json'), 'utf8'));
+  } catch {
+    return null;
+  }
+  const deps = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
+  const ui5deps = (pkg.ui5 && pkg.ui5.dependencies) || [];
+  const notes = [];
+  for (const m of yaml.matchAll(/^\s*-\s*name:\s*([\w-]+)/gm)) {
+    const name = m[1];
+    const provider = known[name];
+    if (!provider) continue;
+    if (!deps[provider])
+      notes.push(`${r}: middleware "${name}" needs "${provider}" in devDependencies.`);
+    else if (!ui5deps.includes(provider))
+      notes.push(
+        `${r}: "${provider}" must also be listed in package.json > ui5.dependencies, otherwise the UI5 tooling does not load "${name}".`
+      );
+  }
+  return notes.length ? notes.join('\n') : null;
+}
+
+function checkTemplateNamespace(root, r) {
+  if (!/^templates\/.*\.cds$/.test(r)) return null;
+  const src = fs.readFileSync(path.resolve(root, r), 'utf8');
+  const m = src.match(/^namespace\s+([\w.]+)\s*;/m);
+  if (!m)
+    return `${r}: a standalone .cds template needs its own namespace (my.catalog.tpl.<name>); cds-mcp compiles every .cds in the project and fails on duplicate definitions.`;
+  const dir = path.join(root, 'templates');
+  for (const f of fs.readdirSync(dir)) {
+    if (!f.endsWith('.cds') || path.join(dir, f) === path.resolve(root, r)) continue;
+    const other = fs.readFileSync(path.join(dir, f), 'utf8').match(/^namespace\s+([\w.]+)\s*;/m);
+    if (other && other[1] === m[1])
+      return `${r}: namespace ${m[1]} is also used by templates/${f}; templates must not share a namespace.`;
+  }
+  return null;
+}
+
 function readKeys(file) {
   if (!exists(file)) return null;
   const keys = new Set();
@@ -187,6 +263,15 @@ try {
   }
   {
     const n = checkCyrillic(root, r);
+    if (n) notes.push(n);
+  }
+  for (const check of [
+    checkSandboxHtml,
+    checkSandboxConfig,
+    checkUi5Yaml,
+    checkTemplateNamespace,
+  ]) {
+    const n = check(root, r);
     if (n) notes.push(n);
   }
 

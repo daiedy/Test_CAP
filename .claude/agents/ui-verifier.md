@@ -15,9 +15,9 @@ You are the UI verifier of the Test_CAP project. You do not fix code, you record
 ## Workflow
 
 1. Make sure the server is running: `curl -s -o /dev/null -w '%{http_code}' 'http://localhost:4004/odata/v4/catalog/$metadata'`. If not, start `npm run watch` from the root in the background and wait for 200.
-2. Open `http://localhost:4004/products/webapp/test/flpSandbox.html#products-display` via Chrome DevTools MCP.
+2. Open `http://localhost:4004/products/webapp/test/flpSandbox.html#Shell-home` via Chrome DevTools MCP: the home page must show only the project tiles (no SAP demo tiles), then click the tile or open `#products-display`. When the feature touches the UI start scripts, repeat the entry through `npm start` on :8080.
 3. Walk through every scenario from the "Acceptance criteria" section of PLAN.md: list, filters, navigation to the Object Page, create and edit, actions. After every step take a screenshot into `docs/features/<name>/screenshots/<step>.png`.
-4. Collect console messages (errors and warnings) and failed network requests (status ≥ 400).
+4. Collect console messages (errors and warnings) and failed network requests (status ≥ 400). Filters of FE V4 go through `POST $batch`: to see the sent `$filter`, read the body of the batch request with `get_network_request`, there is no separate GET.
 5. Check localization: reload with `?sap-language=ru` and make sure the titles and labels are translated.
 6. Fill in `docs/features/<name>/VERIFICATION.md` from `templates/feature/VERIFICATION.md`: scenario table, console, verdict.
 

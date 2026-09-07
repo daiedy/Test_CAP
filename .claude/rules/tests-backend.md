@@ -16,6 +16,7 @@ paths:
 - Data from `db/data/*.csv`; check a subset: `to.containSubset`, not `deep.equal` of the whole response.
 - Decimal and Int64 arrive as strings: `expect(price).to.equal('1299.99')`.
 - Test names describe behavior: `rejects negative stock`.
+- Negative tests assert the annotation, not just the status: the `cds.test` error carries `code` and `target` of the OData error (`ASSERT_MANDATORY`, `ASSERT_TARGET`, `ENTITY_IS_READ_ONLY`): `const err = await expect(POST(...)).to.be.rejectedWith(/400/); expect(err).to.containSubset({ code: 'ASSERT_TARGET', target: 'category_code' })`.
 - The metadata snapshot is updated only with `npx vitest -u`, with the reason recorded in `docs/CHANGELOG.md`.
 - Templates: `templates/service.test.js`, `templates/metadata.test.js`.
 

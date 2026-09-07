@@ -1,6 +1,6 @@
 ---
 name: feature
-description: Feature orchestrator from research to documentation with gates between phases. Use on requests "make a feature", "add an entity/screen/action", "implement ..." (Russian: «сделай фичу», «добавь сущность/экран/действие», «реализуй ...»). Delegates to the subagents architect, ux-designer, cap-backend-dev, fiori-app-dev or ui5-freestyle-dev, test-backend, test-ui, ui-verifier, reviewer, docs-keeper.
+description: Feature orchestrator from research to documentation with gates between phases. Use on requests "make a feature", "add an entity/screen/action", "implement ..." (Russian: «сделай фичу», «добавь сущность/экран/действие», «реализуй ...»). Delegates to the subagents architect, ux-designer, cap-backend-dev, fiori-app-dev or ui5-freestyle-dev, test-backend, test-ui, ui-verifier, reviewer, docs-keeper. Only the user starts it: if the user describes a code change without typing the command, propose `/feature <name>` (or `/spec` for a plan only) and wait.
 argument-hint: <feature description>
 disable-model-invocation: true
 ---

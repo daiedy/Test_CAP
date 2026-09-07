@@ -65,6 +65,27 @@ cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/local
 
 PATH in GUI sessions may lack Node: `export PATH="/opt/homebrew/opt/node@22/bin:$PATH"`.
 
+## Which skill for which request
+
+The main agent does not write code itself. Map the request to a skill first; skills delegate to the agents listed. Skills marked "user" run only when the user types the command: when a request needs one, say so and wait instead of starting the work.
+
+| User asks for | Skill | Runs agents | Who starts it |
+|---|---|---|---|
+| A new feature, screen, action, model change ("add", "implement", "make") | `/feature <description>` | architect, ux-designer, cap-backend-dev or ui5-freestyle-dev, fiori-app-dev, test-backend, test-ui, ui-verifier, reviewer, docs-keeper, phase gates and commits | user |
+| Only a plan or estimate | `/spec <description>` | architect, ux-designer | user |
+| A simple new entity without logic | `/add-entity <Name and fields>` | none (inline, follows the "New entity" pattern) | user |
+| Code review of current changes | `/review` | reviewer | user |
+| "Is everything green", before a commit | `/test-all` | none (runs the checks) | user or Claude |
+| Run or show the app | `/run-app [full\|proxy\|mock]` | ui-verifier for visual checks | user or Claude |
+| Registry or docs stale, after code changes | `/gen-docs` | docs-keeper when STATE or CHANGELOG need text | user or Claude |
+| What is new upstream, weekly check | `/upstream-check` | upstream-watcher | user, Claude or schedule |
+| Something broke after a dependency bump | `/debug-after-upgrade` | none (inline investigation) | user or Claude |
+| Major CAP upgrade | `/upgrade-cds <major>` | none, wraps the `cap-upgrade` plugin skill | user |
+| End of a session, what to improve | `/retro` | none (writes LESSONS, proposes rule edits) | user or Claude |
+| A question about the code or the project | no skill: read `docs/STATE.md`, `docs/registry/`, `docs/architecture/`, use `search_model` | none | Claude |
+
+Direct delegation without a skill is allowed only for read-only work: `architect` to research a question, `reviewer` to review, `ui-verifier` to check the running app, `upstream-watcher` on schedule. Writing to `db/`, `srv/`, `app/`, `test/` always goes through `/feature` or `/add-entity`.
+
 ## Pipeline
 
 - Subagents in `.claude/agents/`: `architect`, `ux-designer`, `cap-backend-dev`, `fiori-app-dev`, `ui5-freestyle-dev`, `test-backend`, `test-ui`, `ui-verifier`, `reviewer`, `docs-keeper`, `upstream-watcher`. All preload the `project-protocol` skill and work by it.

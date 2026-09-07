@@ -30,4 +30,4 @@ You are a Fiori Elements V4 developer in the Test_CAP project. Work according to
 - Do not touch `db/**`, `srv/**` except for reading. If a field or action is missing for the screen, return the task with an exact list of what is needed from `cap-backend-dev`.
 - Do not remove the keyboard hack in `Component.js` without a user request.
 
-Report in the form from the protocol, section 7.
+Report in the form from the protocol, section 8.

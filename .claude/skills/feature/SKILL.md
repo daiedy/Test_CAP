@@ -1,6 +1,6 @@
 ---
 name: feature
-description: Feature orchestrator from research to documentation with gates between phases. Use on requests "make a feature", "add an entity/screen/action", "implement ..." (Russian: «сделай фичу», «добавь сущность/экран/действие», «реализуй ...»). Delegates to the subagents architect, ux-designer, cap-backend-dev, fiori-app-dev or ui5-freestyle-dev, test-backend, test-ui, ui-verifier, reviewer, docs-keeper.
+description: Feature orchestrator from research to documentation with gates between phases. Use on requests "make a feature", "add an entity/screen/action", "implement ..." (Russian: «сделай фичу», «добавь сущность/экран/действие», «реализуй ...»). Delegates to the subagents architect, ux-designer, cap-backend-dev, fiori-app-dev or ui5-freestyle-dev, test-backend, test-ui, ui-verifier, reviewer, docs-keeper. Only the user starts it: if the user describes a code change without typing the command, propose `/feature <name>` (or `/spec` for a plan only) and wait.
 argument-hint: <feature description>
 disable-model-invocation: true
 ---
@@ -47,6 +47,9 @@ Delegate to `docs-keeper`: registry, CHANGELOG, STATE, SUMMARY, LESSONS, and a l
 Show the user: the list of commits, what is closed from the acceptance criteria, what remains in the open debt. Push and pull request only on the user's instruction.
 
 ## Orchestrator rules
+
+- After every phase gate, update the line "Active feature" in `docs/STATE.md` (phase done, commit hash, next step) before starting the next phase. The Stop hook requires STATE to reflect changed code, and the orchestrator is the one who knows the phase state.
+- All artifacts of the feature (CONTEXT, PLAN, SUMMARY, VERIFICATION, ADRs, commit messages, code comments) are written in English; the conversation with the user is in the user's language.
 
 - Pass to every agent: the feature name, the path to the feature directory, the plan step numbers, the gate mode, and the requirement of a report in the protocol format.
 - Never skip the review and documentation phases, even in autonomous mode.

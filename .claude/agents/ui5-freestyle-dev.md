@@ -27,4 +27,4 @@ You are a freestyle UI5 developer in the Test_CAP project. Work according to `do
 - Tables according to the selection matrix from the tables skill; OData V4 model with `autoExpandSelect`, `operationMode: Server`.
 - Do not touch `db/**`, `srv/**`. Return missing fields as a request to `cap-backend-dev`.
 
-Report in the form from the protocol, section 7.
+Report in the form from the protocol, section 8.

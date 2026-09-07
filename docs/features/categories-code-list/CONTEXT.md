@@ -1,242 +1,242 @@
-# Categories как справочник с value help: контекст
+# Categories as a code list with value help: context
 
-Дата: 2026-09-07. Автор: `architect`. Ветка: `feature/categories-code-list`.
+Date: 2026-09-07. Author: `architect`. Branch: `feature/categories-code-list`.
 
-## Запрос
+## Request
 
-Сейчас `Products.category` это свободный текст `String(50)`, а value help для него указывает на сам `Products` (список уже введённых значений). Нужно сделать категории настоящим справочником: сущность `Categories` на основе `sap.common.CodeList` (ADR-0003, паттерн «Справочник с выбором из списка»), ассоциация из `Products`, перенос шести существующих значений категорий из `db/data/my.catalog-Products.csv` (Electronics, Furniture, Kitchen, Stationery, Accessories, Sports) в данные справочника с русскими переводами через `localized`, value help на Object Page и в фильтрах List Report с показом названия вместо кода (`Common.Text` + `TextArrangement`), тесты бэкенда, обновление снапшота контракта, документация. Отдельная страница для ведения справочника не нужна, только value help.
+Today `Products.category` is free text `String(50)`, and its value help points to `Products` itself (the list of already entered values). Categories must become a real code list: an entity `Categories` based on `sap.common.CodeList` (ADR-0003, pattern "Code list with selection from a list"), an association from `Products`, migration of the six existing category values from `db/data/my.catalog-Products.csv` (Electronics, Furniture, Kitchen, Stationery, Accessories, Sports) into the code list data with Russian translations via `localized`, value help on the Object Page and in the List Report filters showing the name instead of the code (`Common.Text` + `TextArrangement`), backend tests, contract snapshot update, documentation. A separate page for maintaining the code list is not needed, only value help.
 
-## Затронутые сущности и сервисы
+## Affected entities and services
 
-Результат `mcp__cds-mcp__search_model` (`Products`, `Currencies`, `CodeList`, `CatalogService`) и `docs/registry/DOMAIN-MODEL.md`, `SERVICES.md`:
+Result of `mcp__cds-mcp__search_model` (`Products`, `Currencies`, `CodeList`, `CatalogService`) and `docs/registry/DOMAIN-MODEL.md`, `SERVICES.md`:
 
-| Объект | Есть сейчас | Что меняется |
+| Object | Exists now | What changes |
 |---|---|---|
-| `my.catalog.Products` (`db/schema.cds`) | `category : String(50)` | `category : Association to Categories`; внешний ключ `category_code : String(20)` генерируется компилятором |
-| `my.catalog.Categories` | нет | новая сущность `Categories : CodeList { key code : String(20); }` в `db/schema.cds` (тот же домен, отдельный модуль не нужен). `name`, `descr` приходят из аспекта как `localized`, компилятор создаёт `Categories.texts` |
-| `CatalogService.Products` | проекция, `category @title @mandatory` в `srv/annotations/Products.cds` | `category @title @mandatory @assert.target`; в OData поле `category` (Edm.String 50) исчезает, появляются `category_code` (Edm.String 20) и NavigationProperty `category`. Осознанное изменение контракта, снапшот `test/__snapshots__/metadata.test.js.snap` обновляется |
-| `CatalogService.Categories` | нет | явная проекция `@readonly entity Categories as projection on catalog.Categories`; титулы в `srv/annotations/Categories.cds`. Автоэкспозиция через `@cds.autoexpose` дала бы набор без возможности аннотировать его в `srv/annotations` (autoexposed-сущности не существуют в CSN до компиляции OData), поэтому проекция явная |
-| `CatalogService.Categories_texts` | нет | появляется автоматически вместе с `Categories` (как `Currencies_texts` сегодня) |
-| `CatalogService.Currencies` | autoexposed, образец CodeList | не меняется; служит образцом: `@cds.odata.valuelist` на CodeList уже даёт `Common.ValueList` для `currency_code` без единой строки в `app/` |
-| `db/data/my.catalog-Products.csv` | колонка `category` с текстами | колонка `category_code` с кодами справочника |
-| `db/data/my.catalog-Categories.csv`, `my.catalog-Categories.texts.csv` | нет | 6 кодов с английскими названиями; переводы `ru` |
-| `app/products/annotations/Products.cds` | `category` в HeaderInfo.Description, SelectionFields, LineItem, FieldGroup#GeneralInfo; `@Common.ValueList` с `CollectionPath: 'Products'` | везде `category_code`; старый ValueList удаляется; на `category` добавляются `Common.Text: category.name`, `Common.TextArrangement: #TextOnly` (и, по решению ADR-0011, `Common.ValueListWithFixedValues`) |
-| `app/products/webapp/localService/metadata.xml`, `mockdata/*.json` | снимок без `Categories`; `Products.json` 5 записей с `category` | перегенерация снимка; `Categories.json`, `Categories_texts.json`; `Products.json` с `category_code` и синхронизация с 15 записями CSV (долг из STATE) |
-| `app/products/webapp/manifest.json` | List Report + Object Page на `/Products` | не меняется: новых страниц нет, value help выражается аннотациями |
-| `test/catalog-service.test.js`, `test/metadata.test.js` | 7 + 2 теста, фильтр `category eq 'Kitchen'`, POST с `category: 'Furniture'` | тесты переводятся на `category_code`; добавляются тесты справочника, локализации, `@assert.target`, `@readonly`; снапшот EDMX обновляется через `npx vitest -u` |
+| `my.catalog.Products` (`db/schema.cds`) | `category : String(50)` | `category : Association to Categories`; the foreign key `category_code : String(20)` is generated by the compiler |
+| `my.catalog.Categories` | no | new entity `Categories : CodeList { key code : String(20); }` in `db/schema.cds` (same domain, a separate module is not needed). `name`, `descr` come from the aspect as `localized`, the compiler creates `Categories.texts` |
+| `CatalogService.Products` | projection, `category @title @mandatory` in `srv/annotations/Products.cds` | `category @title @mandatory @assert.target`; in OData the field `category` (Edm.String 50) disappears, `category_code` (Edm.String 20) and the NavigationProperty `category` appear. A deliberate contract change, the snapshot `test/__snapshots__/metadata.test.js.snap` is updated |
+| `CatalogService.Categories` | no | explicit projection `@readonly entity Categories as projection on catalog.Categories`; titles in `srv/annotations/Categories.cds`. Auto-exposure via `@cds.autoexpose` would give an entity set without the ability to annotate it in `srv/annotations` (autoexposed entities do not exist in the CSN before OData compilation), therefore the projection is explicit |
+| `CatalogService.Categories_texts` | no | appears automatically together with `Categories` (like `Currencies_texts` today) |
+| `CatalogService.Currencies` | autoexposed, CodeList sample | does not change; serves as the sample: `@cds.odata.valuelist` on a CodeList already yields `Common.ValueList` for `currency_code` without a single line in `app/` |
+| `db/data/my.catalog-Products.csv` | column `category` with texts | column `category_code` with code list codes |
+| `db/data/my.catalog-Categories.csv`, `my.catalog-Categories.texts.csv` | no | 6 codes with English names; `ru` translations |
+| `app/products/annotations/Products.cds` | `category` in HeaderInfo.Description, SelectionFields, LineItem, FieldGroup#GeneralInfo; `@Common.ValueList` with `CollectionPath: 'Products'` | `category_code` everywhere; the old ValueList is removed; `Common.Text: category.name`, `Common.TextArrangement: #TextOnly` (and, by the ADR-0011 decision, `Common.ValueListWithFixedValues`) are added on `category` |
+| `app/products/webapp/localService/metadata.xml`, `mockdata/*.json` | snapshot without `Categories`; `Products.json` with 5 records with `category` | snapshot regeneration; `Categories.json`, `Categories_texts.json`; `Products.json` with `category_code` and synchronization with the 15 CSV records (debt from STATE) |
+| `app/products/webapp/manifest.json` | List Report + Object Page on `/Products` | does not change: there are no new pages, value help is expressed by annotations |
+| `test/catalog-service.test.js`, `test/metadata.test.js` | 7 + 2 tests, filter `category eq 'Kitchen'`, POST with `category: 'Furniture'` | tests are moved to `category_code`; tests for the code list, localization, `@assert.target`, `@readonly` are added; the EDMX snapshot is updated via `npx vitest -u` |
 
-Потребители контракта OData: только `app/products` в этом репозитории. Внешних клиентов нет.
+Consumers of the OData contract: only `app/products` in this repository. There are no external clients.
 
-## Что уже существует и переиспользуется
+## What already exists and is reused
 
-Из `docs/registry/HANDLERS.md`, `REUSE-CATALOG.md`, `UI-ARTIFACTS.md` и `search_model`:
+From `docs/registry/HANDLERS.md`, `REUSE-CATALOG.md`, `UI-ARTIFACTS.md` and `search_model`:
 
-- `sap.common.CodeList` из `@sap/cds/common`: аспект с `name : localized String(255)`, `descr : localized String(1000)`, аннотациями `@cds.autoexpose`, `@cds.odata.valuelist`, `@UI.Identification: [name]`. Переиспользуется как основа `Categories`; собственный аспект писать нельзя.
-- Механизм `localized` и `sap.common.TextsAspect`: компилятор сам создаёт `Categories.texts` и ассоциацию `localized`, runtime подставляет `$user.locale` из `Accept-Language`. Никаких хендлеров для переводов.
-- Существующий образец `Products.currency` → `sap.common.Currencies`: показывает, что `Common.ValueList` на внешнем ключе генерируется компилятором из `@cds.odata.valuelist` (см. `localService/metadata.xml`, строки 133–154). Для `category_code` будет то же самое.
-- Существующие аннотации `srv/annotations/Products.cds` и `app/products/annotations/Products.cds`: расширяются, новых файлов для `Products` нет.
-- i18n-бандлы `_i18n/i18n.properties` и `_i18n/i18n_ru.properties`: ключ `Products.category` остаётся, добавляются ключи `Categories.*`.
-- Тесты `test/catalog-service.test.js` и `test/metadata.test.js`: расширяются, новые файлы не нужны.
-- Хендлеров в проекте нет (`HANDLERS.md`: «вся логика декларативная»); фича их не добавляет: обязательность даёт `@mandatory`, существование цели `@assert.target`, только чтение `@readonly`.
+- `sap.common.CodeList` from `@sap/cds/common`: an aspect with `name : localized String(255)`, `descr : localized String(1000)`, annotations `@cds.autoexpose`, `@cds.odata.valuelist`, `@UI.Identification: [name]`. Reused as the basis of `Categories`; writing an own aspect is not allowed.
+- The `localized` mechanism and `sap.common.TextsAspect`: the compiler itself creates `Categories.texts` and the `localized` association, the runtime substitutes `$user.locale` from `Accept-Language`. No handlers for translations.
+- The existing sample `Products.currency` → `sap.common.Currencies`: shows that `Common.ValueList` on the foreign key is generated by the compiler from `@cds.odata.valuelist` (see `localService/metadata.xml`, lines 133–154). The same will happen for `category_code`.
+- The existing annotations `srv/annotations/Products.cds` and `app/products/annotations/Products.cds`: are extended, there are no new files for `Products`.
+- The i18n bundles `_i18n/i18n.properties` and `_i18n/i18n_ru.properties`: the key `Products.category` stays, the keys `Categories.*` are added.
+- The tests `test/catalog-service.test.js` and `test/metadata.test.js`: are extended, new files are not needed.
+- There are no handlers in the project (`HANDLERS.md`: "all logic is declarative"); the feature does not add any: mandatoriness comes from `@mandatory`, target existence from `@assert.target`, read-only from `@readonly`.
 
-Что было бы ошибкой писать заново: свой аспект справочника вместо `CodeList`; хендлер `before CREATE/UPDATE` для проверки кода категории вместо `@assert.target`; хендлер `after READ` для перевода названий вместо `localized`; вторую проекцию `Categories` (например, отдельную для value help); ручной `@Common.ValueList` с `CollectionPath: 'Products'` (текущий, подлежит удалению); отдельную страницу справочника в manifest.
+What would be a mistake to write from scratch: an own code list aspect instead of `CodeList`; a `before CREATE/UPDATE` handler to check the category code instead of `@assert.target`; an `after READ` handler to translate names instead of `localized`; a second `Categories` projection (for example, a separate one for value help); a manual `@Common.ValueList` with `CollectionPath: 'Products'` (the current one, to be removed); a separate code list page in the manifest.
 
-## Применимые паттерны
+## Applicable patterns
 
-Строки из `docs/architecture/PATTERNS.md`:
+Rows from `docs/architecture/PATTERNS.md`:
 
-| Шаг | Паттерн | Статус |
+| Step | Pattern | Status |
 |---|---|---|
-| Сущность `Categories` | «Справочник с выбором из списка»: `: sap.common.CodeList` с ключом `code`, ассоциация из основной сущности (ADR-0003) | есть |
-| `Products.category` | «Ссылка на другую сущность»: `Association to Target` в единственном числе | есть |
-| Названия на `ru` | «Переводимые тексты данных»: `localized String(N)`, CSV `<Entity>.texts` | есть (пример в коде появится этой фичей) |
-| Обязательность | «Обязательное поле»: `@mandatory` в `srv/annotations/<Entity>.cds` (ADR-0004) | есть |
-| Несуществующий код | «Проверка существования цели ассоциации»: `@assert.target` | есть (пример в коде появится этой фичей) |
-| `Categories` только чтение | «Только чтение»: `@readonly` на проекции в сервисе | есть |
-| Value help и текст вместо кода | «Выбор значения из справочника»: `@Common.ValueList` с `CollectionPath` на CodeList, `@Common.Text` + `@Common.TextArrangement: #TextOnly` | есть, но формулировка расходится с примером: у `Products.currency_code` ValueList не написан руками, а сгенерирован из `@cds.odata.valuelist`. Уточнение вынесено в ADR-0011 |
-| Представление: dropdown вместо диалога для короткого списка | нет строки | нужен ADR (ADR-0011, часть 2) |
-| Формат кодов справочника | нет строки (CONVENTIONS задаёт только `UPPER_SNAKE` для `enum`) | нужен ADR (ADR-0010) |
-| Колонки, фильтры, секции | «Колонки таблицы, фильтры, шапка, секции»: `@UI.*` в `app/<app>/annotations/<Entity>.cds` (ADR-0004) | есть |
-| Данные | «Новая сущность»: `cds add data --filter X --records N`, затем правка значений | есть |
-| Тесты | «Тест сервиса», «Контракт OData» (ADR-0002) | есть |
-| Снимок для мока | «Обновление снимка metadata.xml», «UI без бэкенда» (ADR-0008) | есть |
+| Entity `Categories` | "Code list with selection from a list": `: sap.common.CodeList` with key `code`, association from the main entity (ADR-0003) | exists |
+| `Products.category` | "Reference to another entity": `Association to Target` in the singular | exists |
+| Names in `ru` | "Translatable data texts": `localized String(N)`, CSV `<Entity>.texts` | exists (a code example will appear with this feature) |
+| Mandatoriness | "Mandatory field": `@mandatory` in `srv/annotations/<Entity>.cds` (ADR-0004) | exists |
+| Non-existent code | "Association target existence check": `@assert.target` | exists (a code example will appear with this feature) |
+| `Categories` read-only | "Read-only": `@readonly` on the projection in the service | exists |
+| Value help and text instead of code | "Value help from a code list": `@Common.ValueList` with `CollectionPath` to a CodeList, `@Common.Text` + `@Common.TextArrangement: #TextOnly` | exists, but the wording diverges from the example: for `Products.currency_code` the ValueList is not written by hand but generated from `@cds.odata.valuelist`. The clarification is moved to ADR-0011 |
+| Presentation: dropdown instead of a dialog for a short list | no row | ADR needed (ADR-0011, part 2) |
+| Code list code format | no row (CONVENTIONS only sets `UPPER_SNAKE` for `enum`) | ADR needed (ADR-0010) |
+| Columns, filters, sections | "Table columns, filters, header, sections": `@UI.*` in `app/<app>/annotations/<Entity>.cds` (ADR-0004) | exists |
+| Data | "New entity": `cds add data --filter X --records N`, then editing the values | exists |
+| Tests | "Service test", "OData contract" (ADR-0002) | exists |
+| Snapshot for the mock | "metadata.xml snapshot update", "UI without backend" (ADR-0008) | exists |
 
-### Проверено компиляцией (эксперимент в scratchpad, cds-dk 10.0.7, проект не менялся)
+### Verified by compilation (experiment in the scratchpad, cds-dk 10.0.7, the project was not changed)
 
-Собрана копия модели (схема и сервис в разных файлах, как в проекте) в двух вариантах UI-аннотаций.
+A copy of the model was assembled (schema and service in different files, as in the project) in two variants of UI annotations.
 
-- Вариант A, явный `@Common.ValueList` на ассоциации по `templates/annotations-ui.cds`: компилятор второй ValueList не добавляет, явный побеждает; в нём нет `Label`.
-- Вариант B, только `Common.Text: category.name` и `Common.TextArrangement: #TextOnly` (плюс `Common.ValueListWithFixedValues: true`): компилятор генерирует `Common.ValueList` на `category_code` с `Label` из `@title`, `CollectionPath: 'Categories'`, параметрами `InOut category_code ↔ code` и `DisplayOnly name`, то есть байт в байт как у `currency_code` сегодня.
-- В обоих вариантах `@Common.Text` с ассоциации копируется на `category_code` как `Path="category/name"` с вложенным `UI.TextArrangement TextOnly`. `@readonly` на проекции даёт `Capabilities.Insert/Update/DeleteRestrictions` на `EntityContainer/Categories`. Внешний ключ `category_code` получает `Edm.String MaxLength="20"`. Появляются наборы `Categories` и `Categories_texts`. Предупреждений компилятора нет.
-- `cds add data --filter Categories --records 6` создаёт оба файла `my.catalog-Categories.csv` и `my.catalog-Categories.texts.csv`, но с разделителем `,` и случайными локалями (`ru`, `hu`, ...). Проект требует `;` и только `ru`, поэтому после генерации нужна ручная правка.
+- Variant A, explicit `@Common.ValueList` on the association per `templates/annotations-ui.cds`: the compiler does not add a second ValueList, the explicit one wins; it has no `Label`.
+- Variant B, only `Common.Text: category.name` and `Common.TextArrangement: #TextOnly` (plus `Common.ValueListWithFixedValues: true`): the compiler generates `Common.ValueList` on `category_code` with `Label` from `@title`, `CollectionPath: 'Categories'`, parameters `InOut category_code ↔ code` and `DisplayOnly name`, that is, byte for byte the same as `currency_code` today.
+- In both variants `@Common.Text` from the association is copied to `category_code` as `Path="category/name"` with a nested `UI.TextArrangement TextOnly`. `@readonly` on the projection yields `Capabilities.Insert/Update/DeleteRestrictions` on `EntityContainer/Categories`. The foreign key `category_code` gets `Edm.String MaxLength="20"`. The entity sets `Categories` and `Categories_texts` appear. There are no compiler warnings.
+- `cds add data --filter Categories --records 6` creates both files `my.catalog-Categories.csv` and `my.catalog-Categories.texts.csv`, but with the `,` separator and random locales (`ru`, `hu`, ...). The project requires `;` and only `ru`, so manual editing is needed after generation.
 
-## Релевантные уроки
+## Relevant lessons
 
-Из `docs/LESSONS.md`:
+From `docs/LESSONS.md`:
 
-- «Титулы элементов живут на проекции, а не на db-сущности» (2026-09-07): `@title` для `Categories.code/name/descr` ставится на `CatalogService.Categories` в `srv/annotations/Categories.cds`; отсюда и необходимость явной проекции.
-- «`sap.ui.core.util.MockServer` не поддерживает OData V4» (2026-09-07): мок ждёт `<EntitySet>.json` с массивом; `generateMockData: true` сгенерирует мусор для `Categories` и `Categories_texts`, если файлов не будет. Файлы нужно положить.
-- «CAP MCP компилирует все `.cds` проекта, включая `templates/`» (2026-09-07): `search_model` по имени `Categories` находит шаблонные `my.catalog.tpl.*.Categories`; при сверке имён брать `my.catalog.Categories` и `CatalogService.Categories`.
-- «`run_manifest_validation` UI5 MCP 0.2.18 падает» (2026-09-07): не актуально, manifest в этой фиче не меняется.
-- Раздел «Открытый долг» STATE: «Мок-данные `Products.json` содержат 5 записей ... синхронизировать с `db/data` CSV при следующем изменении модели». Это изменение модели, долг закрывается здесь.
+- "Element titles live on the projection, not on the db entity" (2026-09-07): `@title` for `Categories.code/name/descr` is placed on `CatalogService.Categories` in `srv/annotations/Categories.cds`; hence the need for an explicit projection.
+- "`sap.ui.core.util.MockServer` does not support OData V4" (2026-09-07): the mock expects `<EntitySet>.json` with an array; `generateMockData: true` will generate garbage for `Categories` and `Categories_texts` if the files are missing. The files must be put in place.
+- "CAP MCP compiles all `.cds` files of the project, including `templates/`" (2026-09-07): `search_model` by the name `Categories` finds the template `my.catalog.tpl.*.Categories`; when checking names, take `my.catalog.Categories` and `CatalogService.Categories`.
+- "`run_manifest_validation` of UI5 MCP 0.2.18 fails" (2026-09-07): not relevant, the manifest does not change in this feature.
+- The "Open debt" section of STATE: "Mock data `Products.json` contains 5 records ... synchronize with the `db/data` CSV at the next model change". This is a model change, the debt is closed here.
 
-## Экраны (если есть UI)
+## Screens (if there is a UI)
 
-Автор: `ux-designer`, 2026-09-07. Входные данные architect (существующие страницы, 6 фиксированных значений, `TextOnly`, локали `en`/`ru`, без новых ключей в `webapp/i18n`) учтены; отклонения от PLAN перечислены в конце раздела.
+Author: `ux-designer`, 2026-09-07. The architect's input (existing pages, 6 fixed values, `TextOnly`, `en`/`ru` locales, no new keys in `webapp/i18n`) has been taken into account; deviations from PLAN are listed at the end of the section.
 
-Floorplan: существующие List Report `ProductsList` и Object Page `ProductsObjectPage` на `/Products` (`docs/registry/UI-ARTIFACTS.md`). Новых страниц, фрагментов, controller extension и правок `manifest.json` нет. Одна задача пользователя: найти товар по категории и задать категорию товару. Свободный UI5 не нужен: всё выражается аннотациями.
+Floorplan: the existing List Report `ProductsList` and Object Page `ProductsObjectPage` on `/Products` (`docs/registry/UI-ARTIFACTS.md`). No new pages, fragments, controller extensions or `manifest.json` edits. One user task: find a product by category and set the category of a product. Freestyle UI5 is not needed: everything is expressed by annotations.
 
-### Гайдлайны, на которые опирается дизайн
+### Guidelines the design relies on
 
-Из `mcp__fiori-mcp__search_docs` (снапшот документации SAPUI5 / SAP Fiori elements; полный URL топика `https://ui5.sap.com/#/topic/<id>`, в снапшоте MCP id усечён до 7 символов):
+From `mcp__fiori-mcp__search_docs` (snapshot of the SAPUI5 / SAP Fiori elements documentation; the full topic URL is `https://ui5.sap.com/#/topic/<id>`, in the MCP snapshot the id is truncated to 7 characters):
 
-| Источник | Что говорит | Где применено |
+| Source | What it says | Where applied |
 |---|---|---|
-| «Value Help as a Dropdown or Radio Button List» (топик `2a0a630`) | `Common.ValueListWithFixedValues: true` рендерит поле выпадающим списком (ComboBox, в фильтре MultiComboBox для нескольких значений); порог по количеству значений задан только для радиокнопок (≤ 8); фиксированный список не показывает «недавно введённые значения»; для фильтра `AllowedExpressions: 'MultiValue'` при необходимости ограничить выражения | решение «выпадающий список» ниже |
-| «Field Help (SAP Fiori elements for OData V4)» | «если сущность value help даёт только фиксированные значения, поле рендерится выпадающим списком»; type-ahead и колонки диалога управляются `UI.Importance` | поведение фильтра и поля |
-| «Value Help Dialog» (топик `fccb255`), шаг 1 и 5 | заголовок диалога: label DataField → `Common.Label` свойства → `Label` из ValueList; в таблице диалога параметр не показывается отдельной колонкой, если его значение уже показано через `Common.Text` другой колонки; текст ключа берётся из `Common.Text` на сущности value help | запасной вариант «диалог»; требование `Common.Text` на `Categories.code` |
-| «Text and Text Arrangement» и «Field Annotation Patterns (OData V4)» | `Common.Text` + `TextArrangement: #TextOnly` показывают только текст в таблице, шапке и форме | колонка, шапка, поле |
-| «Input with Value Help» (FPM Explorer, Field → Input with Value Help) | dropdown с `ValueListWithFixedValues` показывает ключ и описание по `TextArrangement` поля; `ValueListForValidation` не нужен, если проверка есть на сервере | элементы списка без кодов |
-| SAP Fiori Design Guidelines (не из MCP, по памяти, проверить при ревью): https://experience.sap.com/fiori-design-web/value-help-dialog/, https://experience.sap.com/fiori-design-web/multi-combo-box/, https://experience.sap.com/fiori-design-web/select/ | диалог value help предназначен для больших наборов, где нужен поиск и условия; короткий стабильный список выбирают из выпадающего списка (для Select ориентир «меньше 12 значений») | обоснование ADR-0011, часть 2 |
-| `get_guidelines` UI5 MCP | только стандартные контролы, биндинги и i18n, без inline-скриптов и кастомного CSS | тема и стиль |
-| Скилл `ui5-best-practices-accessibility` (labeling, keyboard, reading-order) | подписи, порядок чтения, фокус и клавиатура | чеклист доступности |
+| "Value Help as a Dropdown or Radio Button List" (topic `2a0a630`) | `Common.ValueListWithFixedValues: true` renders the field as a dropdown (ComboBox, in the filter a MultiComboBox for multiple values); a threshold on the number of values is set only for radio buttons (≤ 8); a fixed list does not show "recently entered values"; for the filter `AllowedExpressions: 'MultiValue'` if the expressions need to be restricted | the "dropdown" decision below |
+| "Field Help (SAP Fiori elements for OData V4)" | "if the value help entity provides only fixed values, the field is rendered as a dropdown"; type-ahead and dialog columns are controlled by `UI.Importance` | filter and field behavior |
+| "Value Help Dialog" (topic `fccb255`), steps 1 and 5 | dialog title: DataField label → `Common.Label` of the property → `Label` from the ValueList; in the dialog table a parameter is not shown as a separate column if its value is already shown via `Common.Text` of another column; the key text is taken from `Common.Text` on the value help entity | the "dialog" fallback; the requirement of `Common.Text` on `Categories.code` |
+| "Text and Text Arrangement" and "Field Annotation Patterns (OData V4)" | `Common.Text` + `TextArrangement: #TextOnly` show only the text in the table, header and form | column, header, field |
+| "Input with Value Help" (FPM Explorer, Field → Input with Value Help) | a dropdown with `ValueListWithFixedValues` shows the key and description according to the field's `TextArrangement`; `ValueListForValidation` is not needed if validation exists on the server | list items without codes |
+| SAP Fiori Design Guidelines (not from MCP, from memory, verify at review): https://experience.sap.com/fiori-design-web/value-help-dialog/, https://experience.sap.com/fiori-design-web/multi-combo-box/, https://experience.sap.com/fiori-design-web/select/ | the value help dialog is intended for large sets where search and conditions are needed; a short stable list is chosen from a dropdown (for Select the guideline is "fewer than 12 values") | rationale of ADR-0011, part 2 |
+| `get_guidelines` UI5 MCP | only standard controls, bindings and i18n, no inline scripts and no custom CSS | theme and style |
+| Skill `ui5-best-practices-accessibility` (labeling, keyboard, reading-order) | labels, reading order, focus and keyboard | accessibility checklist |
 
-### Решение по представлению: выпадающий список, не диалог
+### Presentation decision: dropdown, not dialog
 
-Рекомендация: `Common.ValueListWithFixedValues: true` на ассоциации `category` (ADR-0011, часть 2, принять). Причины:
+Recommendation: `Common.ValueListWithFixedValues: true` on the `category` association (ADR-0011, part 2, accept). Reasons:
 
-1. Набор из 6 значений фиксирован, ведётся разработчиками через CSV, `Categories` объявлена `@readonly`, экрана ведения нет. Это ровно критерий «fixed, stable set of values» из гайдлайна «Value Help as a Dropdown»; порог по числу значений гайдлайн не задаёт, 6 укладывается в любой разумный.
-2. Диалог value help стоит пользователю двух лишних шагов (открыть, подтвердить) и приносит поиск, фильтры и вкладку условий, которые для 6 значений бессмысленны. Выпадающий список открывается одним нажатием, фильтруется по вводу и закрывается выбором.
-3. В фильтре List Report выпадающий список даёт множественный выбор из коробки (MultiComboBox по гайдлайну): «Kitchen» и «Furniture» одновременно, без вкладки «Define Conditions».
-4. Диалог показал бы колонку кода (`ELECTRONICS`) как параметр `InOut`, что противоречит требованию «код никогда»; скрыть его можно только дополнительной аннотацией (см. ниже), тогда как в выпадающем списке с `TextOnly` кода нет по построению.
-5. Радиокнопки (`ValueListShowValuesImmediately`) отклонены: не поддерживают `TextArrangement`, в фильтре неудобны, не дают множественного выбора; ADR-0011 это уже фиксирует.
+1. The set of 6 values is fixed, maintained by developers via CSV, `Categories` is declared `@readonly`, there is no maintenance screen. This is exactly the "fixed, stable set of values" criterion from the "Value Help as a Dropdown" guideline; the guideline sets no threshold on the number of values, 6 fits into any reasonable one.
+2. The value help dialog costs the user two extra steps (open, confirm) and brings search, filters and a conditions tab, which are pointless for 6 values. A dropdown opens with one click, is filtered by typing and closes on selection.
+3. In the List Report filter the dropdown gives multiple selection out of the box (MultiComboBox per the guideline): "Kitchen" and "Furniture" at the same time, without the "Define Conditions" tab.
+4. The dialog would show the code column (`ELECTRONICS`) as an `InOut` parameter, which contradicts the "never the code" requirement; it can be hidden only with an additional annotation (see below), whereas in a dropdown with `TextOnly` there is no code by construction.
+5. Radio buttons (`ValueListShowValuesImmediately`) are rejected: they do not support `TextArrangement`, are inconvenient in the filter, do not provide multiple selection; ADR-0011 already records this.
 
-Что теряется и почему это приемлемо: история недавно введённых значений (для 6 значений не нужна); вкладка условий и «Exclude» в фильтре (для категорий не требуется); кэширование содержимого диалога (список из 6 строк загружается одним запросом `GET /Categories`).
+What is lost and why it is acceptable: the history of recently entered values (not needed for 6 values); the conditions tab and "Exclude" in the filter (not required for categories); caching of the dialog content (a list of 6 rows is loaded with a single `GET /Categories` request).
 
-Запасной вариант, если пользователь отклонит часть 2 ADR-0011: диалог value help, как у валюты. Тогда обязательна аннотация `Common.Text: name` и `Common.TextArrangement: #TextOnly` на `CatalogService.Categories.code` (см. «Обязательное дополнение» ниже), чтобы таблица диалога содержала одну колонку с названиями: по шагу 5 гайдлайна «Value Help Dialog» колонка `name` (`DisplayOnly`) при этом сворачивается в колонку ключа. Заголовок диалога берётся из label поля «Category» / «Категория», отдельный ключ i18n не нужен.
+Fallback if the user rejects part 2 of ADR-0011: a value help dialog, as for currency. Then the annotation `Common.Text: name` and `Common.TextArrangement: #TextOnly` on `CatalogService.Categories.code` is mandatory (see "Mandatory addition" below), so that the dialog table contains a single column with names: per step 5 of the "Value Help Dialog" guideline the `name` column (`DisplayOnly`) then collapses into the key column. The dialog title is taken from the field label "Category" / "Категория", a separate i18n key is not needed.
 
-### Обязательное дополнение к плану: `Common.Text` на `Categories.code`
+### Mandatory addition to the plan: `Common.Text` on `Categories.code`
 
-Проверено `mcp__cds-mcp__search_model` по `CatalogService.Currencies`: у образца `@Common.Text: name` стоит прямо на элементе `code`, и приходит он из определения `sap.common.Currencies` в `@sap/cds/common`, а не из аспекта `CodeList`. У новой `Categories : CodeList { key code }` такой аннотации на `code` не будет. Между тем именно `Common.Text` ключа сущности value help определяет текст элементов выпадающего списка и колонок диалога (гайдлайн «Value Help Dialog», шаг 5; «Text handling and sorting for dropdowns follow the Value Help Dialog logic» из «Value Help as a Dropdown»). Без неё список покажет `ELECTRONICS`, а не «Electronics», при любом `TextArrangement` на `Products.category`.
+Checked with `mcp__cds-mcp__search_model` on `CatalogService.Currencies`: in the sample, `@Common.Text: name` sits directly on the `code` element, and it comes from the definition of `sap.common.Currencies` in `@sap/cds/common`, not from the `CodeList` aspect. The new `Categories : CodeList { key code }` will not have such an annotation on `code`. Meanwhile it is exactly the `Common.Text` of the value help entity's key that determines the text of the dropdown items and dialog columns (the "Value Help Dialog" guideline, step 5; "Text handling and sorting for dropdowns follow the Value Help Dialog logic" from "Value Help as a Dropdown"). Without it the list will show `ELECTRONICS`, not "Electronics", regardless of the `TextArrangement` on `Products.category`.
 
-Требование к реализации (слой представления, ADR-0004): новый файл `app/products/annotations/Categories.cds` с аннотацией элемента `code` проекции `CatalogService.Categories`: `Common.Text: name`, `Common.TextArrangement: #TextOnly`; строка `using from './annotations/Categories';` в `app/products/annotations.cds`. Это добавляет файл к шагу 9 PLAN (или отдельный шаг 9а); architect обновляет план. `fiori-app-dev` проверяет в EDMX: на `Categories/code` есть `Common.Text Path="name"` с вложенным `UI.TextArrangement TextOnly`, на `Products/category_code` есть `Common.ValueListWithFixedValues Bool="true"` (компилятор копирует аннотации ассоциации на внешний ключ, как `@title` и `@mandatory` у `currency_code`; если `ValueListWithFixedValues` не скопировалась, это вопрос architect, а не повод аннотировать `category_code` вторым способом).
+Implementation requirement (presentation layer, ADR-0004): a new file `app/products/annotations/Categories.cds` with the annotation of the `code` element of the `CatalogService.Categories` projection: `Common.Text: name`, `Common.TextArrangement: #TextOnly`; the line `using from './annotations/Categories';` in `app/products/annotations.cds`. This adds a file to step 9 of PLAN (or a separate step 9a); the architect updates the plan. `fiori-app-dev` checks in the EDMX: `Categories/code` has `Common.Text Path="name"` with a nested `UI.TextArrangement TextOnly`, `Products/category_code` has `Common.ValueListWithFixedValues Bool="true"` (the compiler copies the association's annotations to the foreign key, like `@title` and `@mandatory` for `currency_code`; if `ValueListWithFixedValues` was not copied, that is a question for the architect, not a reason to annotate `category_code` in a second way).
 
-### Экран 1. List Report «Products» (`ProductsList`)
+### Screen 1. List Report "Products" (`ProductsList`)
 
-Заголовок и подзаголовок без изменений: `UI.HeaderInfo.TypeNamePlural` «Products» / «Товары» в заголовке таблицы, заголовок страницы из `appTitle`.
+Title and subtitle unchanged: `UI.HeaderInfo.TypeNamePlural` "Products" / "Товары" in the table title, the page title from `appTitle`.
 
-Фильтры (`UI.SelectionFields`, порядок как сейчас, 3 из допустимых 5): `name`, `category_code`, `price`.
+Filters (`UI.SelectionFields`, order as now, 3 of the allowed 5): `name`, `category_code`, `price`.
 
-| Свойство фильтра «Category» | Поведение |
+| Property of the "Category" filter | Behavior |
 |---|---|
-| Подпись | «Category» / «Категория» из `Products.category` (`@title` ассоциации копируется на `category_code`) |
-| Контрол | выпадающий список с множественным выбором (в документации: MultiComboBox; в FE V4 это `FilterField` с фиксированным списком). Никаких `FilterRestrictions` не добавлять: по умолчанию допустимы несколько значений, а вкладка условий для фиксированного списка не показывается |
-| Элементы списка | 6 названий на языке пользователя, без кодов; ввод текста сужает список; порядок элементов см. «Порядок значений» |
-| Выбранное значение | токен с названием («Kitchen» / «Кухня»), не код. Несколько токенов объединяются через OR: «Kitchen» + «Sports» дают 4 товара |
-| Пустое значение | фильтр не задан, таблица не ограничивается; плейсхолдера и специального текста нет |
-| Значение по умолчанию | нет (`Common.FilterDefaultValue` не задаём: каталог должен открываться полным) |
-| «Adapt Filters» | поле «Category» присутствует в списке под тем же label; скрытие пользователем допустимо |
+| Label | "Category" / "Категория" from `Products.category` (the association's `@title` is copied to `category_code`) |
+| Control | dropdown with multiple selection (in the documentation: MultiComboBox; in FE V4 it is a `FilterField` with a fixed list). Do not add any `FilterRestrictions`: by default multiple values are allowed, and the conditions tab is not shown for a fixed list |
+| List items | 6 names in the user's language, without codes; typing narrows the list; for the item order see "Value order" |
+| Selected value | a token with the name ("Kitchen" / "Кухня"), not the code. Several tokens are combined with OR: "Kitchen" + "Sports" give 4 products |
+| Empty value | the filter is not set, the table is not restricted; there is no placeholder or special text |
+| Default value | none (we do not set `Common.FilterDefaultValue`: the catalog must open in full) |
+| "Adapt Filters" | the "Category" field is present in the list under the same label; hiding by the user is allowed |
 
-Колонки таблицы (`UI.LineItem`, порядок важности как сейчас, 4 из допустимых 7): `name`, `category_code` → показывается `category.name` (`TextOnly`), `price` с валютой, `stock`. Заголовок колонки «Category» / «Категория». Ширина и перенос стандартные. Критичности и цветовой кодировки у категории нет и не планируется: это классификация, а не статус.
+Table columns (`UI.LineItem`, importance order as now, 4 of the allowed 7): `name`, `category_code` → `category.name` is shown (`TextOnly`), `price` with currency, `stock`. Column header "Category" / "Категория". Width and wrapping are standard. The category has no criticality or color coding and none is planned: it is a classification, not a status.
 
-Действия: не меняются (тулбар и строка таблицы как сейчас; новых `DataFieldForAction` нет). Навигация по строке на Object Page как сейчас.
+Actions: unchanged (toolbar and table row as now; no new `DataFieldForAction`). Row navigation to the Object Page as now.
 
-Пустые состояния и ошибки:
+Empty states and errors:
 
-- Фильтр выбрал категорию без товаров (сейчас таких нет, но возможно после удаления): стандартное сообщение таблицы FE «No data found. Try adjusting the filter settings» / русский эквивалент из бандла UI5; свой текст не вводим.
-- Ячейка «Category» у товара без категории (возможно только для данных, созданных в обход `@mandatory`, например моком): пустая ячейка, без прочерка и без текста.
-- `GET /Categories` не удался (бэкенд недоступен): список пуст, FE показывает стандартную ошибку запроса в message popover; консоль без необработанных ошибок. Свой обработчик не пишем.
-- Сортировка и группировка по колонке «Category» через настройки таблицы идут по `category_code`, то есть по коду, а не по переведённому названию. Для `en` порядок кодов совпадает с алфавитом названий, для `ru` нет. Принимается как известное ограничение (6 значений); `ui-verifier` фиксирует факт, не чинит.
+- The filter selected a category without products (there are none now, but it is possible after a deletion): the standard FE table message "No data found. Try adjusting the filter settings" / the Russian equivalent from the UI5 bundle; we do not introduce our own text.
+- The "Category" cell of a product without a category (possible only for data created bypassing `@mandatory`, for example by the mock): an empty cell, without a dash and without text.
+- `GET /Categories` failed (backend unavailable): the list is empty, FE shows the standard request error in the message popover; the console has no unhandled errors. We do not write our own handler.
+- Sorting and grouping by the "Category" column via the table settings go by `category_code`, that is, by the code, not by the translated name. For `en` the code order matches the alphabetical order of the names, for `ru` it does not. Accepted as a known limitation (6 values); `ui-verifier` records the fact, does not fix it.
 
-### Экран 2. Object Page «Product» (`ProductsObjectPage`)
+### Screen 2. Object Page "Product" (`ProductsObjectPage`)
 
-Шапка (`UI.HeaderInfo`): Title = `name`, Description = `category_code` → название категории (`TextOnly`), ImageUrl = `imageUrl`. `editableHeaderContent: false` остаётся: категория в шапке только для чтения, редактируется в секции.
+Header (`UI.HeaderInfo`): Title = `name`, Description = `category_code` → the category name (`TextOnly`), ImageUrl = `imageUrl`. `editableHeaderContent: false` stays: the category in the header is read-only, it is edited in the section.
 
-Секции (`UI.Facets`, без изменений): «General Information» (`name`, `description`, `category_code`, `imageUrl`), «Pricing & Stock» (`price`, `currency_code`, `stock`), «Administrative Data» (managed-поля). Порядок полей в «General Information» сохраняется: категория третьей, после описания.
+Sections (`UI.Facets`, unchanged): "General Information" (`name`, `description`, `category_code`, `imageUrl`), "Pricing & Stock" (`price`, `currency_code`, `stock`), "Administrative Data" (managed fields). The field order in "General Information" is preserved: the category is third, after the description.
 
-| Поле «Category» в секции «General Information» | Поведение |
+| The "Category" field in the "General Information" section | Behavior |
 |---|---|
-| Режим просмотра | текст «Electronics» / «Электроника»; ни кода, ни скобок |
-| Режим редактирования | выпадающий список с одиночным выбором (ComboBox), подпись «Category» с маркером обязательности (`@mandatory` → `FieldControl: Mandatory`); значок открытия списка справа; ввод текста сужает список |
-| Элементы списка | 6 названий на языке пользователя, без кодов |
-| Ввод текста, которого нет в списке | стандартная клиентская проверка поля FE: состояние ошибки с текстом фреймворка; сохранение блокируется до исправления. Серверная проверка `@assert.target` остаётся страховкой для API и в UI с выпадающим списком недостижима |
-| Пустое значение при сохранении | стандартная ошибка обязательного поля FE на клиенте; если запрос всё же ушёл, сервер отвечает 400 по `@mandatory`, FE показывает сообщение в message popover и подсвечивает поле |
-| После сохранения | поле и Description в шапке показывают новое название |
+| Display mode | the text "Electronics" / "Электроника"; neither code nor parentheses |
+| Edit mode | a dropdown with single selection (ComboBox), the label "Category" with the mandatory marker (`@mandatory` → `FieldControl: Mandatory`); the list opener icon on the right; typing narrows the list |
+| List items | 6 names in the user's language, without codes |
+| Typing text that is not in the list | the standard FE client-side field validation: error state with the framework's text; saving is blocked until corrected. The server-side check `@assert.target` remains as a safety net for the API and is unreachable in the UI with a dropdown |
+| Empty value on save | the standard FE mandatory field error on the client; if the request was sent anyway, the server responds 400 per `@mandatory`, FE shows the message in the message popover and highlights the field |
+| After saving | the field and the Description in the header show the new name |
 
-Риск, унаследованный из PLAN: `Products` не draft-enabled, `sap.fe.templates.ObjectPage` для non-draft сущностей в V4 поддерживается, но `mcp__fiori-mcp__search_docs` по «non-draft» вернул только материалы для OData V2, так что доступность кнопки «Edit» на этой странице не подтверждена MCP. `ui-verifier` проверяет первым; если кнопки нет, сценарий редактирования фиксируется как долг в `VERIFICATION.md` и `STATE.md`, а value help остаётся проверяемым в фильтре List Report. Включать draft в этой фиче нельзя (отдельная фича и ADR).
+Risk inherited from PLAN: `Products` is not draft-enabled, `sap.fe.templates.ObjectPage` for non-draft entities is supported in V4, but `mcp__fiori-mcp__search_docs` for "non-draft" returned only OData V2 materials, so the availability of the "Edit" button on this page is not confirmed by MCP. `ui-verifier` checks this first; if there is no button, the editing scenario is recorded as debt in `VERIFICATION.md` and `STATE.md`, and the value help remains verifiable in the List Report filter. Enabling draft in this feature is not allowed (a separate feature and ADR).
 
-### Что видит пользователь вместо кода (`TextArrangement`)
+### What the user sees instead of the code (`TextArrangement`)
 
-| Место | Что показано | Чем обеспечено |
+| Place | What is shown | Provided by |
 |---|---|---|
-| Колонка таблицы List Report | название | `Common.Text: category.name` + `#TextOnly` на `Products.category`, скопировано на `category_code` |
-| Токен фильтра | название | то же плюс `Common.Text` на `Categories.code` |
-| Элементы выпадающего списка (фильтр и форма) | название | `Common.Text: name` + `#TextOnly` на `Categories.code` |
-| Description в шапке Object Page | название | `Common.Text` на `Products.category` |
-| Поле в форме, просмотр и редактирование | название | то же |
-| Колонки диалога value help (запасной вариант) | одна колонка «Category» с названиями | `Common.Text` + `#TextOnly` на `Categories.code`, колонка `name` сворачивается по шагу 5 гайдлайна |
-| Настройки таблицы: сортировка, группировка, выбор колонок | label «Category», сортировка по коду | ограничение, см. выше |
-| URL и app state List Report после фильтрации, запросы OData | код (`category_code eq 'KITCHEN'`) | ожидаемо, пользователю не показывается |
-| Текст ошибки сервера (`@assert.target`, `@mandatory`) | код или имя поля в тексте CAP | в UI с выпадающим списком недостижимо |
+| List Report table column | name | `Common.Text: category.name` + `#TextOnly` on `Products.category`, copied to `category_code` |
+| Filter token | name | the same plus `Common.Text` on `Categories.code` |
+| Dropdown items (filter and form) | name | `Common.Text: name` + `#TextOnly` on `Categories.code` |
+| Description in the Object Page header | name | `Common.Text` on `Products.category` |
+| Field in the form, display and edit | name | the same |
+| Value help dialog columns (fallback) | a single "Category" column with names | `Common.Text` + `#TextOnly` on `Categories.code`, the `name` column collapses per step 5 of the guideline |
+| Table settings: sorting, grouping, column selection | the "Category" label, sorting by code | limitation, see above |
+| List Report URL and app state after filtering, OData requests | code (`category_code eq 'KITCHEN'`) | expected, not shown to the user |
+| Server error text (`@assert.target`, `@mandatory`) | the code or field name in the CAP text | unreachable in the UI with a dropdown |
 
-### Порядок значений в списке
+### Value order in the list
 
-Явной сортировки у сгенерированного ValueList нет (`PresentationVariantQualifier` потребовал бы ручного `Common.ValueList`, что противоречит части 1 ADR-0011). Список приходит в порядке сервера, который для SQLite обычно совпадает с порядком строк CSV, но не гарантирован. Рекомендация `cap-backend-dev` (шаг 4): записать `my.catalog-Categories.csv` в алфавитном порядке английских названий: Accessories, Electronics, Furniture, Kitchen, Sports, Stationery. Для `ru` порядок получится неалфавитным (Аксессуары, Электроника, Мебель, Кухня, Спорт, Канцелярия); для 6 значений это приемлемо. Сортировка по переведённому названию, если понадобится, это отдельное решение с ручным ValueList и `UI.PresentationVariant` на `Categories`.
+The generated ValueList has no explicit sorting (`PresentationVariantQualifier` would require a manual `Common.ValueList`, which contradicts part 1 of ADR-0011). The list comes in server order, which for SQLite usually matches the CSV row order, but is not guaranteed. Recommendation for `cap-backend-dev` (step 4): write `my.catalog-Categories.csv` in alphabetical order of the English names: Accessories, Electronics, Furniture, Kitchen, Sports, Stationery. For `ru` the order will be non-alphabetical (Аксессуары, Электроника, Мебель, Кухня, Спорт, Канцелярия); for 6 values this is acceptable. Sorting by the translated name, if ever needed, is a separate decision with a manual ValueList and `UI.PresentationVariant` on `Categories`.
 
-### Локали и отсутствие перевода
+### Locales and missing translations
 
-- Подписи: «Category» / «Категория» из `_i18n` через `@title`; тексты списка, диалога, сообщений об ошибках и пустой таблицы из бандлов UI5 и FE, локализуются фреймворком по `sap-ui-language`.
-- Названия категорий: `Categories.name` через `localized`; UI5 передаёт `Accept-Language` из `sap-ui-language`, сервер отдаёт `ru` из `Categories.texts`.
-- Нет перевода для локали пользователя (например, `de`, или в `texts.csv` пропущена строка): CAP подставляет текст языка по умолчанию, то есть английское `name` из базового CSV (`https://cap.cloud.sap/docs/guides/localized-data`, раздел о разрешении локализованных текстов; `mcp__cds-mcp__search_docs` дизайнеру недоступен, проверить тестом). Пользователь видит «Kitchen», никогда код. Предложение `test-backend`: добавить к тесту «returns localized category names» запрос с `Accept-Language: de` и ожиданием английского названия; в критерии PLAN этого нет, решает architect.
-- Смешение языков в одном списке (часть названий переведена, часть нет) допустимо только как временное состояние данных; в этой фиче все 6 переводов обязательны, паритет проверяет `cap-backend-dev` в шаге 4.
+- Labels: "Category" / "Категория" from `_i18n` via `@title`; the texts of the list, dialog, error messages and empty table come from the UI5 and FE bundles, localized by the framework according to `sap-ui-language`.
+- Category names: `Categories.name` via `localized`; UI5 sends `Accept-Language` from `sap-ui-language`, the server returns `ru` from `Categories.texts`.
+- No translation for the user's locale (for example, `de`, or a row is missing in `texts.csv`): CAP substitutes the default language text, that is, the English `name` from the base CSV (`https://cap.cloud.sap/docs/guides/localized-data`, the section on resolving localized texts; `mcp__cds-mcp__search_docs` is not available to the designer, verify with a test). The user sees "Kitchen", never the code. Proposal for `test-backend`: add to the test "returns localized category names" a request with `Accept-Language: de` expecting the English name; this is not in the PLAN criteria, the architect decides.
+- Mixed languages in one list (some names translated, some not) is acceptable only as a temporary data state; in this feature all 6 translations are mandatory, parity is checked by `cap-backend-dev` in step 4.
 
-### Нужна ли страница ведения справочника
+### Is a code list maintenance page needed
 
-Нет, подтверждаю решение плана. Справочник фиксирован, `@readonly`, ведётся через CSV, 6 значений; страница ведения противоречила бы `@readonly` и добавила бы маршрут в `manifest.json` без пользовательской задачи. Если категории когда-нибудь станут ведомыми пользователем, это отдельная фича: снять `@readonly`, включить draft на `Categories`, добавить List Report через Fiori MCP, и по критерию ADR-0011 (часть 2) вернуть категориям диалог value help вместо выпадающего списка, поскольку набор перестанет быть фиксированным.
+No, I confirm the plan's decision. The code list is fixed, `@readonly`, maintained via CSV, 6 values; a maintenance page would contradict `@readonly` and add a route to `manifest.json` without a user task. If categories ever become user-maintained, that is a separate feature: remove `@readonly`, enable draft on `Categories`, add a List Report via Fiori MCP, and per the ADR-0011 criterion (part 2) return the value help dialog to categories instead of the dropdown, since the set will no longer be fixed.
 
-### Заключение по открытым вопросам PLAN, касающимся UI
+### Conclusion on the open PLAN questions concerning the UI
 
-1. Формат кодов (ADR-0010). На экран не влияет: код не показывается ни в одном из мест таблицы выше, а при отсутствии перевода подставляется английское название, не код. Код виден только в URL/app state, запросах OData, тестах и текстах серверных ошибок, которые в UI с выпадающим списком недостижимы. Выбор между `ELECTRONICS` и `Electronics` остаётся за бэкендом; с точки зрения UX возражений против UPPER_SNAKE нет.
-2. Источник ValueList (ADR-0011, часть 1). Для пользователя оба варианта неразличимы: заголовок диалога и подпись поля берутся из `Common.Label`, колонки и текст элементов из `Common.Text` на `Categories.code`, а не из самого ValueList. Рекомендация: автогенерация из `CodeList` (как у валюты) плюс обязательное дополнение `Categories.cds` выше. Единственный сценарий, где нужен ручной ValueList, это сортировка списка по названию через `PresentationVariantQualifier`; в этой фиче он не требуется.
-3. Представление (ADR-0011, часть 2). Выпадающий список, обоснование в разделе «Решение по представлению». Паттерн утверждает пользователь.
+1. Code format (ADR-0010). Does not affect the screen: the code is not shown in any of the places in the table above, and when a translation is missing the English name is substituted, not the code. The code is visible only in the URL/app state, OData requests, tests and server error texts, which are unreachable in the UI with a dropdown. The choice between `ELECTRONICS` and `Electronics` stays with the backend; from the UX point of view there are no objections to UPPER_SNAKE.
+2. ValueList source (ADR-0011, part 1). For the user both variants are indistinguishable: the dialog title and the field label are taken from `Common.Label`, the columns and item text from `Common.Text` on `Categories.code`, not from the ValueList itself. Recommendation: auto-generation from `CodeList` (as for currency) plus the mandatory addition `Categories.cds` above. The only scenario where a manual ValueList is needed is sorting the list by name via `PresentationVariantQualifier`; in this feature it is not required.
+3. Presentation (ADR-0011, part 2). Dropdown, the rationale is in the "Presentation decision" section. The pattern is approved by the user.
 
-### Тема и стиль
+### Theme and style
 
-Тема `sap_horizon` (`webapp/index.html`, `test/flpSandbox.html`), только стандартные контролы FE, без кастомного CSS, цветов и иконок для категорий. Критичность (`UI.Criticality`) к категории не применяется.
+Theme `sap_horizon` (`webapp/index.html`, `test/flpSandbox.html`), only standard FE controls, no custom CSS, colors or icons for categories. Criticality (`UI.Criticality`) is not applied to the category.
 
-### Доступность: чеклист `ui5-best-practices-accessibility`
+### Accessibility: `ui5-best-practices-accessibility` checklist
 
-Собственных XML-вью и контроллеров фича не добавляет, поэтому все восемь тем закрываются стандартными контролами; `ui-verifier` проверяет результат, а не код.
+The feature adds no own XML views or controllers, so all eight topics are covered by standard controls; `ui-verifier` checks the result, not the code.
 
-| Тема | Даёт FE и стандартные контролы | Проверяет `ui-verifier` (Chrome DevTools MCP, дерево доступности, клавиатура) |
+| Topic | Provided by FE and standard controls | Checked by `ui-verifier` (Chrome DevTools MCP, accessibility tree, keyboard) |
 |---|---|---|
-| Landmarks | DynamicPage List Report и ObjectPageLayout выставляют роли и подписи регионов | ничего дополнительно |
-| Labeling | подпись «Category» связана с полем фильтра и полем формы (`labelFor` / `aria-labelledby`), маркер и `aria-required` из `FieldControl: Mandatory`, у списка роль `combobox` с `aria-expanded` и `listbox`, у диалога (запасной вариант) заголовок «Category» | в дереве доступности поле фильтра и поле формы объявляются как «Category» (в `ru` «Категория»), обязательное поле формы объявлено как required; элементы списка читаются названиями, не кодами; токен в фильтре читается названием |
-| Heading levels | уровни заголовков страницы, таблицы и секций задаёт FE | ничего дополнительно |
-| Focus & keyboard | открытие списка `F4` или `Alt+Down`, перемещение стрелками, выбор `Enter` (в фильтре `Space` переключает пункт, `Backspace` удаляет токен), закрытие `Esc`; порядок табуляции равен DOM; `F6` переключает группы «фильтры / таблица», на Object Page секции | сценарий только с клавиатуры: `Tab` до фильтра «Category», `Alt+Down`, `Down`, `Enter`, `Enter` на «Go», таблица обновилась; на Object Page `Edit`, `Tab` до «Category», выбор стрелками и `Enter`, сохранение; фокус после закрытия списка остаётся в поле |
-| Keyboard shortcuts | новых кнопок нет | ничего дополнительно |
-| Invisible messaging | обновление таблицы после фильтра и ошибки валидации объявляют MDC-контролы FE | после применения фильтра и при ошибке обязательного поля скринридер получает объявление; если фреймворк молчит, фиксировать как ограничение FE, не дописывать `InvisibleMessage` |
-| Reading order | DOM-порядок совпадает с визуальным: подпись перед полем, фильтры перед таблицей, шапка перед секциями | ничего дополнительно |
-| Target size | стандартные размеры полей, токенов и элементов списка | ничего дополнительно |
+| Landmarks | the List Report DynamicPage and ObjectPageLayout set region roles and labels | nothing additional |
+| Labeling | the "Category" label is associated with the filter field and the form field (`labelFor` / `aria-labelledby`), the marker and `aria-required` from `FieldControl: Mandatory`, the list has the `combobox` role with `aria-expanded` and `listbox`, the dialog (fallback) has the title "Category" | in the accessibility tree the filter field and the form field are announced as "Category" (in `ru` "Категория"), the mandatory form field is announced as required; list items are read as names, not codes; the token in the filter is read as the name |
+| Heading levels | the heading levels of the page, table and sections are set by FE | nothing additional |
+| Focus & keyboard | opening the list with `F4` or `Alt+Down`, moving with arrows, selecting with `Enter` (in the filter `Space` toggles an item, `Backspace` removes a token), closing with `Esc`; the tab order equals the DOM; `F6` switches the "filters / table" groups, on the Object Page the sections | keyboard-only scenario: `Tab` to the "Category" filter, `Alt+Down`, `Down`, `Enter`, `Enter` on "Go", the table refreshed; on the Object Page `Edit`, `Tab` to "Category", selection with arrows and `Enter`, save; the focus stays in the field after the list closes |
+| Keyboard shortcuts | no new buttons | nothing additional |
+| Invisible messaging | the table refresh after filtering and validation errors are announced by the FE MDC controls | after applying the filter and on a mandatory field error the screen reader receives an announcement; if the framework is silent, record it as an FE limitation, do not add `InvisibleMessage` |
+| Reading order | the DOM order matches the visual order: label before field, filters before table, header before sections | nothing additional |
+| Target size | standard sizes of fields, tokens and list items | nothing additional |
 
-Дополнительно: прогон в `sap_horizon_hcb` не требуется этой фичей, но если `ui-verifier` делает скриншоты в двух темах, категорийные тексты должны оставаться читаемыми без кастомных цветов (их нет).
+Additionally: a run in `sap_horizon_hcb` is not required by this feature, but if `ui-verifier` takes screenshots in two themes, the category texts must remain readable without custom colors (there are none).
 
-### Тексты i18n
+### i18n texts
 
-Новых ключей в `app/products/webapp/i18n/*` нет: подписи приходят из `_i18n` через `@title`, тексты списка, диалога, пустой таблицы и ошибок валидации из бандлов UI5/FE. Заголовок диалога value help (запасной вариант) равен label поля, ключ не нужен. Для пустого значения ключ не нужен: пустая ячейка и незаполненный фильтр без текста, это стандарт FE.
+There are no new keys in `app/products/webapp/i18n/*`: labels come from `_i18n` via `@title`, the texts of the list, dialog, empty table and validation errors from the UI5/FE bundles. The value help dialog title (fallback) equals the field label, no key is needed. No key is needed for the empty value: an empty cell and an unfilled filter without text, that is the FE standard.
 
-`_i18n/i18n.properties` и `_i18n/i18n_ru.properties` (labels модели, ключи `<Entity>.<element>` по `CONVENTIONS.md`):
+`_i18n/i18n.properties` and `_i18n/i18n_ru.properties` (model labels, keys `<Entity>.<element>` per `CONVENTIONS.md`):
 
-| Ключ | en | ru | Где виден |
+| Key | en | ru | Where visible |
 |---|---|---|---|
-| `Products.category` (есть) | Category | Категория | фильтр, колонка, поле формы, заголовок диалога |
-| `Categories.code` | Category | Категория | заголовок единственной колонки диалога value help и type-ahead; в `$metadata`. Отклонение от PLAN («Category Code»): с `TextOnly` на `code` в этой колонке стоят названия, заголовок «Category Code» над «Electronics» ввёл бы в заблуждение |
-| `Categories.name` | Category Name | Название категории | только `$metadata` (колонка сворачивается в колонку кода) |
-| `Categories.descr` | Category Description | Описание категории | только `$metadata`, поле не заполняется |
+| `Products.category` (exists) | Category | Категория | filter, column, form field, dialog title |
+| `Categories.code` | Category | Категория | header of the single value help dialog column and type-ahead; in `$metadata`. Deviation from PLAN ("Category Code"): with `TextOnly` on `code` this column holds names, the header "Category Code" above "Electronics" would be misleading |
+| `Categories.name` | Category Name | Название категории | only `$metadata` (the column collapses into the code column) |
+| `Categories.descr` | Category Description | Описание категории | only `$metadata`, the field is not filled |
 
-Названия категорий это данные, не i18n-ключи (`db/data/my.catalog-Categories.csv` и `my.catalog-Categories.texts.csv`, шаг 4 PLAN):
+Category names are data, not i18n keys (`db/data/my.catalog-Categories.csv` and `my.catalog-Categories.texts.csv`, step 4 of PLAN):
 
-| Код | `name` en | `name` ru |
+| Code | `name` en | `name` ru |
 |---|---|---|
 | `ACCESSORIES` | Accessories | Аксессуары |
 | `ELECTRONICS` | Electronics | Электроника |
@@ -245,24 +245,24 @@ Floorplan: существующие List Report `ProductsList` и Object Page `P
 | `SPORTS` | Sports | Спорт |
 | `STATIONERY` | Stationery | Канцелярия |
 
-Порядок строк алфавитный по `en` (см. «Порядок значений»); коды по ADR-0010, при ином решении по ADR-0010 меняется только колонка «Код».
+Row order is alphabetical by `en` (see "Value order"); codes per ADR-0010, with a different decision on ADR-0010 only the "Code" column changes.
 
-### Сценарии для `ui-verifier` сверх критериев PLAN
+### Scenarios for `ui-verifier` beyond the PLAN criteria
 
-1. Элементы выпадающего списка в фильтре и в форме показывают названия, не коды, в `en` и `ru`. Если видны коды, причина в отсутствии `Common.Text` на `Categories.code` (см. «Обязательное дополнение»).
-2. В фильтре выбраны «Kitchen» и «Sports»: 4 товара, два токена с названиями, запрос содержит `category_code eq 'KITCHEN' or category_code eq 'SPORTS'`.
-3. У фильтра нет вкладки условий и кнопки открытия диалога; на Object Page нет диалога, только список.
-4. Клавиатурный сценарий из чеклиста доступности в обеих страницах.
-5. Дерево доступности: подпись, required, роль combobox, тексты элементов.
+1. The dropdown items in the filter and in the form show names, not codes, in `en` and `ru`. If codes are visible, the cause is the missing `Common.Text` on `Categories.code` (see "Mandatory addition").
+2. "Kitchen" and "Sports" are selected in the filter: 4 products, two tokens with names, the request contains `category_code eq 'KITCHEN' or category_code eq 'SPORTS'`.
+3. The filter has no conditions tab and no dialog opener button; on the Object Page there is no dialog, only the list.
+4. The keyboard scenario from the accessibility checklist on both pages.
+5. Accessibility tree: label, required, combobox role, item texts.
 
-### Отклонения от PLAN и что должен обновить architect
+### Deviations from PLAN and what the architect must update
 
-- Новый файл `app/products/annotations/Categories.cds` и строка `using` в `app/products/annotations.cds` (шаг 9 или 9а), проверка EDMX на `Categories/code` и `Products/category_code`.
-- Значение ключа `Categories.code`: «Category» / «Категория» вместо «Category Code» / «Код категории».
-- Порядок строк в `my.catalog-Categories.csv`: алфавитный по английскому названию.
-- Необязательное: тест на fallback локали (`Accept-Language: de`).
-- Критерий UI PLAN «фильтр открывает value help со списком из 6 названий» уточняется: выпадающий список с множественным выбором, без диалога.
+- New file `app/products/annotations/Categories.cds` and the `using` line in `app/products/annotations.cds` (step 9 or 9a), EDMX check on `Categories/code` and `Products/category_code`.
+- Value of the key `Categories.code`: "Category" / "Категория" instead of "Category Code" / "Код категории".
+- Row order in `my.catalog-Categories.csv`: alphabetical by the English name.
+- Optional: a locale fallback test (`Accept-Language: de`).
+- The PLAN UI criterion "the filter opens a value help with a list of 6 names" is refined: a dropdown with multiple selection, without a dialog.
 
-## Открытые вопросы
+## Open questions
 
-Закрыты 2026-09-07 решениями пользователя (переданы оркестратором): ADR-0010 и ADR-0011 приняты, тесты UI входят в фичу, мок-данные синхронизируются с CSV, `Categories.code` = «Category» / «Категория». Дополнения `ux-designer` из раздела «Экраны» внесены в план. См. `PLAN.md`, раздел «Решения пользователя (2026-09-07)».
+Closed on 2026-09-07 by user decisions (passed on by the orchestrator): ADR-0010 and ADR-0011 accepted, UI tests are part of the feature, mock data is synchronized with the CSV, `Categories.code` = "Category" / "Категория". The `ux-designer` additions from the "Screens" section have been incorporated into the plan. See `PLAN.md`, section "User decisions (2026-09-07)".

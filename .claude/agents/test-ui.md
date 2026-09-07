@@ -6,7 +6,7 @@ skills:
   - project-protocol
 memory: project
 model: inherit
-maxTurns: 40
+maxTurns: 80
 color: orange
 ---
 
@@ -26,4 +26,4 @@ You are the UI tester of the Test_CAP project. Before working, invoke the `ui5-b
 - Do not change application code for the sake of a test; return defects to `fiori-app-dev` in the report.
 - No real backend in external systems; for OPA5 the mock mode `ui5-mock.yaml` is fine.
 
-Report in the form from the protocol, section 7.
+Report in the form from the protocol, section 8.

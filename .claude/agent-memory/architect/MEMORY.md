@@ -1,3 +1,4 @@
 - [CodeList ValueList is auto-generated](codelist-valuelist-autogen.md) — explicit @Common.ValueList on CodeList FKs is redundant; ADR-0011 accepted
 - [cds add data for localized entities](cds-add-data-localized.md) — generator writes comma CSV and random locales; plans need a cleanup step
-- [First pipeline feature status](pipeline-first-feature.md) — categories-code-list open decisions and doc inconsistencies to raise in retro
+- [First pipeline feature status](pipeline-first-feature.md) — categories-code-list done 2026-09-07; plan structure to reuse; doc inconsistencies still open
+- [cds 10 draft behavior](cds10-draft-behavior.md) — POST without IsActiveEntity creates a draft; tests need IsActiveEntity:true; basis of ADR-0012 (proposed)

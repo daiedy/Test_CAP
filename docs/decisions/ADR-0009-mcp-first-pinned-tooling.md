@@ -7,7 +7,7 @@ An LLM without grounding in current documentation invents CDS syntax, mixes ODat
 
 ## Decision
 - Protocol: before creating or changing any SAP artifact, the agent queries the corresponding MCP (CDS and handlers → `cds-mcp`; annotations, Fiori Elements, manifest → `fiori-mcp`; UI5 controls and API → UI5 MCP from the `ui5` plugin). If MCP contradicts the model's knowledge, follow MCP. For version questions trust `cds version`, `npm view` and live pages, not the snapshot in MCP.
-- Versions in `.mcp.json` are pinned exactly (`@cap-js/mcp-server@0.0.5`, `@sap-ux/fiori-mcp-server@1.12.2`, `chrome-devtools-mcp@1.8.0`; UI5 MCP via the `ui5@claude-plugins-official` plugin 0.1.8). They are bumped only by the `release-check` skill after reading the changelog.
+- Versions in `.mcp.json` are pinned exactly (`@cap-js/mcp-server@0.0.5`, `@sap-ux/fiori-mcp-server@1.12.2`, `chrome-devtools-mcp@1.8.0`; UI5 MCP via the `ui5@claude-plugins-official` plugin 0.1.8). They are bumped only by the `upstream-check` skill after reading the changelog.
 - `.claude/**`, `.mcp.json`, `scripts/hooks/**` are considered security-sensitive: agents do not edit them (the `pipeline-config.md` rule, PreToolUse hook), edits go through human review, dependency installation with `--ignore-scripts` in CI.
 - Fiori MCP telemetry is disabled with the `SAP_UX_FIORI_TOOLS_DISABLE_TELEMETRY` variable.
 

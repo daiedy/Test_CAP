@@ -1,12 +1,12 @@
 ---
-name: release-check
-description: Weekly check of framework updates (CAP, UI5, Fiori tools, SAP MCP servers) and a digest entry in docs/framework/UPDATES.md. Use when the user says "framework updates", "release check", "what's new in CAP/UI5", "check the releases", "are there new versions" (Russian: «обновления фреймворков», «что нового в CAP/UI5», «проверь релизы», «есть ли новые версии»), and on the schedule of the release-watcher agent.
+name: upstream-check
+description: Weekly check of new releases of the upstream dependencies the project builds on (SAP CAP, SAPUI5, Fiori tools, SAP MCP servers), not our own code, with a digest entry in docs/upstream/UPDATES.md. Use when the user says "upstream updates", "framework updates", "release check", "what's new in CAP/UI5", "check the releases", "are there new versions" (Russian: «обновления фреймворков», «что нового в CAP/UI5», «проверь релизы», «есть ли новые версии»), and on the schedule of the upstream-watcher agent.
 allowed-tools: Bash, Read, Write, WebFetch
 ---
 
-# Framework update check
+# Upstream dependency update check
 
-Goal: in one pass understand what changed in SAP CAP, SAPUI5, Fiori tools and the MCP servers, and write a short digest with an impact assessment for the project into `docs/framework/UPDATES.md`. Do not update anything in `package.json` and `.mcp.json`, only recommend.
+Goal: in one pass understand what changed in the upstream dependencies the project builds on (SAP CAP, SAPUI5, Fiori tools and the MCP servers), and write a short digest with an impact assessment for the project into `docs/upstream/UPDATES.md`. Do not update anything in `package.json` and `.mcp.json`, only recommend.
 
 ## Step 1. Collect the diff with the script
 
@@ -15,7 +15,7 @@ export PATH="/opt/homebrew/opt/node@22/bin:$PATH"
 node scripts/watch-releases.mjs --out "$SCRATCHPAD/release-diff.md"
 ```
 
-`$SCRATCHPAD` is the scratchpad directory of the session. The script updates `docs/framework/versions.json` itself. If the output contains an `## Errors` section, list those sources in the digest as "not checked" and draw no conclusions from them.
+`$SCRATCHPAD` is the scratchpad directory of the session. The script updates `docs/upstream/versions.json` itself. If the output contains an `## Errors` section, list those sources in the digest as "not checked" and draw no conclusions from them.
 
 If the diff is empty (`No changes since the last run.`), add a one-line section to `UPDATES.md`: "`<date>`: no changes, N sources checked", and finish.
 
@@ -44,7 +44,7 @@ Version rule: documentation snapshots in the MCP servers may lag behind. Verify 
 
 ## Step 4. Write the digest
 
-Insert a new section right after the introductory text in `docs/framework/UPDATES.md`, above the previous sections:
+Insert a new section right after the introductory text in `docs/upstream/UPDATES.md`, above the previous sections:
 
 ```markdown
 ## <YYYY-MM-DD>

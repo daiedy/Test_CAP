@@ -1,12 +1,12 @@
-# Framework update digest
+# Upstream dependency update digest
 
-This file is maintained by the `release-watcher` agent through the `release-check` skill. Data source: the script `scripts/watch-releases.mjs`, which without the model downloads npm dist-tags, CAP release pages, GitHub Atom feeds and UI5 version JSON files, compares them with `docs/framework/versions.json` and prints a diff. The agent reads only the diff and writes a new section here at the top: what changed, whether it affects the project, which actions are recommended. The script itself runs locally (`node scripts/watch-releases.mjs`) or weekly in GitHub Actions (`.github/workflows/release-check.yml`).
+This file is maintained by the `upstream-watcher` agent through the `upstream-check` skill. Data source: the script `scripts/watch-releases.mjs`, which without the model downloads npm dist-tags, CAP release pages, GitHub Atom feeds and UI5 version JSON files, compares them with `docs/upstream/versions.json` and prints a diff. The agent reads only the diff and writes a new section here at the top: what changed, whether it affects the project, which actions are recommended. The script itself runs locally (`node scripts/watch-releases.mjs`) or weekly in GitHub Actions (`.github/workflows/upstream-check.yml`).
 
 Reading rule: sections go from newest to oldest. Every section contains two lists, "Affects the project" and "Does not affect", and a list of recommended actions. This file does not change the versions in `.mcp.json` and `package.json`, it only recommends.
 
 ## 2026-09-07: baseline
 
-First run, the state is recorded in `docs/framework/versions.json`. 31 sources checked, no errors.
+First run, the state is recorded in `docs/upstream/versions.json`. 31 sources checked, no errors.
 
 | Package or source | Version as of 2026-09-07 | In the project |
 |---|---|---|

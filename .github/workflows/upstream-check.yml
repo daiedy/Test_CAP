@@ -1,14 +1,14 @@
-# Weekly framework release check.
+# Weekly upstream dependency release check.
 #
 # This job is deliberately non-agentic: it only runs scripts/watch-releases.mjs,
 # publishes the Markdown diff as a build artifact and, when something changed,
 # opens or updates a GitHub issue. The agentic part (assessing impact and writing
-# docs/framework/UPDATES.md) is done by the `release-check` skill, run locally in
+# docs/upstream/UPDATES.md) is done by the `upstream-check` skill, run locally in
 # Claude Code or by a scheduled Claude routine, never in CI.
 #
-# The run is read-only: docs/framework/versions.json is not committed from CI.
+# The run is read-only: docs/upstream/versions.json is not committed from CI.
 # The committed state stays the source of truth for the local agent run.
-name: release-check
+name: upstream-check
 
 on:
   schedule:
@@ -56,13 +56,13 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           DATE="$(date -u +%Y-%m-%d)"
-          TITLE="Framework updates $DATE"
+          TITLE="Upstream dependency updates $DATE"
           # Reuse an open issue with the same label if one exists, otherwise create a new one.
-          EXISTING="$(gh issue list --label framework-updates --state open --limit 1 --json number --jq '.[0].number // empty')"
+          EXISTING="$(gh issue list --label upstream-updates --state open --limit 1 --json number --jq '.[0].number // empty')"
           if [ -n "$EXISTING" ]; then
             gh issue comment "$EXISTING" --body-file release-diff.md
             gh issue edit "$EXISTING" --title "$TITLE"
           else
-            gh label create framework-updates --description "Weekly framework release diff" --color 0A5DC2 --force
-            gh issue create --title "$TITLE" --label framework-updates --body-file release-diff.md
+            gh label create upstream-updates --description "Weekly upstream dependency release diff" --color 0A5DC2 --force
+            gh issue create --title "$TITLE" --label upstream-updates --body-file release-diff.md
           fi

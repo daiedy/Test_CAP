@@ -35,7 +35,7 @@ const REASONS = {
   'scripts/hooks/**': 'hook scripts are changed only by a human; ask the user',
   '.claude/**': 'agent configuration is protected; ask the user to make the change',
   '.mcp.json':
-    'MCP configuration is protected; versions are bumped through release-check by the user decision',
+    'MCP configuration is protected; versions are bumped through upstream-check by the user decision',
   'docs/ai-pipeline-plan.md': 'the plan is edited only on a direct request from the user',
 };
 

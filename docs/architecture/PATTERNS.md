@@ -72,5 +72,5 @@ For every recurring task there is exactly one approved way here. An agent that m
 | Run for development | `npm run watch` in the root, UI at http://localhost:4004/products/webapp/test/flpSandbox.html | | |
 | UI without backend | `npm run start-mock` in `app/products`, mock from `localService` | `app/products/ui5-mock.yaml` | ADR-0008 |
 | metadata.xml snapshot update | `cds compile srv --to edmx-v4 > app/products/webapp/localService/metadata.xml` after any model change | | |
-| Dependency update | Only via `release-check` and Renovate, MCP versions are pinned | | ADR-0009 |
+| Dependency update | Only via `upstream-check` and Renovate, MCP versions are pinned | | ADR-0009 |
 | Deployment | Not configured; `mta.yaml` is a draft. Any deployment work starts with an ADR | | |

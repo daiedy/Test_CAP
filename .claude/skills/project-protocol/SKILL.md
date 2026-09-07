@@ -41,7 +41,7 @@ If MCP or the project documentation contradicts your knowledge, the document and
 | New Fiori application | `mcp__fiori-mcp__generate_fiori_app_cap` |
 | Controls, XML views, controllers, bindings of freestyle UI5 | `mcp__plugin_ui5_ui5-mcp-server__get_api_reference`, `get_guidelines`; after edits `run_ui5_linter`; after a manifest edit `run_manifest_validation` |
 | UI tests (OPA5, QUnit) | skills `ui5-best-practices-opa5`, `ui5-best-practices-qunit`, `mcp__fiori-mcp__search_docs` |
-| Package versions, "what's new", compatibility | not MCP: `cds version`, `npm view <pkg> version`, `docs/framework/UPDATES.md`. Documentation snapshots in MCP may be outdated |
+| Package versions, "what's new", compatibility | not MCP: `cds version`, `npm view <pkg> version`, `docs/upstream/UPDATES.md`. Documentation snapshots in MCP may be outdated |
 
 If the task touches several layers, ask all the corresponding servers.
 
@@ -98,7 +98,7 @@ one or two lines or "none"
 
 - Editing `mta.yaml`, `xs-security.json`, `ui5-deploy.yaml`, `package-lock.json`, `.claude/**`, `.mcp.json`, `scripts/hooks/**`, `docs/registry/**`, `docs/ai-pipeline-plan.md` without an explicit user request.
 - Creating `manifest.json` and the Fiori application structure by hand; `cds add sample`; `console.log`; user-facing strings in code; global access `sap.ui.getCore()`, `jQuery.sap.*`.
-- Installing or bumping versions of dependencies and MCP; this is done by `release-check` and the user.
+- Installing or bumping versions of dependencies and MCP; this is done by `upstream-check` and the user.
 - Committing and pushing without an instruction from the user or the `feature` orchestrator.
 - Claiming that tests pass or the linter is clean without a fresh run in this session.
 - Silently choosing between two ways. Uncertainty is a question to the user or architect, not a guess.

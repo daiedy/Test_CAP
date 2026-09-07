@@ -1,5 +1,5 @@
 /**
- * SessionStart hook: injects project state, framework digest and toolchain check into context.
+ * SessionStart hook: injects project state, upstream dependency digest and toolchain check into context.
  * Plain stdout is added to Claude's context. Never fails.
  */
 import path from 'node:path';
@@ -20,12 +20,12 @@ try {
     out.push('', 'docs/STATE.md is missing: create it before finishing the work.');
   }
 
-  const updates = path.join(root, 'docs', 'framework', 'UPDATES.md');
+  const updates = path.join(root, 'docs', 'upstream', 'UPDATES.md');
   if (exists(updates)) {
     const lines = fs.readFileSync(updates, 'utf8').split('\n');
     const idx = lines.findIndex((l) => /^##\s+\d{4}-\d{2}-\d{2}/.test(l));
     if (idx >= 0) {
-      out.push('', '## Latest framework update digest', lines.slice(idx, idx + 16).join('\n'));
+      out.push('', '## Latest upstream dependency digest', lines.slice(idx, idx + 16).join('\n'));
     }
   }
 

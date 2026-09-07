@@ -1,6 +1,6 @@
 # Stack and versions
 
-State as of 2026-09-07. Versions are updated through `release-check` (see `docs/framework/UPDATES.md`), changes are recorded in `docs/CHANGELOG.md`.
+State as of 2026-09-07. Versions are updated through `upstream-check` (see `docs/upstream/UPDATES.md`), changes are recorded in `docs/CHANGELOG.md`.
 
 ## Environment
 
@@ -50,7 +50,7 @@ Database in development: SQLite in-memory, CSV deployed on every start (`cds wat
 | Plugin `ui5@claude-plugins-official` | 0.1.8 | 8 UI5 best practices skills |
 | Plugin `cap-developer@cap` | 1.0.0 | CAP development skill from the CAP team |
 
-MCP versions are pinned in `.mcp.json` and bumped only through `release-check` (ADR-0009).
+MCP versions are pinned in `.mcp.json` and bumped only through `upstream-check` (ADR-0009).
 
 ## Planned for phases 3-4
 

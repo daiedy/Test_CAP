@@ -7,7 +7,7 @@ The application loads SAPUI5 from `https://ui5.sap.com` without a version in the
 
 ## Decision
 - `manifest.json` `_version: "2.0.0"`, `minUI5Version: "1.136.0"`, the `synchronizationMode` parameter removed.
-- In development UI5 is taken from the CDN at the current version without pinning. UI5 changes are tracked by `release-watcher` via `versionoverview.json` and the `sap/fe/core` release notes.
+- In development UI5 is taken from the CDN at the current version without pinning. UI5 changes are tracked by `upstream-watcher` via `versionoverview.json` and the `sap/fe/core` release notes.
 - For production the version is pinned when deployment is set up, in a separate ADR (LTS line, currently 1.148).
 
 ## Alternatives

@@ -62,4 +62,4 @@ Authentication in development: `mocked` (users from `package.json`, by default `
 | `docs/STATE.md` | `docs-keeper` | where we are now, accumulated decisions, open debt |
 | `docs/LESSONS.md` | all agents via `retro` | lessons learned |
 | `docs/CHANGELOG.md` | `docs-keeper` | what changed |
-| `docs/framework/UPDATES.md` | `release-watcher` | framework update digest |
+| `docs/upstream/UPDATES.md` | `upstream-watcher` | upstream dependency update digest |

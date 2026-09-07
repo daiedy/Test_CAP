@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Framework release watcher for the CAP + UI5 pipeline.
+ * Upstream dependency release watcher for the CAP + UI5 pipeline.
  *
  * Fetches npm dist-tags, CAP release pages, GitHub Atom feeds and UI5 version
- * JSON files, compares them with the state stored in docs/framework/versions.json
+ * JSON files, compares them with the state stored in docs/upstream/versions.json
  * and prints a Markdown diff. Deterministic, no LLM involved: the agent
- * (skill `release-check`) only reads the diff this script produces.
+ * (skill `upstream-check`) only reads the diff this script produces.
  *
  * Usage:
  *   node scripts/watch-releases.mjs                 # update state, print Markdown diff
@@ -21,7 +21,7 @@ import path from 'node:path';
 import process from 'node:process';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
-const STATE_FILE = path.join(ROOT, 'docs', 'framework', 'versions.json');
+const STATE_FILE = path.join(ROOT, 'docs', 'upstream', 'versions.json');
 const FETCH_TIMEOUT_MS = 15_000;
 const CONCURRENCY = 6;
 const MAX_FEED_ENTRIES = 20;
@@ -91,7 +91,7 @@ async function fetchText(url) {
   try {
     const res = await fetch(url, {
       signal: controller.signal,
-      headers: { 'user-agent': 'test-cap-release-watcher', accept: '*/*' },
+      headers: { 'user-agent': 'test-cap-upstream-watcher', accept: '*/*' },
       redirect: 'follow',
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -325,7 +325,7 @@ function diffSource(source, previous, current) {
 
 function renderMarkdown(report) {
   const lines = [];
-  lines.push(`# Framework release diff (${report.checkedAt})`, '');
+  lines.push(`# Upstream dependency release diff (${report.checkedAt})`, '');
   if (report.baseline) {
     lines.push('First run: state seeded, nothing to compare against yet.', '');
   }

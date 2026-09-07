@@ -2,6 +2,16 @@
 
 Записи добавляют все агенты через скилл `retro` и человек. Формат: дата, что случилось, почему, как избежать, источник. Новые записи сверху. Список типовых ошибок агентов в CAP и Fiori из публикаций: `docs/ai-pipeline-plan.md`, раздел 3.4.
 
+## 2026-09-07. `$filter` при мультивыборе в фильтре FE V4 виден только внутри `$batch`
+
+Что: при выборе нескольких значений в выпадающем фильтре (MultiComboBox) FE V4 отправляет запрос через `POST .../$batch`; отдельного GET с `$filter` в сети нет, итоговое выражение (`category_code eq 'KITCHEN' or category_code eq 'SPORTS'`) видно только в multipart-теле batch-запроса. Замечено `ui-verifier` при проверке фильтра категорий в фиче `categories-code-list`.
+Как избежать: проверять сеть через `list_network_requests` (фильтр `resourceTypes: ["xhr","fetch"]`) и `get_network_request` на найденный `$batch`, а не искать отдельный GET с `$filter` в URL.
+
+## 2026-09-07. Фаза дизайна дала реальные правки плана: `Common.Text` на ключе собственного CodeList обязателен
+
+Что: при подготовке экранов `ux-designer` через `mcp__cds-mcp__search_model` по `CatalogService.Currencies` обнаружил, что `@Common.Text: name` у `sap.common.Currencies.code` задан в самом определении `@sap/cds/common`, а не наследуется от аспекта `CodeList`; у новой `Categories : CodeList { key code }` такой аннотации не будет, и без неё выпадающий список и колонки диалога value help покажут код (`ELECTRONICS`), а не название. `PLAN.md` дополнен обязательным шагом: `app/products/annotations/Categories.cds` с `Common.Text: name` + `Common.TextArrangement: #TextOnly` на `code`.
+Как избежать: для любого нового собственного `CodeList` явно проверять и добавлять `Common.Text` на его ключ в `app/<app>/annotations/<CodeList>.cds`, не полагаться на то, что аспект `CodeList` даёт эту аннотацию сам. Закреплено в ADR-0011, часть 1.
+
 ## 2026-09-07. Выпадающий список `ValueListWithFixedValues` в FE V4 это typeahead-таблица, а не `sap.m.List`
 
 Что: в OPA-журнее проверка элементов выпадающего списка категорий (`sap.m.List` + `sap.m.DisplayListItem`, как в `sap.fe.test.api.FilterBarActions#iSelectDropDownOption`) 60 секунд не находила контролы, хотя список на скриншоте открыт. Дамп через `sap/ui/test/OpaPlugin` в кадре приложения показал: SAP Fiori elements для OData V4 (1.152) рендерит фиксированный список как typeahead `sap.m.Table` с id `...::FilterFieldValueHelp::category_code::Popover::qualifier::::SuggestTable` (родители `sap.ui.mdc.valuehelp.content.MTable` → `sap.ui.mdc.valuehelp.Popover`), строки `sap.m.ColumnListItem` в режиме `MultiSelect` (чекбокс с суффиксом `-selectMulti`), ячейка `sap.fe.macros.Field` → `FieldWrapper` → `sap.m.Text`, причём один и тот же текст рендерится двумя `sap.m.Text` (pop-in), а кода в строке нет. Заметил `test-ui` в фиче `categories-code-list`.
@@ -25,7 +35,7 @@
 ## 2026-09-07. `npm run watch` (`cds-serve --watch`) падает, `npx cds watch` работает
 
 Что: `cds-serve --watch` из `@sap/cds` 10.0.6 упал с `TypeError: this.load is not a function` (`bin/serve.js:333`), хотя `@sap/cds-dk` стоит локально; `npx cds watch` (cds-dk 10.0.7) поднимает сервер. Замечено `test-ui` при запуске живого стека для OPA.
-Как избежать: для локального запуска использовать `cds watch`; скрипт `watch` в корневом `package.json` пересмотреть отдельной задачей (файл не менялся, решает пользователь).
+Исправлено в коммите `ce05c8a`: `npm run watch` теперь `cds watch`; `npm start` остаётся `cds-serve` по документации CAP (работает без cds-dk).
 
 ## 2026-09-07. Ссылка на ассоциацию в `UI.DataField.Value` не переписывается на внешний ключ
 

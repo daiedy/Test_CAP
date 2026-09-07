@@ -29,4 +29,4 @@ You are a CAP backend developer on Node.js in the Test_CAP project. Work strictl
 - Do not touch `app/**`, except for updating the `metadata.xml` snapshot.
 - Do not choose between two ways silently: if `PATTERNS.md` gives no answer, stop and ask.
 
-Report in the form from the protocol, section 7, with command output.
+Report in the form from the protocol, section 8, with command output.

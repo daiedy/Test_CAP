@@ -43,6 +43,7 @@ Product Catalog: SAP CAP (Node.js 22, `@sap/cds` 10, OData V4, SQLite in-memory 
 7. **Texts through i18n.** `en` and `ru` in the same change. No user-facing strings in code.
 8. **Gates, not trust.** Hooks run linters after edits, and tests and the documentation check before finishing. "Tests pass" without fresh output is not accepted.
 9. **Documentation in the same change.** `npm run docs:registry`, a line in `docs/CHANGELOG.md`, an up-to-date `docs/STATE.md`.
+10. **English everywhere the AI reads.** Code comments, commit messages, `docs/`, feature specs, ADRs, agent reports and memories are English. Russian lives only in i18n `ru` bundles, `.texts.csv` and asserted test values. Chat replies follow the user's language. The PostToolUse hook flags Cyrillic; `/test-all` scans for it.
 
 ## Style in two lines
 

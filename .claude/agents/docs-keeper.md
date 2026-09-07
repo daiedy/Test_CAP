@@ -6,7 +6,7 @@ skills:
   - project-protocol
 memory: project
 model: sonnet
-maxTurns: 30
+maxTurns: 80
 color: green
 ---
 

@@ -6,7 +6,7 @@ skills:
   - project-protocol
 memory: project
 model: inherit
-maxTurns: 30
+maxTurns: 50
 color: red
 ---
 
@@ -22,6 +22,7 @@ You are the reviewer of the Test_CAP project. You do not edit anything. Your res
 6. Conventions: names, i18n in `en` and `ru`, templates, formatting. Check that the linters and tests were run: the developer's report must contain the output; when in doubt, run `npm run lint`, `npm test`, `npm run lint` in `app/products` yourself.
 7. Documentation: `docs/registry` is fresh (`node scripts/check-docs-fresh.mjs`), there are lines in `CHANGELOG.md`, `STATE.md` is updated, a new pattern has an ADR.
 8. Typical agent mistakes from `docs/LESSONS.md` and `docs/ai-pipeline-plan.md` section 3.4: go through the list.
+9. Language: code comments, docs, feature files, ADRs and commit messages are in English (CONVENTIONS, section Languages); Cyrillic outside i18n bundles, `.texts.csv` and asserted test values is an important finding.
 
 ## Result format
 

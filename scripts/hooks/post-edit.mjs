@@ -90,6 +90,48 @@ function checkUi5(root, r) {
   }
 }
 
+// Project language rule (CONVENTIONS, Languages): code and docs are English. Cyrillic is allowed
+// only in i18n bundles, .texts.csv data and asserted test values (test files are skipped here).
+const CYRILLIC_SCOPE = [
+  'db/**',
+  'srv/**',
+  'app/**/annotations/**',
+  'app/**/annotations.cds',
+  'app/**/webapp/ext/**',
+  'scripts/**',
+  'templates/**',
+  'docs/**',
+  'CLAUDE.md',
+  'README.md',
+  '.claude/**',
+];
+const CYRILLIC_EXCLUDE = [
+  '**/*_ru.properties',
+  '**/*.texts.csv',
+  '**/*.snap',
+  'docs/ai-pipeline-plan.md',
+  'scripts/build-plan-page.py',
+  'test/**',
+  'app/**/webapp/test/**',
+  'app/**/webapp/i18n/**',
+  '_i18n/**',
+  'docs/registry/**',
+];
+
+function checkCyrillic(root, r) {
+  if (!isUnder(r, CYRILLIC_SCOPE) || isUnder(r, CYRILLIC_EXCLUDE)) return null;
+  const lines = fs.readFileSync(path.resolve(root, r), 'utf8').split('\n');
+  const hits = [];
+  lines.forEach((l, i) => {
+    // skill/agent descriptions keep Russian trigger words in parentheses on purpose
+    if (/^description:/.test(l)) return;
+    if (/[\u0400-\u04FF]/.test(l)) hits.push(i + 1);
+  });
+  if (!hits.length) return null;
+  const shown = hits.slice(0, 10).join(', ');
+  return `Language rule: ${r} contains Cyrillic on line(s) ${shown}${hits.length > 10 ? ` and ${hits.length - 10} more` : ''}. Code, comments and docs must be English (CONVENTIONS, Languages); only i18n bundles, .texts.csv and asserted test values may hold Russian.`;
+}
+
 function readKeys(file) {
   if (!exists(file)) return null;
   const keys = new Set();
@@ -141,6 +183,10 @@ try {
   }
   if (isUnder(r, ['_i18n/**/*.properties', 'app/**/webapp/i18n/**/*.properties'])) {
     const n = checkI18n(root, r);
+    if (n) notes.push(n);
+  }
+  {
+    const n = checkCyrillic(root, r);
     if (n) notes.push(n);
   }
 

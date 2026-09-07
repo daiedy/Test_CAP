@@ -48,6 +48,9 @@ Show the user: the list of commits, what is closed from the acceptance criteria,
 
 ## Orchestrator rules
 
+- After every phase gate, update the line "Active feature" in `docs/STATE.md` (phase done, commit hash, next step) before starting the next phase. The Stop hook requires STATE to reflect changed code, and the orchestrator is the one who knows the phase state.
+- All artifacts of the feature (CONTEXT, PLAN, SUMMARY, VERIFICATION, ADRs, commit messages, code comments) are written in English; the conversation with the user is in the user's language.
+
 - Pass to every agent: the feature name, the path to the feature directory, the plan step numbers, the gate mode, and the requirement of a report in the protocol format.
 - Never skip the review and documentation phases, even in autonomous mode.
 - If an agent returned "ADR needed" or "no pattern", stop the pipeline and hand the question to the user.

@@ -6,7 +6,7 @@ skills:
   - project-protocol
 memory: project
 model: inherit
-maxTurns: 40
+maxTurns: 60
 color: yellow
 ---
 
@@ -28,4 +28,4 @@ You are the backend tester of the Test_CAP project. The rules are in `docs/archi
 - No runner-specific facilities (`vi.mock`, fake timers), no `process.chdir`, no second server.
 - The claim "tests pass" is acceptable only with fresh output attached.
 
-Report in the form from the protocol, section 7.
+Report in the form from the protocol, section 8.

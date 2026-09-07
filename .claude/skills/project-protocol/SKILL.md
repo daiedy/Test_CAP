@@ -28,8 +28,8 @@ If MCP or the project documentation contradicts your knowledge, the document and
 5. Check with MCP according to the routing table below before the first edit.
 6. Take a template from `templates/` if you create a new file of that type.
 7. Make the edits. Path rules (`.claude/rules/`) are loaded automatically, follow them.
-8. Check: linters and tests from section 5. Do not write "checked" if you did not run them.
-9. Update the documentation you are responsible for (section 6) and report in the form (section 7).
+8. Check: linters and tests from section 6. Do not write "checked" if you did not run them.
+9. Update the documentation you are responsible for (section 7) and report in the form (section 8).
 
 ## 3. Routing to MCP
 
@@ -45,14 +45,18 @@ If MCP or the project documentation contradicts your knowledge, the document and
 
 If the task touches several layers, ask all the corresponding servers.
 
-## 4. Protection against duplication and inconsistency
+## 4. Language
+
+Everything the pipeline reads or produces is written in English: code comments, commit messages, docs under `docs/` (STATE, CHANGELOG, LESSONS, feature specs, ADRs), agent reports saved to files, registry, templates. The only non-English text lives in i18n bundles (`*_ru.properties`, `*.texts.csv`) and in test data that asserts translated values. Reply to the user in the user's language; that is separate from the files. The PostToolUse hook flags Cyrillic in code and docs; the reviewer treats it as an important finding.
+
+## 5. Protection against duplication and inconsistency
 
 - New function, handler, fragment, formatter, type: first `docs/registry/REUSE-CATALOG.md`, `HANDLERS.md`, `UI-ARTIFACTS.md`. Reuse or extend what you find.
 - Identical tasks are solved identically. The reference is the existing code and `PATTERNS.md`, not a "prettier" variant.
 - Names, file structure, formatting: only by `CONVENTIONS.md`. Prettier and the linters settle style disputes.
 - Texts only through i18n, keys by convention, `en` and `ru` in the same change.
 
-## 5. Checks before handing over
+## 6. Checks before handing over
 
 | You changed | Run |
 |---|---|
@@ -64,7 +68,7 @@ If the task touches several layers, ask all the corresponding servers.
 
 Attach the commands and their output (last lines) to the report. A red test or a linter error means the task is not finished.
 
-## 6. Documentation you are responsible for
+## 7. Documentation you are responsible for
 
 - Changed code: a line in `docs/CHANGELOG.md` (scope: db, srv, app, test, docs, pipeline, deps).
 - Closed a plan item: tick it in `docs/features/<name>/PLAN.md`.
@@ -72,7 +76,7 @@ Attach the commands and their output (last lines) to the report. A red test or a
 - Made a decision that is not in `PATTERNS.md`: do not make it. Stop and propose an ADR.
 - `docs/registry/*` is not edited by hand, only `npm run docs:registry`.
 
-## 7. Report form
+## 8. Report form
 
 ```
 ## Done
@@ -94,7 +98,7 @@ what requires a decision from the user or architect
 one or two lines or "none"
 ```
 
-## 8. Forbidden
+## 9. Forbidden
 
 - Editing `mta.yaml`, `xs-security.json`, `ui5-deploy.yaml`, `package-lock.json`, `.claude/**`, `.mcp.json`, `scripts/hooks/**`, `docs/registry/**`, `docs/ai-pipeline-plan.md` without an explicit user request.
 - Creating `manifest.json` and the Fiori application structure by hand; `cds add sample`; `console.log`; user-facing strings in code; global access `sap.ui.getCore()`, `jQuery.sap.*`.

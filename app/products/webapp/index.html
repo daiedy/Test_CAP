@@ -13,51 +13,9 @@
         }
     </style>
 
-    <script>
-        window["sap-ushell-config"] = {
-            defaultRenderer: "fiori2",
-            renderers: {
-                fiori2: {
-                    componentData: {
-                        config: {
-                            enableSearch: false
-                        }
-                    }
-                }
-            },
-            services: {
-                "ClientSideTargetResolution": {
-                    "adapter": {
-                        "config": {
-                            "inbounds": {
-                                "products-display": {
-                                    "semanticObject": "products",
-                                    "action": "display",
-                                    "title": "Product Catalog",
-                                    "signature": {
-                                        "parameters": {},
-                                        "additionalParameters": "allowed"
-                                    },
-                                    "resolutionResult": {
-                                        "applicationType": "SAPUI5",
-                                        "additionalInformation": "SAPUI5.Component=products",
-                                        "url": "/products/webapp"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "NavTargetResolution": {
-                    "config": {
-                        "enableClientSideTargetResolution": true
-                    }
-                }
-            }
-        };
-    </script>
+    <script src="sandboxConfig.js"></script>
 
-    <script src="https://ui5.sap.com/test-resources/sap/ushell/bootstrap/sandbox.js"></script>
+    <script id="sap-ushell-bootstrap" src="https://ui5.sap.com/test-resources/sap/ushell/bootstrap/sandbox.js"></script>
     <script
         src="https://ui5.sap.com/resources/sap-ui-core.js"
         data-sap-ui-libs="sap.m, sap.ushell, sap.fe.templates"
@@ -68,17 +26,7 @@
         data-sap-ui-resource-roots='{"products": "./"}'
     ></script>
 
-    <script>
-        sap.ui.getCore().attachInit(function () {
-            sap.ushell.Container.createRenderer(null, true).then(function(renderer) {
-                renderer.placeAt("content");
-
-                if (!globalThis.location.hash || globalThis.location.hash === "#" || globalThis.location.hash === "#Shell-home") {
-                    globalThis.location.hash = "#products-display";
-                }
-            });
-        });
-    </script>
+    <script src="sandboxInit.js"></script>
 </head>
 
 <body class="sapUiBody" id="content">

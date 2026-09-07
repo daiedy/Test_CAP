@@ -5,11 +5,12 @@ Updated by the `docs-keeper` agent at the end of every task and by the PreCompac
 ## Where we are
 
 - Date: 2026-09-07
-- Branch: `main` 8ec176b, pushed; CI green on GitHub. `main` holds the merged first feature run (`feature/categories-code-list`) and the English translation of the pipeline; pushed.
+- Branch: `feature/products-draft-edit` from `main` 6784760 (main pushed, CI green). `main` holds the merged first feature run (`feature/categories-code-list`) and the English translation of the pipeline; pushed.
 - Pipeline: stages 0–4 of the plan are implemented and exercised by one full `/feature` run. Not done: CI for tests and linters, Dependabot, packaging as a plugin (stage 5).
 - Retro follow-ups applied in this branch: `maxTurns` raised (test-ui, ui-verifier, docs-keeper 80; reviewer 50; architect, test-backend 60), `feature` skill updates STATE after every phase, `test-all` gained a dev-server smoke step and a Cyrillic scan, PostToolUse hook flags Cyrillic, `metadata.test.js` checks that `localService/metadata.xml` equals the compiled EDMX (16 tests), CLAUDE.md invariant 10 (English everywhere the AI reads) and a request-to-skill routing table.
 - All docs, agent memories, feature files and ADRs are English now; Russian remains only in i18n `ru` bundles, `.texts.csv`, asserted test values and the owner's plan `docs/ai-pipeline-plan.md`.
-- Active feature: none. Specification in progress: `products-draft-edit` (architect, `/spec`), see `docs/features/products-draft-edit/` and ADR-0012 draft.
+- Active feature: `products-draft-edit` on branch `feature/products-draft-edit` (plan approved with the recommended options, ADR-0012 accepted). Step 3 done: `@odata.draft.enabled` on `CatalogService.Products`, draft cycle and lock verified by curl. Step 4 in progress (`test-backend`: draft tests, snapshot, `metadata.xml` regenerated in this phase so the sync test is green). Step 2 (screens, `ux-designer`) in progress. Next: gate phase 2 and commit, then UI journey, verification, review, docs.
+- Specification in progress: `catalog-authorization` (architect, `/spec`), next feature after draft.
 - LESSONS is an inbox (2 pending upstream entries); `/retro` transfers lessons into hooks, rules, tests and agent prompts.
 - Next steps: user decisions on ADR-0012 (draft vs inline edit), `liveMode` for the List Report, New Sandbox migration; pipeline stage 5 (plugin packaging) when a second project appears.
 

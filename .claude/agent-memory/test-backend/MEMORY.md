@@ -1,0 +1,1 @@
+- [Probing runtime behavior](project-probing-runtime-behavior.md) — throwaway probe under test/ logging to the scratchpad; Vitest 5 hides console output; delete before npm test

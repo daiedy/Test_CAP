@@ -2,7 +2,7 @@ using { my.catalog as catalog } from '../db/schema';
 
 /** Public catalog API. UI annotations live in app/products/annotations. */
 service CatalogService {
-  entity Products as projection on catalog.Products;
+  @odata.draft.enabled entity Products as projection on catalog.Products;
   @readonly entity Categories as projection on catalog.Categories;
 }
 

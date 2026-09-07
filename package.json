@@ -26,8 +26,8 @@
     "vitest": "^5"
   },
   "scripts": {
-    "start": "cds-serve",
-    "watch": "cds-serve --watch",
+    "start": "cds serve",
+    "watch": "cds watch",
     "build": "cds build --production",
     "deploy": "cds deploy",
     "test": "vitest run --silent",

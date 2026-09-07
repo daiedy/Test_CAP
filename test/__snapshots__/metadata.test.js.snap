@@ -132,7 +132,7 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
             </PropertyValue>
             <PropertyValue Property="Description">
               <Record Type="UI.DataField">
-                <PropertyValue Property="Value" Path="category"/>
+                <PropertyValue Property="Value" Path="category_code"/>
               </Record>
             </PropertyValue>
             <PropertyValue Property="ImageUrl" Path="imageUrl"/>
@@ -141,7 +141,7 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         <Annotation Term="UI.SelectionFields">
           <Collection>
             <PropertyPath>name</PropertyPath>
-            <PropertyPath>category</PropertyPath>
+            <PropertyPath>category_code</PropertyPath>
             <PropertyPath>price</PropertyPath>
           </Collection>
         </Annotation>
@@ -151,7 +151,7 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
               <PropertyValue Property="Value" Path="name"/>
             </Record>
             <Record Type="UI.DataField">
-              <PropertyValue Property="Value" Path="category"/>
+              <PropertyValue Property="Value" Path="category_code"/>
             </Record>
             <Record Type="UI.DataField">
               <PropertyValue Property="Value" Path="price"/>
@@ -191,7 +191,7 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
                   <PropertyValue Property="Value" Path="description"/>
                 </Record>
                 <Record Type="UI.DataField">
-                  <PropertyValue Property="Value" Path="category"/>
+                  <PropertyValue Property="Value" Path="category_code"/>
                 </Record>
                 <Record Type="UI.DataField">
                   <PropertyValue Property="Value" Path="imageUrl"/>
@@ -319,21 +319,29 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         <Annotation Term="Common.Label" String="{i18n>Products.category}"/>
       </Annotations>
       <Annotations Target="CatalogService.Products/category_code">
+        <Annotation Term="Common.Text" Path="category/name">
+          <Annotation Term="UI.TextArrangement" EnumMember="UI.TextArrangementType/TextOnly"/>
+        </Annotation>
+        <Annotation Term="Common.ValueListWithFixedValues" Bool="true"/>
+        <Annotation Term="Common.Label" String="{i18n>Products.category}"/>
+        <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
         <Annotation Term="Common.ValueList">
           <Record Type="Common.ValueListType">
-            <PropertyValue Property="CollectionPath" String="Products"/>
+            <PropertyValue Property="Label" String="{i18n>Products.category}"/>
+            <PropertyValue Property="CollectionPath" String="Categories"/>
             <PropertyValue Property="Parameters">
               <Collection>
                 <Record Type="Common.ValueListParameterInOut">
-                  <PropertyValue Property="LocalDataProperty" PropertyPath="category"/>
-                  <PropertyValue Property="ValueListProperty" String="category"/>
+                  <PropertyValue Property="LocalDataProperty" PropertyPath="category_code"/>
+                  <PropertyValue Property="ValueListProperty" String="code"/>
+                </Record>
+                <Record Type="Common.ValueListParameterDisplayOnly">
+                  <PropertyValue Property="ValueListProperty" String="name"/>
                 </Record>
               </Collection>
             </PropertyValue>
           </Record>
         </Annotation>
-        <Annotation Term="Common.Label" String="{i18n>Products.category}"/>
-        <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
       </Annotations>
       <Annotations Target="CatalogService.Products/imageUrl">
         <Annotation Term="Common.Label" String="{i18n>Products.imageUrl}"/>
@@ -371,6 +379,9 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         <Annotation Term="Common.Label" String="{i18n>Categories.descr}"/>
       </Annotations>
       <Annotations Target="CatalogService.Categories/code">
+        <Annotation Term="Common.Text" Path="name">
+          <Annotation Term="UI.TextArrangement" EnumMember="UI.TextArrangementType/TextOnly"/>
+        </Annotation>
         <Annotation Term="Common.Label" String="{i18n>Categories.code}"/>
       </Annotations>
       <Annotations Target="CatalogService.Currencies">

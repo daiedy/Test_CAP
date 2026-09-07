@@ -7,7 +7,7 @@
 - Дата: 2026-09-07
 - Ветка: `feature/categories-code-list` от `main` 2b4a820 (этапы 0–4 конвейера закоммичены и запушены 2026-09-07)
 - Текущая фаза конвейера: этапы 0–4 плана реализованы (окружение, конституция, агенты и скиллы, хуки и тесты бэкенда, наблюдатель релизов). Не сделано: тесты UI (OPA5, ui5-test-runner, wdi5), CI для тестов, упаковка в плагин (этап 5)
-- Активная фича: `categories-code-list` (первый прогон конвейера). План утверждён пользователем 2026-09-07 с решениями ADR-0010 (коды UPPER_SNAKE) и ADR-0011 (ValueList из CodeList, выпадающий список). Шаги 1–6 выполнены (спецификация, экраны, модель, данные, сервис, семантика); шаг 7 (тесты и снапшот, `test-backend`) в работе; далее фаза 3 UI (шаги 9–13), верификация, ревью, документация. Незакоммичено до ворот фазы 2. После фичи: `/retro`
+- Активная фича: `categories-code-list` (первый прогон конвейера). План утверждён пользователем 2026-09-07 с решениями ADR-0010 (коды UPPER_SNAKE) и ADR-0011 (ValueList из CodeList, выпадающий список). Фаза 2 закоммичена (`1e0bd04` спецификация и ADR, `9c8623d` бэкенд, `15` тестов зелёные; попутно `fix(pipeline)` команды снимка metadata). Фаза 3: шаги 9–12 (UI-аннотации, снимок, мок-данные) выполнены `fiori-app-dev`, шаг 13 (OPA5-журнеи, `test-ui`) в работе; далее ворота и коммит UI, `ui-verifier`, `reviewer`, `docs-keeper`. После фичи: `/retro`
 - Параллельно: перевод всех файлов конвейера на английский и переименование `release-watcher` → `upstream-watcher` в ветке `chore/english-pipeline` (фоновый агент); слияние после завершения фичи
 
 ## Что работает
@@ -29,8 +29,8 @@
 | Нет CI для `npm test` и линтеров (есть только `release-check.yml`) | Добавить `ci.yml`: `npm ci --ignore-scripts`, lint, test, ui5lint | пользователь решает |
 | Хуки, MCP и субагенты проверены в живой сессии 2026-09-07 только точечными вызовами, полный `/feature` не прогонялся | Первый `/feature` покажет; после него `/retro` | пользователь |
 | `run_manifest_validation` UI5 MCP 0.2.18 падает с ошибкой схемы draft-06 | Обход через `ui5lint`; ждать новую версию `@ui5/mcp-server` через `release-check` | release-watcher |
-| Мок-данные `localService/mockdata/Products.json` содержат 5 записей с placeholder-картинками | Закрывается шагом 11 фичи `categories-code-list` | fiori-app-dev |
-| Контракт OData меняется: `Products.category` (String) → `category_code` + навигация `category`; снапшот metadata и `localService/metadata.xml` обновляются в фиче | Шаги 7 и 11 фичи `categories-code-list`, запись в CHANGELOG | test-backend, fiori-app-dev |
+| Контракт OData изменён: `Products.category` (String) → `category_code` + навигация `category`; снапшот и `localService/metadata.xml` обновлены, записи в CHANGELOG | Закрыто шагами 7 и 11 фичи `categories-code-list` | |
+| Реестр `docs/registry` устарел с фазы 2 фичи (ожидаемо по плану) | Шаг 17 фичи, `docs-keeper`: `npm run docs:registry` | docs-keeper |
 
 ## Накопленные решения
 

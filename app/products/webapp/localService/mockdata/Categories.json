@@ -1,0 +1,32 @@
+[
+  {
+    "code": "ACCESSORIES",
+    "name": "Accessories",
+    "descr": null
+  },
+  {
+    "code": "ELECTRONICS",
+    "name": "Electronics",
+    "descr": null
+  },
+  {
+    "code": "FURNITURE",
+    "name": "Furniture",
+    "descr": null
+  },
+  {
+    "code": "KITCHEN",
+    "name": "Kitchen",
+    "descr": null
+  },
+  {
+    "code": "SPORTS",
+    "name": "Sports",
+    "descr": null
+  },
+  {
+    "code": "STATIONERY",
+    "name": "Stationery",
+    "descr": null
+  }
+]

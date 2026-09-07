@@ -1,0 +1,38 @@
+[
+  {
+    "code": "ACCESSORIES",
+    "locale": "ru",
+    "name": "Аксессуары",
+    "descr": null
+  },
+  {
+    "code": "ELECTRONICS",
+    "locale": "ru",
+    "name": "Электроника",
+    "descr": null
+  },
+  {
+    "code": "FURNITURE",
+    "locale": "ru",
+    "name": "Мебель",
+    "descr": null
+  },
+  {
+    "code": "KITCHEN",
+    "locale": "ru",
+    "name": "Кухня",
+    "descr": null
+  },
+  {
+    "code": "SPORTS",
+    "locale": "ru",
+    "name": "Спорт",
+    "descr": null
+  },
+  {
+    "code": "STATIONERY",
+    "locale": "ru",
+    "name": "Канцелярия",
+    "descr": null
+  }
+]

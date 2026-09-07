@@ -5,10 +5,12 @@ Updated by the `docs-keeper` agent at the end of every task and by the PreCompac
 ## Where we are
 
 - Date: 2026-09-07
-- Branch: `feature/categories-code-list` from `main` 2b4a820 (pipeline stages 0–4 committed and pushed 2026-09-07)
-- Current pipeline phase: stages 0–4 of the plan are implemented (environment, constitution, agents and skills, hooks and backend tests, release watcher). Not done: CI for the tests, packaging as a plugin (stage 5)
-- Feature `categories-code-list` is complete (first full run of the `/feature` pipeline): `1e0bd04` (specification, ADR-0010, ADR-0011), `9c8623d` (backend: `Categories`, `category_code`), `4bfecd8` (fix of the metadata snapshot command), `ce05c8a` (fix of `npm run watch`), `64e0cf0` (UI annotations, value help, OPA5), plus the closing documentation commit (`docs-keeper`, step 17). The review verdict was "ready to commit" without blocking findings. The retrospective is done (LESSONS, entry "Retrospective of the first run"). Next step: merge the `chore/english-pipeline` branch, then pipeline fixes based on the retrospective
-- In parallel: translation of all pipeline files to English and the rename `release-watcher` → `upstream-watcher` in the `chore/english-pipeline` branch (background agent); merge after the feature is finished
+- Branch: `chore/retro-follow-ups` from `main` 358f7ad. `main` holds the merged first feature run (`feature/categories-code-list`) and the English translation of the pipeline; pushed.
+- Pipeline: stages 0–4 of the plan are implemented and exercised by one full `/feature` run. Not done: CI for tests and linters, Dependabot, packaging as a plugin (stage 5).
+- Retro follow-ups applied in this branch: `maxTurns` raised (test-ui, ui-verifier, docs-keeper 80; reviewer 50; architect, test-backend 60), `feature` skill updates STATE after every phase, `test-all` gained a dev-server smoke step and a Cyrillic scan, PostToolUse hook flags Cyrillic, `metadata.test.js` checks that `localService/metadata.xml` equals the compiled EDMX (16 tests), CLAUDE.md invariant 10 (English everywhere the AI reads) and a request-to-skill routing table.
+- All docs, agent memories, feature files and ADRs are English now; Russian remains only in i18n `ru` bundles, `.texts.csv`, asserted test values and the owner's plan `docs/ai-pipeline-plan.md`.
+- Active feature: none. Specification in progress: `products-draft-edit` (architect, `/spec`), see `docs/features/products-draft-edit/` and ADR-0012 draft.
+- Next steps: merge this branch into `main` and push; user decision on ADR-0012 (draft vs inline edit); `ci.yml` plus `dependabot.yml` as a small task.
 
 ## What works
 
@@ -26,8 +28,8 @@ Updated by the `docs-keeper` agent at the end of every task and by the PreCompac
 | Keyboard hack for the Explore button in `Component.js` (setTimeout, internal ushell id) | Deliberate decision of the author. Do not touch without a request; the alternative via `CommandExecution` is described in LESSONS | user |
 | `Products.price` Decimal(10, 2) instead of the convention Decimal(15, 2) | Kept, ADR-0003. Change at the first model migration | architect |
 | `mta.yaml`, `xs-security.json` are drafts without productive dependencies | Separate ADR before any deployment work | user |
-| No CI for `npm test` and the linters (only `release-check.yml` exists) | Add `ci.yml`: `npm ci --ignore-scripts`, lint, test, ui5lint | user decides |
-| Retrospective findings: `maxTurns` of the `test-ui`, `ui-verifier`, `docs-keeper` agents are too low (three stops per run); the `feature` skill does not update STATE between phases; no smoke check of `npm run watch` in `test-all`; no "metadata.xml is up to date" test | Edits of `.claude/**` by user decision (diff proposed in the retrospective); the test and the smoke check as a separate task | user |
+| No CI for `npm test` and the linters (only `upstream-check.yml` exists); no Dependabot | Add `ci.yml`: `npm ci --ignore-scripts`, lint, test, ui5lint | user decides |
+| Retrospective follow-ups applied 2026-09-07 (turn limits, STATE per phase, smoke step, Cyrillic check, metadata sync test); remaining: draft decision (ADR-0012), CI, Dependabot | See rows below; ADR-0012 awaits the user | user |
 | `run_manifest_validation` of UI5 MCP 0.2.18 fails with a draft-06 schema error | Workaround via `ui5lint`; wait for a new `@ui5/mcp-server` version via `release-check` | release-watcher |
 | The `Products` Object Page without draft has no edit mode; the category editing scenario in `EditCategoryOnObjectPageJourney.js` is under `opaTest.skip` | The draft decision is a separate feature with an ADR | user |
 | `npm start` in `app/products` (`fiori run`, :8080) does not bring up the application from the FLP sandbox: `/products/webapp` is not served, the CDN bootstrap bypasses the proxy; the only working entry point is :4004 | Close together with `modernize-flp-sandbox` | user decides |

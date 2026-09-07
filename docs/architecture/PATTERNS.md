@@ -1,6 +1,6 @@
 # Pattern catalogue: one task, one way
 
-For every recurring task there is exactly one approved way here. An agent that meets a task from the table uses the specified way and example. If the way does not fit, work stops and an ADR is created, not a second way. Links to examples point to the current code; the registry in `docs/registry/` shows what already exists.
+For every recurring task there is exactly one approved way here. An agent that meets a task from the table uses the specified way and example. If the way does not fit, work stops and an ADR is created, not a second way. Links to examples point to the current code; the registry in `docs/registry/` shows what already exists. Rows without an example describe a way that has not been applied in this project yet: the first agent that applies such a pattern adds the example path (and the ADR, if one was needed) to the row in the same change, and the reviewer checks it.
 
 ## Data model
 
@@ -69,7 +69,7 @@ For every recurring task there is exactly one approved way here. An agent that m
 
 | Task | Way | Example | Decision |
 |---|---|---|---|
-| Run for development | `npm run watch` in the root, UI at http://localhost:4004/products/webapp/test/flpSandbox.html | | |
+| Run for development | `npm run watch` in the root, UI at http://localhost:4004/products/webapp/test/flpSandbox.html, or `npm start` in `app/products` for the UI5 dev server on :8080 | `README.md`, run modes table | |
 | UI without backend | `npm run start-mock` in `app/products`, mock from `localService` | `app/products/ui5-mock.yaml` | ADR-0008 |
 | metadata.xml snapshot update | `cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/localService/metadata.xml` after any model change | | |
 | Dependency update | Only via `upstream-check` and Renovate, MCP versions are pinned | | ADR-0009 |

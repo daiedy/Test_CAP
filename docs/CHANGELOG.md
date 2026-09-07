@@ -5,6 +5,14 @@ Format: date, area, what changed. Maintained by `docs-keeper`, all agents add to
 ## 2026-09-07
 
 ### pipeline
+- CI: `.github/workflows/ci.yml` with three jobs (backend lint, tests, registry freshness and compile incl. templates; UI ui5lint and ESLint; OPA5 journeys with `ui5-test-runner` against `cds serve`). Dependabot: `.github/dependabot.yml`, weekly, grouped (sap-cap, sap-ui5-fiori, tooling), cooldown 7/14 days, CAP majors excluded (they go through `/upgrade-cds`), GitHub Actions updates included.
+- `app/products/eslint.config.mjs` with `@sap-ux/eslint-plugin-fiori-tools`; scripts `lint:js`, `lint:js:fix`. Baseline: 1 warning (the deliberate `setTimeout` in `Component.js`).
+
+### app
+- FLP sandbox works through `npm start` on :8080: `id="sap-ushell-bootstrap"` on the bootstrap tag (livereload was picked as the last script and broke the config URL), relative app URL in the sandbox config, inline scripts moved to `test/flpSandboxConfig.js`, `test/flpSandboxInit.js`, `sandboxConfig.js`, `sandboxInit.js` (CSP warnings gone). `Container.createRenderer` calls carry `ui5lint-disable-next-line` until the New Sandbox migration.
+
+
+### pipeline
 - Retro follow-ups: `maxTurns` raised for test-ui, ui-verifier, docs-keeper (80), reviewer (50), architect and test-backend (60); `feature` skill updates STATE after each phase gate; `architect` decides on draft before planning edit UIs; `reviewer` checks the language rule; `test-all` gained a dev-server smoke step and a Cyrillic scan.
 - English-only rule: CLAUDE.md invariant 10, `project-protocol` section 4, PostToolUse hook flags Cyrillic outside i18n bundles, `.texts.csv` and tests.
 - CLAUDE.md: request-to-skill routing table (which skill for which request, which agents it runs, who starts it).

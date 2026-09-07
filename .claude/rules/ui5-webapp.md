@@ -20,7 +20,7 @@ paths:
 - Texts only through `i18n`. Keys `<page>.<element>.<property>`.
 - Bootstrap parameters in html in dashed notation (`data-sap-ui-compat-version`), `data-sap-ui-async="true"`.
 - `Component.js`: inherits from `sap/fe/core/AppComponent`; it contains a deliberate keyboard handler for the shell button, do not remove it without a request from the user.
-- Known debt: CSP inline scripts in `index.html` and `test/flpSandbox.html`. Removed by the `modernize-flp-sandbox` skill, as a separate task.
+- Known debt: the FLP sandbox uses the legacy bootstrap (`Container.createRenderer`, deprecated). Migration to the New Sandbox is a separate task via the `modernize-flp-sandbox` skill. Keep `id="sap-ushell-bootstrap"` on the bootstrap script tag and relative app URLs in the sandbox config, otherwise livereload breaks the sandbox on :8080 (LESSONS).
 
 ## After editing
 - `mcp__plugin_ui5_ui5-mcp-server__run_ui5_linter` or `npx ui5lint <file>` in `app/<app>`: zero errors in the changed files.

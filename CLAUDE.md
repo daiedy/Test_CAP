@@ -103,4 +103,4 @@ Direct delegation without a skill is allowed only for read-only work: `architect
 
 ## Known debt
 
-See `docs/STATE.md`, section "Open debt". Key items today: CSP inline scripts in the test html files (removed by the `modernize-flp-sandbox` skill from the `ui5-modernization` plugin), `Products.price` Decimal(10, 2) instead of the convention, deployment not configured.
+See `docs/STATE.md`, section "Open debt". Key items today: legacy FLP sandbox bootstrap (`createRenderer`, New Sandbox migration via the `modernize-flp-sandbox` skill), `Products.price` Decimal(10, 2) instead of the convention, deployment not configured.

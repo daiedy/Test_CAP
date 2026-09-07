@@ -2,6 +2,12 @@
 
 Entries are added by all agents through the `retro` skill and by the human. Format: date, what happened, why, how to avoid it, source. New entries on top. The list of typical agent mistakes in CAP and Fiori from publications: `docs/ai-pipeline-plan.md`, section 3.4.
 
+## 2026-09-07. The FLP sandbox on :8080 failed because livereload was the last script tag
+
+What: `npm start` (`fiori run`) loaded `flpSandbox.html` but the app never appeared; the sandbox requested `fioriSandboxConfig.json` from port 35729. `sandbox.js` locates its own script tag by `id="sap-ushell-bootstrap"` and, when the id is missing, falls back to the last `<script>` on the page. `fiori-tools-appreload` injects `livereload.js` as the last tag, so the base URL pointed at the livereload port. On :4004 (CAP) there is no livereload, so it worked there.
+Fix: `id="sap-ushell-bootstrap"` on the sandbox bootstrap script tag; the app intent URL is relative (`../` in `test/flpSandbox.html`, `./` in `index.html`) so it resolves behind both servers. Inline scripts moved to `flpSandboxConfig.js`/`flpSandboxInit.js` and `sandboxConfig.js`/`sandboxInit.js` (CSP).
+Still open: `Container.createRenderer` is deprecated without a successor; the replacement is the New Sandbox (`SandboxBootTask`), a separate migration via the `modernize-flp-sandbox` skill. The calls carry `ui5lint-disable-next-line` with that reason.
+
 ## 2026-09-07. Retrospective of the first `/feature` run (categories-code-list)
 
 Facts: 7 commits, 8 agents, 3 gates passed, review without blocking findings, 15 backend tests and 11 OPA5 tests green. Failures and their causes:

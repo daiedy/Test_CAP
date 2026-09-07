@@ -9,4 +9,4 @@ At reviewer step 16 of `/feature`, uncommitted `docs/registry/*` regeneration is
 
 **Why:** First run (`categories-code-list`, 2026-09-07): the orchestrator explicitly said not to flag registry drift; VERIFICATION.md was absent at review time while screenshots existed.
 
-**How to apply:** Report registry drift as "in order, pending step 17"; list stale STATE/LESSONS/CHANGELOG lines as "Важные for docs-keeper" rather than blocking; verify metadata.xml by recompiling (`cds compile '*' --to edmx-v4 -s CatalogService -l en`) and diffing instead of trusting reports.
+**How to apply:** Report registry drift as "in order, pending step 17"; list stale STATE/LESSONS/CHANGELOG lines as "Important for docs-keeper" rather than blocking; verify metadata.xml by recompiling (`cds compile '*' --to edmx-v4 -s CatalogService -l en`) and diffing instead of trusting reports.

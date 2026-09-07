@@ -16,7 +16,7 @@ Path: `/odata/v4/catalog`. File: `srv/catalog-service.cds`. Authorization: not s
 | Currencies.texts | sap.common.Currencies.texts | autoexposed |  |  |  |
 | Categories | my.catalog.Categories | @readonly |  |  |  |
 | Categories.texts | my.catalog.Categories.texts | autoexposed |  |  |  |
-| DraftAdministrativeData | DRAFT.DraftAdministrativeData | CRUD |  |  |  |
+| DraftAdministrativeData | DRAFT.DraftAdministrativeData | contained (draft administrative data, no EntitySet) |  |  |  |
 
 ### Actions and functions
 

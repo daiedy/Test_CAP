@@ -29,7 +29,7 @@ For every recurring task there is exactly one approved way here. An agent that m
 | Business logic error | `req.reject(400, 'KEY', [args])`, key in `_i18n/messages.properties` | `templates/handler.js` | |
 | Logging | `const LOG = cds.log('catalog')`; `LOG.info`, `LOG.warn`, `LOG.error` | `templates/handler.js` | |
 | Shared function for several handlers | `srv/lib/<topic>.js`, named export, JSDoc, unit test; check `docs/registry/REUSE-CATALOG.md` before creating | | |
-| Drafts | `@odata.draft.enabled` only on the root projection of the FE application that edits the data; never on the parent and the children of a composition at the same time; non-Fiori clients and tests address active data explicitly with `IsActiveEntity=true` | `CatalogService.Products` (`srv/catalog-service.cds`) | ADR-0012 |
+| Drafts | `@odata.draft.enabled` only on the root projection of the FE application that edits the data; never on the parent and the children of a composition at the same time; non-Fiori clients and tests address active data explicitly with `IsActiveEntity=true` | `CatalogService.Products` (`srv/catalog-service.cds`) | ADR-0012 FE V4 facts (verified 2026-09-07): shell or browser Back with a persisted draft change opens the Save / Keep Draft / Discard Draft dialog; without a `Common.SemanticKey` the List Report shows no draft or lock marker in the row (Editing Status filter and the Object Page lock popover still work). |
 | Side effect after write | `this.after('CREATE', 'Entity', ...)` or an `srv.emit` event; no manual transactions | | |
 
 ## UI Fiori Elements

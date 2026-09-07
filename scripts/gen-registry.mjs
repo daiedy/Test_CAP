@@ -204,12 +204,17 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
           const from =
             e.query?.SELECT?.from?.ref?.join('.') ?? e.projection?.from?.ref?.join('.') ?? '';
           const auto = e['@cds.autoexposed'] ? 'autoexposed' : '';
+          // Draft administrative data is reached only through a contained navigation and has no EntitySet.
+          const draftAdmin = from.startsWith('DRAFT.')
+            ? 'contained (draft administrative data, no EntitySet)'
+            : '';
           const mode =
             [
               e['@readonly'] && '@readonly',
               e['@insertonly'] && '@insertonly',
               e['@odata.draft.enabled'] && 'draft',
               auto,
+              draftAdmin,
             ]
               .filter(Boolean)
               .join(', ') || 'CRUD';

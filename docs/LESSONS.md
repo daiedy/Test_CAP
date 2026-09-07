@@ -1,18 +1,10 @@
 # Lessons learned
 
-This file is an inbox, not an archive. A lesson lives here only until `/retro` turns it into something that acts on its own: a hook check, a test, a path rule, a PATTERNS row, an ADR or a line in an agent prompt. Transferred lessons are removed; their destination is recorded in `docs/CHANGELOG.md`. The Stop hook warns when more than 10 entries remain. Format: date, title, status, why it is still here.
+This file is an inbox, not an archive. A lesson lives here only until `/retro` turns it into something that acts on its own: a hook check, a test, a path rule, a PATTERNS row, a template, an ADR or a line in an agent prompt. Transferred lessons are removed; their destination is recorded in `docs/CHANGELOG.md`. The Stop hook warns when more than 10 entries remain. Format: date, title, status, why it is still here.
 
-## New on 2026-09-07 (`products-draft-edit`)
+## Pending
 
-- A `POST` to a draft-enabled entity without `IsActiveEntity: true` creates a draft (201, `IsActiveEntity: false`) and skips `@mandatory`/`@assert.target`; address active data explicitly. Source: `test-backend`, ADR-0012.
-- `DELETE /Entity(<id>)` (addressed as active) of a record that has an open draft answers 403 `DRAFT_ACTIVE_DELETE_FORBIDDEN_DRAFT_EXISTS`; discard with `DELETE /Entity(ID=<id>,IsActiveEntity=false)` instead. Source: `test-backend`.
-- `@assert.*` violations on a draft `PATCH` surface as `DraftMessages` with HTTP 200 and are only enforced (400) on `draftActivate`; the `target` on activation is prefixed `in/<field>` (e.g. `in/name`) except `ASSERT_TARGET` on a new draft, which stays a plain field path (e.g. `category_code`) — match by a suffix regex, assert `code` exactly. Source: `test-backend`.
-- The registry generator (`scripts/gen-registry.mjs`) renders the contained `DraftAdministrativeData` entity type as a CRUD projection in `SERVICES.md`, although it has no `EntitySet`. Not fixed in this feature (`scripts/` is code, needs a user request); recorded as debt in `docs/STATE.md`. Source: `reviewer`, `docs-keeper`.
-- FE V4 1.152: shell/browser Back navigation with a persisted (PATCHed) draft change opens a "Warning" dialog (Save / Keep Draft / Discard Draft), not a silent keep as the CAP draft principle alone would suggest. Source: `ui-verifier`, corrected in `CONTEXT.md`.
-- Chrome DevTools MCP: clearing a required `sap.m.Input` with `fill("")` or `Ctrl+A`+`Backspace` immediately before a button click may not reliably fire the `change` event UI5 needs to mark the bound property dirty, so a subsequent Save can read the last committed (non-empty) value. Blur the field and confirm the PATCH landed in `$batch` before pressing the button. Source: `ui-verifier`, `VERIFICATION.md` scenario 7.
-- Pipeline: a contract (OData model) change must schedule `npx vitest -u` and the `metadata.xml` regeneration in the same phase as the model change, not a later one; PLAN steps 4 and 6 had to be rewritten mid-run when the phase-2 gate needed `npm test` green before the UI phase started. Source: orchestrator, `PLAN.md` step 4 note.
-- Pipeline: accepting an ADR must replace the whole `Status:` sentence, not append to it — an earlier edit left a concatenated, self-contradicting sentence ("accepted ... decision by the user pending"). Source: `reviewer` finding, fixed in ADR-0012 by `docs-keeper`.
-- Pipeline: `ui-verifier` needed three 80-turn sessions to cover 10 scenarios end to end; write `VERIFICATION.md` incrementally (a table row per scenario as it completes) and budget turns per scenario up front rather than discovering the shortfall mid-run. Source: `ui-verifier`, `VERIFICATION.md`.
+- 2026-09-07. Protected-file follow-ups of the `products-draft-edit` retro. The rules already act through templates and docs (see the transfer table), but the roles that need them most read protected files: `ui-verifier` prompt (write `VERIFICATION.md` incrementally, budget turns per scenario, blur a field and confirm the `PATCH` in `$batch` before clicking Save); `architect` prompt and `feature` skill (a contract change schedules `npx vitest -u` and the `metadata.xml` regeneration in the same phase; accepting an ADR replaces the whole `Status:` sentence); `project-protocol` section 3 (when an MCP server is unavailable: front-load the queries, fall back to the CDN `-dbg.js` sources of the loaded UI5 version or capire, mark "not verified by MCP"); rule `tests-backend.md` (draft-enabled entities are addressed with `IsActiveEntity=true`, ADR-0012). Status: `Pending user decision` (`.claude/**` is protected; diffs were proposed in the session of 2026-09-07; apply with `PIPELINE_ALLOW_PROTECTED=1` on request).
 
 ## Pending upstream
 
@@ -25,6 +17,13 @@ This file is an inbox, not an archive. A lesson lives here only until `/retro` t
 
 | Lesson | Now lives in |
 |---|---|
+| Draft-enabled entity: `POST` without `IsActiveEntity: true` creates a draft and skips `@mandatory`; `DELETE` of a record with a draft is 403 `DRAFT_ACTIVE_DELETE_FORBIDDEN_DRAFT_EXISTS`; `@assert.*` on a draft `PATCH` are `DraftMessages` (200), enforced on `draftActivate` (400) with `in/`-prefixed targets except `ASSERT_TARGET` | `docs/architecture/TESTING.md` "cds 10 specifics"; PATTERNS "Service test", "Drafts"; `templates/service.test.js`; ADR-0012 |
+| FE V4: Back navigation with a persisted draft change opens Save / Keep Draft / Discard Draft; no row marker without `Common.SemanticKey` | PATTERNS "Drafts"; `docs/STATE.md` open debt (semantic key decision) |
+| Contract change: `npx vitest -u` and `metadata.xml` in the same phase as the model change | `templates/feature/PLAN.md` contract rule; PATTERNS "OData contract" |
+| ADR acceptance replaces the whole `Status:` sentence | `templates/adr.md` |
+| `ui-verifier`: incremental `VERIFICATION.md`, turn budget per scenario, `$batch` evidence, blur before click | `templates/feature/VERIFICATION.md` |
+| Registry rendered the contained `DraftAdministrativeData` as a CRUD projection | `scripts/gen-registry.mjs` (entities from `DRAFT.*` labelled "contained, no EntitySet") |
+| Agent memory files ride in phase commits | `docs/architecture/CONVENTIONS.md` section 7 |
 | Sandbox bootstrap tag needs `id="sap-ushell-bootstrap"`, app url relative, tiles in `appconfig/fioriSandboxConfig.json` | PostToolUse checks `checkSandboxHtml`, `checkSandboxConfig`; rule `ui5-webapp.md`; agent `ui-verifier` opens `#Shell-home` |
 | ui5.yaml middleware without its package or `ui5.dependencies` entry | PostToolUse check `checkUi5Yaml` |
 | CDS templates need unique namespaces (cds-mcp compiles them) | PostToolUse check `checkTemplateNamespace`; `test-all` step 7 |

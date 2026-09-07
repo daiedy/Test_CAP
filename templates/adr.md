@@ -1,6 +1,7 @@
 # ADR-NNNN: <Short title of the decision>
 
-Date: YYYY-MM-DD. Status: proposed | accepted | superseded by ADR-NNNN.
+Date: YYYY-MM-DD. Status: proposed (feature `<name>`; decision by the user pending) | accepted (user, YYYY-MM-DD, feature `<name>`) | superseded by ADR-NNNN.
+<!-- On acceptance replace the whole Status sentence with the accepted form; never append to the proposed one. -->
 
 ## Context
 Which task or problem requires a decision. Links to the feature, lesson, source.

@@ -6,12 +6,12 @@ Updated by the `docs-keeper` agent at the end of every task and by the PreCompac
 
 - Date: 2026-09-07
 - Branch: `feature/products-draft-edit` from `main` 6784760 (main pushed, CI green). `main` holds the merged first feature run (`feature/categories-code-list`) and the English translation of the pipeline; pushed.
-- Pipeline: stages 0–4 of the plan are implemented and exercised by one full `/feature` run. Not done: CI for tests and linters, Dependabot, packaging as a plugin (stage 5).
+- Pipeline: stages 0–4 of the plan are implemented and exercised by two full `/feature` runs (`categories-code-list`, `products-draft-edit`); CI and Dependabot are in place. Not done: packaging as a plugin (stage 5).
 - Retro follow-ups applied in this branch: `maxTurns` raised (test-ui, ui-verifier, docs-keeper 80; reviewer 50; architect, test-backend 60), `feature` skill updates STATE after every phase, `test-all` gained a dev-server smoke step and a Cyrillic scan, PostToolUse hook flags Cyrillic, `metadata.test.js` checks that `localService/metadata.xml` equals the compiled EDMX (16 tests), CLAUDE.md invariant 10 (English everywhere the AI reads) and a request-to-skill routing table.
 - All docs, agent memories, feature files and ADRs are English now; Russian remains only in i18n `ru` bundles, `.texts.csv`, asserted test values and the owner's plan `docs/ai-pipeline-plan.md`.
-- Active feature: `products-draft-edit` on branch `feature/products-draft-edit`, complete and awaiting retro and merge to `main`. Phase 2 committed (`535c21b`): `@odata.draft.enabled` on `CatalogService.Products`, 22 backend tests green, snapshot and `metadata.xml` regenerated. Phase 3 committed: step 6 done (mock mode emulates the draft cycle without data changes), step 7 done (`EditCategoryOnObjectPageJourney` un-skipped, Cancel/discard test added; `npm run test:ui` 17/17, 0 skipped). Step 9 (`ui-verifier`): verdict "ready for review", 10 scenarios plus the lock-by-`bob` scenario, data restored. Step 10 (`reviewer`): zero blocking findings. Step 11 (`docs-keeper`) closes the documentation. Next: retro, merge to `main`.
+- Feature `products-draft-edit` is complete on branch `feature/products-draft-edit` and retro-triaged; ready to merge into `main`. Results: `@odata.draft.enabled` on `CatalogService.Products` (ADR-0012), 22 backend tests, OPA5 17/17 with 0 skipped, browser verification "ready for review" (`docs/features/products-draft-edit/VERIFICATION.md`), review with zero blocking findings. Commits `6a95811`, `6367418`, `535c21b`, `efb05bf`, `7c8ab1d`, `a28cdcb`, plus the retro commit.
 - Next feature `catalog-authorization`: specification and ADR-0013 (proposed) committed on this branch (`efb05bf`); starts after the draft feature is merged, with the architect's recommended options unless the user objects.
-- LESSONS is an inbox (2 pending upstream entries); `/retro` transfers lessons into hooks, rules, tests and agent prompts.
+- LESSONS is an inbox (1 entry pending a user decision on protected-file edits proposed by the retro of 2026-09-07, 4 pending upstream); `/retro` transfers lessons into hooks, rules, tests, templates and agent prompts.
 - Next steps: `liveMode` for the List Report, New Sandbox migration; pipeline stage 5 (plugin packaging) when a second project appears.
 
 ## What works
@@ -36,7 +36,6 @@ Updated by the `docs-keeper` agent at the end of every task and by the PreCompac
 | List Report needs the Go button before the table reloads (FE default, avoids server round trips on every filter change); the user finds it inconvenient for a 15-row catalog | Set `liveMode: true` on `ProductsList` via Fiori MCP `execute_functionality`; tiny feature, needs a PLAN because it changes `manifest.json` and the OPA5 filter journey | user |
 | UI tests run only against the live stack (`npm run watch`); the mock (`npm run start-mock`) does not serve `ru` | Known limitation of `sap-fe-mockserver`, no alternative found | |
 | List Report shows no draft or lock marker in the row: `Products` has no `Common.SemanticKey` (verified 2026-09-07, `products-draft-edit/VERIFICATION.md` scenarios 4 and 6); Editing Status filter and the Object Page lock popover work | Small follow-up feature: `@Common.SemanticKey: [name]` in `app/products/annotations/Products.cds` (UI layer), contract snapshot and journeys re-checked | user decides |
-| Registry generator renders the contained `DraftAdministrativeData` as a CRUD projection in `SERVICES.md` | Fix in `scripts/gen-registry.mjs` (skip entities without an EntitySet); `scripts/` is code, requires a user request | user request |
 
 ## Accumulated decisions
 

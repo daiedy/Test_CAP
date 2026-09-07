@@ -4,6 +4,11 @@
 
 ## 2026-09-07
 
+### db, srv (фича `categories-code-list`, фаза 2, шаги 3–6)
+- `db/schema.cds`: новая сущность `my.catalog.Categories : sap.common.CodeList` с `key code : String(20)` (ADR-0010). `Products.category` переведён с `String(50)` на `Association to Categories`; внешний ключ `category_code : String(20)` генерирует компилятор.
+- Данные: `db/data/my.catalog-Categories.csv` (6 кодов `ACCESSORIES`, `ELECTRONICS`, `FURNITURE`, `KITCHEN`, `SPORTS`, `STATIONERY`, названия en, алфавитный порядок) и `my.catalog-Categories.texts.csv` (6 строк, только локаль `ru`); в `my.catalog-Products.csv` колонка `category` переименована в `category_code`, значения заменены кодами, ID и остальные колонки без изменений.
+- `srv/catalog-service.cds`: явная проекция `@readonly entity Categories` (нужна для `@assert.target` и титулов). `srv/annotations/Products.cds`: `@assert.target` на `category`. Новый `srv/annotations/Categories.cds`: титулы `code`/`name`/`descr`; ключи `Categories.code`, `Categories.name`, `Categories.descr` в `_i18n/i18n.properties` и `i18n_ru.properties`. Хендлеров нет. Изменение контракта OData и снапшот `test/__snapshots__` фиксирует `test-backend` (шаг 7).
+
 ### pipeline
 - Конвейер агентов: 11 субагентов (`.claude/agents/`), общий скилл `project-protocol`, скиллы `feature`, `spec`, `add-entity`, `gen-docs`, `run-app`, `test-all`, `review`, `retro`, `release-check`, `debug-after-upgrade`, `upgrade-cds`, 11 правил по путям (`.claude/rules/`), шаблоны `templates/`, 9 ADR.
 - Хуки в `.claude/settings.json` со скриптами `scripts/hooks/`: SessionStart (контекст и проверка окружения), PreToolUse (защита файлов, напоминание о реестре), PostToolUse (компиляция, prettier, eslint, ui5lint, паритет i18n, маркер устаревания реестра), SubagentStop (блок при ошибках линтера), Stop (реестр, STATE, CHANGELOG, `npm test`), PreCompact (чекпоинт в STATE).
@@ -18,6 +23,7 @@
 - Шаблоны `templates/*.cds` получили уникальные namespace `my.catalog.tpl.*`: CAP MCP компилирует все `.cds` проекта и падал на дубликатах. В LESSONS записан обход дефекта `run_manifest_validation` UI5 MCP 0.2.18.
 
 ### test
+- Фича `categories-code-list`, шаг 7 (`test-backend`): `test/catalog-service.test.js` расширен с 7 до 13 тестов. Новые: «lists the 6 seeded categories», «returns localized category names with English fallback» (`Accept-Language` `ru`, `en` и fallback `de` → английское имя), «filters products by category code» (замена «filters by category»), «expands the category of a product», «rejects a product without a category» (`ASSERT_MANDATORY`), «rejects an unknown category code» (`ASSERT_TARGET`), «does not allow creating categories» (405); «creates a product with the mandatory fields…» и «rejects a product without a name» переведены на `category_code`. Снапшот `test/__snapshots__/metadata.test.js.snap` обновлён `npx vitest -u` осознанно: контракт OData изменён, `Products.category` (String 50) заменён на `category_code` (String 20) и навигацию `category`; добавлены наборы `Categories`, `Categories_texts`, `Capabilities.*Restrictions` на `Categories`, сгенерированный `Common.ValueList` с `CollectionPath="Categories"` на `category_code`; старый ValueList на `Products` удалён. `Common.Text`/`TextArrangement`/`ValueListWithFixedValues` появятся после шагов 9–10, снапшот обновится повторно в шаге 14.
 - Добавлены `test/catalog-service.test.js` (7 тестов: список, цена строкой, фильтр, создание с managed-полями, `@mandatory`, `@assert.range`, справочник валют) и `test/metadata.test.js` (снапшот EDMX в `test/__snapshots__/`, HTTP `$metadata` с английскими labels). `vitest.config.mjs` с `globals: true`.
 
 ### deps

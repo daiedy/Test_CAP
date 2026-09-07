@@ -2,6 +2,16 @@
 
 Записи добавляют все агенты через скилл `retro` и человек. Формат: дата, что случилось, почему, как избежать, источник. Новые записи сверху. Список типовых ошибок агентов в CAP и Fiori из публикаций: `docs/ai-pipeline-plan.md`, раздел 3.4.
 
+## 2026-09-07. Явный `@Common.ValueList` на ассоциации подавляет ValueList, сгенерированный из CodeList
+
+Что: после перевода `Products.category` на `Association to Categories : CodeList` снапшот `$metadata` (`cds.load('*')`, то есть с `app/`) показал на `category_code` старый `Common.ValueList` с `CollectionPath="Products"` из `app/products/annotations/Products.cds`, а сгенерированного `CollectionPath="Categories"` не было. `cds compile srv --to edmx-v4` (без `app/`) показывает сгенерированный. Компилятор не генерирует ValueList из `@cds.odata.valuelist`, если на элементе уже есть явный `@Common.ValueList`, и явная аннотация с ассоциации копируется на внешний ключ.
+Как избежать: при переводе поля на CodeList удалять старый `@Common.ValueList` в `app/` в том же изменении; проверять `cds compile '*' --to edmx-v4 | grep -A 6 'Products/category_code'`, а не `cds compile srv`. Второй позиционный аргумент CLI (`cds compile srv app`) игнорируется, слои объединяет только `'*'`.
+
+## 2026-09-07. Ошибка `cds.test` (fetch) несёт `code` и `target` OData-ошибки
+
+Что: `@cap-js/cds-test` 1.0.2 бросает `Object.assign(new Error, { response, status }, response.data.error)`: сообщение вида `400 - Provide the missing value.`, поля `code` (`ASSERT_MANDATORY`, `ASSERT_TARGET`, `ENTITY_IS_READ_ONLY`), `target` (`category_code`). `rejectedWith(/400/)` chai-as-promised резолвится в саму ошибку.
+Как применять: `const err = await expect(POST(...)).to.be.rejectedWith(/400/); expect(err).to.containSubset({ code: 'ASSERT_TARGET', target: 'category_code' })`. Так негативный тест привязан к конкретной аннотации, а не к любому 400.
+
 ## 2026-09-07. CAP MCP компилирует все `.cds` проекта, включая `templates/`
 
 Что: `mcp__cds-mcp__search_model` падал с «Duplicate definition of artifact my.catalog.template.Orders»: четыре шаблона в `templates/*.cds` объявляли один namespace и одинаковые сущности. `cds compile srv` и тесты этого не видели, потому что берут только корни `db`, `srv`, `app`.

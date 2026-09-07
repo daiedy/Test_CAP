@@ -1,4 +1,4 @@
-using { cuid, managed, Currency } from '@sap/cds/common';
+using { cuid, managed, Currency, sap.common.CodeList } from '@sap/cds/common';
 using from '@sap/cds-common-content'; // ISO code lists: Currencies, Countries, Languages
 
 namespace my.catalog;
@@ -10,6 +10,11 @@ entity Products : cuid, managed {
   price       : Decimal(10, 2);
   currency    : Currency;
   stock       : Integer;
-  category    : String(50);
+  category    : Association to Categories;
   imageUrl    : String(500);
+}
+
+/** Product category, user-facing code list. Labels: srv/annotations/Categories.cds */
+entity Categories : CodeList {
+  key code : String(20);
 }

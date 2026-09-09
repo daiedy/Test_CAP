@@ -4,15 +4,15 @@ Updated by the `docs-keeper` agent at the end of every task and by the PreCompac
 
 ## Where we are
 
-- Date: 2026-09-07
+- Date: 2026-09-09
 - Branch: `main` at `c9d9839` (merge of `feature/products-draft-edit`, pushed; CI run 34141175799 green: backend, UI lint, OPA5 journeys). `main` holds two merged feature runs (`categories-code-list`, `products-draft-edit`), the English pipeline, CI and Dependabot.
 - Pipeline: stages 0–4 of the plan are implemented and exercised by two full `/feature` runs (`categories-code-list`, `products-draft-edit`); CI and Dependabot are in place. Not done: packaging as a plugin (stage 5).
 - Retro follow-ups applied in this branch: `maxTurns` raised (test-ui, ui-verifier, docs-keeper 80; reviewer 50; architect, test-backend 60), `feature` skill updates STATE after every phase, `test-all` gained a dev-server smoke step and a Cyrillic scan, PostToolUse hook flags Cyrillic, `metadata.test.js` checks that `localService/metadata.xml` equals the compiled EDMX (16 tests), CLAUDE.md invariant 10 (English everywhere the AI reads) and a request-to-skill routing table.
 - All docs, agent memories, feature files and ADRs are English now; Russian remains only in i18n `ru` bundles, `.texts.csv`, asserted test values and the owner's plan `docs/ai-pipeline-plan.md`.
 - Feature `products-draft-edit` merged 2026-09-07 (`c9d9839`): `@odata.draft.enabled` on `CatalogService.Products` (ADR-0012), 22 backend tests, OPA5 17/17 with 0 skipped, browser verification "ready for review" (`docs/features/products-draft-edit/VERIFICATION.md`), review with zero blocking findings, retro triaged (`8d21809`).
-- Next feature `catalog-authorization`: specification and ADR-0013 (proposed) are on `main` (`efb05bf`); starts now via `/feature` with the architect's recommended options (Viewer/Editor roles, `@requires` on the service, `@restrict` on `Products`, mocked users alice/bob Editor and a new `viewer`, anonymous 401 incl. `$metadata`), then `liveMode` for the List Report, then the deployment ADR.
-- LESSONS is an inbox (1 entry pending a user decision on protected-file edits proposed by the retro of 2026-09-07, 4 pending upstream); `/retro` transfers lessons into hooks, rules, tests, templates and agent prompts.
-- Next steps: `liveMode` for the List Report, New Sandbox migration; pipeline stage 5 (plugin packaging) when a second project appears.
+- Next feature `catalog-authorization`: specification and ADR-0013 (proposed) are on `main` (`efb05bf`); starts after the marker feature via `/feature` with the architect's recommended options (Viewer/Editor roles, `@requires` on the service, `@restrict` on `Products`, mocked users alice/bob Editor and a new `viewer`, anonymous 401 incl. `$metadata`), then `liveMode` for the List Report, then the deployment ADR.
+- LESSONS is an inbox (0 pending decisions, 4 pending upstream). The protected-file follow-ups of the retro were applied on 2026-09-09 on the user's request (agents `ui-verifier`, `architect`, skill `feature`, protocol section 3, rule `tests-backend.md`); `/retro` transfers lessons into hooks, rules, tests, templates and agent prompts.
+- Next steps (user decision 2026-09-09): marker feature first (`@Common.SemanticKey` on `Products`, draft and lock marker in the List Report row), then `catalog-authorization`, `liveMode` for the List Report, the deployment ADR; New Sandbox migration; pipeline stage 5 (plugin packaging) when a second project appears.
 
 ## What works
 
@@ -35,7 +35,7 @@ Updated by the `docs-keeper` agent at the end of every task and by the PreCompac
 | `run_manifest_validation` of UI5 MCP 0.2.18 fails with a draft-06 schema error | Workaround via `ui5lint`; wait for a new `@ui5/mcp-server` version via `release-check` | release-watcher |
 | List Report needs the Go button before the table reloads (FE default, avoids server round trips on every filter change); the user finds it inconvenient for a 15-row catalog | Set `liveMode: true` on `ProductsList` via Fiori MCP `execute_functionality`; tiny feature, needs a PLAN because it changes `manifest.json` and the OPA5 filter journey | user |
 | UI tests run only against the live stack (`npm run watch`); the mock (`npm run start-mock`) does not serve `ru` | Known limitation of `sap-fe-mockserver`, no alternative found | |
-| List Report shows no draft or lock marker in the row: `Products` has no `Common.SemanticKey` (verified 2026-09-07, `products-draft-edit/VERIFICATION.md` scenarios 4 and 6); Editing Status filter and the Object Page lock popover work | Small follow-up feature: `@Common.SemanticKey: [name]` in `app/products/annotations/Products.cds` (UI layer), contract snapshot and journeys re-checked | user decides |
+| List Report shows no draft or lock marker in the row: `Products` has no `Common.SemanticKey` (verified 2026-09-07, `products-draft-edit/VERIFICATION.md` scenarios 4 and 6); Editing Status filter and the Object Page lock popover work | Small follow-up feature: `@Common.SemanticKey: [name]` in `app/products/annotations/Products.cds` (UI layer), contract snapshot and journeys re-checked | next `/feature` (user, 2026-09-09) |
 
 ## Accumulated decisions
 

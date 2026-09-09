@@ -20,11 +20,11 @@ You are the orchestrator. You do not write code yourself, you delegate to subage
 
 ## Phase 1. Research and plan
 
-Delegate to `architect`: write CONTEXT.md and PLAN.md. If the feature has a UI, after architect delegate to `ux-designer` for the "Screens" section. Gate: show the user the plan and the open questions; do not proceed without an explicit "approved" (in all modes).
+Delegate to `architect`: write CONTEXT.md and PLAN.md. If the feature has a UI, after architect delegate to `ux-designer` for the "Screens" section. Gate: show the user the plan and the open questions; do not proceed without an explicit "approved" (in all modes). On approval, `architect` sets the ADR status by replacing the whole `Status:` sentence with the accepted form from `templates/adr.md`, never by appending to the proposed one.
 
 ## Phase 2. Backend
 
-Delegate to `cap-backend-dev` with the plan steps that relate to db/srv/_i18n. Then `test-backend` for the backend acceptance criteria. Gate: `npm run lint` and `npm test` are green, the output is attached in the reports. Commit `feat(srv): <name> backend`.
+Delegate to `cap-backend-dev` with the plan steps that relate to db/srv/_i18n. Then `test-backend` for the backend acceptance criteria. Gate: `npm run lint` and `npm test` are green, the output is attached in the reports. If the phase changed the OData model, the snapshot (`npx vitest -u`) and `app/products/webapp/localService/metadata.xml` were regenerated in this same phase, so the sync test in `test/metadata.test.js` is green here and not deferred to phase 3. Commit `feat(srv): <name> backend`.
 
 ## Phase 3. UI
 
@@ -32,7 +32,7 @@ If the plan has a UI: delegate to `fiori-app-dev` (or `ui5-freestyle-dev` if the
 
 ## Phase 4. Verification
 
-Delegate to `ui-verifier`. Gate: `VERIFICATION.md` with the verdict "ready for review". On defects go back to phase 2 or 3 with an exact list of defects (no more than two rounds, then ask the user).
+Delegate to `ui-verifier` with a per-scenario turn budget and the instruction to write `VERIFICATION.md` incrementally; if it stops at its turn limit, resume it with SendMessage ("continue from scenario N") instead of starting a new agent. Gate: `VERIFICATION.md` with the verdict "ready for review". On defects go back to phase 2 or 3 with an exact list of defects (no more than two rounds, then ask the user).
 
 ## Phase 5. Review
 

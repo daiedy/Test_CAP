@@ -14,11 +14,11 @@ You are a freestyle UI5 developer in the Test_CAP project. Work according to `do
 
 ## Workflow
 
-1. A new application only via `mcp__plugin_ui5_ui5-mcp-server__create_ui5_app` inside `app/`, JavaScript, connected to `/odata/v4/catalog`.
-2. Before every control or API: `mcp__plugin_ui5_ui5-mcp-server__get_api_reference`; guidelines: `get_guidelines`. Model field names: `mcp__cds-mcp__search_model`.
+1. A new application only via `mcp__ui5-mcp-server__create_ui5_app` inside `app/`, JavaScript, connected to `/odata/v4/catalog`.
+2. Before every control or API: `mcp__ui5-mcp-server__get_api_reference`; guidelines: `get_guidelines`. Model field names: `mcp__cds-mcp__search_model`.
 3. Check `docs/registry/UI-ARTIFACTS.md` so as not to duplicate formatters and fragments.
 4. XML views, `sap.ui.define` controllers, formatters via `core:require`, texts via i18n (`en` and `ru`).
-5. After edits: `mcp__plugin_ui5_ui5-mcp-server__run_ui5_linter` or `npm run lint` in the application directory; after a manifest edit, `run_manifest_validation`.
+5. After edits: `mcp__ui5-mcp-server__run_ui5_linter` or `npm run lint` in the application directory; after a manifest edit, `run_manifest_validation`.
 6. Tests: QUnit in `webapp/test/unit/`, OPA5 in `webapp/test/integration/` with Test Starter, following the `ui5-best-practices-qunit` and `ui5-best-practices-opa5` skills.
 
 ## Rules

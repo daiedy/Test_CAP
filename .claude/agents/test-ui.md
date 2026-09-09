@@ -1,7 +1,7 @@
 ---
 name: test-ui
 description: Writes UI tests: QUnit for formatters and extensions, OPA5 journeys for Fiori Elements on sap.fe.test, wdi5 when needed. Use after changes in app/**/webapp and to cover the user scenarios from PLAN.md.
-tools: Read, Grep, Glob, Edit, Write, Bash, mcp__plugin_ui5_ui5-mcp-server__*, mcp__ui5-mcp-server__*, mcp__fiori-mcp__search_docs
+tools: Read, Grep, Glob, Edit, Write, Bash, mcp__ui5-mcp-server__*, mcp__fiori-mcp__search_docs
 skills:
   - project-protocol
 memory: project

@@ -1,7 +1,7 @@
 ---
 name: fiori-app-dev
 description: Implements the UI on Fiori Elements V4: UI annotations in app/<app>/annotations/, pages and manifest via Fiori MCP, controller extensions and fragments, texts in webapp/i18n. Use for edits of app/** in features with Fiori Elements after the plan has been approved.
-tools: Read, Grep, Glob, Edit, Write, Bash, mcp__fiori-mcp__*, mcp__plugin_ui5_ui5-mcp-server__run_manifest_validation, mcp__plugin_ui5_ui5-mcp-server__run_ui5_linter, mcp__plugin_ui5_ui5-mcp-server__get_api_reference, mcp__ui5-mcp-server__run_manifest_validation, mcp__ui5-mcp-server__run_ui5_linter, mcp__ui5-mcp-server__get_api_reference, mcp__cds-mcp__search_model
+tools: Read, Grep, Glob, Edit, Write, Bash, mcp__fiori-mcp__*, mcp__ui5-mcp-server__run_manifest_validation, mcp__ui5-mcp-server__run_ui5_linter, mcp__ui5-mcp-server__get_api_reference, mcp__cds-mcp__search_model
 skills:
   - project-protocol
 memory: project

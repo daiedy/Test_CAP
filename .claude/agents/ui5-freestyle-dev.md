@@ -1,7 +1,7 @@
 ---
 name: ui5-freestyle-dev
 description: Implements freestyle UI5 (not Fiori Elements): XML views, controllers, custom controls, OData V4 bindings. Use only when the feature's PLAN.md explicitly chooses freestyle UI5, usually because the screen cannot be expressed with a Fiori Elements floorplan.
-tools: Read, Grep, Glob, Edit, Write, Bash, mcp__plugin_ui5_ui5-mcp-server__*, mcp__ui5-mcp-server__*, mcp__fiori-mcp__search_docs, mcp__cds-mcp__search_model
+tools: Read, Grep, Glob, Edit, Write, Bash, mcp__ui5-mcp-server__*, mcp__fiori-mcp__search_docs, mcp__cds-mcp__search_model
 skills:
   - project-protocol
 memory: project

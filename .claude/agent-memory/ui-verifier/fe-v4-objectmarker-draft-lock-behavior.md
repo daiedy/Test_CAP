@@ -1,0 +1,17 @@
+---
+name: fe-v4-objectmarker-draft-lock-behavior
+description: Measured sap.m.ObjectMarker behavior for FE V4 draft/lock row markers (Common.SemanticKey), including two points where the pinned API docs mispredict what happens inside a table cell
+metadata:
+  type: project
+---
+
+Measured 2026-09-09 verifying `products-draft-marker` (Test_CAP, `Common.SemanticKey: [ name ]` on a draft-enabled List Report, UI5 1.136.5, sap_horizon). Two facts worth knowing before trusting a design doc's prediction about this control:
+
+1. **Every `sap.m.ObjectMarker` type is a real tab stop with a working press handler, including `Draft`.** The control's own type-visibility default (`Draft` = text only, no icon; `Locked`/`LockedBy`/`Unsaved`/`UnsavedBy` = icon+text above 600px) is correctly documented and holds. But a separate claim — "the `Draft` marker is non-interactive / adds no tab stop" — does NOT hold: in the DOM it renders as `<a href="#" tabindex="0">` and FE binds a `press` handler for every type, and pressing it opens a real popover ("Last changed on \<date\>."), even for your own draft. Verify via `sap.ui.getCore().byId(id)` → check `ctrl.mEventRegistry` for `"press"`, or just `.focus()` + `press_key Enter` and look for a dialog. Don't take a design doc's "non-interactive" claim about the marker at face value — it may be conflating the marker with the neighboring `ObjectIdentifier`'s `titleActive` property (which genuinely does default to `false`).
+2. **The icon-only-below-600px breakpoint (documented for standalone `ObjectMarker` usage) does not reproduce inside an `sap.fe` responsive table cell**, at least not down to ~500px window width, tested with both a live resize and a full page reload at that width (to rule out a stale render). `sap.ui.Device.media.getCurrentRange('StdExt')` correctly reports the `"Phone"` range and `documentElement` carries `sapUiMedia-Std-Phone`, yet the marker's CSS class stays `sapMObjectMarkerIcon sapMObjectMarkerText` and the text stays `display:inline; visibility:visible`. Working theory: the responsive table pops other columns (Category/Price/Stock) off first, leaving the marker's column full-width, so the marker's own breakpoint logic never triggers. Don't assume a `sap.m` control-level API doc describes its behavior unchanged once FE places it inside a table cell — measure at the actual narrow width instead of citing the doc.
+
+Both were WCAG-neutral-or-better in practice (text stayed available, so 1.4.1 wasn't at risk), so treat prediction mismatches like these as findings to hand to `architect`/`docs-keeper` for correcting the design doc / ADR, not as UI defects to report against the feature.
+
+To drive the "Editing Status" `sap.m.Select` filter (fixed values: All / All (Hiding Drafts) / Unchanged / Own Draft / Locked by Another User / Unsaved Changes by Another User): a plain `click` on the control's uid from the snapshot frequently times out ("did not become interactive"). Reliable sequence instead: `evaluate_script` to `document.getElementById(<id-without-suffix>).focus()`, then `press_key F4` (opens an `Available Values` dialog with `option` rows), then `click` the option's uid. After picking a value you still must `click` the actual `Go` button (a JS `.click()` dispatched via `evaluate_script` on a button found by text match does NOT reliably trigger UI5's binding refresh — use the real `click` tool on the button's snapshot uid).
+
+See also [[project-run-setup]] and [[fe-v4-dropdown-valuehelp-verification]].

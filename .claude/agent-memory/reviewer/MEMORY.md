@@ -1,1 +1,2 @@
-- [Pipeline review conventions](pipeline-review-conventions.md) — what is intentionally unfinished at step 16 (registry, STATE) and where OPA runner output lives
+- [Pipeline review conventions](pipeline-review-conventions.md) — what is intentionally unfinished before docs-keeper, per-lens severity, and how to adjudicate PLAN prose vs its code block when refuting a finding
+- [Verifying test guard strength](verifying-test-guard-strength.md) — read-only ways to prove a contract test or OPA5 assertion would really go red; UI5 CDN source paths

@@ -2,6 +2,11 @@
 
 Format: date, area, what changed. Maintained by `docs-keeper`, all agents add to it. New entries on top.
 
+## 2026-09-09
+
+### pipeline
+- Protected-file follow-ups of the `products-draft-edit` retro applied on the user's request: agent `ui-verifier` writes `VERIFICATION.md` incrementally with a per-scenario turn budget and blurs a field before Save; agent `architect` schedules the snapshot and `metadata.xml` regeneration in the phase of the model change and replaces the whole ADR `Status:` sentence on acceptance; skill `feature` says the same at the phase 1, 2 and 4 gates and resumes a turn-limited `ui-verifier` with SendMessage; protocol section 3 gains the MCP-unavailable fallback (capire, CDN `-dbg.js` sources, "not verified by MCP"); rule `tests-backend.md` gains the `IsActiveEntity` rule for draft-enabled entities (ADR-0012). LESSONS: 0 pending decisions, 4 pending upstream.
+
 ## 2026-09-07
 
 ### docs

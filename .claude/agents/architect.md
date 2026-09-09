@@ -24,6 +24,8 @@ You are the architect of the Test_CAP project (SAP CAP + Fiori Elements V4). You
 ## Rules
 
 - If the feature involves editing data in a Fiori Elements app, check `@odata.draft.enabled` on the root projection before writing the plan and put the draft decision into "Decisions for the user", not into risks.
+- A plan step that changes the OData model (`db/*.cds`, `srv/**/*.cds`, `app/*/annotations/*.cds`) schedules `npx vitest -u` and the regeneration of `app/products/webapp/localService/metadata.xml` in the same phase as the model change; the sync test in `test/metadata.test.js` must be green at that phase's gate (PATTERNS "OData contract", `templates/feature/PLAN.md` contract rule).
+- When the user accepts an ADR, replace the whole `Status:` sentence with the accepted form from `templates/adr.md`; never append to the proposed sentence.
 
 - Declarative before imperative: `@assert`, `@mandatory`, `@restrict` annotations and calculated elements before handlers.
 - One projection per entity, semantics in `srv/annotations`, presentation in `app/<app>/annotations`.

@@ -45,6 +45,8 @@ If MCP or the project documentation contradicts your knowledge, the document and
 
 If the task touches several layers, ask all the corresponding servers.
 
+If an MCP server is unavailable (timeout, "Search is currently unavailable", embeddings error): retry once, then fall back to the official documentation of the pinned version (capire for CDS; for UI5 and `sap.fe.test` the CDN debug sources `https://ui5.sap.com/resources/<module path>-dbg.js` of the version in `sap-ui-version.json`), mark every such finding "not verified by MCP" in the report, and note the outage once in the report's "For LESSONS" section (the orchestrator records it once per feature, not once per agent).
+
 ## 4. Language
 
 Everything the pipeline reads or produces is written in English: code comments, commit messages, docs under `docs/` (STATE, CHANGELOG, LESSONS, feature specs, ADRs), agent reports saved to files, registry, templates. The only non-English text lives in i18n bundles (`*_ru.properties`, `*.texts.csv`) and in test data that asserts translated values. Reply to the user in the user's language; that is separate from the files. The PostToolUse hook flags Cyrillic in code and docs; the reviewer treats it as an important finding.

@@ -4,7 +4,7 @@ This file is an inbox, not an archive. A lesson lives here only until `/retro` t
 
 ## Pending
 
-- 2026-09-07. Protected-file follow-ups of the `products-draft-edit` retro. The rules already act through templates and docs (see the transfer table), but the roles that need them most read protected files: `ui-verifier` prompt (write `VERIFICATION.md` incrementally, budget turns per scenario, blur a field and confirm the `PATCH` in `$batch` before clicking Save); `architect` prompt and `feature` skill (a contract change schedules `npx vitest -u` and the `metadata.xml` regeneration in the same phase; accepting an ADR replaces the whole `Status:` sentence); `project-protocol` section 3 (when an MCP server is unavailable: front-load the queries, fall back to the CDN `-dbg.js` sources of the loaded UI5 version or capire, mark "not verified by MCP"); rule `tests-backend.md` (draft-enabled entities are addressed with `IsActiveEntity=true`, ADR-0012). Status: `Pending user decision` (`.claude/**` is protected; diffs were proposed in the session of 2026-09-07; apply with `PIPELINE_ALLOW_PROTECTED=1` on request).
+- none.
 
 ## Pending upstream
 
@@ -17,6 +17,7 @@ This file is an inbox, not an archive. A lesson lives here only until `/retro` t
 
 | Lesson | Now lives in |
 |---|---|
+| Protected-file follow-ups of the `products-draft-edit` retro: incremental `VERIFICATION.md` and turn budget, blur before click; contract change in the same phase and ADR status replace; MCP-unavailable fallback; `IsActiveEntity` for draft-enabled entities (applied 2026-09-09 on the user's request) | agent `ui-verifier`; agent `architect` and skill `feature`; protocol section 3; rule `tests-backend.md` |
 | Draft-enabled entity: `POST` without `IsActiveEntity: true` creates a draft and skips `@mandatory`; `DELETE` of a record with a draft is 403 `DRAFT_ACTIVE_DELETE_FORBIDDEN_DRAFT_EXISTS`; `@assert.*` on a draft `PATCH` are `DraftMessages` (200), enforced on `draftActivate` (400) with `in/`-prefixed targets except `ASSERT_TARGET` | `docs/architecture/TESTING.md` "cds 10 specifics"; PATTERNS "Service test", "Drafts"; `templates/service.test.js`; ADR-0012 |
 | FE V4: Back navigation with a persisted draft change opens Save / Keep Draft / Discard Draft; no row marker without `Common.SemanticKey` | PATTERNS "Drafts"; `docs/STATE.md` open debt (semantic key decision) |
 | Contract change: `npx vitest -u` and `metadata.xml` in the same phase as the model change | `templates/feature/PLAN.md` contract rule; PATTERNS "OData contract" |

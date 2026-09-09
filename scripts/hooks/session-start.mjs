@@ -5,11 +5,13 @@
 import path from 'node:path';
 import fs from 'node:fs';
 import { readStdinJson, repoRoot, run, readLines, exists } from '../lib/hook-utils.mjs';
+import { pruneAudit } from '../lib/mcp-audit.mjs';
 
 try {
   const input = readStdinJson();
   const root = repoRoot();
   const out = [];
+  pruneAudit(root); // MCP audit files older than 14 days (ADR-0014)
 
   out.push(`# Test_CAP project context (SessionStart, source=${input.source || 'unknown'})`);
 

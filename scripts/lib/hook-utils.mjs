@@ -16,9 +16,32 @@ export function repoRoot() {
 }
 
 /** Read the whole stdin and parse it as JSON; returns {} on any failure. */
+/**
+ * Reads the hook input JSON from stdin. `fs.readFileSync(0)` fails with EAGAIN when the parent
+ * has not written to the pipe yet (observed with piped smoke tests), so read in a loop and wait
+ * briefly on EAGAIN instead of silently returning `{}`.
+ */
 export function readStdinJson() {
+  const chunks = [];
+  const buf = Buffer.alloc(65536);
+  const pause = new Int32Array(new SharedArrayBuffer(4));
+  let retries = 0;
+  for (;;) {
+    let n;
+    try {
+      n = fs.readSync(0, buf, 0, buf.length, null);
+    } catch (e) {
+      if (e.code === 'EAGAIN' && retries++ < 300) {
+        Atomics.wait(pause, 0, 0, 10);
+        continue;
+      }
+      break;
+    }
+    if (n === 0) break;
+    chunks.push(Buffer.from(buf.subarray(0, n)));
+  }
   try {
-    const raw = fs.readFileSync(0, 'utf8');
+    const raw = Buffer.concat(chunks).toString('utf8');
     return raw.trim() ? JSON.parse(raw) : {};
   } catch {
     return {};

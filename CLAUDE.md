@@ -32,7 +32,7 @@ Product Catalog: SAP CAP (Node.js 22, `@sap/cds` 10, OData V4, SQLite in-memory 
    |---|---|
    | CDS: entities, projections, actions, handlers | `cds-mcp`: `search_model`, then `search_docs` |
    | `@UI.*`, `@Common.*`, Fiori Elements, `manifest.json` | `fiori-mcp`: `search_docs`; manifest only via `list_functionality` → `execute_functionality` |
-   | Controls, XML views, UI5 controllers | UI5 MCP from the `ui5` plugin: `get_api_reference`, `get_guidelines`, `run_ui5_linter`, `run_manifest_validation` |
+   | Controls, XML views, UI5 controllers | UI5 MCP (`ui5-mcp-server`, pinned in `.mcp.json`; the `ui5` plugin supplies the skills): `get_api_reference`, `get_guidelines`, `run_ui5_linter`, `run_manifest_validation` |
    | Versions, "what's new" | not MCP: `cds version`, `npm view`, `docs/upstream/UPDATES.md` |
 
 2. **Specification before code.** A code change starts with `docs/features/<name>/PLAN.md` approved by the user. Orchestrator: `/feature`, plan only: `/spec`.
@@ -91,7 +91,7 @@ Direct delegation without a skill is allowed only for read-only work: `architect
 - Subagents in `.claude/agents/`: `architect`, `ux-designer`, `cap-backend-dev`, `fiori-app-dev`, `ui5-freestyle-dev`, `test-backend`, `test-ui`, `ui-verifier`, `reviewer`, `docs-keeper`, `upstream-watcher`. All preload the `project-protocol` skill and work by it.
 - Skills: `/feature`, `/spec`, `/add-entity`, `/gen-docs`, `/run-app`, `/test-all`, `/review`, `/retro`, `/upstream-check`, `/debug-after-upgrade`, `/upgrade-cds`. External: `cap-developer`, `cap-upgrade` (plugin `cap`), `ui5-best-practices*` (plugin `ui5`).
 - Hooks (`.claude/settings.json`, scripts in `scripts/hooks/`): SessionStart prints STATE and checks the environment; PreToolUse forbids editing protected files; PostToolUse runs compilation and linters by file type and marks the registry stale; SubagentStop blocks handing over with linter errors; Stop requires a fresh registry, updated STATE and CHANGELOG and a green `npm test`. Bypass only by user decision: `PIPELINE_SKIP_GATE=1`, `PIPELINE_ALLOW_PROTECTED=1`.
-- MCP in `.mcp.json` with pinned versions: `cds-mcp` 0.0.5, `fiori-mcp` 1.12.2, `chrome-devtools` 1.8.0. UI5 MCP comes with the `ui5` plugin.
+- MCP in `.mcp.json` with pinned versions: `cds-mcp` 0.0.5, `fiori-mcp` 1.12.2, `chrome-devtools` 1.8.0, `ui5-mcp-server` 0.2.18 (overrides the unpinned server bundled with the `ui5` plugin; the plugin stays for its skills). Setup on a new machine: `docs/architecture/STACK.md`.
 
 ## Do not do without an explicit user request
 

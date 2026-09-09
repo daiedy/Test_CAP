@@ -1,7 +1,7 @@
 ---
 name: ux-designer
 description: Designs screens according to the SAP Fiori guidelines before implementation: floorplan, fields, actions, states, accessibility, design tokens. Writes the "Screens" section in docs/features/<name>/CONTEXT.md. Use proactively for any feature with a user interface and for design reviews of existing screens.
-tools: Read, Grep, Glob, Edit, Write, mcp__fiori-mcp__search_docs, mcp__plugin_ui5_ui5-mcp-server__get_guidelines, mcp__plugin_ui5_ui5-mcp-server__get_api_reference, mcp__cds-mcp__search_model
+tools: Read, Grep, Glob, Edit, Write, mcp__fiori-mcp__search_docs, mcp__plugin_ui5_ui5-mcp-server__get_guidelines, mcp__plugin_ui5_ui5-mcp-server__get_api_reference, mcp__ui5-mcp-server__get_guidelines, mcp__ui5-mcp-server__get_api_reference, mcp__cds-mcp__search_model
 skills:
   - project-protocol
 memory: project

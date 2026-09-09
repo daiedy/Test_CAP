@@ -37,6 +37,16 @@
             "timeout": 90
           }
         ]
+      },
+      {
+        "matcher": "^mcp__|^Skill$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PATH=\"/opt/homebrew/opt/node@22/bin:/opt/homebrew/bin:$PATH\" node scripts/hooks/mcp-audit.mjs",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "SubagentStop": [
@@ -71,13 +81,21 @@
           }
         ]
       }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "^mcp__",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PATH=\"/opt/homebrew/opt/node@22/bin:/opt/homebrew/bin:$PATH\" node scripts/hooks/mcp-audit.mjs",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   },
   "permissions": {
-    "deny": [
-      "Read(./.env)",
-      "Read(./.env.*)",
-      "Read(./default-env.json)"
-    ]
+    "deny": ["Read(./.env)", "Read(./.env.*)", "Read(./default-env.json)"]
   }
 }

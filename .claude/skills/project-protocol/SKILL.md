@@ -25,7 +25,7 @@ If MCP or the project documentation contradicts your knowledge, the document and
 2. Read the first 40 lines of `docs/STATE.md` and the "Open debt" section.
 3. Find what exists: the corresponding `docs/registry/` file plus `mcp__cds-mcp__search_model` for every entity, service, action the task touches. Write into the report what you reuse.
 4. Find the approved way in `PATTERNS.md`. One way. If none fits, stop and propose an ADR, do not invent a second one.
-5. Check with MCP according to the routing table below before the first edit.
+5. Check with MCP according to the routing table below before the first edit. The SubagentStop hook compares your Edit/Write calls with the MCP audit log (ADR-0014); when a query is missing it blocks you once and asks for a `## MCP not used` section in your report (section 8). Direct edits of `manifest.json` are denied: Fiori MCP only.
 6. Take a template from `templates/` if you create a new file of that type.
 7. Make the edits. Path rules (`.claude/rules/`) are loaded automatically, follow them.
 8. Check: linters and tests from section 6. Do not write "checked" if you did not run them.
@@ -95,6 +95,9 @@ command → result (last lines of the output)
 
 ## Open questions
 what requires a decision from the user or architect
+
+## MCP not used
+only if you edited a file without the MCP query its type expects (or when the SubagentStop hook asks for it): one line per file, `path → reason` (why the query was unnecessary, or impossible); otherwise omit the section
 
 ## For LESSONS
 one or two lines or "none"

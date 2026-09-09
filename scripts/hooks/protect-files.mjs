@@ -25,6 +25,7 @@ const PROTECTED = [
   'scripts/hooks/**',
   'docs/registry/**',
   'docs/ai-pipeline-plan.md',
+  'app/**/webapp/manifest.json',
 ];
 const PROTECTED_EXCEPTIONS = ['.claude/agent-memory/**'];
 const REUSE_WATCH = ['srv/lib/**', 'app/**/webapp/ext/**'];
@@ -37,6 +38,8 @@ const REASONS = {
   '.mcp.json':
     'MCP configuration is protected; versions are bumped through upstream-check by the user decision',
   'docs/ai-pipeline-plan.md': 'the plan is edited only on a direct request from the user',
+  'app/**/webapp/manifest.json':
+    'manifest.json is changed only through Fiori MCP (`mcp__fiori-mcp__list_functionality` → `get_functionality_details` → `execute_functionality`), CLAUDE.md invariant 1 and ADR-0014',
 };
 
 try {

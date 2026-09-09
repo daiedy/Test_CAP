@@ -20,6 +20,7 @@ import {
   findUp,
   exists,
 } from '../lib/hook-utils.mjs';
+import { appendAudit, agentKey } from '../lib/mcp-audit.mjs';
 
 const TIMEOUT = 60_000;
 const STALE_SCOPE = ['db/**', 'srv/**', 'app/**'];
@@ -246,6 +247,18 @@ try {
   const root = repoRoot();
   const r = rel(filePath, root);
   if (!insideRepo(r) || !exists(path.resolve(root, r))) process.exit(0);
+
+  // MCP audit (ADR-0014): record the edit per agent; SubagentStop compares it with the MCP attempts.
+  try {
+    appendAudit(root, input.session_id, {
+      event: 'edit',
+      agent: agentKey(input),
+      agentType: input.agent_type || 'main',
+      file: r,
+    });
+  } catch {
+    // advisory
+  }
 
   const notes = [];
   if (r.endsWith('.cds')) {

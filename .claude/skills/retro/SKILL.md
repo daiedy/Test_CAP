@@ -10,7 +10,7 @@ allowed-tools: Read, Grep, Glob, Edit, Write, Bash(git *), Bash(node *), Bash(np
 
 ## 1. Collect the facts
 
-`git log --oneline -20`, `git diff --stat HEAD~5`, the agents' reports of this session, red checks, repeated rounds, hook blocks, entries in `docs/LESSONS.md` marked `Pending`.
+`git log --oneline -20`, `git diff --stat HEAD~5`, the agents' reports of this session, red checks, repeated rounds, hook blocks, entries in `docs/LESSONS.md` marked `Pending`. MCP audit: `.pipeline/mcp-audit-*.jsonl` (ADR-0014), count `justification` and `skipped-unjustified` records per `agentType`; a repeated justified skip becomes an exception in `MCP_RULES` (`scripts/lib/mcp-audit.mjs`), an unjustified one a stricter check or a prompt line.
 
 ## 2. Name the cause of each failure
 

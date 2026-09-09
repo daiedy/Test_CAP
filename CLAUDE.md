@@ -41,7 +41,7 @@ Product Catalog: SAP CAP (Node.js 22, `@sap/cds` 10, OData V4, SQLite in-memory 
 5. **Annotation layers.** Semantics (`@title`, `@mandatory`, `@assert.*`, `@readonly`) in `srv/annotations/<Entity>.cds`; presentation (`@UI.*`, `@Common.ValueList`, `@Common.Text`) in `app/<app>/annotations/<Entity>.cds`; no annotations in `db/`.
 6. **Declarative before imperative.** A handler is written when an annotation is not enough.
 7. **Texts through i18n.** `en` and `ru` in the same change. No user-facing strings in code.
-8. **Gates, not trust.** Hooks run linters after edits, and tests and the documentation check before finishing. "Tests pass" without fresh output is not accepted.
+8. **Gates, not trust.** Hooks run linters after edits, and tests and the documentation check before finishing. "Tests pass" without fresh output is not accepted. The SubagentStop hook compares an agent's edits with the MCP audit log and asks once for a written `## MCP not used` reason when a query is missing (ADR-0014); `manifest.json` is editable only through Fiori MCP.
 9. **Documentation in the same change.** `npm run docs:registry`, a line in `docs/CHANGELOG.md`, an up-to-date `docs/STATE.md`.
 10. **English everywhere the AI reads.** Code comments, commit messages, `docs/`, feature specs, ADRs, agent reports and memories are English. Russian lives only in i18n `ru` bundles, `.texts.csv` and asserted test values. Chat replies follow the user's language. The PostToolUse hook flags Cyrillic; `/test-all` scans for it.
 
@@ -90,7 +90,7 @@ Direct delegation without a skill is allowed only for read-only work: `architect
 
 - Subagents in `.claude/agents/`: `architect`, `ux-designer`, `cap-backend-dev`, `fiori-app-dev`, `ui5-freestyle-dev`, `test-backend`, `test-ui`, `ui-verifier`, `reviewer`, `docs-keeper`, `upstream-watcher`. All preload the `project-protocol` skill and work by it.
 - Skills: `/feature`, `/spec`, `/add-entity`, `/gen-docs`, `/run-app`, `/test-all`, `/review`, `/retro`, `/upstream-check`, `/debug-after-upgrade`, `/upgrade-cds`. External: `cap-developer`, `cap-upgrade` (plugin `cap`), `ui5-best-practices*` (plugin `ui5`).
-- Hooks (`.claude/settings.json`, scripts in `scripts/hooks/`): SessionStart prints STATE and checks the environment; PreToolUse forbids editing protected files; PostToolUse runs compilation and linters by file type and marks the registry stale; SubagentStop blocks handing over with linter errors; Stop requires a fresh registry, updated STATE and CHANGELOG and a green `npm test`. Bypass only by user decision: `PIPELINE_SKIP_GATE=1`, `PIPELINE_ALLOW_PROTECTED=1`.
+- Hooks (`.claude/settings.json`, scripts in `scripts/hooks/`): SessionStart prints STATE and checks the environment; PreToolUse forbids editing protected files; PostToolUse runs compilation and linters by file type, marks the registry stale and logs MCP, skill and edit calls per agent into `.pipeline/` (gitignored); SubagentStop blocks handing over with linter errors or with an MCP query missing and unexplained; Stop requires a fresh registry, updated STATE and CHANGELOG and a green `npm test`. Bypass only by user decision: `PIPELINE_SKIP_GATE=1`, `PIPELINE_ALLOW_PROTECTED=1`.
 - MCP in `.mcp.json` with pinned versions: `cds-mcp` 0.0.5, `fiori-mcp` 1.12.2, `chrome-devtools` 1.8.0, `ui5-mcp-server` 0.2.18 (the `ui5` plugin stays for its skills; its unpinned bundled server `plugin:ui5:ui5-mcp-server` is toggled off in `/mcp` on each machine). Setup on a new machine: `docs/architecture/STACK.md`.
 
 ## Do not do without an explicit user request

@@ -165,6 +165,26 @@
         <Annotation Term="Common.AddressViaNavigationPath" Bool="true"/>
       </Annotations>
       <Annotations Target="CatalogService.Products">
+        <Annotation Term="Common.SemanticKey">
+          <Collection>
+            <PropertyPath>name</PropertyPath>
+          </Collection>
+        </Annotation>
+        <Annotation Term="Common.SideEffects" Qualifier="alwaysFetchMessages">
+          <Record Type="Common.SideEffectsType">
+            <PropertyValue Property="SourceEntities">
+              <Collection>
+                <NavigationPropertyPath></NavigationPropertyPath>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="TargetProperties">
+              <Collection>
+                <String>DraftMessages</String>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+        <Annotation Term="Common.Messages" Path="DraftMessages"/>
         <Annotation Term="UI.HeaderInfo">
           <Record Type="UI.HeaderInfoType">
             <PropertyValue Property="TypeName" String="Product"/>
@@ -281,21 +301,6 @@
             </PropertyValue>
           </Record>
         </Annotation>
-        <Annotation Term="Common.SideEffects" Qualifier="alwaysFetchMessages">
-          <Record Type="Common.SideEffectsType">
-            <PropertyValue Property="SourceEntities">
-              <Collection>
-                <NavigationPropertyPath></NavigationPropertyPath>
-              </Collection>
-            </PropertyValue>
-            <PropertyValue Property="TargetProperties">
-              <Collection>
-                <String>DraftMessages</String>
-              </Collection>
-            </PropertyValue>
-          </Record>
-        </Annotation>
-        <Annotation Term="Common.Messages" Path="DraftMessages"/>
       </Annotations>
       <Annotations Target="CatalogService.EntityContainer/Products">
         <Annotation Term="Common.DraftRoot">

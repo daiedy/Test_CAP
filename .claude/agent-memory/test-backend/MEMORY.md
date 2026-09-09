@@ -1,1 +1,2 @@
 - [Probing runtime behavior](project-probing-runtime-behavior.md) — throwaway probe under test/ logging to the scratchpad; Vitest 5 hides console output; delete before npm test
+- [Proving a contract test red](project-contract-test-red-proof.md) — git archive HEAD into the scratchpad + symlinked node_modules to run the new test pre-feature; grep -c to catch tautologies

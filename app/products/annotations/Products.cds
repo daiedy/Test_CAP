@@ -2,6 +2,8 @@ using { CatalogService } from '../../../srv/catalog-service';
 
 // Presentation annotations for CatalogService.Products (List Report + Object Page).
 annotate CatalogService.Products with @(
+  // Semantic key: FE V4 renders the draft/lock marker in this LineItem column (ADR-0015).
+  Common.SemanticKey: [ name ],
   UI.HeaderInfo: {
     TypeName      : '{i18n>Products.typeName}',
     TypeNamePlural: '{i18n>Products.typeNamePlural}',

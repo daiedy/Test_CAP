@@ -10,10 +10,26 @@ sap.ui.define(
     './CategoryShownAsNameJourney',
     './EditCategoryOnObjectPageJourney',
     './RussianLocaleJourney',
+    './DraftMarkerInListReportJourney',
   ],
-  function (runner, FilterProductsByCategory, CategoryShownAsName, EditCategoryOnObjectPage, RussianLocale) {
+  function (
+    runner,
+    FilterProductsByCategory,
+    CategoryShownAsName,
+    EditCategoryOnObjectPage,
+    RussianLocale,
+    DraftMarkerInListReport
+  ) {
     'use strict';
 
-    runner.run([FilterProductsByCategory, CategoryShownAsName, EditCategoryOnObjectPage, RussianLocale]);
+    // DraftMarkerInListReportJourney runs last: it is the only journey that creates a draft, so a
+    // leftover draft can never change the row count the earlier journeys assert.
+    runner.run([
+      FilterProductsByCategory,
+      CategoryShownAsName,
+      EditCategoryOnObjectPage,
+      RussianLocale,
+      DraftMarkerInListReport,
+    ]);
   }
 );

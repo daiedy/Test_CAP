@@ -17,7 +17,7 @@ First run, the state is recorded in `docs/upstream/versions.json`. 31 sources ch
 | `@cap-js/sqlite` | 3.0.2 | ^3 (3.0.2) |
 | `@cap-js/mcp-server` | 0.0.5 | pinned 0.0.5 in `.mcp.json` |
 | `@sap-ux/fiori-mcp-server` | 1.12.2 | pinned 1.12.2 in `.mcp.json` |
-| `@ui5/mcp-server` | 0.2.18 | via the `ui5` plugin 0.1.8 |
+| `@ui5/mcp-server` | 0.2.18 | pinned 0.2.18 in `.mcp.json` as `ui5-mcp-server` since 2026-09-09 (before that unpinned, started by the `ui5` plugin 0.1.8 as `npx -y @ui5/mcp-server`) |
 | `chrome-devtools-mcp` | 1.8.0 | pinned 1.8.0 in `.mcp.json` |
 | `@ui5/cli` | 4.0.65 | ^4 |
 | `@ui5/linter` | 1.23.5 | ^1 |

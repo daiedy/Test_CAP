@@ -1,0 +1,20 @@
+---
+name: fe-v4-semantic-key-marker
+description: FE V4 facts behind the draft/lock row marker (Common.SemanticKey, sap.m.ObjectMarker, sap.fe.test isDraft matcher) and the measured EDMX delta; basis of ADR-0015 (proposed 2026-09-09).
+metadata:
+  type: project
+---
+
+Feature `products-draft-marker` (spec written 2026-09-09, ADR-0015 proposed): the List Report of a draft-enabled entity shows no row marker until `@Common.SemanticKey` names an element that is also a `UI.LineItem` `DataField`. Verified facts, each from MCP or the loaded UI5 sources:
+
+- FE V4 renders the editing status in the column of the **first semantic key present in `UI.LineItem`**; the fallback to `UI.HeaderInfo` Title/Description exists **only in OData V2**, which is why `UI.HeaderInfo.Title = name` produced nothing here. Responsive table → key column; grid/tree/analytical → separate unlabelled second column. FE V4 List Report default table type is `ResponsiveTable` (`sap/fe/core/converters/controls/Common/Table.js` → `getTableType`).
+- The marker control is `sap.m.ObjectMarker`; texts ship translated in `sap.m` (`OM_DRAFT` "Draft", `OM_LOCKED_BY` "Locked by {0}", `OM_LOCKED_BY_ANOTHER_USER`, `OM_UNSAVED_BY`), so such a feature needs **no project i18n key**. Per-type default visibility (API 1.136.5) is the trap when writing verification criteria: type `Draft` renders **text only, no icon** (its `sap-icon://request` is in the internal map but not displayed), while `Locked`/`LockedBy`/`Unsaved`/`UnsavedBy` render icon plus text above 600 px and **icon only below**. Its reactive area is `Inline` and unreachable from annotations, so the WCAG 2.5.8 target size of the lock link is an upstream note, not a project defect. V4 delete-dialog texts come from `C_TRANSACTION_HELPER_*` framework keys, not from the semantic key.
+- A semantic key cell renders as `sap.m.ObjectIdentifier` (bold, second line only if the element has an associated text). `sap/fe/test/builder/MacroFieldBuilder.js` matches `ObjectIdentifier` on its `title`, so existing `iCheckRows({ prop: value })` / `iPressRow` assertions survive. The row marker is asserted with `iCheckRows(values, N, { isDraft: true })` (`MdcTableBuilder` → `Row.Matchers.isDraft`, matches an `ObjectMarker` in the row); `iNavigateByBreadcrumb('<TypeNamePlural>')` (`sap/fe/test/api/HeaderActions.js`) is the in-app way back to the List Report that avoids the shell-Back "Save / Keep Draft / Discard Draft" dialog.
+- FE uses a semantic key only for the marker column, the `ObjectIdentifier` rendering and `$select`; identity, routing (`Products({key})`), delete and drafts stay on `ID` + `IsActiveEntity`. So a **non-unique** semantic key is safe; `@assert.unique` would be an unrelated domain rule.
+- Measured EDMX delta of the annotation: one `<Annotation Term="Common.SemanticKey"><Collection><PropertyPath>name</PropertyPath></Collection></Annotation>` on `CatalogService.Products`, plus a positional move of the compiler-generated `Common.SideEffects#alwaysFetchMessages` / `Common.Messages` inside the same block. So `app/*/annotations/*.cds` **is** a contract change: snapshot + `localService/metadata.xml` regenerate in the UI phase (phase 3); there is no backend phase for such a feature.
+
+**Why:** these were the unknowns that made the marker look like a risk in `products-draft-edit`; they are framework behavior, not repo state, so re-deriving them costs several MCP and CDN round trips.
+
+**How to apply:** reuse for any "why does FE not show X in the row" question and for planning UI-only features that still move the OData contract. Verify the current model with `search_model` first — see [[cds10-draft-behavior]] and [[pipeline-first-feature]].
+
+**Architect experiment trick worth reusing:** to measure the EDMX delta of an annotation without touching project files, write the `annotate` statement into a scratchpad `.cds` file that `using`s the service by absolute path and run `cds compile '*' <scratch.cds> --to edmx-v4 -s CatalogService -l en`, then `diff` against `cds compile '*' ...` alone. Compiles clean, `git status` stays empty.

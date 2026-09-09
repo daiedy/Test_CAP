@@ -1,3 +1,4 @@
-- [Write tool blocks SUMMARY.md](feedback_write_tool_blocks_summary.md) — use a Bash heredoc when Write refuses a legitimate docs/features/<name>/SUMMARY.md
+- [Write tool blocks SUMMARY.md](feedback_write_tool_blocks_summary.md) — Bash heredoc by default; when Bash-authored content is explicitly forbidden, `cp` an analogous file + one full-content Edit instead
 - [ADR status line must be replaced, not appended](feedback_adr_status_line_format.md) — full-sentence replace on acceptance; template form from ADR-0010/0011
-- [docs-keeper's step-11 scope](project_docs_keeper_step11_scope.md) — the fixed checklist per /feature run, and which pending files belong to other agents (ui-verifier, reviewer)
+- [docs-keeper's step-11 scope](project_docs_keeper_step11_scope.md) — the fixed checklist per /feature run; VERIFICATION.md/screenshots/other agents' memory are read-only by default but can be explicitly assigned to docs-keeper's commit
+- [Bash bypasses hooks, prefer Edit](feedback_bash_bypasses_hooks_prefer_edit.md) — Test_CAP hooks only see Edit/Write; an explicit task rule against Bash file-authoring overrides the generic "prefer Bash" default

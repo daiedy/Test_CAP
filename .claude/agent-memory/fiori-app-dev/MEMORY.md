@@ -1,0 +1,1 @@
+- [STATE.md session line is a hook artifact](project-state-md-precompact-artifact.md) — a lone `## Sessions` bullet appearing in docs/STATE.md mid-run is written by the PreCompact hook, not by you

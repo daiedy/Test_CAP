@@ -32,4 +32,14 @@ describe('OData contract of CatalogService', () => {
     expect(status).toBe(200);
     expect(data).toContain('Common.Label" String="Product Name"');
   });
+
+  it('exposes the semantic key of Products in the contract', async () => {
+    // ADR-0015: FE V4 renders the draft/lock marker in the first semantic-key LineItem column.
+    const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
+      headers: { 'Accept-Language': 'en' },
+    });
+    expect(status).toBe(200);
+    expect(data).toContain('Term="Common.SemanticKey"');
+    expect(data).toContain('<PropertyPath>name</PropertyPath>');
+  });
 });

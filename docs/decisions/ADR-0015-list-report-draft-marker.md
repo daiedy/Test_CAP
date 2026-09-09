@@ -1,0 +1,58 @@
+# ADR-0015: Draft and lock marker in the List Report row via `@Common.SemanticKey`
+
+Date: 2026-09-09. Status: accepted (user, 2026-09-09, feature `products-draft-marker`)
+
+## Context
+
+`CatalogService.Products` is draft-enabled (ADR-0012). Editing, the Editing Status filter with its six options and the Object Page lock popover all work, but a List Report row gives no hint that it is the user's own draft or that another user holds a lock. This was measured, not assumed: `docs/features/products-draft-edit/VERIFICATION.md` scenarios 4 and 6 confirmed the missing marker in the accessibility tree and in screenshots, and it has been an open-debt row in `docs/STATE.md` since 2026-09-07.
+
+`mcp__fiori-mcp__search_docs` explains why ("Configuring Display of Editing Status in List Report Tables", "Handling Semantic Key Fields in SAP Fiori Elements"): Fiori Elements renders the editing status in the column of the **first semantic key that is also a `UI.LineItem` `DataField`**; the fallback to `UI.HeaderInfo` Title/Description exists **only in OData V2**. Our app is V4 with `UI.HeaderInfo.Title = name`, which is exactly the configuration that produces nothing. `PATTERNS.md` has no row for this: its "UI Fiori Elements" rows cover `@UI.*` layout and the code-list value help (ADR-0011), and the "Drafts" row only records the negative fact. Per CLAUDE.md invariant 4 the way is decided once, here, rather than invented per feature. The decision also has to answer a question the vocabulary raises: a semantic key is conventionally a *unique* human-readable business key, and `Products.name` carries no uniqueness constraint.
+
+Research and measurements: `docs/features/products-draft-marker/CONTEXT.md`.
+
+## Decision
+
+1. **The marker is produced by one annotation on the presentation layer.** `@Common.SemanticKey` naming the element that is both `UI.HeaderInfo.Title` and the first `UI.LineItem` `DataField` goes into `app/<app>/annotations/<Entity>.cds` (CLAUDE.md invariant 5, ADR-0004). No custom column, fragment, formatter, controller extension or manifest setting is used: Fiori Elements owns the control (`sap.m.ObjectMarker`), the placement and the texts.
+2. **For `Products` that element is `name`.** In `app/products/annotations/Products.cds`, inside the existing block:
+   ```cds
+   annotate CatalogService.Products with @(
+     // Semantic key: FE V4 renders the draft/lock marker in this LineItem column (ADR-0015).
+     Common.SemanticKey: [ name ],
+     UI.HeaderInfo: { ... }
+   );
+   ```
+3. **`name` deliberately stays non-unique.** No `@assert.unique` and no `db/` change. Fiori Elements never dereferences a semantic key — it uses it to choose the marker column, to render the cell as `sap.m.ObjectIdentifier` and to add the property to `$select`; identity, navigation, delete and the whole draft protocol run on the technical key `ID` plus `IsActiveEntity` (verified in `sap/fe/core/converters/controls/Common/Table.js` and in the manifest route `Products({key})`). A duplicate name therefore only produces two rows that look alike, which is already possible today. Introducing a uniqueness constraint would be a new domain rule with its own tests, error text and migration question, and it would forbid legitimate duplicates; if a real business key is wanted, that is a separate feature (see Alternatives, option C).
+4. **Consequence for tests.** The row marker is asserted in OPA5 with the framework matcher `iCheckRows(values, N, { isDraft: true })` (`sap.fe.test` `TableBuilder.Row.Matchers.isDraft`, which matches a `sap.m.ObjectMarker` in the row). The "locked by another user" case is not automated in OPA5 (one session cannot create another user's draft) and stays a `ui-verifier` scenario with `curl -u bob:`.
+5. **Consequence for the contract.** The annotation is part of the compiled model, so the Vitest EDMX snapshot and `app/products/webapp/localService/metadata.xml` are regenerated in the same phase as the edit (PATTERNS "OData contract"). The measured delta is one `<Annotation Term="Common.SemanticKey">` block on `CatalogService.Products`.
+
+## Alternatives
+
+| Option | Why rejected |
+|---|---|
+| Do nothing; rely on the Editing Status filter and the Object Page lock popover | the filter is opt-in and shows nothing per row; the user asked for the row marker, and a user who edits and returns to the list has no cue at all (measured in `products-draft-edit` scenarios 4 and 6) |
+| `@Common.SemanticKey: [ name ]` **plus** `@assert.unique: { name: [ name ] }` in `db/schema.cds` | turns a one-line UI fix into a domain rule change: a `db/` change, a new rejection on Create and on `draftActivate`, new tests and an error text, and it forbids legitimate duplicate names (variants, same name in two categories). Nothing in Fiori Elements requires it (decision 3). Available later without rework if the domain ever demands it |
+| Introduce a real business key (`productNumber`/SKU), make it the semantic key | the better long-term model, but a separate and much larger feature: new element, seeded data, a LineItem column, filter, i18n, tests. Doing it inside a marker fix would half-implement it. Recorded as a possible follow-up, not as this decision |
+| Use `ID` (the UUID) as the semantic key | it would satisfy uniqueness and put a UUID in the key column of every row, defeating the purpose of a human-readable key |
+| Custom column or controller extension rendering an `ObjectMarker` from `DraftAdministrativeData` | reimplements framework behavior (invariant 6, PATTERNS "Custom section or column" is for content FE cannot express), duplicates texts FE already ships translated, and would need its own i18n keys and unit tests |
+| Switch the List Report to a grid table so the editing status gets its own unlabelled column | a `manifest.json` change that alters the look and personalization of the whole table for a cosmetic placement difference; the responsive default already puts the marker where the docs say users expect it |
+| Put the annotation in `srv/annotations/Products.cds` because a semantic key is arguably service-wide semantics | contradicts CLAUDE.md invariant 5 and ADR-0004: the annotation exists solely to steer FE rendering. Revisit only if a second UI is ever built on the same service |
+
+## Consequences
+
+- One line of UI annotation gives own-draft, locked-by and unsaved-changes markers in the row, plus the standard `sap.m.ObjectIdentifier` look of a key column; the `Product Name` cell becomes bold, with no second line (the element has no associated text).
+- No project-owned user-facing string is added: `sap.m` ships `OM_DRAFT`, `OM_LOCKED_BY`, `OM_LOCKED_BY_ANOTHER_USER` and `OM_UNSAVED_BY` translated in `en` and `ru`, so invariant 7 is satisfied by adding nothing. The marker's appearance is the control's per-type default: `Draft` is text without an icon; `Locked*`/`Unsaved*` are icon plus text (`sap.m.ObjectMarker` 1.136.5's own API doc says icon-only below a 600 px window width, but that describes the standalone control — measured inside this FE V4 responsive table cell, at `window.innerWidth` 500 after both a live resize and a full reload, the marker stayed icon-plus-text; the table pops the other columns first, so the pinned breakpoint rule does not describe this placement, `docs/features/products-draft-marker/VERIFICATION.md` scenario 3). Nothing here is configurable from an annotation. Every marker type, including `Draft`, is also a real, interactive tab stop with a working press handler and a "Last changed on …" popover — this project's own annotation cannot change that either; a claim that the own-draft marker is non-interactive would be describing the neighbouring `sap.m.ObjectIdentifier`'s title (`titleActive` stays `false`), not the marker. The WCAG 2.5.8 target-size question (`reactiveAreaMode: Inline`, unreachable from an annotation) is conditional on label length, not a certain gap: the measured lock-marker link for `bob` was 110.97×25 CSS px, clearing the 24×24 px minimum; a longer user name could still fall under it, so `ui-verifier` measures it each time rather than assuming either outcome, and only records an upstream note against `sap.m`/`sap.fe` when the measured box is actually below the minimum, never fixed with a custom column or CSS.
+- The semantic-key rendering rules also apply to Object Pages in OData V4, and `name` is a field of `UI.FieldGroup#GeneralInfo`; the expectation is that forms are unaffected (the rule concerns table columns) and `ui-verifier` confirms it. If a form field did turn bold or lose its label, that observation belongs here, in these consequences, and not in a hand fix of the form.
+- The OData contract changes, so the snapshot and `localService/metadata.xml` are regenerated with the edit; mock mode keeps working but cannot show the marker, because `sap-fe-mockserver` does not simulate draft administrative data.
+- `PATTERNS.md` gains a row in "UI Fiori Elements" ("Draft and lock marker in the List Report row"), the "Drafts" row's sentence about the missing marker gains the pointer to this ADR, and the "User scenario" row records the `iCheckRows(..., { isDraft: true })` idiom. The open-debt row in `docs/STATE.md` is removed.
+- Duplicate product names stay possible; tests that identify a row by name assert an explicit expected row count, so a duplicate in the seed data fails loudly instead of silently matching the wrong row.
+- [x] `app/products/annotations/Products.cds`, `app/products/webapp/localService/metadata.xml`, `test/__snapshots__/metadata.test.js.snap`
+- [x] `test/metadata.test.js` (contract assertion), `app/products/webapp/test/integration/DraftMarkerInListReportJourney.js`, `opaTests.qunit.js`
+- [x] `docs/architecture/PATTERNS.md` (new row, two amended rows), `docs/STATE.md` (debt row removed), `docs/LESSONS.md`
+
+## Sources
+
+- `mcp__fiori-mcp__search_docs`: "Configuring Display of Editing Status in List Report Tables" (semantic key must be in the LineItem; responsive table → key column, grid table → separate column; the Title/Description fallback is OData V2 only), "Handling Semantic Key Fields in SAP Fiori Elements" (CAP CDS form, "only available for the default `DataField`", `sap.m.ObjectIdentifier` rendering rules), "Fiori Elements — Editing Status" (status from draft administrative data, user name plus popover), "Adapting Confirmation Dialog Texts" / "Configuring the Delete Dialog" (V4 delete texts come from framework i18n keys, not from the semantic key), "Changing Default Titles of New and Unnamed Objects"
+- `mcp__cds-mcp__search_model` `Products`: no `@Common.SemanticKey` today, `name : String(100)` without a constraint, draft annotations and actions present
+- `mcp__cds-mcp__search_docs`: `@assert.unique: { <name>: [ <elements> ] }` is the CAP uniqueness form and lives on the `db` entity
+- Loaded UI5 sources (CDN `-dbg.js` of the version the app runs): `sap/fe/core/converters/controls/Common/Table.js` (`getTableType` default `ResponsiveTable`; semantic keys feed `$select` and the table visualization), `sap/m/ObjectMarker.js` and `sap/m/messagebundle[_ru].properties` (marker types, icons and texts), `sap/fe/test/builder/MacroFieldBuilder.js` (`ObjectIdentifier` matched on `title`), `sap/fe/test/builder/MdcTableBuilder.js` (`Row.Matchers.isDraft`), `sap/fe/test/api/TableAssertions.js` (`iCheckRows` third argument), `sap/fe/test/api/HeaderActions.js` (`iNavigateByBreadcrumb`)
+- Measurements and experiments: `docs/features/products-draft-marker/CONTEXT.md`; prior evidence: `docs/features/products-draft-edit/VERIFICATION.md` scenarios 4 and 6, ADR-0012, ADR-0004, ADR-0011

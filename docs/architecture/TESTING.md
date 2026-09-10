@@ -8,7 +8,7 @@
 | OData contract | Vitest snapshot of `cds compile '*' --to edmx-v4 -s CatalogService -l en` | `test/metadata.test.js` | `npm test`, Stop hook, CI |
 | Service | `@cap-js/cds-test` + Vitest, SQLite in-memory | `test/<service>.test.js` | `npm test`, Stop hook, CI |
 | UI unit | QUnit | `app/products/webapp/test/unit/` | `ui5-test-runner`, CI (phase 3) |
-| UI scenarios | OPA5 journeys on `sap.fe.test`, run with `npm run test:ui` in `app/products` while `npm run watch` runs in the root | `app/products/webapp/test/integration/` | `ui5-test-runner`, CI (phase 3) |
+| UI scenarios | OPA5 journeys on `sap.fe.test`, run with `npm run test:ui` in `app/products` while `npx cds serve --in-memory --port 4004` runs in the root | `app/products/webapp/test/integration/` | `ui5-test-runner`, CI (phase 3) |
 | End-to-end | wdi5 against `cds watch` | `app/products/webapp/test/e2e/` | on schedule and before a release (phase 3) |
 
 ## Rules
@@ -36,7 +36,8 @@ cd app/products && npm run lint   # ui5lint
 - Decimal and Int64 from SQLite arrive as strings: `expect(product.price).to.equal('1299.99')`.
 - Write operations return `{ affected }`, not the changed rows.
 - `srv.entities` is a getter, not a function.
-- UI tests (`ui5-test-runner`) run only against the live stack (`npm run watch` on :4004): `fiori run` (`npm start`, :8080) does not serve `/products/webapp` from the FLP sandbox, and the mock server ignores `Accept-Language`, so the `ru` journey cannot pass there.
+- UI tests (`ui5-test-runner`) run only against the live stack on :4004, started as `npx cds serve --in-memory --port 4004` exactly as `.github/workflows/ci.yml` does: `fiori run` (`npm start`, :8080) does not serve `/products/webapp` from the FLP sandbox, and the mock server ignores `Accept-Language`, so the `ru` journey cannot pass there. `cds watch` is for development, not for a test run: measured 2026-09-10, the runner found no test page against one `cds watch` instance and timed out the probe navigation against a second, concurrent one.
+- Measured durations (2026-09-09/10), the basis for `--page-timeout`: the whole suite of 23 tests on a single page takes 85 s in CI (job "OPA5 journeys", step "Run OPA5 journeys with ui5-test-runner") and 68 s locally; with `--split-opa` the slowest single journey page is 22 s. `--page-timeout` is per page and wall-clock, it covers browser launch and the UI5 CDN bootstrap, and there is no retry on expiry: `pageTimedOut()` marks every test of the page that has not reported yet as failed.
 - On a draft-enabled entity (ADR-0012), `POST` without `IsActiveEntity: true` creates a draft and skips `@mandatory`; address active data explicitly with `IsActiveEntity=true` in payloads and keys.
 - On `draftActivate`, the `ASSERT_MANDATORY`/`ASSERT_RANGE` targets are prefixed `in/<field>` (for example `in/name`), while `ASSERT_TARGET` on a new draft is the plain field path (for example `category_code`); match `target` by a suffix regex (`/category_code$/`) and assert `code` exactly instead.
 - `DraftMessages` is `[]` on a clean draft `PATCH`; a violated `@assert.*` rule appears there with HTTP 200 and only turns into a 400 on `draftActivate`.

@@ -5,6 +5,7 @@
  *   3. `npm test` passes (skipped with a note while test/ does not exist).
  * Gate state (hash of the porcelain status at the last successful gate) lives in
  * .claude/.gate-state.json so an unchanged tree passes instantly.
+ *   4. no protected file was changed outside the sanctioned route (ADR-0016 backstop, whatever wrote it).
  * Bypass: PIPELINE_SKIP_GATE=1. Loop guard: stop_hook_active.
  */
 import path from 'node:path';
@@ -17,7 +18,9 @@ import {
   lastLines,
   exists,
   truncate,
+  changedFiles,
 } from '../lib/hook-utils.mjs';
+import { protectedHit, reasonFor } from '../lib/protected-paths.mjs';
 
 const CODE_PATHS = ['db', 'srv', 'app', 'test', '_i18n'];
 const TEST_TIMEOUT = 10 * 60 * 1000;
@@ -44,6 +47,27 @@ try {
   }
 
   const root = repoRoot();
+
+  // ADR-0016 backstop: a protected file may have been written through Bash, which neither
+  // protect-files.mjs nor post-edit.mjs can see. git shows the result whoever wrote it.
+  const protectedChanged = changedFiles(root)
+    .filter((c) => !c.status.startsWith('D'))
+    .map((c) => ({ p: c.path, hit: protectedHit(c.path) }))
+    .filter((x) => x.hit);
+  if (protectedChanged.length) {
+    // A branch name is not a boundary (any agent can create `chore/x`); only the user-held
+    // environment variable counts as sanction (ADR-0016).
+    if (process.env.PIPELINE_ALLOW_PROTECTED !== '1') {
+      block(
+        'Protected files are changed in the working tree and this is not the sanctioned route ' +
+          '(rule pipeline-config.md, ADR-0016):\n' +
+          protectedChanged.map((x) => `  ${x.p} (${reasonFor(x.hit)})`).join('\n') +
+          '\nRevert them (`git checkout -- <path>`), or, if the user asked for the change, re-run the ' +
+          'session with PIPELINE_ALLOW_PROTECTED=1 (only the user can set it).'
+      );
+    }
+  }
+
   const stateFile = path.join(root, '.claude', '.gate-state.json');
   const codeStatus = porcelain(root, CODE_PATHS);
   const hash = sha256(codeStatus);

@@ -25,6 +25,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PATH=\"/opt/homebrew/opt/node@22/bin:/opt/homebrew/bin:$PATH\" node scripts/hooks/protect-files-bash.mjs",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -96,6 +106,10 @@
     ]
   },
   "permissions": {
-    "deny": ["Read(./.env)", "Read(./.env.*)", "Read(./default-env.json)"]
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./default-env.json)"
+    ]
   }
 }

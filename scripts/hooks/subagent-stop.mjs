@@ -3,6 +3,8 @@
  * Warnings pass. Exit 2 blocks with a summary on stderr.
  * MCP audit (ADR-0014): if the agent edited files that expect an MCP query and made no attempt,
  * it is blocked once and asked for a "## MCP not used" section in its report; the reason is logged for /retro.
+ * Write route (ADR-0016): changed files with no `edit` audit record were written outside Edit/Write,
+ * so post-edit.mjs never saw them; their per-file-type checks run here and a protected path blocks.
  */
 import path from 'node:path';
 import fs from 'node:fs';
@@ -18,6 +20,8 @@ import {
   emitJson,
 } from '../lib/hook-utils.mjs';
 import { agentKey, readAudit, appendAudit, mcpGaps } from '../lib/mcp-audit.mjs';
+import { protectedHit, reasonFor } from '../lib/protected-paths.mjs';
+import { runFileChecks } from '../lib/file-checks.mjs';
 
 const TIMEOUT = 150_000;
 
@@ -93,7 +97,9 @@ try {
     .filter((p) => exists(path.resolve(root, p)) && fs.statSync(path.resolve(root, p)).isFile());
 
   const cdsAndSrv = changed.filter(
-    (p) => p.endsWith('.cds') || isUnder(p, ['srv/**/*.js', 'test/**/*.js'])
+    (p) =>
+      p.endsWith('.cds') ||
+      isUnder(p, ['srv/**/*.js', 'test/**/*.js', 'scripts/**/*.mjs', 'scripts/**/*.js'])
   );
   const ui5 = changed.filter((p) =>
     isUnder(p, ['app/**/webapp/**/*.{js,xml,html}', 'app/**/webapp/manifest.json'])
@@ -109,10 +115,48 @@ try {
     process.exit(2);
   }
 
+  // ADR-0016: a file written through Bash (redirection, heredoc, a script) has no `edit` record,
+  // so it skipped protect-files.mjs and post-edit.mjs. git shows it anyway; check it here.
+  const auditRecords = readAudit(root, input.session_id);
+  const recorded = new Set(
+    auditRecords.filter((e) => e.event === 'edit' && e.file).map((e) => e.file)
+  );
+  const unrecorded = changed.filter((p) => !recorded.has(p));
+  const advisories = [];
+
+  const protectedWrites = unrecorded.map((p) => ({ p, hit: protectedHit(p) })).filter((x) => x.hit);
+  if (protectedWrites.length) {
+    // Only the environment variable counts as sanction: a branch name is not a boundary,
+    // any agent can create `chore/x` (ADR-0016).
+    const allowedRoute = process.env.PIPELINE_ALLOW_PROTECTED === '1';
+    const list = protectedWrites.map((x) => `  ${x.p} (${reasonFor(x.hit)})`).join('\n');
+    if (!allowedRoute) {
+      process.stderr.write(
+        'Protected files were changed outside Edit/Write, so the PreToolUse guard never saw them ' +
+          '(rule pipeline-config.md, ADR-0016):\n' +
+          list +
+          '\nRevert them (`git checkout -- <path>`) and ask the user. A deliberate change needs a session ' +
+          'started with PIPELINE_ALLOW_PROTECTED=1, which only the user can set. Then finish again.\n'
+      );
+      process.exit(2);
+    }
+    advisories.push(`Protected files changed with PIPELINE_ALLOW_PROTECTED=1:\n${list}`);
+  }
+
+  const CHECK_LIMIT = 12;
+  for (const p of unrecorded.slice(0, CHECK_LIMIT)) {
+    advisories.push(...runFileChecks(root, p).map((n) => `${p}: ${n}`));
+  }
+  if (unrecorded.length > CHECK_LIMIT) {
+    advisories.push(
+      `${unrecorded.length - CHECK_LIMIT} further files written outside Edit/Write were not checked here (limit ${CHECK_LIMIT}); run the checks by hand if they matter.`
+    );
+  }
+
   // MCP audit (ADR-0014): edits without a prior MCP query need a written reason in the report.
   const agent = agentKey(input);
   const agentType = input.agent_type || 'main';
-  const gaps = mcpGaps(readAudit(root, input.session_id), agent);
+  const gaps = mcpGaps(auditRecords, agent);
   if (gaps.length) {
     const report = input.last_assistant_message || '';
     const marker = /#{1,4}\s*MCP not used\b/i;
@@ -133,9 +177,9 @@ try {
         agentType,
         files,
       });
-      emitJson({
-        systemMessage: `MCP audit: ${agentType} finished without an MCP query and without a "## MCP not used" section for ${files.join(', ')}. Recorded for /retro.`,
-      });
+      advisories.push(
+        `MCP audit: ${agentType} finished without an MCP query and without a "## MCP not used" section for ${files.join(', ')}. Recorded for /retro.`
+      );
     } else {
       const list = gaps.map((g) => `  ${g.file} (${g.label}) → ${g.needs.join(' or ')}`).join('\n');
       process.stderr.write(
@@ -146,6 +190,7 @@ try {
       process.exit(2);
     }
   }
+  if (advisories.length) emitJson({ systemMessage: advisories.join('\n\n') });
 } catch (e) {
   process.stderr.write(`subagent-stop hook: internal error (${e.message}), check skipped.\n`);
 }

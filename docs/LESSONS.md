@@ -4,7 +4,10 @@ This file is an inbox, not an archive. A lesson lives here only until `/retro` t
 
 ## Pending
 
-Nothing pending. The last entry, the Bash write blind spot of 2026-09-09, was decided by the user on 2026-09-10 and transferred to ADR-0016, `scripts/lib/file-checks.mjs`, `scripts/lib/protected-paths.mjs`, `scripts/hooks/protect-files-bash.mjs`, the extended `subagent-stop.mjs` / `stop-gate.mjs` gates, rule `pipeline-config.md` and `test/hooks-protect-bash.test.js`.
+- 2026-09-11 (`test-backend`, `catalog-authorization` step 7). The EDMX that cds compiles and serves is pretty-printed, so an `$edmJson` expression never appears as one string: `UI.CreateHidden` renders as `<Annotation Term="UI.CreateHidden">`, newline, `<Not>`, newline, `<Path>...</Path>`. A contract assertion copied from a plan as the single-line `<Not><Path>...</Path></Not>` matches nothing. Assert on the metadata with the whitespace between tags removed (`data.replace(/>\s+</g, '><')`) and keep the term and its expression in one comparison, otherwise the test only proves that the three terms exist somewhere. Candidate for `docs/architecture/TESTING.md` "cds 10 specifics" and rule `tests-backend.md`.
+- 2026-09-11 (`test-backend`). `@requires` on a service makes every `cds.test`-based file need `defaults.auth`, including the contract test, because `$metadata` is protected too; a test file that only spawns a script (`test/hooks-protect-bash.test.js`) must not set it. Anonymous is `{ auth: null }`, and the resulting error carries the **numeric** `status`/`code` 401, while a denied role carries the **string** `code` `'403'`. Already in the plan and in ADR-0013; listed here so `/retro` can move it into `TESTING.md` rule 5 and `templates/service.test.js` (step 15 of the plan does exactly that).
+
+The previous entry, the Bash write blind spot of 2026-09-09, was decided by the user on 2026-09-10 and transferred to ADR-0016, the shared hook libraries under `scripts/lib/`, the new PreToolUse Bash guard, the extended SubagentStop and Stop gates, rule `pipeline-config.md` and `test/hooks-protect-bash.test.js`.
 
 ## Pending upstream
 

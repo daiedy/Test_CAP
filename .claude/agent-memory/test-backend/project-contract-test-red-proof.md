@@ -1,6 +1,6 @@
 ---
 name: contract-test-red-proof
-description: How to prove a new $metadata/EDMX assertion was red before the feature without reverting the working tree, and how to avoid a tautological substring assertion
+description: How to prove a new $metadata/EDMX assertion was red before the feature without reverting the working tree, how to avoid a tautological substring assertion, and how to write a contract test for annotations that a later phase adds
 metadata:
   type: project
 ---
@@ -21,6 +21,19 @@ snapshot-only guard accepts a blind `npx vitest -u`. The copy gives a genuine re
 count diff, and the count diff catches tautologies: on 2026-09-09 `Term="Common.SemanticKey"` went
 0 -> 1 (a real guard) while `<PropertyPath>name</PropertyPath>` was already present once via
 `UI.SelectionFields`, so that second assertion alone would have passed before the feature.
+
+The same copy technique works forward as well as backward: when a plan asks phase 2 for a contract
+test on annotations that phase 3 will add, write the assertion, mark it `it.skip` with a comment
+naming the plan step that removes `.skip`, and prove both directions before handing over: 0
+occurrences in the current EDMX, and a green un-skipped run in a scratchpad copy of the **working
+tree** (tar the repo without `node_modules`/`.git`) that carries the future annotation. Keeps the
+phase gate green without inventing the feature. Done 2026-09-11 for the `UI.*Hidden` half of
+`catalog-authorization`.
+
+Assert on EDMX with the whitespace between tags removed (`data.replace(/>\s+</g, '><')`): the
+compiler pretty-prints, so an `$edmJson` expression copied from a plan as
+`<Not><Path>...</Path></Not>` matches nothing, and comparing the term and its expression in one
+normalized string is what keeps the test from only proving that the term exists somewhere.
 
 **How to apply:** whenever a plan asks for a contract test that "must fail on main". Count the
 asserted substring in the pre-feature EDMX; if the count is not 0, say so in the report instead of

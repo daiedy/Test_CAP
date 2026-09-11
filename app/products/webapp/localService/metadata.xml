@@ -38,6 +38,7 @@
           <NavigationPropertyBinding Path="texts" Target="Categories_texts"/>
           <NavigationPropertyBinding Path="localized" Target="Categories_texts"/>
         </EntitySet>
+        <Singleton Name="Permissions" Type="CatalogService.Permissions"/>
         <EntitySet Name="Currencies" EntityType="CatalogService.Currencies">
           <NavigationPropertyBinding Path="texts" Target="Currencies_texts"/>
           <NavigationPropertyBinding Path="localized" Target="Currencies_texts"/>
@@ -88,6 +89,13 @@
         <NavigationProperty Name="localized" Type="CatalogService.Categories_texts">
           <ReferentialConstraint Property="code" ReferencedProperty="code"/>
         </NavigationProperty>
+      </EntityType>
+      <EntityType Name="Permissions">
+        <Key>
+          <PropertyRef Name="ID"/>
+        </Key>
+        <Property Name="ID" Type="Edm.String" Nullable="false"/>
+        <Property Name="isEditor" Type="Edm.Boolean"/>
       </EntityType>
       <EntityType Name="Currencies">
         <Key>
@@ -485,6 +493,18 @@
           <Annotation Term="UI.TextArrangement" EnumMember="UI.TextArrangementType/TextOnly"/>
         </Annotation>
         <Annotation Term="Common.Label" String="Category"/>
+      </Annotations>
+      <Annotations Target="CatalogService.EntityContainer/Permissions">
+        <Annotation Term="Capabilities.DeleteRestrictions">
+          <Record Type="Capabilities.DeleteRestrictionsType">
+            <PropertyValue Property="Deletable" Bool="false"/>
+          </Record>
+        </Annotation>
+        <Annotation Term="Capabilities.UpdateRestrictions">
+          <Record Type="Capabilities.UpdateRestrictionsType">
+            <PropertyValue Property="Updatable" Bool="false"/>
+          </Record>
+        </Annotation>
       </Annotations>
       <Annotations Target="CatalogService.Currencies">
         <Annotation Term="UI.Identification">

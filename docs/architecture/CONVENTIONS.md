@@ -39,7 +39,9 @@ scripts/                          pipeline scripts (ESM, Node 22)
 docs/                             documentation, see ARCHITECTURE.md
 ```
 
-Annotation split rule: everything that describes the meaning of data and validation (labels, mandatory, assert, readonly, restrict) lives in `srv/annotations/`. Everything that describes presentation (LineItem, Facets, FieldGroups, HeaderInfo, SelectionFields, ValueList, Text) lives in `app/<app>/annotations/`. Service files and `db/schema.cds` contain no UI annotations.
+Annotation split rule: everything that describes the meaning of data and validation (labels, mandatory, assert, readonly) lives in `srv/annotations/`. `@requires` and `@restrict` are service annotations and live inline in `srv/<name>-service.cds` next to the projection they govern (ADR-0013), not in `srv/annotations/`. Everything that describes presentation (LineItem, Facets, FieldGroups, HeaderInfo, SelectionFields, ValueList, Text) lives in `app/<app>/annotations/`. Service files and `db/schema.cds` contain no UI annotations.
+
+A read-only permission singleton (e.g. `CatalogService.Permissions`, ADR-0013) is service API and lives in `srv/<name>-service.cds` next to the projections it signals for; the `UI.*Hidden` annotations that consume it live in `app/<app>/annotations/<Entity>.cds`, the same split as any other presentation annotation.
 
 ## 3. CDS
 

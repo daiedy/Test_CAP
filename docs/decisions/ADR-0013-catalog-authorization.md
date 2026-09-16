@@ -74,6 +74,14 @@ Facts established for the decision (`docs/features/catalog-authorization/CONTEXT
 - Registry: `SERVICES.md` shows `Authorization: @requires "authenticated-user"`, the `@restrict` in the "Restrictions" column and the `Permissions` singleton; `HANDLERS.md` shows one handler.
 - Deployment ADR (future): `cds add xsuaa --for production` regenerates `xs-security.json` with `CatalogViewer`/`CatalogEditor`; role collections in `mta.yaml`; `@sap/xssec` and the `[production]` profile.
 - Follow-ups enabled: instance-based rules, an `Admin` role if code lists get a maintenance screen, a second OPA5 run as `viewer` if the hidden state ever regresses, and reuse of the `Permissions` singleton for any further role-driven visibility (it is a place, not a one-off).
+- [x] `srv/catalog-service.cds` (`@requires`, `@restrict`, `Permissions` singleton), `srv/catalog-service.js` (first handler), `package.json` (`cds.requires.auth.users`)
+- [x] `app/products/annotations/Products.cds` (three `UI.*Hidden`), `app/products/webapp/localService/mockdata/Permissions.json`, `app/products/ui5-test-runner.json`
+- [x] Contract: `app/products/webapp/localService/metadata.xml`, `test/__snapshots__/metadata.test.js.snap` regenerated (+50 EDMX lines, 0 removed against `main`)
+- [x] Tests: `test/metadata.test.js` (38 backend total: 26 + 6 + 6), `test/catalog-service.test.js` `describe('CatalogService authorization')`, `app/products/webapp/test/integration/RoleAwareActionsJourney.js` (25 opaTests total)
+- [x] `docs/architecture/PATTERNS.md` ("Authorization" extended, new row "Role-aware UI visibility"), `CONVENTIONS.md` section 2, `TESTING.md` rule 5, `ARCHITECTURE.md` ("Roles" table, `Permissions` paragraph), `README.md`, `templates/service.test.js`
+- [x] `docs/registry/SERVICES.md`, `HANDLERS.md` regenerated
+- [ ] Deployment ADR (`cds add xsuaa --for production`, `xs-security.json`, `mta.yaml` role collections): not started, tracked in `docs/STATE.md` open debt
+- [ ] Second OPA5 run as `viewer`: not built, only if the hidden state ever regresses (user decision 2026-09-10)
 
 ## Sources
 

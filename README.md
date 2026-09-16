@@ -27,6 +27,8 @@ Open http://localhost:4004/products/webapp/test/flpSandbox.html#products-display
 
 Mock mode uses `@sap-ux/ui5-middleware-fe-mockserver` with `webapp/localService/metadata.xml` and `webapp/localService/mockdata/*.json`. After a model change update the snapshot: `cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/localService/metadata.xml`.
 
+`CatalogService` requires an authenticated user (ADR-0013): through CAP or the UI5 proxy, the browser prompts with its Basic dialog on the first OData request - log in as `alice` or `bob` for full access, `viewer` for read-only, with any password; mock mode has no backend and no roles, so it needs no login and always shows the full action set.
+
 ## Commands
 
 Root:

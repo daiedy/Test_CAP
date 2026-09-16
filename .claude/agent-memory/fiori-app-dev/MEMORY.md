@@ -1,1 +1,2 @@
 - [STATE.md session line is a hook artifact](project-state-md-precompact-artifact.md) — a lone `## Sessions` bullet appearing in docs/STATE.md mid-run is written by the PreCompact hook, not by you
+- [docs/registry/.stale blocks SubagentStop](project-stale-marker-blocks-subagent-stop.md) — the marker is hook-written, cannot be reverted by you, and the exits belong to the orchestrator or the user

@@ -51,3 +51,11 @@ annotate CatalogService.Products with {
     Common.ValueListWithFixedValues : true
   );
 };
+
+// Role-aware standard actions (ADR-0013): hidden for anyone who is not a CatalogEditor.
+// The flag comes from the CatalogService.Permissions singleton, filled in srv/catalog-service.js.
+annotate CatalogService.Products with @(
+  UI.CreateHidden: { $edmJson: { $Not: { $Path: '/CatalogService.EntityContainer/Permissions/isEditor' } } },
+  UI.UpdateHidden: { $edmJson: { $Not: { $Path: '/CatalogService.EntityContainer/Permissions/isEditor' } } },
+  UI.DeleteHidden: { $edmJson: { $Not: { $Path: '/CatalogService.EntityContainer/Permissions/isEditor' } } }
+);

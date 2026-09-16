@@ -1,0 +1,3 @@
+{
+  "browserArgs": ["--basic-auth-username", "alice"]
+}

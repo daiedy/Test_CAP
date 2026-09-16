@@ -57,7 +57,7 @@ describe('OData contract of CatalogService', () => {
   // Skipped on purpose until step 9 of docs/features/catalog-authorization/PLAN.md: the three
   // UI.*Hidden annotations are added by fiori-app-dev in phase 3 (app/products/annotations/Products.cds).
   // The assertion is complete; step 9 only removes the `.skip` and regenerates metadata.xml plus the snapshot.
-  it.skip('hides the editing actions of Products from anyone who is not a CatalogEditor', async () => {
+  it('hides the editing actions of Products from anyone who is not a CatalogEditor', async () => {
     const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
       headers: { 'Accept-Language': 'en' },
     });

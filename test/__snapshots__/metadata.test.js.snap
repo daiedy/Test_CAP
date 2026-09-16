@@ -312,6 +312,21 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
             </PropertyValue>
           </Record>
         </Annotation>
+        <Annotation Term="UI.CreateHidden">
+          <Not>
+            <Path>/CatalogService.EntityContainer/Permissions/isEditor</Path>
+          </Not>
+        </Annotation>
+        <Annotation Term="UI.UpdateHidden">
+          <Not>
+            <Path>/CatalogService.EntityContainer/Permissions/isEditor</Path>
+          </Not>
+        </Annotation>
+        <Annotation Term="UI.DeleteHidden">
+          <Not>
+            <Path>/CatalogService.EntityContainer/Permissions/isEditor</Path>
+          </Not>
+        </Annotation>
       </Annotations>
       <Annotations Target="CatalogService.EntityContainer/Products">
         <Annotation Term="Common.DraftRoot">
@@ -334,6 +349,21 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
               </Collection>
             </PropertyValue>
           </Record>
+        </Annotation>
+        <Annotation Term="UI.CreateHidden">
+          <Not>
+            <Path>/CatalogService.EntityContainer/Permissions/isEditor</Path>
+          </Not>
+        </Annotation>
+        <Annotation Term="UI.UpdateHidden">
+          <Not>
+            <Path>/CatalogService.EntityContainer/Permissions/isEditor</Path>
+          </Not>
+        </Annotation>
+        <Annotation Term="UI.DeleteHidden">
+          <Not>
+            <Path>/CatalogService.EntityContainer/Permissions/isEditor</Path>
+          </Not>
         </Annotation>
       </Annotations>
       <Annotations Target="CatalogService.Products/ID">

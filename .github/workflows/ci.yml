@@ -85,11 +85,13 @@ jobs:
       - name: Start CAP server
         run: |
           npx cds serve --in-memory --port 4004 > cds.log 2>&1 &
+          # Since ADR-0013 the service answers 401 to an anonymous caller, so the readiness probe
+          # authenticates as the mocked editor alice (empty password); -f treats 401 as a failure.
           for i in $(seq 1 30); do
-            curl -sf 'http://localhost:4004/odata/v4/catalog/$metadata' > /dev/null && break
+            curl -sf -u alice: 'http://localhost:4004/odata/v4/catalog/$metadata' > /dev/null && break
             sleep 1
           done
-          curl -sf 'http://localhost:4004/odata/v4/catalog/$metadata' > /dev/null || { cat cds.log; exit 1; }
+          curl -sf -u alice: 'http://localhost:4004/odata/v4/catalog/$metadata' > /dev/null || { cat cds.log; exit 1; }
       - name: Run OPA5 journeys with ui5-test-runner
         working-directory: app/products
         run: npm run test:ui -- --report-dir ../../ui-test-report

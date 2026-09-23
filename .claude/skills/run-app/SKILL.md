@@ -7,7 +7,7 @@ allowed-tools: Bash, Read
 
 Mode: `$ARGUMENTS` (default `full`).
 
-- **full**: from the root `npm run watch` in the background; wait for `curl -sf 'http://localhost:4004/odata/v4/catalog/$metadata'`; UI address `http://localhost:4004/products/webapp/test/flpSandbox.html#products-display`.
+- **full**: from the root `npm run watch` in the background; wait for `curl -sf -u alice: 'http://localhost:4004/odata/v4/catalog/$metadata'` (anonymous callers get 401 since ADR-0013); UI address `http://localhost:4004/products/webapp/test/flpSandbox.html#products-display`.
 - **proxy**: the same plus `npm start` in `app/products` in the background; address `http://localhost:8080/test/flpSandbox.html#products-display`.
 - **mock**: only `npm run start-mock` in `app/products`; the address is the same, data from `webapp/localService`.
 

@@ -23,7 +23,7 @@ Working rule: fill this file incrementally, one scenario row as soon as it compl
 ```
 
 ## Browser console
-Errors: N. Warnings: N. List of significant messages.
+Baseline: the console section of the latest `VERIFICATION.md` on `main` (known sandbox 404s, ushell deprecation, FE i18n asserts). New errors: N. New warnings: N. List every new message with the action that triggers it and how often it fires; name the known noise once instead of re-listing it. A visibility mechanism (`UI.*Hidden`) is checked on the List Report and the Object Page separately.
 
 ## Verdict
 Ready for review | rework required (list).

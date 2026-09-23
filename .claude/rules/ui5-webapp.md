@@ -4,6 +4,7 @@ paths:
   - "app/**/webapp/**/*.xml"
   - "app/**/webapp/manifest.json"
   - "app/**/webapp/**/*.html"
+  - "app/**/webapp/localService/**"
 ---
 # UI5 application code (app/<app>/webapp/)
 
@@ -21,6 +22,7 @@ paths:
 - Bootstrap parameters in html in dashed notation (`data-sap-ui-compat-version`), `data-sap-ui-async="true"`.
 - `Component.js`: inherits from `sap/fe/core/AppComponent`; it contains a deliberate keyboard handler for the shell button, do not remove it without a request from the user.
 - FLP sandbox: tiles and intents live in `webapp/appconfig/fioriSandboxConfig.json` (merged last by `sandbox.js`, overrides the SAP demo tiles from the CDN); `test/flpSandboxConfig.js` carries only renderer and plugin settings. Arrays in the sandbox config replace, they do not merge.
+- `localService/mockdata/*.json` is a JSON array for every entity set and also for a singleton (`[{ ... }]`): `@sap-ux/fe-mockserver-core` iterates the file with `forEach`. The object form answers a bare `curl GET` correctly and throws `tenantJsonData.forEach is not a function` on the `$batch` path Fiori elements uses, so verify mock data through the app (`npm run start-mock`, List Report and Object Page) or with a `$batch` request, never with a bare GET (measured 2026-09-16; PostToolUse check `checkMockdata`).
 - `ui5lint --fix` rewrites code (for example `sap.ui.getCore().byId` to `Element.getElementById`): review the diff before committing; for new code use the modern API directly.
 - Known debt: the FLP sandbox uses the legacy bootstrap (`Container.createRenderer`, deprecated). Migration to the New Sandbox is a separate task via the `modernize-flp-sandbox` skill. Keep `id="sap-ushell-bootstrap"` on the bootstrap script tag and relative app URLs in the sandbox config, otherwise livereload breaks the sandbox on :8080 (LESSONS).
 

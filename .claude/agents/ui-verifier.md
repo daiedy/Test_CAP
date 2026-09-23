@@ -14,7 +14,7 @@ You are the UI verifier of the Test_CAP project. You do not fix code, you record
 
 ## Workflow
 
-1. Make sure the server is running: `curl -s -o /dev/null -w '%{http_code}' 'http://localhost:4004/odata/v4/catalog/$metadata'`. If not, start `npm run watch` from the root in the background and wait for 200.
+1. Make sure the server is running: `curl -s -o /dev/null -w '%{http_code}' 'http://localhost:4004/odata/v4/catalog/$metadata'`. If not, start `npx cds serve --in-memory --port 4004` from the root in the background and wait for 200 (`cds watch` is for development, rule `tests-ui.md`).
 2. Open `http://localhost:4004/products/webapp/test/flpSandbox.html#Shell-home` via Chrome DevTools MCP: the home page must show only the project tiles (no SAP demo tiles), then click the tile or open `#products-display`. When the feature touches the UI start scripts, repeat the entry through `npm start` on :8080.
 3. Walk through every scenario from the "Acceptance criteria" section of PLAN.md: list, filters, navigation to the Object Page, create and edit, actions. After every step take a screenshot into `docs/features/<name>/screenshots/<step>.png`.
 4. Collect console messages (errors and warnings) and failed network requests (status ≥ 400). Filters of FE V4 go through `POST $batch`: to see the sent `$filter`, read the body of the batch request with `get_network_request`, there is no separate GET.
@@ -27,5 +27,6 @@ You are the UI verifier of the Test_CAP project. You do not fix code, you record
 - Stop the processes you started yourself.
 - After typing into or clearing a field, blur it and confirm that the `PATCH` landed in `$batch` before pressing Save or Create; a click right after `fill("")` or Ctrl+A/Backspace can be processed before UI5 fires `change`, and the old value is saved.
 - If Chrome DevTools MCP is unavailable, check the HTTP endpoints via curl, note in VERIFICATION.md that the visual check was not performed, and do not claim that the UI works.
+- A visibility or availability mechanism (`UI.*Hidden`, `Capabilities`, a bound `enabled`) is checked on every page that consumes it, List Report toolbar and Object Page header separately: an unresolved binding defaults differently per page (2026-09-16: from one `$Not` expression, Create and Delete stayed visible while Edit vanished).
 
 Report in the form from the protocol, section 8.

@@ -99,6 +99,8 @@ const CYRILLIC_EXCLUDE = [
   'scripts/build-plan-page.py',
   'test/**',
   'app/**/webapp/test/**',
+  // quoted rendered UI is the evidence of a verification scenario (CONVENTIONS, Languages)
+  'docs/features/*/VERIFICATION.md',
   'app/**/webapp/i18n/**',
   '_i18n/**',
   'docs/registry/**',
@@ -116,6 +118,22 @@ function checkCyrillic(root, r) {
   if (!hits.length) return null;
   const shown = hits.slice(0, 10).join(', ');
   return `Language rule: ${r} contains Cyrillic on line(s) ${shown}${hits.length > 10 ? ` and ${hits.length - 10} more` : ''}. Code, comments and docs must be English (CONVENTIONS, Languages); only i18n bundles, .texts.csv and asserted test values may hold Russian.`;
+}
+
+// sap-fe-mockserver (@sap-ux/fe-mockserver-core) iterates every mockdata file with forEach, so a
+// singleton fixture is a one-element array too. The object form answers a bare GET correctly and
+// throws "tenantJsonData.forEach is not a function" on FE's $batch path (measured 2026-09-16,
+// catalog-authorization scenario 6: Create and Delete stayed, Edit vanished).
+function checkMockdata(root, r) {
+  if (!isUnder(r, ['app/**/webapp/localService/mockdata/*.json'])) return null;
+  let data;
+  try {
+    data = JSON.parse(fs.readFileSync(path.resolve(root, r), 'utf8'));
+  } catch (e) {
+    return `${r}: not valid JSON (${e.message}).`;
+  }
+  if (Array.isArray(data)) return null;
+  return `${r}: mock data must be a JSON array, also for a singleton (\`[{ ... }]\`): sap-fe-mockserver calls forEach on the file, and an object form throws on the $batch path Fiori elements uses while a bare GET still looks fine (rule ui5-webapp.md).`;
 }
 
 // Lessons turned into checks (docs/LESSONS.md triage, 2026-09-07).
@@ -255,6 +273,7 @@ export function runFileChecks(root, r, { markRegistryStale = true } = {}) {
     checkSandboxConfig,
     checkUi5Yaml,
     checkTemplateNamespace,
+    checkMockdata,
   ]) {
     const n = check(root, r);
     if (n) notes.push(n);

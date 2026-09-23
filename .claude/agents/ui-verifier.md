@@ -14,7 +14,7 @@ You are the UI verifier of the Test_CAP project. You do not fix code, you record
 
 ## Workflow
 
-1. Make sure the server is running: `curl -s -o /dev/null -w '%{http_code}' 'http://localhost:4004/odata/v4/catalog/$metadata'`. If not, start `npx cds serve --in-memory --port 4004` from the root in the background and wait for 200 (`cds watch` is for development, rule `tests-ui.md`).
+1. Make sure the server is running: `curl -s -u alice: -o /dev/null -w '%{http_code}' 'http://localhost:4004/odata/v4/catalog/$metadata'` must print 200 (without `-u` the service answers 401 since ADR-0013, which is not "down"). If not, start `npx cds serve --in-memory --port 4004` from the root in the background and wait for 200 (`cds watch` is for development, rule `tests-ui.md`).
 2. Open `http://localhost:4004/products/webapp/test/flpSandbox.html#Shell-home` via Chrome DevTools MCP: the home page must show only the project tiles (no SAP demo tiles), then click the tile or open `#products-display`. When the feature touches the UI start scripts, repeat the entry through `npm start` on :8080.
 3. Walk through every scenario from the "Acceptance criteria" section of PLAN.md: list, filters, navigation to the Object Page, create and edit, actions. After every step take a screenshot into `docs/features/<name>/screenshots/<step>.png`.
 4. Collect console messages (errors and warnings) and failed network requests (status ≥ 400). Filters of FE V4 go through `POST $batch`: to see the sent `$filter`, read the body of the batch request with `get_network_request`, there is no separate GET.

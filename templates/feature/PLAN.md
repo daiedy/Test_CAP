@@ -16,7 +16,7 @@ Date: YYYY-MM-DD. Status: draft | approved | done. Gate mode: semi-autonomous | 
 | 3 | Backend: logic | `cap-backend-dev` | `srv/catalog-service.js` | Action on a single record | `npm test` |
 | 4 | UI | `fiori-app-dev` | `app/products/annotations/<Entity>.cds`, `webapp/i18n/*` | Table columns | `ui5lint`, metadata snapshot |
 | 5 | UI tests | `test-ui` | `webapp/test/...` | User scenario | `ui5-test-runner` |
-| 6 | Verification | `ui-verifier` | `VERIFICATION.md` | | screenshots, console without errors |
+| 6 | Verification | `ui-verifier` | `VERIFICATION.md` | | screenshots; console: no message that is new against the console section of the latest `VERIFICATION.md` on `main` (name the known noise, do not forbid substrings: a criterion like "no error mentioning `Products`" trips on pre-existing framework asserts) |
 | 7 | Review | `reviewer` | | | zero blocking findings |
 | 8 | Documentation | `docs-keeper` | `docs/registry`, `STATE.md`, `CHANGELOG.md`, `SUMMARY.md` | | `check-docs-fresh` |
 

@@ -66,6 +66,8 @@ fiori-tools.json
 # Claude Code (personal)
 .claude/settings.local.json
 .claude/.gate-state.json
+# Pipeline marker written by the PostToolUse hook, removed by the registry generator (ADR-0017)
+docs/registry/.stale
 CLAUDE.local.md
 .claude/agent-memory/**/scratch/
 

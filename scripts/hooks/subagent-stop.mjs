@@ -5,6 +5,7 @@
  * it is blocked once and asked for a "## MCP not used" section in its report; the reason is logged for /retro.
  * Write route (ADR-0016): changed files with no `edit` audit record were written outside Edit/Write,
  * so post-edit.mjs never saw them; their per-file-type checks run here and a protected path blocks.
+ * Generated files (docs/registry/**) are not audited as protected writes; their gate is freshness (ADR-0017).
  */
 import path from 'node:path';
 import fs from 'node:fs';
@@ -20,7 +21,7 @@ import {
   emitJson,
 } from '../lib/hook-utils.mjs';
 import { agentKey, readAudit, appendAudit, mcpGaps } from '../lib/mcp-audit.mjs';
-import { protectedHit, reasonFor } from '../lib/protected-paths.mjs';
+import { protectedWriteHit, reasonFor } from '../lib/protected-paths.mjs';
 import { runFileChecks } from '../lib/file-checks.mjs';
 
 const TIMEOUT = 150_000;
@@ -124,7 +125,9 @@ try {
   const unrecorded = changed.filter((p) => !recorded.has(p));
   const advisories = [];
 
-  const protectedWrites = unrecorded.map((p) => ({ p, hit: protectedHit(p) })).filter((x) => x.hit);
+  const protectedWrites = unrecorded
+    .map((p) => ({ p, hit: protectedWriteHit(root, p) }))
+    .filter((x) => x.hit);
   if (protectedWrites.length) {
     // Only the environment variable counts as sanction: a branch name is not a boundary,
     // any agent can create `chore/x` (ADR-0016).
@@ -135,8 +138,9 @@ try {
         'Protected files were changed outside Edit/Write, so the PreToolUse guard never saw them ' +
           '(rule pipeline-config.md, ADR-0016):\n' +
           list +
-          '\nRevert them (`git checkout -- <path>`) and ask the user. A deliberate change needs a session ' +
-          'started with PIPELINE_ALLOW_PROTECTED=1, which only the user can set. Then finish again.\n'
+          '\nDo not revert them yourself: the Bash guard denies `git checkout` to a subagent. Stop, list them ' +
+          'in your report under "## Open questions", and let the orchestrator and the user decide. A deliberate ' +
+          'change needs a session started with PIPELINE_ALLOW_PROTECTED=1, which only the user can set.\n'
       );
       process.exit(2);
     }

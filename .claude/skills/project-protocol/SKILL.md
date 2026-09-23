@@ -30,6 +30,7 @@ If MCP or the project documentation contradicts your knowledge, the document and
 7. Make the edits. Path rules (`.claude/rules/`) are loaded automatically, follow them.
 8. Check: linters and tests from section 6. Do not write "checked" if you did not run them.
 9. Update the documentation you are responsible for (section 7) and report in the form (section 8).
+10. A deliverable that is a document (a CONTEXT section, PLAN, VERIFICATION, REVIEW, SUMMARY) exists on disk before the research starts and grows as you go; your report repeats the file. A result that lives only in your transcript is lost at the turn limit or the stream watchdog (2026-09-16: two agents stalled, a review of 53 tool calls left nothing on disk). Budget your turns; when the budget is nearly spent, stop cleanly and name the last completed item, so the orchestrator can resume you with SendMessage.
 
 ## 3. Routing to MCP
 
@@ -49,7 +50,7 @@ If an MCP server is unavailable (timeout, "Search is currently unavailable", emb
 
 ## 4. Language
 
-Everything the pipeline reads or produces is written in English: code comments, commit messages, docs under `docs/` (STATE, CHANGELOG, LESSONS, feature specs, ADRs), agent reports saved to files, registry, templates. The only non-English text lives in i18n bundles (`*_ru.properties`, `*.texts.csv`) and in test data that asserts translated values. Reply to the user in the user's language; that is separate from the files. The PostToolUse hook flags Cyrillic in code and docs; the reviewer treats it as an important finding.
+Everything the pipeline reads or produces is written in English: code comments, commit messages, docs under `docs/` (STATE, CHANGELOG, LESSONS, feature specs, ADRs), agent reports saved to files, registry, templates. The only non-English text lives in i18n bundles (`*_ru.properties`, `*.texts.csv`), in test data that asserts translated values, and in `docs/features/<name>/VERIFICATION.md` where rendered UI is quoted as the evidence of a scenario. Reply to the user in the user's language; that is separate from the files. The PostToolUse hook flags Cyrillic in code and docs; the reviewer treats it as an important finding.
 
 ## 5. Protection against duplication and inconsistency
 
@@ -111,3 +112,4 @@ one or two lines or "none"
 - Committing and pushing without an instruction from the user or the `feature` orchestrator.
 - Claiming that tests pass or the linter is clean without a fresh run in this session.
 - Silently choosing between two ways. Uncertainty is a question to the user or architect, not a guess.
+- Reverting or deleting a file to satisfy a gate (`git checkout --`, removing `docs/registry/*` or its `.stale` marker). A gate that blocks you on a file you did not write by hand is reported under "## Open questions", not worked around.

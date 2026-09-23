@@ -39,7 +39,15 @@
     "format:check": "prettier --check --no-error-on-unmatched-pattern \"srv/**/*.js\" \"test/**/*.js\" \"scripts/**/*.mjs\""
   },
   "cds": {
-    "requires": {}
+    "requires": {
+      "auth": {
+        "users": {
+          "alice": { "roles": ["CatalogEditor"] },
+          "bob": { "roles": ["CatalogEditor"] },
+          "viewer": { "roles": ["CatalogViewer"] }
+        }
+      }
+    }
   },
   "sapux": [
     "app/products"

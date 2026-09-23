@@ -55,8 +55,17 @@ describe('CatalogService.Products', () => {
 
 describe('authorization', () => {
   it('denies anonymous access', async () => {
-    await expect(
-      GET(`${base}/Products`, { auth: { username: 'nobody', password: '' } })
-    ).to.be.rejectedWith(/40[13]/);
+    // { auth: null } overrides defaults.auth and sends no Authorization header (ADR-0013);
+    // the error carries a numeric status/code 401.
+    const err = await expect(GET(`${base}/Products`, { auth: null })).to.be.rejectedWith(/401/);
+    expect(err.status).to.equal(401);
+  });
+
+  it('denies a user without the required role', async () => {
+    // A denied role carries a string code '403', unlike the numeric 401 above (ADR-0013).
+    const err = await expect(
+      GET(`${base}/Products`, { auth: { username: 'carol' } })
+    ).to.be.rejectedWith(/403/);
+    expect(err).to.containSubset({ code: '403' });
   });
 });

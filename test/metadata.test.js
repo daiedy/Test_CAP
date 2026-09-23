@@ -4,6 +4,8 @@ import cds from '@sap/cds';
 import { readFileSync } from 'node:fs';
 
 const test = cds.test(import.meta.dirname + '/..');
+// @requires on CatalogService also protects $metadata, so even the contract test needs a user (ADR-0013).
+test.defaults.auth = { username: 'alice' };
 
 describe('OData contract of CatalogService', () => {
   it('matches the EDMX snapshot', async () => {
@@ -41,5 +43,30 @@ describe('OData contract of CatalogService', () => {
     expect(status).toBe(200);
     expect(data).toContain('Term="Common.SemanticKey"');
     expect(data).toContain('<PropertyPath>name</PropertyPath>');
+  });
+
+  it('exposes the Permissions singleton', async () => {
+    // ADR-0013: the UI reads its edit permission from a read-only singleton, not from a row.
+    const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
+      headers: { 'Accept-Language': 'en' },
+    });
+    expect(status).toBe(200);
+    expect(data).toContain('<Singleton Name="Permissions"');
+  });
+
+  // ADR-0013: the three UI.*Hidden annotations (app/products/annotations/Products.cds) hide the
+  // editing actions from a CatalogViewer via the Permissions singleton read through $edmJson.
+  it('hides the editing actions of Products from anyone who is not a CatalogEditor', async () => {
+    const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
+      headers: { 'Accept-Language': 'en' },
+    });
+    expect(status).toBe(200);
+    // The EDMX is pretty-printed, so compare without the whitespace between the tags.
+    const compact = data.replace(/>\s+</g, '><');
+    for (const term of ['UI.CreateHidden', 'UI.UpdateHidden', 'UI.DeleteHidden']) {
+      expect(compact).toContain(
+        `<Annotation Term="${term}"><Not><Path>/CatalogService.EntityContainer/Permissions/isEditor</Path></Not></Annotation>`
+      );
+    }
   });
 });

@@ -11,6 +11,7 @@ sap.ui.define(
     './EditCategoryOnObjectPageJourney',
     './RussianLocaleJourney',
     './DraftMarkerInListReportJourney',
+    './RoleAwareActionsJourney',
   ],
   function (
     runner,
@@ -18,18 +19,22 @@ sap.ui.define(
     CategoryShownAsName,
     EditCategoryOnObjectPage,
     RussianLocale,
-    DraftMarkerInListReport
+    DraftMarkerInListReport,
+    RoleAwareActions
   ) {
     'use strict';
 
-    // DraftMarkerInListReportJourney runs last: it is the only journey that creates a draft, so a
-    // leftover draft can never change the row count the earlier journeys assert.
+    // DraftMarkerInListReportJourney runs after the journeys that assert the row count: it is the
+    // only journey that creates a draft, so a leftover draft can never change that count.
+    // RoleAwareActionsJourney runs last (PLAN step 11): it only reads and selects, so it depends on
+    // no other journey and changes nothing for them.
     runner.run([
       FilterProductsByCategory,
       CategoryShownAsName,
       EditCategoryOnObjectPage,
       RussianLocale,
       DraftMarkerInListReport,
+      RoleAwareActions,
     ]);
   }
 );

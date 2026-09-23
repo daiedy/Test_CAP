@@ -3,4 +3,6 @@
 - [First pipeline feature status](pipeline-first-feature.md) — categories-code-list done 2026-09-07; plan structure to reuse; doc inconsistencies still open
 - [cds 10 draft behavior](cds10-draft-behavior.md) — POST without IsActiveEntity creates a draft; tests need IsActiveEntity:true; basis of ADR-0012 (proposed)
 - [FE V4 semantic key and the row draft marker](fe-v4-semantic-key-marker.md) — why no marker without `@Common.SemanticKey`, `isDraft` OPA matcher, measured EDMX delta; ADR-0015 (proposed)
-- [cds 10 mocked auth and @restrict on drafts](cap-mocked-auth-behavior.md) — anonymous 401 only on demand, users merge, Viewer 403 on draft actions, metadata test needs auth; ADR-0013 (proposed)
+- [cds 10 mocked auth and @restrict on drafts](cap-mocked-auth-behavior.md) — anonymous 401 only on demand, users merge, Viewer 403 on draft actions, metadata test needs auth; ADR-0013 accepted 2026-09-10
+- [Role-aware UI needs a singleton](role-aware-ui-singleton.md) — why a per-row element cannot hide Create; measured +50 EDMX lines; ADR-0013 part 8
+- [Test suite shape and auth](test-suite-shape.md) — re-derive test counts per plan; the hook test uses no cds.test, so no defaults.auth

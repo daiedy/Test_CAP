@@ -27,6 +27,11 @@ const active = (payload) => ({ IsActiveEntity: true, ...payload });
 const activeKey = (id) => `${base}/Products(ID=${id},IsActiveEntity=true)`;
 const draftKey = (id) => `${base}/Products(ID=${id},IsActiveEntity=false)`;
 
+// Authorization (ADR-0013): alice and bob are CatalogEditors, viewer is a CatalogViewer,
+// carol is a default mock user without any catalog role.
+const as = (username) => ({ auth: { username } });
+const anonymous = { auth: null }; // overrides defaults.auth, sends no Authorization header
+
 describe('CatalogService.Products', () => {
   it('lists the 15 seeded products', async () => {
     const { data } = await GET(`${base}/Products?$count=true&$top=1`);
@@ -272,5 +277,112 @@ describe('CatalogService.Categories', () => {
     await expect(POST(`${base}/Categories`, { code: 'OTHER', name: 'Other' })).to.be.rejectedWith(
       /405/
     );
+  });
+});
+
+// Authorization (ADR-0013): @requires on the service and @restrict on Products.
+// Anonymous requests are rejected with 401 (numeric `code`), a denied role with 403 (string `code`).
+describe('CatalogService authorization', () => {
+  it('rejects anonymous requests with 401', async () => {
+    const products = await expect(GET(`${base}/Products?$top=1`, anonymous)).to.be.rejectedWith(
+      /401/
+    );
+    expect(products.status).to.equal(401);
+
+    const metadata = await expect(GET(`${base}/$metadata`, anonymous)).to.be.rejectedWith(/401/);
+    expect(metadata.status).to.equal(401);
+  });
+
+  it('lets a CatalogViewer read products, categories, currencies and the metadata', async () => {
+    const products = await GET(`${base}/Products?$top=1&$select=name`, as('viewer'));
+    expect(products.status).to.equal(200);
+    expect(products.data.value).to.have.length(1);
+
+    const categories = await GET(`${base}/Categories?$top=1&$select=code`, as('viewer'));
+    expect(categories.status).to.equal(200);
+
+    const currencies = await GET(`${base}/Currencies?$top=1&$select=code`, as('viewer'));
+    expect(currencies.status).to.equal(200);
+
+    const metadata = await GET(`${base}/$metadata`, as('viewer'));
+    expect(metadata.status).to.equal(200);
+  });
+
+  it('forbids a CatalogViewer to create products, active or as a draft', async () => {
+    const asActive = await expect(
+      POST(`${base}/Products`, active(newProduct), as('viewer'))
+    ).to.be.rejectedWith(/403/);
+    expect(asActive).to.containSubset({ code: '403' });
+
+    // A POST without IsActiveEntity would create a draft; the grant covers that path too.
+    const asDraft = await expect(
+      POST(`${base}/Products`, newProduct, as('viewer'))
+    ).to.be.rejectedWith(/403/);
+    expect(asDraft).to.containSubset({ code: '403' });
+
+    // Nothing was written: neither an active record nor a draft exists afterwards.
+    const { data: actives } = await GET(
+      `${base}/Products?$filter=name eq 'Test Lamp'&$select=name`
+    );
+    expect(actives.value).to.have.length(0);
+    const { data: drafts } = await GET(
+      `${base}/Products?$filter=name eq 'Test Lamp' and IsActiveEntity eq false&$select=name`
+    );
+    expect(drafts.value).to.have.length(0);
+  });
+
+  it('forbids a CatalogViewer to edit, delete or start a draft on a product', async () => {
+    const { data } = await GET(`${base}/Products?$filter=name eq 'Yoga Mat'&$select=ID,stock`);
+    const seeded = data.value[0];
+
+    const patch = await expect(
+      PATCH(activeKey(seeded.ID), { stock: 3 }, as('viewer'))
+    ).to.be.rejectedWith(/403/);
+    expect(patch).to.containSubset({ code: '403' });
+
+    const remove = await expect(DELETE(activeKey(seeded.ID), as('viewer'))).to.be.rejectedWith(
+      /403/
+    );
+    expect(remove).to.containSubset({ code: '403' });
+
+    const edit = await expect(
+      POST(
+        `${activeKey(seeded.ID)}/CatalogService.draftEdit`,
+        { PreserveChanges: true },
+        as('viewer')
+      )
+    ).to.be.rejectedWith(/403/);
+    expect(edit).to.containSubset({ code: '403' });
+
+    // The seeded product is untouched and carries no draft.
+    const after = await GET(`${activeKey(seeded.ID)}?$select=stock,HasDraftEntity`);
+    expect(after.data).to.containSubset({ stock: seeded.stock, HasDraftEntity: false });
+  });
+
+  it('forbids an authenticated user without a catalog role to read products', async () => {
+    // carol is a default mock user (role `admin`), unknown to this model.
+    const err = await expect(GET(`${base}/Products?$top=1`, as('carol'))).to.be.rejectedWith(/403/);
+    expect(err).to.containSubset({ code: '403' });
+
+    // Code lists stay readable for every authenticated user.
+    const categories = await GET(`${base}/Categories?$top=1&$select=code`, as('carol'));
+    expect(categories.status).to.equal(200);
+  });
+
+  it("reports the caller's edit permission on the Permissions singleton", async () => {
+    for (const username of ['alice', 'bob']) {
+      const { data } = await GET(`${base}/Permissions`, as(username));
+      expect(data).to.containSubset({ isEditor: true });
+    }
+    for (const username of ['viewer', 'carol']) {
+      const { data } = await GET(`${base}/Permissions`, as(username));
+      expect(data).to.containSubset({ isEditor: false });
+    }
+    const err = await expect(GET(`${base}/Permissions`, anonymous)).to.be.rejectedWith(/401/);
+    expect(err.status).to.equal(401);
+  });
+
+  it('does not allow writing the Permissions singleton', async () => {
+    await expect(PATCH(`${base}/Permissions`, { isEditor: false })).to.be.rejectedWith(/405/);
   });
 });

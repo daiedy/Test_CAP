@@ -36,7 +36,20 @@ One entity `Products : cuid, managed` with the fields name, description, price, 
 | UI without backend | `npm run start-mock` in `app/products` | http://localhost:8080/test/flpSandbox.html | `sap-fe-mockserver` serves `localService/metadata.xml` and `mockdata/*.json` |
 | Backend tests | `npm test` in the root | | `cds.test` starts the server in-process on a random port |
 
-Authentication in development: `mocked` (users from `package.json`, by default `alice`, `bob`). Productive authentication is not configured.
+Authentication in development: `mocked` (users from `package.json`). `CatalogService` requires an authenticated user (ADR-0013): the browser raises its own Basic dialog (realm "Users") at the first OData request; there is no in-app login screen. Log in as `alice` or `bob` for full access, `viewer` for read-only, with any password (the mocked users have none configured). Productive authentication is not configured.
+
+### Roles
+
+`CatalogService` defines two roles (ADR-0013), both required by `@requires: 'authenticated-user'` on the service; an anonymous request gets 401 with the Basic challenge, including on `$metadata`.
+
+| Role | May do on `Products` | Mock users | Future XSUAA scope |
+|---|---|---|---|
+| `CatalogViewer` | `READ` only | `viewer` | `$XSAPPNAME.CatalogViewer` |
+| `CatalogEditor` | `*` (CRUD and the draft actions `draftEdit`, `draftPrepare`, `draftActivate`, discard) | `alice`, `bob` | `$XSAPPNAME.CatalogEditor` |
+
+Code lists (`Categories`, `Currencies`) and `$metadata` are readable by any authenticated user, regardless of role. An authenticated user with neither role (e.g. the default mock user `carol`) gets 403 on `Products` but can still read the code lists. `xs-security.json` is not generated yet; `cds add xsuaa --for production` will derive the scope and role-template names above from these CDS role names.
+
+The Fiori UI reflects the caller's role: `CatalogService.Permissions` is a read-only singleton (`isEditor: Boolean`) served by the project's first handler, `srv/catalog-service.js`, from `req.user.is('CatalogEditor')`. `app/products/annotations/Products.cds` reads it through `UI.CreateHidden`/`UI.UpdateHidden`/`UI.DeleteHidden` (`$edmJson`, ADR-0013 part 8), so a `CatalogViewer` never sees Create, Delete or Edit - enforcement itself stays fully declarative in `@restrict`, the singleton only drives what the UI shows.
 
 ## Extension points
 

@@ -66,7 +66,7 @@ Plugins are not installed automatically: `enabledPlugins` in `.claude/settings.j
    claude plugin install cap-developer@cap
    claude plugin install ui5@claude-plugins-official
    ```
-4. Restart the Claude Code session so `.mcp.json` and the plugins load; approve the four project servers when asked. `/mcp` must list `cds-mcp`, `fiori-mcp`, `chrome-devtools` and `ui5-mcp-server`; the SessionStart hook prints the briefing, STATE and the environment check.
+4. Restart the Claude Code session so `.mcp.json` and the plugins load; approve the four project servers when asked. `/mcp` must list `cds-mcp`, `fiori-mcp`, `chrome-devtools` and `ui5-mcp-server`; the SessionStart hook shows the briefing in the terminal and hands the briefing, STATE and the environment check to Claude.
 5. In `/mcp` toggle off `plugin:ui5:ui5-mcp-server`, the unpinned server bundled with the `ui5` plugin, so that only the pinned `ui5-mcp-server` runs. Claude Code stores the toggle per machine and project in `~/.claude.json` (`disabledMcpServers`); it cannot be committed. Check: `pgrep -fl 'ui5/mcp-server'` shows one process, `@ui5/mcp-server@0.2.18`.
 6. Google Chrome for `chrome-devtools-mcp` (the `ui-verifier` agent).
 7. GitHub CLI for the backlog (ADR-0019): `brew install gh`, `gh auth login` with the `repo` scope; the briefing shows the cached queue or a one-line notice without it.

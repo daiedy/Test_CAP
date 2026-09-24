@@ -1,16 +1,33 @@
 /**
- * SessionStart hook: injects the briefing (ADR-0019: language, now, backlog queue from GitHub Issues,
- * recommendation), the project state and the toolchain check into context.
- * Plain stdout is added to Claude's context. Never fails.
+ * SessionStart hook: the briefing (ADR-0019: language, now, backlog queue from GitHub Issues,
+ * recommendation), the project state and the toolchain check.
+ * Output is JSON. Plain stdout of a SessionStart hook is never displayed: Claude Code only adds
+ * it to the model's context. So `systemMessage` shows the briefing (and the environment line when
+ * it warns) to the user in the terminal, and `hookSpecificOutput.additionalContext` carries the
+ * full text to Claude. Never fails.
  * Reading rule (ADR-0018): sections by heading, never a line count; a section over its budget is
  * cut with a visible marker that names how much is missing and where to read it.
  */
 import path from 'node:path';
 import fs from 'node:fs';
-import { readStdinJson, repoRoot, run, readSection, exists } from '../lib/hook-utils.mjs';
+import { readStdinJson, repoRoot, run, readSection, exists, emitJson } from '../lib/hook-utils.mjs';
 import { pruneAudit } from '../lib/mcp-audit.mjs';
 import { stateShapeErrors, capped, STATE_PRINT_BUDGET } from '../lib/doc-shapes.mjs';
 import { collectBriefing, renderBriefing } from '../lib/backlog.mjs';
+
+/** `cds --version` colors its output even when piped; the codes break the version regex. */
+const stripAnsi = (s) => s.replace(/\x1b\[[0-9;]*m/g, '');
+
+/** Emit the hook result: `systemMessage` for the user, `additionalContext` for Claude. */
+function emit(userLines, contextLines) {
+  emitJson({
+    systemMessage: userLines.filter(Boolean).join('\n'),
+    hookSpecificOutput: {
+      hookEventName: 'SessionStart',
+      additionalContext: contextLines.join('\n') + '\n',
+    },
+  });
+}
 
 try {
   const input = readStdinJson();
@@ -20,11 +37,13 @@ try {
 
   out.push(`# Test_CAP project context (SessionStart, source=${input.source || 'unknown'})`);
   // ADR-0019: the briefing comes first, in PIPELINE_LANG; the queue comes from GitHub Issues with a cache.
+  let briefing;
   try {
-    out.push('', renderBriefing(collectBriefing(root)));
+    briefing = renderBriefing(collectBriefing(root));
   } catch (e) {
-    out.push('', `## Briefing\nunavailable (${e.message}); run node scripts/backlog.mjs briefing.`);
+    briefing = `## Briefing\nunavailable (${e.message}); run node scripts/backlog.mjs briefing.`;
   }
+  out.push('', briefing);
 
   const state = path.join(root, 'docs', 'STATE.md');
   if (exists(state)) {
@@ -76,7 +95,7 @@ try {
   }
   const nodeMajor = Number(process.versions.node.split('.')[0]);
   const cds = run('cds', ['--version'], { timeoutMs: 8_000 });
-  const cdsMatch = cds.stdout.match(/@sap\/cds-dk[^\d]*(\d+)\.(\d+)\.(\d+)/);
+  const cdsMatch = stripAnsi(cds.stdout).match(/@sap\/cds-dk[^\d]*(\d+)\.(\d+)\.(\d+)/);
   const cdsVersion = cdsMatch ? `${cdsMatch[1]}.${cdsMatch[2]}.${cdsMatch[3]}` : null;
   const warn = [];
   if (nodeMajor !== expectedNode)
@@ -84,20 +103,20 @@ try {
   if (!cdsVersion) warn.push('global `cds` not found: npm i -g @sap/cds-dk@10');
   else if (Number(cdsMatch[1]) !== expectedCds)
     warn.push(`@sap/cds-dk ${cdsVersion}, expected ${expectedCds}.x`);
-  out.push(
-    '',
-    '## Environment',
+  const environment =
     `Node ${process.versions.node}, @sap/cds-dk ${cdsVersion || 'not found'}.` +
-      (warn.length ? ` WARNING: ${warn.join('; ')}.` : ' Matches STACK.md.')
-  );
+    (warn.length ? ` WARNING: ${warn.join('; ')}.` : ' Matches STACK.md.');
+  out.push('', '## Environment', environment);
 
   out.push(
     '',
     'Protocol: MCP-first (routing in the project-protocol skill, section 3), backlog in GitHub Issues (/backlog, ADR-0019), specification in docs/features/<name>/ before code, registry docs/registry/ before new functions. Rules in CLAUDE.md and .claude/rules/.'
   );
 
-  process.stdout.write(out.join('\n') + '\n');
+  // The user sees the briefing without its markdown heading, and the environment line only when it warns.
+  emit([briefing.replace(/^## /, ''), warn.length ? environment : ''], out);
 } catch (e) {
-  process.stdout.write(`SessionStart hook: failed to collect context (${e.message}).\n`);
+  const message = `SessionStart hook: failed to collect context (${e.message}).`;
+  emit([message], [message]);
 }
 process.exit(0);

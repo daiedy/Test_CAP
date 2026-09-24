@@ -1,0 +1,36 @@
+name: Feature (backlog)
+description: A planned feature of the Product Catalog, the same shape /backlog creates from chat (ADR-0019)
+title: "<kebab-name>: <short title>"
+labels: ["feature", "prio:P2"]
+body:
+  - type: markdown
+    attributes:
+      value: "Fields are English (CLAUDE.md invariant 10); keep the original wording in the Original field. Priority: change the prio label after creation."
+  - type: textarea
+    id: request
+    attributes:
+      label: Request
+      description: What is needed, in your words
+    validations:
+      required: true
+  - type: textarea
+    id: original
+    attributes:
+      label: Original
+      description: The request in its original language, if not English
+  - type: input
+    id: blocked-by
+    attributes:
+      label: Blocked by
+      description: Issue numbers this feature waits for, e.g. "#3, #4", or "none"
+      value: none
+  - type: textarea
+    id: hints
+    attributes:
+      label: Scope hints for architect
+      description: What exists, what changes, which pattern; optional
+  - type: textarea
+    id: questions
+    attributes:
+      label: Questions for the plan gate
+      description: One per line; the answers become "User decisions" in CONTEXT.md

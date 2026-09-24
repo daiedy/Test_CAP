@@ -36,3 +36,7 @@ Folded into `docs/LESSONS.md` (see there for the full text): the two pending ent
 - The OPA5 suite authenticates as one user (`alice`) per run, so the hidden state for a `CatalogViewer` has no automated regression guard beyond the backend tests and `ui-verifier`'s blocking criterion. A second runner config (`ui5-test-runner-viewer.json`, `test:ui:viewer` script) is deferred until the hidden state actually regresses (user decision 2026-09-10).
 - Deployment: `cds add xsuaa --for production` will generate the `CatalogViewer`/`CatalogEditor` role templates and scopes from these CDS role names; not started, separate ADR (`docs/STATE.md`).
 - Feature branch not yet merged into `main`.
+
+## Full record
+
+Pruned to this file (ADR-0019). CONTEXT.md, PLAN.md, REVIEW.md, VERIFICATION.md, screenshots of this feature stay in git history at https://github.com/daiedy/Test_CAP/tree/94a991df29046b88f8f2a0d7e6a178deb08e76ac/docs/features/catalog-authorization (commit `94a991d`).

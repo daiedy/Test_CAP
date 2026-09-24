@@ -76,3 +76,6 @@ For every recurring task there is exactly one approved way here. An agent that m
 | metadata.xml snapshot update | `cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/localService/metadata.xml` after any model change | | |
 | Dependency update | Only via `upstream-check` and Renovate, MCP versions are pinned | | ADR-0009 |
 | Deployment | Not configured; `mta.yaml` is a draft. Any deployment work starts with an ADR | | |
+| Record a wish, order the queue | `/backlog <description>` creates a GitHub issue (`feature`, `prio:P1..P3`, a "Blocked by" section); `/spec #N` and `/feature #N` take it from there; a planned item never gets a folder or a file | `.github/ISSUE_TEMPLATE/feature.yml`, `scripts/backlog.mjs` | ADR-0019 |
+| Finish a feature | Phase 7 of `/feature`: `backlog.mjs close N --summary SUMMARY.md`, then `prune-feature.mjs <name>` keeps `SUMMARY.md` with a permalink to the full record | `docs/features/catalog-authorization/SUMMARY.md` | ADR-0019 |
+| Language of the chat and the briefing | `PIPELINE_LANG` in `.claude/settings.local.json` `env`; script texts in `scripts/i18n/pipeline.properties` and `pipeline_ru.properties` | | ADR-0019 |

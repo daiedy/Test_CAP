@@ -1,7 +1,7 @@
 ---
 name: feature
 description: Feature orchestrator from research to documentation with gates between phases. Use on requests "make a feature", "add an entity/screen/action", "implement ..." (Russian: «сделай фичу», «добавь сущность/экран/действие», «реализуй ...»). Delegates to the subagents architect, ux-designer, cap-backend-dev, fiori-app-dev or ui5-freestyle-dev, test-backend, test-ui, ui-verifier, reviewer, docs-keeper. Only the user starts it: if the user describes a code change without typing the command, propose `/feature <name>` (or `/spec` for a plan only) and wait.
-argument-hint: <feature description>
+argument-hint: <feature description> | #<issue number>
 disable-model-invocation: true
 ---
 
@@ -11,16 +11,16 @@ You are the orchestrator. You do not write code yourself, you delegate to subage
 
 ## Phase 0. Preparation
 
-1. Come up with a kebab-name for the feature from the description, confirm it with the user together with the gate mode:
+1. Argument `#N` (ADR-0019): the kebab-name is the issue title before the colon, the request is the issue body (`gh issue view N --json title,body`). A plain description: come up with a kebab-name. Confirm the name with the user together with the gate mode:
    - **semi-autonomous** (default): after each phase show the result and wait for "next";
    - **autonomous**: stop only at plan approval and on red checks;
    - **manual**: wait after each phase, do not run checks automatically.
 2. Check that the tree is clean: `git status --porcelain`. If there are foreign changes, ask whether to continue.
-3. Create the branch `feature/<name>` and the directory `docs/features/<name>/`.
+3. Create the branch `feature/<name>` and the directory `docs/features/<name>/`. For an issue: `node scripts/backlog.mjs status N in-progress`; the STATE `Feature` line reads `<name> (#N)`.
 
 ## Phase 1. Research and plan
 
-Delegate to `architect`: write CONTEXT.md (the implementers' brief), PLAN.md and, for experiments and framework facts, `research/*.md`. If the feature has a UI, after architect delegate to `ux-designer` for SCREENS.md. Gate: run `node scripts/check-feature-docs.mjs <name>` and hand a red result back to `architect`; then show the user the plan and the open questions; do not proceed without an explicit "approved" (in all modes). On approval, `architect` sets the ADR status by replacing the whole `Status:` sentence with the accepted form from `templates/adr.md`, never by appending to the proposed one.
+Delegate to `architect`: write CONTEXT.md (the implementers' brief), PLAN.md and, for experiments and framework facts, `research/*.md`; a PLAN.md left by `/spec` is reviewed, not rewritten. If the feature has a UI, after architect delegate to `ux-designer` for SCREENS.md. Gate: run `node scripts/check-feature-docs.mjs <name>` and hand a red result back to `architect`; then show the user the plan and the open questions; do not proceed without an explicit "approved" (in all modes). On approval, `architect` sets the ADR status by replacing the whole `Status:` sentence with the accepted form from `templates/adr.md`, never by appending to the proposed one.
 
 ## Phase 2. Backend
 
@@ -44,12 +44,12 @@ Delegate to `docs-keeper`: registry, CHANGELOG, STATE, SUMMARY, LESSONS, and a l
 
 ## Phase 7. Completion
 
-Show the user: the list of commits, what is closed from the acceptance criteria, what remains in the open debt. Push and pull request only on the user's instruction.
+For an issue: `node scripts/backlog.mjs close N --summary docs/features/<name>/SUMMARY.md` (posts the summary, drops the labels, closes), then `node scripts/prune-feature.mjs <name>` keeps only `SUMMARY.md` with a permalink to the full record (ADR-0019); commit `docs: <name> close #N and prune`; STATE `Feature: none`. Show the user: the list of commits, what is closed from the acceptance criteria, what remains in the open debt. Push and pull request only on the user's instruction.
 
 ## Orchestrator rules
 
 - After every phase gate, update the `Feature`, `Phase`, `Last commit` and `Next` lines of the `## Now` section of `docs/STATE.md` before starting the next phase; never add a paragraph there (ADR-0018). The Stop hook requires STATE to reflect changed code and to keep the template shape, and the orchestrator is the one who knows the phase state.
-- All artifacts of the feature (CONTEXT, PLAN, SUMMARY, VERIFICATION, ADRs, commit messages, code comments) are written in English; the conversation with the user is in the user's language.
+- All artifacts of the feature (CONTEXT, PLAN, SUMMARY, VERIFICATION, ADRs, commit messages, code comments) are written in English; the conversation with the user is in `PIPELINE_LANG` (printed by the SessionStart briefing) or, unset, in the user's language.
 
 - Pass to every agent: the feature name, the path to the feature directory, the plan step numbers, the gate mode, the requirement of a report in the protocol format, and its reading list (ADR-0018):
 

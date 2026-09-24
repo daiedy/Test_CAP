@@ -6,6 +6,13 @@
 import path from 'node:path';
 import fs from 'node:fs';
 import { isUnder, run, truncate, findUp, exists } from './hook-utils.mjs';
+import {
+  stateShapeErrors,
+  statePrintedBytes,
+  planShapeErrors,
+  contextShapeErrors,
+  STATE_PRINT_BUDGET,
+} from './doc-shapes.mjs';
 
 const TIMEOUT = 60_000;
 const STALE_SCOPE = ['db/**', 'srv/**', 'app/**'];
@@ -243,6 +250,28 @@ function checkI18n(root, r) {
   return `i18n ${path.relative(root, dir)}: ${parts.join('; ')}`;
 }
 
+// ADR-0018: the documents every agent reads keep a shape, so narrative cannot accumulate in them.
+function checkDocShapes(root, r) {
+  const text = () => fs.readFileSync(path.resolve(root, r), 'utf8');
+  if (r === 'docs/STATE.md') {
+    const errors = stateShapeErrors(text());
+    const bytes = statePrintedBytes(text());
+    if (bytes > STATE_PRINT_BUDGET)
+      errors.push(
+        `Now plus Open debt is ${bytes} bytes, budget ${STATE_PRINT_BUDGET}: shorten, or move items to docs/CHANGELOG.md`
+      );
+    return errors.length
+      ? `docs/STATE.md must keep the shape of templates/STATE.md (ADR-0018); the Stop gate blocks until it does:\n  ${errors.join('\n  ')}`
+      : null;
+  }
+  const m = r.match(/^docs\/features\/[^/]+\/(PLAN|CONTEXT)\.md$/);
+  if (!m) return null;
+  const errors = m[1] === 'PLAN' ? planShapeErrors(text()) : contextShapeErrors(text());
+  return errors.length
+    ? `${r} must keep the shape of templates/feature/${m[1]}.md (ADR-0018); the phase 1 gate runs node scripts/check-feature-docs.mjs:\n  ${errors.join('\n  ')}`
+    : null;
+}
+
 /**
  * Runs every check that applies to one repo-relative file and returns the notes.
  * markRegistryStale=false is used by the late gates, where the marker is already set.
@@ -274,6 +303,7 @@ export function runFileChecks(root, r, { markRegistryStale = true } = {}) {
     checkUi5Yaml,
     checkTemplateNamespace,
     checkMockdata,
+    checkDocShapes,
   ]) {
     const n = check(root, r);
     if (n) notes.push(n);

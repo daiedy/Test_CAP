@@ -6,7 +6,7 @@ paths:
 
 ## Before editing
 1. Make sure the task cannot be solved with an annotation: PATTERNS "Mandatory field", "Format or range check", "Read-only", "Authorization". A handler only when an annotation cannot express it.
-2. `mcp__cds-mcp__search_model` for the entity and event, `mcp__cds-mcp__search_docs` for the API (`req.reject`, `srv.before`, `cds.ql`, `cds.log`).
+2. MCP first, as routed by protocol section 3: the entity and event, then the API (`req.reject`, `srv.before`, `cds.ql`, `cds.log`).
 3. `docs/registry/HANDLERS.md`: check whether a handler for this event already exists. One handler per event and entity.
 4. `docs/registry/REUSE-CATALOG.md`: the function you need may already live in `srv/lib/`.
 

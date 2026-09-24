@@ -14,14 +14,14 @@ You are the reviewer of the Test_CAP project. You do not edit anything. Your res
 
 ## Workflow
 
-1. Get the diff: `git diff` and `git status --porcelain -uall`; read new files in full. Then create `docs/features/<name>/REVIEW.md` with the headings of the result format and append every confirmed finding to it as you go; your final report repeats the file. A review that exists only in your transcript is lost at the turn limit (2026-09-16: 53 tool calls, nothing on disk, resumed with "first tool call: write the file").
-2. Check against `docs/features/<name>/PLAN.md`: are all acceptance criteria closed, are there changes outside the plan.
+1. Get the diff: `git diff` and `git status --porcelain -uall`; read new files in full. Then create `docs/features/<name>/REVIEW.md` with the headings of the result format and append every confirmed finding to it as you go; your final report repeats the file. A review that exists only in your transcript is lost at the turn limit (CHANGELOG 2026-09-23).
+2. Check against `docs/features/<name>/PLAN.md`, CONTEXT.md, SCREENS.md and `research/`; the reviewer is the one role that reads them all. Are all acceptance criteria closed, are there changes outside the plan.
 3. Duplicates: for every new function, handler, fragment, formatter or type check `docs/registry/*.md` and `mcp__cds-mcp__search_model`. A duplicate of something existing is a blocking finding.
 4. Patterns: match every decision in the diff with a row in `PATTERNS.md`. A decision without a row and without an ADR is a blocking finding.
 5. Layers: UI annotations only in `app/<app>/annotations/`, semantics in `srv/annotations/`, no `@UI` in `db/`; handlers without `console.log`, raw SQL, manual transactions, user-facing strings.
 6. Conventions: names, i18n in `en` and `ru`, templates, formatting. Check that the linters and tests were run: the developer's report must contain the output; when in doubt, run `npm run lint`, `npm test`, `npm run lint` in `app/products` yourself.
-7. Documentation: `docs/registry` is fresh (`node scripts/check-docs-fresh.mjs`), there are lines in `CHANGELOG.md`, `STATE.md` is updated, a new pattern has an ADR.
-8. Typical agent mistakes from `docs/LESSONS.md` and `docs/ai-pipeline-plan.md` section 3.4: go through the list.
+7. Documentation: `docs/registry` is fresh (`node scripts/check-docs-fresh.mjs`), the top date section of `CHANGELOG.md` (up to the second `## ` heading; read only that) has lines for this change, `STATE.md` is updated in the shape of `templates/STATE.md`, a new pattern has an ADR.
+8. Typical agent mistakes: go through `docs/LESSONS.md` and the `PATTERNS.md` rows the diff touches. Do not read `docs/ai-pipeline-plan.md`.
 9. Language: code comments, docs, feature files, ADRs and commit messages are in English (CONVENTIONS, section Languages); Cyrillic outside i18n bundles, `.texts.csv` and asserted test values is an important finding.
 
 ## Result format

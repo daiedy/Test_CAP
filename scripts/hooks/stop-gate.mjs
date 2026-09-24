@@ -8,6 +8,7 @@
  *   4. no protected file was changed outside the sanctioned route (ADR-0016 backstop, whatever wrote it);
  *      generated files (docs/registry/**) are covered by check 1 instead, so the generator's own
  *      output never trips check 4 (ADR-0017).
+ *   5. docs/STATE.md keeps the shape of templates/STATE.md whenever it changed (ADR-0018).
  * Bypass: PIPELINE_SKIP_GATE=1. Loop guard: stop_hook_active.
  */
 import path from 'node:path';
@@ -23,6 +24,7 @@ import {
   changedFiles,
 } from '../lib/hook-utils.mjs';
 import { protectedWriteHit, reasonFor } from '../lib/protected-paths.mjs';
+import { stateShapeErrors, statePrintedBytes, STATE_PRINT_BUDGET } from '../lib/doc-shapes.mjs';
 
 const CODE_PATHS = ['db', 'srv', 'app', 'test', '_i18n'];
 const TEST_TIMEOUT = 10 * 60 * 1000;
@@ -68,6 +70,24 @@ try {
           'session with PIPELINE_ALLOW_PROTECTED=1 (only the user can set it).'
       );
     }
+  }
+
+  // ADR-0018: docs/STATE.md is a dashboard; a narrative or an extra section cannot accumulate there.
+  const stateDoc = path.join(root, 'docs', 'STATE.md');
+  if (exists(stateDoc) && porcelain(root, ['docs/STATE.md']).trim()) {
+    const text = fs.readFileSync(stateDoc, 'utf8');
+    const errors = stateShapeErrors(text);
+    const bytes = statePrintedBytes(text);
+    if (bytes > STATE_PRINT_BUDGET)
+      errors.push(
+        `Now plus Open debt is ${bytes} bytes, budget ${STATE_PRINT_BUDGET}: shorten, or move items to docs/CHANGELOG.md`
+      );
+    if (errors.length)
+      block(
+        'docs/STATE.md does not keep the shape of templates/STATE.md (ADR-0018):\n' +
+          errors.map((e) => `  ${e}`).join('\n') +
+          '\nKeep only the template sections; narrative belongs in docs/CHANGELOG.md or the feature SUMMARY.md.'
+      );
   }
 
   const stateFile = path.join(root, '.claude', '.gate-state.json');

@@ -16,8 +16,8 @@ You are the documentation keeper of the Test_CAP project. You do not change code
 
 1. `npm run docs:registry`, then `node scripts/check-docs-fresh.mjs`: the registry must be up to date.
 2. `git diff --stat` and `git status --porcelain -uall`: what changed in this task.
-3. `docs/CHANGELOG.md`: add lines under today's date by area (db, srv, app, test, docs, pipeline, deps). Wording: what changed and why, without retelling the diff.
-4. `docs/STATE.md`: update "Where we are", "What works", "Open debt" (close items, add new ones). Do not delete the "Sessions" section.
+3. `docs/CHANGELOG.md`: read only the top date section (up to the second `## ` heading), then add lines under today's date by area (db, srv, app, test, docs, pipeline, deps). Wording: what changed and why, without retelling the diff. When a new year starts, move the previous year into `docs/changelog/<year>.md`.
+4. `docs/STATE.md` keeps the shape of `templates/STATE.md` (ADR-0018): replace the values of the `## Now` lines, edit rows of `## Open debt` (close items, add new ones) and items of `## What works`; never add a paragraph or a section, narrative goes to CHANGELOG and the feature SUMMARY.
 5. If the work was done on a feature: `docs/features/<name>/SUMMARY.md` from `templates/feature/SUMMARY.md`, tick the completed items in PLAN.md.
 6. If the agents' reports have a "For LESSONS" section with content: move it to `docs/LESSONS.md` at the top, with a date.
 7. If a new pattern with an ADR appeared: add a row to `docs/architecture/PATTERNS.md` and a link to the ADR. If dependency versions changed: update `docs/architecture/STACK.md`.

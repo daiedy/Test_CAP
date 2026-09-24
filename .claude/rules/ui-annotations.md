@@ -8,10 +8,9 @@ paths:
 `app/<app>/annotations.cds` contains only `using from './annotations/<Entity>';` lines. The files `app/<app>/annotations/<Entity>.cds` contain `@UI.*`, `@Common.ValueList`, `@Common.Text`, `@Common.TextArrangement`.
 
 ## Before editing
-1. `mcp__fiori-mcp__search_docs` for the needed term: `UI.LineItem`, `UI.Facets`, `UI.DataFieldForAction`, `Common.ValueList`, criticality.
-2. `mcp__cds-mcp__search_model` for the entity: exact names of elements and associations.
-3. `docs/registry/UI-ARTIFACTS.md`: which annotations are already set, so as not to create a second `LineItem` without a qualifier.
-4. Read the PATTERNS rows, section "UI Fiori Elements".
+1. MCP first, as routed by protocol section 3: the term (`UI.LineItem`, `UI.Facets`, `UI.DataFieldForAction`, `Common.ValueList`, criticality) and the exact element names of the entity.
+2. `docs/registry/UI-ARTIFACTS.md`: which annotations are already set, so as not to create a second `LineItem` without a qualifier.
+3. Read the PATTERNS rows, section "UI Fiori Elements".
 
 ## Rules
 - The annotation target is always `CatalogService.<Entity>`, never `my.catalog.*`.

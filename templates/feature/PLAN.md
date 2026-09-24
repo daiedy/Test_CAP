@@ -2,6 +2,10 @@
 
 Date: YYYY-MM-DD. Status: draft | approved | done. Gate mode: semi-autonomous | autonomous | manual.
 
+Shape (ADR-0018): one criterion per line under "Acceptance criteria", table rows only under "Steps"; explanations belong in `CONTEXT.md` or `research/`. `node scripts/check-feature-docs.mjs <name>` verifies the shape at the phase 1 gate.
+
+Contract rule: a step that changes the OData model (`db/*.cds`, `srv/**/*.cds`, `app/*/annotations/*.cds`) schedules `npx vitest -u` and `cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/localService/metadata.xml` in the same phase, never in a later one; the sync test in `test/metadata.test.js` turns red at that phase's gate otherwise (PATTERNS "OData contract").
+
 ## Acceptance criteria
 - [ ] Behavior 1, verified by test `test/<service>.test.js` "..."
 - [ ] Behavior 2, verified by OPA5 scenario "..."
@@ -16,14 +20,15 @@ Date: YYYY-MM-DD. Status: draft | approved | done. Gate mode: semi-autonomous | 
 | 3 | Backend: logic | `cap-backend-dev` | `srv/catalog-service.js` | Action on a single record | `npm test` |
 | 4 | UI | `fiori-app-dev` | `app/products/annotations/<Entity>.cds`, `webapp/i18n/*` | Table columns | `ui5lint`, metadata snapshot |
 | 5 | UI tests | `test-ui` | `webapp/test/...` | User scenario | `ui5-test-runner` |
-| 6 | Verification | `ui-verifier` | `VERIFICATION.md` | | screenshots; console: no message that is new against the console section of the latest `VERIFICATION.md` on `main` (name the known noise, do not forbid substrings: a criterion like "no error mentioning `Products`" trips on pre-existing framework asserts) |
+| 6 | Verification | `ui-verifier` | `VERIFICATION.md` | | screenshots; console: no message that is new against the console section of the latest `VERIFICATION.md` on `main` (name the known noise, do not forbid substrings) |
 | 7 | Review | `reviewer` | | | zero blocking findings |
 | 8 | Documentation | `docs-keeper` | `docs/registry`, `STATE.md`, `CHANGELOG.md`, `SUMMARY.md` | | `check-docs-fresh` |
-
-Contract rule: a step that changes the OData model (`db/*.cds`, `srv/**/*.cds`, `app/*/annotations/*.cds`) schedules `npx vitest -u` and `cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/localService/metadata.xml` in the same phase, never in a later one; the sync test in `test/metadata.test.js` turns red at that phase's gate otherwise (PATTERNS "OData contract", lesson of `products-draft-edit`).
 
 ## Decisions that require an ADR
 List or "none".
 
 ## Risks
 What can go wrong and how it will be detected.
+
+## Open questions
+What the user has to decide, or "none".

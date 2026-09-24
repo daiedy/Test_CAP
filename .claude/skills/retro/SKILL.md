@@ -22,18 +22,18 @@ Knowledge (documentation or MCP was insufficient), rules (a rule was missing or 
 |---|---|---|
 | Something a machine can check (a file shape, a command, a version) | `scripts/hooks/post-edit.mjs`, `test/`, a step in `test-all` | the check runs on every edit or commit |
 | How to do things in files of one type | `.claude/rules/<type>.md` or a row in `docs/architecture/PATTERNS.md` | loaded automatically when such a file is touched |
-| A step of one role's procedure | the agent prompt in `.claude/agents/<role>.md` | the role does it every time |
+| A step of one role's procedure | one imperative line in the agent prompt `.claude/agents/<role>.md`, without a date or a story (the story stays in CHANGELOG; a pointer `(CHANGELOG YYYY-MM-DD)` is allowed) | the role does it every time; `test/prompt-budget.test.js` rejects a dated story |
 | A decision between alternatives | ADR in `docs/decisions/` and a PATTERNS row | the choice is fixed |
 | Waiting for an upstream fix | stays in LESSONS with `Pending upstream` and the package/version to watch | `upstream-check` reports when it changes |
 | History only | `docs/CHANGELOG.md` or the feature SUMMARY | removed from LESSONS |
 
 ## 4. Apply the transfers
 
-Edit the destination. `.claude/**` and `scripts/hooks/**` are protected: apply with `PIPELINE_ALLOW_PROTECTED=1` only when the user asked for the retro, otherwise show the diff and wait. After a hook change run the smoke test (pipe a sample JSON into the hook) and `node --check`.
+Edit the destination. `.claude/**` and `scripts/hooks/**` are protected: apply with `PIPELINE_ALLOW_PROTECTED=1` only when the user asked for the retro, otherwise show the diff and wait. After a hook change run the smoke test (pipe a sample JSON into the hook) and `node --check`. A prompt, rule or skill that grew fails `test/prompt-budget.test.js`; when the growth is the decision, run `node scripts/prompt-budget.mjs --record` and put the new size into the CHANGELOG line (ADR-0018). Then review `.claude/agent-memory/<role>/`: every topic names the ADR or mechanism it depends on; delete a topic whose ADR is superseded, together with its index line.
 
 ## 5. Rewrite LESSONS
 
-Remove every transferred entry. For each remaining entry write one line: date, title, status `Pending <destination>` or `Pending upstream <package>`, and the reason it is not transferred yet. Keep the file under ~40 lines.
+Remove every transferred entry. For each remaining entry write one line: date, title, status `Pending <destination>` or `Pending upstream <package>`, and the reason it is not transferred yet. The file holds only such one-line entries; its shape is the limit, not a line count (ADR-0018).
 
 ## 6. Update STATE
 

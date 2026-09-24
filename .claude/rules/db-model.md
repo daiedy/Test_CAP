@@ -7,10 +7,9 @@ paths:
 Applies to `db/schema.cds`, `db/common.cds`, `db/<module>.cds`. For CSV data see `data.md`.
 
 ## Before editing
-1. `mcp__cds-mcp__search_model` for every affected entity and association: what already exists, who references it.
-2. `mcp__cds-mcp__search_docs` for the construct you are about to use (aspect, composition, localized, calculated element).
-3. Read `docs/registry/DOMAIN-MODEL.md`: do not duplicate entities and types, reuse existing ones.
-4. Make sure the task has a specification `docs/features/<name>/PLAN.md`.
+1. MCP first, as routed by protocol section 3: the affected entities and associations, then the construct you use (aspect, composition, localized, calculated element).
+2. Read `docs/registry/DOMAIN-MODEL.md`: do not duplicate entities and types, reuse existing ones.
+3. Make sure the task has a specification `docs/features/<name>/PLAN.md`.
 
 ## Rules
 - `CONVENTIONS.md` section 3 in full. Key points: `cuid, managed`, PascalCase plural for entities, camelCase elements, lengths on all strings, `Association to` in singular, `Composition of many` in plural.

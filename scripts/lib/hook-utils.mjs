@@ -193,9 +193,18 @@ export function findUp(startDir, marker, stopAt = repoRoot()) {
   }
 }
 
-export function readLines(file, count) {
+/**
+ * A Markdown section by its exact heading line, from the heading to the line before the next
+ * `## ` heading; '' when absent. Reading by structure, never by a line count (ADR-0018).
+ */
+export function readSection(file, heading) {
   try {
-    return fs.readFileSync(file, 'utf8').split('\n').slice(0, count).join('\n');
+    const lines = fs.readFileSync(file, 'utf8').split('\n');
+    const start = lines.findIndex((l) => l.trim() === heading);
+    if (start < 0) return '';
+    let end = lines.findIndex((l, i) => i > start && /^## /.test(l));
+    if (end < 0) end = lines.length;
+    return lines.slice(start, end).join('\n');
   } catch {
     return '';
   }

@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-09-25
-- Branch: main
+- Branch: chore/briefing-visible
 - Feature: none
 - Phase: none
-- Last commit: 5bf8b85 Merge branch 'chore/backlog-issues'
-- Next: restart the session (the `/backlog` skill and the briefing hook are snapshotted at start), then follow the "Recommended now" line of the briefing, today `/spec #5`; push when the user says so; `liveMode` and the deployment ADR stay in Open debt.
+- Last commit: d624955 docs(state): record the merge of chore/backlog-issues
+- Next: commit chore `briefing-visible` and merge it `--no-ff` when the user says so; restart the session (hooks are snapshotted at start) and check that the briefing appears in the terminal; then follow the "Recommended now" line of the briefing, today `/spec #5`; push when the user says so; `liveMode` and the deployment ADR stay in Open debt.
 
 ## Open debt
 

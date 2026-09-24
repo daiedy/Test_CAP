@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-09-25
-- Branch: chore/backlog-issues
+- Branch: main
 - Feature: none
 - Phase: none
-- Last commit: af708f2 docs(state): record the merge of chore/context-budget
-- Next: merge `chore/backlog-issues` into `main`, restart the session (the `/backlog` skill and the briefing hook are snapshotted at start), then follow the "Recommended now" line of the briefing (`node scripts/backlog.mjs briefing`); `liveMode` and the deployment ADR stay in Open debt.
+- Last commit: 5bf8b85 Merge branch 'chore/backlog-issues'
+- Next: restart the session (the `/backlog` skill and the briefing hook are snapshotted at start), then follow the "Recommended now" line of the briefing, today `/spec #5`; push when the user says so; `liveMode` and the deployment ADR stay in Open debt.
 
 ## Open debt
 

@@ -8,7 +8,7 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Branch: main
 - Feature: none
 - Phase: none
-- Last commit: 6233507 Merge branch 'chore/ci-auth-probe'
+- Last commit: 3eecc10 Merge branch 'chore/context-budget'
 - Next: restart the Claude Code session before the next `/feature` (hooks and prompts are snapshotted at start; ADR-0018 is merged), then `liveMode` for the List Report via Fiori MCP, then the deployment ADR.
 
 ## Open debt

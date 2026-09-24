@@ -49,3 +49,7 @@ None added by this feature. The STATE.md "Open debt" row this feature closed (mi
 - `docs/features/products-draft-marker/PLAN.md`
 - `docs/features/products-draft-marker/VERIFICATION.md`
 - `docs/decisions/ADR-0015-list-report-draft-marker.md`
+
+## Full record
+
+Pruned to this file (ADR-0019). CONTEXT.md, PLAN.md, VERIFICATION.md, screenshots of this feature stay in git history at https://github.com/daiedy/Test_CAP/tree/b3a06112e787498b987423b010db6b6416974461/docs/features/products-draft-marker (commit `b3a0611`).

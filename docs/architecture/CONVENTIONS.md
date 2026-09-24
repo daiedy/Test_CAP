@@ -9,6 +9,8 @@ The single source of rules about how files in this repository look. Path rules i
 | Identifiers in CDS, JS, XML, i18n keys | English |
 | Comments in code, commit messages | English |
 | Documentation in `docs/`, CLAUDE.md, rules, skills and agents | English |
+| GitHub issue bodies, comments posted by the pipeline | English (the original wording may sit in a collapsed `Original` block) |
+| Chat replies, session briefing, `/backlog` output | `PIPELINE_LANG` from `.claude/settings.local.json` `env` (texts in `scripts/i18n/pipeline*.properties`); unset: the user's language (ADR-0019) |
 | Texts for the user | only through i18n: `en` by default, `ru` translation |
 
 ## 2. Repository structure

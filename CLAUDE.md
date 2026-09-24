@@ -18,7 +18,8 @@ Product Catalog: SAP CAP (Node.js 22, `@sap/cds` 10, OData V4, SQLite in-memory 
 | How to test | `docs/architecture/TESTING.md` |
 | What already exists in the code (generated) | `docs/registry/*.md` |
 | Why it was decided this way | `docs/decisions/ADR-*.md` |
-| Feature specifications | `docs/features/<name>/` |
+| What is planned and in which order | GitHub Issues with the `feature` label, `/backlog` (ADR-0019) |
+| Feature specifications (while in work; `SUMMARY.md` with a permalink after) | `docs/features/<name>/` |
 | Lessons learned, typical mistakes | `docs/LESSONS.md` |
 | What changed | `docs/CHANGELOG.md` |
 | What is new in the upstream dependencies | `docs/upstream/UPDATES.md` |
@@ -30,7 +31,7 @@ Product Catalog: SAP CAP (Node.js 22, `@sap/cds` 10, OData V4, SQLite in-memory 
 
    The routing table (which server and tool for which file type, and the fallback when a server is down) lives once, in section 3 of the `project-protocol` skill, which every subagent preloads; the hook side is the `MCP_RULES` table in `scripts/lib/mcp-audit.mjs`. Version questions are not MCP: `cds version`, `npm view`, `docs/upstream/UPDATES.md`.
 
-2. **Specification before code.** A code change starts with `docs/features/<name>/PLAN.md` approved by the user. Orchestrator: `/feature`, plan only: `/spec`.
+2. **Specification before code.** A wish enters the backlog as a GitHub issue through `/backlog`, never as a folder (ADR-0019). A code change starts with `docs/features/<name>/PLAN.md` approved by the user. Orchestrator: `/feature`, plan only: `/spec`.
 3. **Registry before implementation.** Before a new function, handler, fragment, type: `docs/registry/` and `search_model`. A duplicate of something existing is a blocking review error.
 4. **One task, one way.** The way is taken from `PATTERNS.md`. No row means an ADR is needed, not a second way.
 5. **Annotation layers.** Semantics (`@title`, `@mandatory`, `@assert.*`, `@readonly`) in `srv/annotations/<Entity>.cds`; presentation (`@UI.*`, `@Common.ValueList`, `@Common.Text`) in `app/<app>/annotations/<Entity>.cds`; no annotations in `db/`.
@@ -38,7 +39,7 @@ Product Catalog: SAP CAP (Node.js 22, `@sap/cds` 10, OData V4, SQLite in-memory 
 7. **Texts through i18n.** `en` and `ru` in the same change. No user-facing strings in code.
 8. **Gates, not trust.** Hooks run linters after edits, and tests and the documentation check before finishing. "Tests pass" without fresh output is not accepted. The SubagentStop hook compares an agent's edits with the MCP audit log and asks once for a written `## MCP not used` reason when a query is missing (ADR-0014); `manifest.json` is editable only through Fiori MCP.
 9. **Documentation in the same change.** `npm run docs:registry`, a line in `docs/CHANGELOG.md`, an up-to-date `docs/STATE.md` in the shape of `templates/STATE.md` (ADR-0018: sections and budgets, never line counts).
-10. **English everywhere the AI reads.** Code comments, commit messages, `docs/`, feature specs, ADRs, agent reports and memories are English. Russian lives only in i18n `ru` bundles, `.texts.csv`, asserted test values and rendered UI quoted as evidence in `VERIFICATION.md`. Chat replies follow the user's language. The PostToolUse hook flags Cyrillic; `/test-all` scans for it.
+10. **English everywhere the AI reads.** Code comments, commit messages, `docs/`, feature specs, ADRs, agent reports and memories are English. Russian lives only in i18n `ru` bundles, `.texts.csv`, asserted test values and rendered UI quoted as evidence in `VERIFICATION.md`. Chat replies, the session briefing and the `/backlog` output follow `PIPELINE_LANG` (`env` in `.claude/settings.local.json`, printed by SessionStart; texts in `scripts/i18n/pipeline*.properties`), unset: the user's language. The PostToolUse hook flags Cyrillic; `/test-all` scans for it.
 
 ## Style in two lines
 
@@ -52,6 +53,7 @@ npm test                         # Vitest + @cap-js/cds-test, $metadata snapshot
 npm run lint                     # cds lint
 npm run docs:registry            # regenerate docs/registry
 node scripts/check-docs-fresh.mjs
+node scripts/backlog.mjs list       # backlog queue from GitHub Issues, in PIPELINE_LANG
 cd app/products && npm start     # UI5 dev server with proxy to :4004
 cd app/products && npm run start-mock   # UI without backend (sap-fe-mockserver)
 cd app/products && npm run lint  # ui5lint
@@ -66,8 +68,9 @@ The main agent does not write code itself. Map the request to a skill first; ski
 
 | User asks for | Skill | Runs agents | Who starts it |
 |---|---|---|---|
-| A new feature, screen, action, model change ("add", "implement", "make") | `/feature <description>` | architect, ux-designer, cap-backend-dev or ui5-freestyle-dev, fiori-app-dev, test-backend, test-ui, ui-verifier, reviewer, docs-keeper, phase gates and commits | user |
-| Only a plan or estimate | `/spec <description>` | architect, ux-designer | user |
+| Record a wish, see the queue, change a priority or a blocker | `/backlog [<description> \| #N prio P1 \| #N blocked-by #M]` | none (gh CLI, `scripts/backlog.mjs`) | user |
+| A new feature, screen, action, model change ("add", "implement", "make") | `/feature <description or #N>` | architect, ux-designer, cap-backend-dev or ui5-freestyle-dev, fiori-app-dev, test-backend, test-ui, ui-verifier, reviewer, docs-keeper, phase gates and commits | user |
+| Only a plan or estimate | `/spec <description or #N>` | architect, ux-designer | user |
 | A simple new entity without logic | `/add-entity <Name and fields>` | none (inline, follows the "New entity" pattern) | user |
 | Code review of current changes | `/review` | reviewer | user |
 | "Is everything green", before a commit | `/test-all` | none (runs the checks) | user or Claude |
@@ -84,8 +87,8 @@ Direct delegation without a skill is allowed only for read-only work: `architect
 ## Pipeline
 
 - Subagents in `.claude/agents/`: `architect`, `ux-designer`, `cap-backend-dev`, `fiori-app-dev`, `ui5-freestyle-dev`, `test-backend`, `test-ui`, `ui-verifier`, `reviewer`, `docs-keeper`, `upstream-watcher`. All preload the `project-protocol` skill and work by it.
-- Skills: `/feature`, `/spec`, `/add-entity`, `/gen-docs`, `/run-app`, `/test-all`, `/review`, `/retro`, `/upstream-check`, `/debug-after-upgrade`, `/upgrade-cds`. External: `cap-developer`, `cap-upgrade` (plugin `cap`), `ui5-best-practices*` (plugin `ui5`).
-- Hooks (`.claude/settings.json`, scripts in `scripts/hooks/`): SessionStart prints STATE and checks the environment; PreToolUse forbids editing protected files; PostToolUse runs compilation and linters by file type, marks the registry stale and logs MCP, skill and edit calls per agent into `.pipeline/` (gitignored); SubagentStop blocks handing over with linter errors or with an MCP query missing and unexplained; Stop requires a fresh registry, updated STATE and CHANGELOG and a green `npm test`. Bypass only by user decision: `PIPELINE_SKIP_GATE=1`, `PIPELINE_ALLOW_PROTECTED=1`.
+- Skills: `/backlog`, `/feature`, `/spec`, `/add-entity`, `/gen-docs`, `/run-app`, `/test-all`, `/review`, `/retro`, `/upstream-check`, `/debug-after-upgrade`, `/upgrade-cds`. External: `cap-developer`, `cap-upgrade` (plugin `cap`), `ui5-best-practices*` (plugin `ui5`).
+- Hooks (`.claude/settings.json`, scripts in `scripts/hooks/`): SessionStart prints the briefing (language, now, queue from GitHub Issues, recommendation, debt count), STATE and the environment; PreToolUse forbids editing protected files; PostToolUse runs compilation and linters by file type, marks the registry stale and logs MCP, skill and edit calls per agent into `.pipeline/` (gitignored); SubagentStop blocks handing over with linter errors or with an MCP query missing and unexplained; Stop requires a fresh registry, updated STATE and CHANGELOG and a green `npm test`. Bypass only by user decision: `PIPELINE_SKIP_GATE=1`, `PIPELINE_ALLOW_PROTECTED=1`.
 - MCP in `.mcp.json` with pinned versions: `cds-mcp` 0.0.5, `fiori-mcp` 1.12.2, `chrome-devtools` 1.8.0, `ui5-mcp-server` 0.2.18 (the `ui5` plugin stays for its skills; its unpinned bundled server `plugin:ui5:ui5-mcp-server` is toggled off in `/mcp` on each machine). Setup on a new machine: `docs/architecture/STACK.md`.
 
 ## Do not do without an explicit user request
@@ -95,6 +98,7 @@ Direct delegation without a skill is allowed only for read-only work: `architect
 - Bump versions of `@sap/cds`, `@sap/cds-dk`, MCP servers; this is done by `/upstream-check` and `/upgrade-cds` with a user decision.
 - Create a Fiori application or `manifest.json` by hand; `cds add sample`; TypeScript in the UI (ADR-0005).
 - Commit and push. Commits are made by the `/feature` orchestrator per phase or by the user.
+- Create, edit or close GitHub issues outside `/backlog`, `/spec` and `/feature`.
 
 ## Known debt
 

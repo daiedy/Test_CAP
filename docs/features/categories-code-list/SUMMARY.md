@@ -44,3 +44,7 @@ Completion date: 2026-09-07. Commits: `1e0bd04` (specification, ADR-0010, ADR-00
 - `docs/features/categories-code-list/PLAN.md`, the criterion about the OPA5 journeys contains the wording "plus `npm start`" from the original plan; the actual run goes against `npm run watch` (see "Deviations from the plan" above and `LESSONS.md`).
 - The draft decision for `Products` (needed for a full check of category editing on the Object Page) is a separate feature with an ADR, not part of this one.
 - `mta.yaml`/`xs-security.json` remain drafts, deployment is not configured: out of scope of this feature.
+
+## Full record
+
+Pruned to this file (ADR-0019). CONTEXT.md, PLAN.md, VERIFICATION.md, screenshots of this feature stay in git history at https://github.com/daiedy/Test_CAP/tree/0214ec1aa0829eb42b190534fcd38e3523beeee9/docs/features/categories-code-list (commit `0214ec1`).

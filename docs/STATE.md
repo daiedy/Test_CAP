@@ -4,12 +4,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## Now
 
-- Date: 2026-09-24
-- Branch: main
+- Date: 2026-09-25
+- Branch: chore/backlog-issues
 - Feature: none
 - Phase: none
-- Last commit: 3eecc10 Merge branch 'chore/context-budget'
-- Next: restart the Claude Code session before the next `/feature` (hooks and prompts are snapshotted at start; ADR-0018 is merged), then `liveMode` for the List Report via Fiori MCP, then the deployment ADR.
+- Last commit: af708f2 docs(state): record the merge of chore/context-budget
+- Next: merge `chore/backlog-issues` into `main`, restart the session (the `/backlog` skill and the briefing hook are snapshotted at start), then follow the "Recommended now" line of the briefing (`node scripts/backlog.mjs briefing`); `liveMode` and the deployment ADR stay in Open debt.
 
 ## Open debt
 
@@ -19,7 +19,7 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 | Keyboard hack for the Explore button in `Component.js` (setTimeout, internal ushell id) | Deliberate decision of the author. Do not touch without a request; the alternative via `CommandExecution` is described in LESSONS | user |
 | `Products.price` Decimal(10, 2) instead of the convention Decimal(15, 2) | Kept, ADR-0003. Change at the first model migration | architect |
 | `mta.yaml`, `xs-security.json` are drafts without productive dependencies | Separate ADR before any deployment work; `cds add xsuaa --for production` will generate the `CatalogViewer`/`CatalogEditor` role templates and scopes from the CDS role names already in place (ADR-0013) | user |
-| `$edmJson` `$Path` through the entity container (`/CatalogService.EntityContainer/Permissions/isEditor`, used by the three `UI.*Hidden` annotations, ADR-0013) trips an unguarded UI5 1.152.0 defect once per page load on :4004: `Failed to read path ... - TypeError: Cannot read properties of undefined (reading '$select')` (`_Helper.aggregateExpandSelect`, `_Helper-dbg.js:238`). Deterministic, identical for both roles, no functional impact measured (`REVIEW.md`, `VERIFICATION.md` scenarios 1-2) | Try the documented fallback short path `/Permissions/isEditor`, regenerate the contract, re-verify in a browser | architect |
+| `$edmJson` `$Path` through the entity container (`/CatalogService.EntityContainer/Permissions/isEditor`, used by the three `UI.*Hidden` annotations, ADR-0013) trips an unguarded UI5 1.152.0 defect once per page load on :4004: `Failed to read path ... - TypeError: Cannot read properties of undefined (reading '$select')` (`_Helper.aggregateExpandSelect`, `_Helper-dbg.js:238`). Deterministic, identical for both roles, no functional impact measured (full record linked from `docs/features/catalog-authorization/SUMMARY.md`) | Try the documented fallback short path `/Permissions/isEditor`, regenerate the contract, re-verify in a browser | architect |
 | The OPA5 suite for `catalog-authorization` authenticates as one user (`alice`) per run, so the hidden state for a `CatalogViewer` has no automated regression guard; only the backend tests (`@restrict`) and `ui-verifier`'s blocking viewer criterion cover it | Add a second runner config `ui5-test-runner-viewer.json` and a `test:ui:viewer` script only if the hidden state ever regresses (user decision 2026-09-10, PLAN "Open questions") | user |
 | CI and Dependabot added 2026-09-07 (`ci.yml`: backend, UI lint, OPA5 journeys; `dependabot.yml`: weekly, grouped, majors of CAP excluded). First run failed (root ESLint picked up the UI config, UI lockfile out of sync), fixed in `8ec176b`; run 34112716975 green: backend, UI lint, OPA5 journeys | Watch Dependabot PRs on Mondays | user |
 | `run_manifest_validation` of UI5 MCP 0.2.18 fails with a draft-06 schema error | Workaround via `ui5lint`; wait for a new `@ui5/mcp-server` version via `upstream-check`, then bump the pin in `.mcp.json` | upstream-watcher |

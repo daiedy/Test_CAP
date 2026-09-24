@@ -24,17 +24,18 @@
     ".claude/rules/ui-annotations.md": 3426,
     ".claude/rules/ui5-webapp.md": 3581,
     ".claude/skills/add-entity/SKILL.md": 1875,
+    ".claude/skills/backlog/SKILL.md": 2664,
     ".claude/skills/debug-after-upgrade/SKILL.md": 4940,
-    ".claude/skills/feature/SKILL.md": 6519,
+    ".claude/skills/feature/SKILL.md": 7226,
     ".claude/skills/gen-docs/SKILL.md": 849,
     ".claude/skills/project-protocol/SKILL.md": 9109,
     ".claude/skills/retro/SKILL.md": 3916,
     ".claude/skills/review/SKILL.md": 760,
     ".claude/skills/run-app/SKILL.md": 1275,
-    ".claude/skills/spec/SKILL.md": 1205,
+    ".claude/skills/spec/SKILL.md": 1830,
     ".claude/skills/test-all/SKILL.md": 1598,
     ".claude/skills/upgrade-cds/SKILL.md": 1480,
     ".claude/skills/upstream-check/SKILL.md": 4422,
-    "CLAUDE.md": 9381
+    "CLAUDE.md": 10261
   }
 }

@@ -39,3 +39,7 @@ Completion date: 2026-09-07. Commits: `6a95811` (plan approved, ADR-0012 accepte
 - `docs/features/products-draft-edit/PLAN.md`
 - `docs/features/products-draft-edit/VERIFICATION.md`
 - `docs/decisions/ADR-0012-products-draft-editing.md`
+
+## Full record
+
+Pruned to this file (ADR-0019). CONTEXT.md, PLAN.md, VERIFICATION.md, screenshots of this feature stay in git history at https://github.com/daiedy/Test_CAP/tree/b3a06112e787498b987423b010db6b6416974461/docs/features/products-draft-edit (commit `b3a0611`).

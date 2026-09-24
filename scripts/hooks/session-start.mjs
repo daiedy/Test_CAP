@@ -1,11 +1,19 @@
 /**
  * SessionStart hook: injects project state, upstream dependency digest and toolchain check into context.
  * Plain stdout is added to Claude's context. Never fails.
+ * Reading rule (ADR-0018): sections by heading, never a line count; a section over its budget is
+ * cut with a visible marker that names how much is missing and where to read it.
  */
 import path from 'node:path';
 import fs from 'node:fs';
-import { readStdinJson, repoRoot, run, readLines, exists } from '../lib/hook-utils.mjs';
+import { readStdinJson, repoRoot, run, readSection, exists } from '../lib/hook-utils.mjs';
 import { pruneAudit } from '../lib/mcp-audit.mjs';
+import {
+  stateShapeErrors,
+  capped,
+  STATE_PRINT_BUDGET,
+  DIGEST_PRINT_BUDGET,
+} from '../lib/doc-shapes.mjs';
 
 try {
   const input = readStdinJson();
@@ -17,17 +25,43 @@ try {
 
   const state = path.join(root, 'docs', 'STATE.md');
   if (exists(state)) {
-    out.push('', '## docs/STATE.md (first 40 lines)', readLines(state, 40));
+    const printed = ['## Now', '## Open debt']
+      .map((h) => readSection(state, h) || `${h}\n\n(section missing, see templates/STATE.md)\n`)
+      .join('\n');
+    out.push(
+      '',
+      '## docs/STATE.md, sections Now and Open debt',
+      capped(printed, STATE_PRINT_BUDGET, 'docs/STATE.md')
+    );
+    const errors = stateShapeErrors(fs.readFileSync(state, 'utf8'));
+    if (errors.length)
+      out.push(
+        '',
+        `docs/STATE.md breaks the shape of templates/STATE.md (ADR-0018); the Stop gate blocks until it is fixed: ${errors.join('; ')}`
+      );
   } else {
-    out.push('', 'docs/STATE.md is missing: create it before finishing the work.');
+    out.push(
+      '',
+      'docs/STATE.md is missing: create it from templates/STATE.md before finishing the work.'
+    );
   }
 
   const updates = path.join(root, 'docs', 'upstream', 'UPDATES.md');
   if (exists(updates)) {
-    const lines = fs.readFileSync(updates, 'utf8').split('\n');
-    const idx = lines.findIndex((l) => /^##\s+\d{4}-\d{2}-\d{2}/.test(l));
-    if (idx >= 0) {
-      out.push('', '## Latest upstream dependency digest', lines.slice(idx, idx + 16).join('\n'));
+    const heading = fs
+      .readFileSync(updates, 'utf8')
+      .split('\n')
+      .find((l) => /^##\s+\d{4}-\d{2}-\d{2}/.test(l));
+    if (heading) {
+      out.push(
+        '',
+        '## Latest upstream dependency digest',
+        capped(
+          readSection(updates, heading.trim()),
+          DIGEST_PRINT_BUDGET,
+          'docs/upstream/UPDATES.md'
+        )
+      );
     }
   }
 
@@ -61,8 +95,7 @@ try {
 
   out.push(
     '',
-    'Protocol: MCP-first (cds-mcp for CDS and handlers, fiori-mcp for annotations and manifest, ui5-mcp for UI5), ' +
-      'specification in docs/features/<name>/ before code, registry docs/registry/ before new functions. Rules in CLAUDE.md and .claude/rules/.'
+    'Protocol: MCP-first (routing in the project-protocol skill, section 3), specification in docs/features/<name>/ before code, registry docs/registry/ before new functions. Rules in CLAUDE.md and .claude/rules/.'
   );
 
   process.stdout.write(out.join('\n') + '\n');

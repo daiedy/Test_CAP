@@ -7,10 +7,9 @@ paths:
 File `srv/<name>-service.cds`: projections, actions, functions, authorization. File `srv/annotations/<Entity>.cds`: `@title`, `@mandatory`, `@assert.*`, `@readonly`, `@Measures.ISOCurrency`. Determine which part the edit belongs to and apply the corresponding block.
 
 ## Before editing
-1. `mcp__cds-mcp__search_model` for the service and entity: existing projections, actions, annotations.
-2. `mcp__cds-mcp__search_docs` for the specific annotation or construct (`@restrict`, bound action, `excluding`, `@assert.range`).
-3. `docs/registry/SERVICES.md`: check whether an action or projection for this task already exists.
-4. Check the row in `docs/architecture/PATTERNS.md`, section "Service and logic".
+1. MCP first, as routed by protocol section 3: the service and entity, then the annotation or construct (`@restrict`, bound action, `excluding`, `@assert.range`).
+2. `docs/registry/SERVICES.md`: check whether an action or projection for this task already exists.
+3. Check the row in `docs/architecture/PATTERNS.md`, section "Service and logic".
 
 ## Service (`srv/<name>-service.cds`)
 - One projection per entity, expose only the needed fields.

@@ -5,9 +5,8 @@ paths:
 # Backend tests (test/)
 
 ## Before editing
-1. `mcp__cds-mcp__search_docs` for `cds.test`, `defaults.auth`, `containSubset`, if the API is not obvious.
-2. `mcp__cds-mcp__search_model`: exact names of entities, actions, fields.
-3. Read `docs/architecture/TESTING.md`, sections "Rules" and "cds 10 specifics".
+1. MCP first, as routed by protocol section 3: `cds.test`, `defaults.auth`, `containSubset` when the API is not obvious, and the exact names of entities, actions, fields.
+2. Read `docs/architecture/TESTING.md`, sections "Rules" and "cds 10 specifics".
 
 ## Rules
 - One file per service: `test/<service>.test.js`. Contract: `test/metadata.test.js`.

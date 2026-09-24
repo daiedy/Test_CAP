@@ -20,7 +20,7 @@ You are the orchestrator. You do not write code yourself, you delegate to subage
 
 ## Phase 1. Research and plan
 
-Delegate to `architect`: write CONTEXT.md and PLAN.md. If the feature has a UI, after architect delegate to `ux-designer` for the "Screens" section. Gate: show the user the plan and the open questions; do not proceed without an explicit "approved" (in all modes). On approval, `architect` sets the ADR status by replacing the whole `Status:` sentence with the accepted form from `templates/adr.md`, never by appending to the proposed one.
+Delegate to `architect`: write CONTEXT.md (the implementers' brief), PLAN.md and, for experiments and framework facts, `research/*.md`. If the feature has a UI, after architect delegate to `ux-designer` for SCREENS.md. Gate: run `node scripts/check-feature-docs.mjs <name>` and hand a red result back to `architect`; then show the user the plan and the open questions; do not proceed without an explicit "approved" (in all modes). On approval, `architect` sets the ADR status by replacing the whole `Status:` sentence with the accepted form from `templates/adr.md`, never by appending to the proposed one.
 
 ## Phase 2. Backend
 
@@ -48,12 +48,20 @@ Show the user: the list of commits, what is closed from the acceptance criteria,
 
 ## Orchestrator rules
 
-- After every phase gate, update the line "Active feature" in `docs/STATE.md` (phase done, commit hash, next step) before starting the next phase. The Stop hook requires STATE to reflect changed code, and the orchestrator is the one who knows the phase state.
+- After every phase gate, update the `Feature`, `Phase`, `Last commit` and `Next` lines of the `## Now` section of `docs/STATE.md` before starting the next phase; never add a paragraph there (ADR-0018). The Stop hook requires STATE to reflect changed code and to keep the template shape, and the orchestrator is the one who knows the phase state.
 - All artifacts of the feature (CONTEXT, PLAN, SUMMARY, VERIFICATION, ADRs, commit messages, code comments) are written in English; the conversation with the user is in the user's language.
 
-- Pass to every agent: the feature name, the path to the feature directory, the plan step numbers, the gate mode, and the requirement of a report in the protocol format.
+- Pass to every agent: the feature name, the path to the feature directory, the plan step numbers, the gate mode, the requirement of a report in the protocol format, and its reading list (ADR-0018):
+
+  | Role | Reads | Does not read |
+  |---|---|---|
+  | `cap-backend-dev`, `test-backend` | PLAN.md, CONTEXT.md | SCREENS.md; `research/` unless a step names a file |
+  | `fiori-app-dev`, `ui5-freestyle-dev`, `test-ui` | PLAN.md, CONTEXT.md, SCREENS.md | `research/` unless a step names a file |
+  | `ui-verifier` | PLAN.md, SCREENS.md | CONTEXT.md, `research/` |
+  | `reviewer` | everything in the feature directory | `docs/ai-pipeline-plan.md` |
+  | `docs-keeper` | PLAN.md and the agents' reports | `research/` |
 - Never skip the review and documentation phases, even in autonomous mode.
 - If an agent returned "ADR needed" or "no pattern", stop the pipeline and hand the question to the user.
 - Commits only for the files of the phase (`git add <files>`), message in conventional commits style, no `git add -A`.
-- The orchestrator verifies, it does not fix. A defect in an agent's output goes back to the owning agent (or the resumed one) with the evidence, even when the fix looks like one line. If the agent is dead and you must act, run exactly the check the acceptance criterion names: for a UI artifact the browser or the framework's own request shape (`$batch`), not a hand-typed request. On 2026-09-16 a `curl GET` "fix" of a correct mock fixture became the defect the verifier found.
+- The orchestrator verifies, it does not fix. A defect in an agent's output goes back to the owning agent (or the resumed one) with the evidence, even when the fix looks like one line. If the agent is dead and you must act, run exactly the check the acceptance criterion names: for a UI artifact the browser or the framework's own request shape (`$batch`), not a hand-typed request. A bare `curl GET` once passed a mock fixture that failed on the `$batch` path the application uses (CHANGELOG 2026-09-16).
 - Any agent may stop at its turn limit or stall on the stream watchdog. Before relaunching, read `git status` for what it already wrote; resume it with SendMessage ("continue from ..."; for an agent with nothing on disk: "first tool call: write the file"). Relaunch only if it does not answer, and hand the new instance the on-disk state instead of the original brief.

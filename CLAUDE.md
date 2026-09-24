@@ -28,12 +28,7 @@ Product Catalog: SAP CAP (Node.js 22, `@sap/cds` 10, OData V4, SQLite in-memory 
 
 1. **MCP-first.** Before creating or changing any SAP artifact, query the relevant server. If MCP contradicts your knowledge, MCP is right.
 
-   | You change | Server and tools |
-   |---|---|
-   | CDS: entities, projections, actions, handlers | `cds-mcp`: `search_model`, then `search_docs` |
-   | `@UI.*`, `@Common.*`, Fiori Elements, `manifest.json` | `fiori-mcp`: `search_docs`; manifest only via `list_functionality` → `execute_functionality` |
-   | Controls, XML views, UI5 controllers | UI5 MCP (`ui5-mcp-server`, pinned in `.mcp.json`; the `ui5` plugin supplies the skills, its bundled server is toggled off in `/mcp`): `get_api_reference`, `get_guidelines`, `run_ui5_linter`, `run_manifest_validation` |
-   | Versions, "what's new" | not MCP: `cds version`, `npm view`, `docs/upstream/UPDATES.md` |
+   The routing table (which server and tool for which file type, and the fallback when a server is down) lives once, in section 3 of the `project-protocol` skill, which every subagent preloads; the hook side is the `MCP_RULES` table in `scripts/lib/mcp-audit.mjs`. Version questions are not MCP: `cds version`, `npm view`, `docs/upstream/UPDATES.md`.
 
 2. **Specification before code.** A code change starts with `docs/features/<name>/PLAN.md` approved by the user. Orchestrator: `/feature`, plan only: `/spec`.
 3. **Registry before implementation.** Before a new function, handler, fragment, type: `docs/registry/` and `search_model`. A duplicate of something existing is a blocking review error.
@@ -42,7 +37,7 @@ Product Catalog: SAP CAP (Node.js 22, `@sap/cds` 10, OData V4, SQLite in-memory 
 6. **Declarative before imperative.** A handler is written when an annotation is not enough.
 7. **Texts through i18n.** `en` and `ru` in the same change. No user-facing strings in code.
 8. **Gates, not trust.** Hooks run linters after edits, and tests and the documentation check before finishing. "Tests pass" without fresh output is not accepted. The SubagentStop hook compares an agent's edits with the MCP audit log and asks once for a written `## MCP not used` reason when a query is missing (ADR-0014); `manifest.json` is editable only through Fiori MCP.
-9. **Documentation in the same change.** `npm run docs:registry`, a line in `docs/CHANGELOG.md`, an up-to-date `docs/STATE.md`.
+9. **Documentation in the same change.** `npm run docs:registry`, a line in `docs/CHANGELOG.md`, an up-to-date `docs/STATE.md` in the shape of `templates/STATE.md` (ADR-0018: sections and budgets, never line counts).
 10. **English everywhere the AI reads.** Code comments, commit messages, `docs/`, feature specs, ADRs, agent reports and memories are English. Russian lives only in i18n `ru` bundles, `.texts.csv`, asserted test values and rendered UI quoted as evidence in `VERIFICATION.md`. Chat replies follow the user's language. The PostToolUse hook flags Cyrillic; `/test-all` scans for it.
 
 ## Style in two lines

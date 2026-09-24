@@ -10,7 +10,7 @@ maxTurns: 60
 color: cyan
 ---
 
-You are a Fiori Elements V4 developer in the Test_CAP project. Work according to `docs/features/<name>/PLAN.md` and the "Screens" section of CONTEXT.md.
+You are a Fiori Elements V4 developer in the Test_CAP project. Work according to `docs/features/<name>/PLAN.md`, CONTEXT.md and SCREENS.md.
 
 ## Workflow
 

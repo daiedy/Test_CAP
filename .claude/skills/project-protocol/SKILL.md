@@ -21,8 +21,8 @@ If MCP or the project documentation contradicts your knowledge, the document and
 
 ## 2. Mandatory order of work
 
-1. Read the task and the feature `PLAN.md`. If there is no plan and the task changes code, stop and report: `architect` is needed.
-2. Read the first 40 lines of `docs/STATE.md` and the "Open debt" section.
+1. Read the task, the feature `PLAN.md` and `CONTEXT.md` whole; `SCREENS.md` only if your role builds, tests or verifies the UI; `research/*.md` only when a plan step names the file (ADR-0018). If there is no plan and the task changes code, stop and report: `architect` is needed.
+2. Read the `Now` and `Open debt` sections of `docs/STATE.md`.
 3. Find what exists: the corresponding `docs/registry/` file plus `mcp__cds-mcp__search_model` for every entity, service, action the task touches. Write into the report what you reuse.
 4. Find the approved way in `PATTERNS.md`. One way. If none fits, stop and propose an ADR, do not invent a second one.
 5. Check with MCP according to the routing table below before the first edit. The SubagentStop hook compares your Edit/Write calls with the MCP audit log (ADR-0014); when a query is missing it blocks you once and asks for a `## MCP not used` section in your report (section 8). Direct edits of `manifest.json` are denied: Fiori MCP only.
@@ -30,7 +30,7 @@ If MCP or the project documentation contradicts your knowledge, the document and
 7. Make the edits. Path rules (`.claude/rules/`) are loaded automatically, follow them.
 8. Check: linters and tests from section 6. Do not write "checked" if you did not run them.
 9. Update the documentation you are responsible for (section 7) and report in the form (section 8).
-10. A deliverable that is a document (a CONTEXT section, PLAN, VERIFICATION, REVIEW, SUMMARY) exists on disk before the research starts and grows as you go; your report repeats the file. A result that lives only in your transcript is lost at the turn limit or the stream watchdog (2026-09-16: two agents stalled, a review of 53 tool calls left nothing on disk). Budget your turns; when the budget is nearly spent, stop cleanly and name the last completed item, so the orchestrator can resume you with SendMessage.
+10. A deliverable that is a document (CONTEXT, SCREENS, PLAN, VERIFICATION, REVIEW, SUMMARY) exists on disk before the research starts and grows as you go; your report repeats the file. A result that lives only in your transcript is lost at the turn limit or the stream watchdog (CHANGELOG 2026-09-23). Budget your turns; when the budget is nearly spent, stop cleanly and name the last completed item, so the orchestrator can resume you with SendMessage.
 
 ## 3. Routing to MCP
 
@@ -74,6 +74,7 @@ Attach the commands and their output (last lines) to the report. A red test or a
 ## 7. Documentation you are responsible for
 
 - Changed code: a line in `docs/CHANGELOG.md` (scope: db, srv, app, test, docs, pipeline, deps).
+- `docs/STATE.md` keeps the shape of `templates/STATE.md`: change values of the `Now` lines, rows of `Open debt`, items of `What works`; never add a paragraph or a section (ADR-0018).
 - Closed a plan item: tick it in `docs/features/<name>/PLAN.md`.
 - Learned something non-obvious about the framework, or made a mistake and understood why: an entry in `docs/LESSONS.md`.
 - Made a decision that is not in `PATTERNS.md`: do not make it. Stop and propose an ADR.

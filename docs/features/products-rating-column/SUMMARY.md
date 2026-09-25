@@ -34,3 +34,7 @@ Added to `docs/LESSONS.md` "Pending" (2026-09-25): an edit-mode `sap.m.RatingInd
 ## Open debt
 
 None added by this feature. Not verified within this feature's scope, named as such rather than claimed: mock mode with the Rating column; SCREENS scenarios B (sort by Rating), F (unrated product) and G (narrow width); the `RatingIndicator` `valuetext` against a real screen reader (chrome-devtools accessibility snapshot only).
+
+## Full record
+
+Pruned to this file (ADR-0019). CONTEXT.md, PLAN.md, REVIEW.md, SCREENS.md, VERIFICATION.md, research, screenshots of this feature stay in git history at https://github.com/daiedy/Test_CAP/tree/4c719bb99fb25a8fa25d17c5cf8662be64ae6db5/docs/features/products-rating-column (commit `4c719bb`).

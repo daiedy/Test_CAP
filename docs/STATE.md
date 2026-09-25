@@ -6,10 +6,10 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 - Date: 2026-09-25
 - Branch: feature/products-rating-column
-- Feature: products-rating-column (#5)
-- Phase: 6 Documentation: review passed with zero blocking findings, docs updated
-- Last commit: dd6ba53 docs(products-rating-column): browser verification
-- Next: phase 7 completion by the `/feature` orchestrator (close issue #5, prune the feature folder).
+- Feature: none
+- Phase: none (products-rating-column #5 done and closed, branch not merged)
+- Last commit: 4c719bb docs: products-rating-column summary and registry
+- Next: user merges `feature/products-rating-column` into `main` and pushes (the SUMMARY permalink needs the push); then `/spec #6`.
 
 ## Open debt
 

@@ -1,6 +1,6 @@
 ---
 name: sap-fe-test-api-verification
-description: Where to verify sap.fe.test OPA API signatures (FooterActionsOP, HeaderActions, FormActions, MacroFieldBuilder) when fiori-mcp search_docs is down; what the ui5-test-runner report does and does not contain
+description: Where to verify sap.fe.test OPA API signatures when fiori-mcp is down; measured ids for a DataFieldForAnnotation DataPoint column and form field; how to probe rendered ids via a failing OPA assert
 metadata:
   type: reference
 ---
@@ -15,3 +15,10 @@ metadata:
 `npx prettier --check webapp/test/integration/` from `app/products` flags the pre-existing integration files (they were not formatted with the root `.prettierrc`); format only the file you changed, do not reformat the others in a test task.
 
 Related: [[test-cap-ui-test-run-baseline]]
+
+## DataFieldForAnnotation to a DataPoint (measured 2026-09-25, FE 1.152.0, products-rating-column)
+
+- Table column: property key is the DataPoint `Value` property (`rating`), id `...::LineItem::C::DataPoint::Rating`; `iCheckColumns` / `iCheckCells` keyed by `rating`.
+- Form: `FormElement::DataFieldForAnnotation::DataPoint::Rating`, so `iCheckField({ property: 'DataPoint::Rating' }, undefined, state)`. The typedef's `targetAnnotation` is not read by `BaseAPI` (ids come from `property`, inserted into a RegExp unescaped).
+- A non-text cell control (RatingIndicator) is asserted with the cell state `{ editor: { controlType, value, maxValue } }`: `MdcTableBuilder` Cell `editor` routes through `MacroFieldBuilder` which unwraps FE wrappers; a plain `{ value }` cell state failed (timeout).
+- Headless Chrome `--dump-dom` produces nothing in the agent sandbox. Probe ids instead with a temporary `opaTest` whose `Then.waitFor` success calls `sap.ui.test.Opa5.assert.ok(false, '<ids>')` while `runner.run([OnlyThisJourney])`: the runner's console output prints failure messages in full (only passes are reduced to counts). Restore both files afterwards.

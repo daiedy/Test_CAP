@@ -1,0 +1,40 @@
+# products-rating-column: summary
+
+Completion date: 2026-09-25. Commits: `69eb82a` (plan, context, screens) ... `dc74131` (backend: model, semantics, tests, contract) ... `249a539` (UI: annotations, mock data, OPA5) ... `dd6ba53` (browser verification), plus the documentation commit that follows this report, on branch `feature/products-rating-column`. `f4e1ec7` is an unrelated pipeline chore (user-approved ESLint fix in `scripts/hooks/session-start.mjs`), interleaved but out of this feature's scope. Review: `REVIEW.md`, zero blocking findings.
+
+## What was done
+
+- **Model** (`db/schema.cds`): `rating : Integer` on `my.catalog.Products` after `stock`, no annotation. `db/data/my.catalog-Products.csv` seeds all 15 products (`Laptop Pro 15` 5, `Yoga Mat` 4, at least one 0 and one 1).
+- **Semantics** (`srv/annotations/Products.cds`): `@title: '{i18n>Products.rating}'` and `@assert.range: [0, 5]` on `rating`; `_i18n/i18n.properties` and `_i18n/i18n_ru.properties` gain `Products.rating` (`#XFLD`).
+- **UI** (`app/products/annotations/Products.cds`): `UI.DataPoint #Rating` (`Value: rating`, `TargetValue: 5`, `Visualization: #Rating`, no `Title`/`Description`) referenced by a `UI.DataFieldForAnnotation` with an explicit `Label`, placed as the 5th and last `UI.LineItem` column (`UI.Importance: #Low`) and as the 4th field of `UI.FieldGroup #GeneralInfo` (between `category_code` and `imageUrl`). `localService/mockdata/Products.json` gains `rating` per record (same 15 values as the CSV). `manifest.json` is byte-unchanged, no fragment, no handler (declarative annotation only).
+- **Contract**: net **+22/-0** across `test/__snapshots__/metadata.test.js.snap` and `app/products/webapp/localService/metadata.xml` against `main`, in two phases: phase 2 +6/-0 (`Property rating Edm.Int32`, `Common.Label`, `Validation.Minimum` 0, `Validation.Maximum` 5); phase 3 +16/-0 (the `UI.DataPoint #Rating` record, the `LineItem` `DataFieldForAnnotation` with `UI.Importance #Low`, the `GeneralInfo` `DataFieldForAnnotation`). The plan's predicted raw phase-3 diff of +72/-56 (a positional move of the `Common.SemanticKey`/`SideEffects`/`Messages` block) was **not observed**: the actual raw diff for that phase is +16/-0, same as the net figure — no churn.
+- **Backend tests** (+5 across two files, backend suite **69** tests, up from 64 on `main` at `831dd42`): `test/catalog-service.test.js` +4 ("returns the seeded rating of a product", "rejects a rating above 5 (@assert.range)", "rejects a negative rating (@assert.range)", "rejects activation of a draft with a rating above 5 (@assert.range)"); `test/metadata.test.js` +1 ("exposes the rating column as a UI.DataPoint with Visualization Rating").
+- **UI tests** (UI suite **28** `opaTest`s, up from 25 on `main`, 0 skipped): new `app/products/webapp/test/integration/RatingShownAsStarsJourney.js` (3 cases: list report stars, object page field, teardown), a new assertion in `RussianLocaleJourney.js` (`ru` column header), new `data/RatingTexts.js` fixture (column key, field identifier, seeded values, `en`/`ru` labels as `\u` escapes).
+- **Verification** (`VERIFICATION.md`, `ui-verifier`): the four mandatory scenarios ("Editor changes the rating", "Range is enforced on Save", "Viewer sees ratings", "Russian labels") all passed, with `$batch` evidence for the `PATCH`/`draftActivate` writes and the `ASSERT_RANGE` rejection. "Mock mode" (optional) and SCREENS scenarios B/F/G were not executed within the turn budget (see "Open debt").
+- **Pipeline** (own commit `f4e1ec7`, out of this feature's scope): `eslint-disable-next-line no-control-regex` with a reason on the intended ESC (`\x1b`) in the ANSI-stripping regex of `scripts/hooks/session-start.mjs`, fixing `npm run lint`, red since `ff1dfa9`.
+- **Documentation** (this phase): registry regenerated; `docs/STATE.md` `Now`/`What works` (test counts 69 backend / 28 OPA5, new capability line); `docs/CHANGELOG.md` (scope prefix and stale wording fixed on the phase-2 line); `docs/architecture/PATTERNS.md` "Table columns, filters, header, sections" row amended (`UI.DataPoint` visualizations in the Way, this feature in the Example); `docs/LESSONS.md` gains the RatingIndicator clamp-and-writeback entry; `PLAN.md` criteria 19, 22, 23 and 33 corrected to the delivered facts (below).
+
+## Deviations from the plan
+
+- **Test ids and keys**, not knowable ahead of the rendered app (PLAN Risks row 2): the delivered OPA5 calls use the column key `rating` (not the planned `Rating`) and the `editor` cell state that unwraps the Fiori Elements field wrapper down to the control — `iCheckCells({ name: 'Laptop Pro 15' }, { rating: { editor: { controlType: 'sap.m.RatingIndicator', value: 5, maxValue: 5 } } })` — and the Object Page field identifier is `{ property: 'DataPoint::Rating' }`, not `targetAnnotation` (not read by `sap/fe/test/api/BaseAPI` in this UI5 version). `PLAN.md` criteria 22 and 23 amended with the actual calls.
+- **Raw contract diff.** The plan predicted a raw phase-3 diff of +72/-56 from a positional move of pre-existing annotations (`research/contract-delta.md`); the real diff has no such move, raw +16/-0 matching the net figure. `PLAN.md` criterion 19 amended; the whole feature's net contract diff against `main` is +22/-0 (phase 2 +6/-0, phase 3 +16/-0), not the predicted raw figure.
+- **`npm run lint:js` criterion (33)** was already met, with one known, out-of-scope warning: `webapp/Component.js:14:17` (`@sap-ux/fiori-tools/sap-timeout-usage`), the keyboard-hack debt named in `CLAUDE.md` "Known debt", in a protected file unchanged by this feature. `cds lint` and `ui5lint` are clean. Criterion ticked with this note.
+- **Not executed within budget, named rather than claimed:** mock mode (`ui-verifier` scenario, optional, `localService/mockdata/Products.json` carries the `rating` values but this was not exercised through the app in this session); SCREENS scenarios B (sort by Rating), F (unrated product) and G (narrow width), all optional or informational per `SCREENS.md`. None is expected to hide a defect (`REVIEW.md` reasons each from the UI5 1.152.0 source).
+
+## New items for the registry
+
+- Element: `Products.rating` (`Integer`, `@assert.range: [0,5]`) in `DOMAIN-MODEL.md`.
+- `SERVICES.md`: the `Products` projection's `LineItem` count grows from `LineItem(4)` to `LineItem(5)`.
+- No new function, handler, fragment or formatter: the feature is a declarative element and annotation addition, `manifest.json` unchanged.
+
+## Lessons
+
+Added to `docs/LESSONS.md` "Pending" (2026-09-25): an edit-mode `sap.m.RatingIndicator` clamps a displayed value above `maxValue` and writes the clamped value back through its two-way binding on the very next render, so a `@assert.range` Save-rejection scenario (`ASSERT_RANGE` on `draftActivate`) is only observable if Save happens before any reload or re-render of the field — found by `ui-verifier` while reproducing "Range is enforced on Save", confirmed against the UI5 1.152.0 `sap/m/RatingIndicator-dbg.js` source. The empty `valuetext` observed in the accessibility tree (SCREENS scenario D) is **not** recorded as debt (`REVIEW.md`): the 1.152.0 source does set an ARIA value text (`RATING_VALUEARIATEXT`), so the empty capture is most likely an artifact of the chrome-devtools snapshot rather than a real accessibility gap; `VERIFICATION.md` lists it as "not verified with a screen reader".
+
+## Open debt
+
+None added by this feature. Not verified within this feature's scope, named as such rather than claimed: mock mode with the Rating column; SCREENS scenarios B (sort by Rating), F (unrated product) and G (narrow width); the `RatingIndicator` `valuetext` against a real screen reader (chrome-devtools accessibility snapshot only).
+
+## Full record
+
+Pruned to this file (ADR-0019). CONTEXT.md, PLAN.md, REVIEW.md, SCREENS.md, VERIFICATION.md, research, screenshots of this feature stay in git history at https://github.com/daiedy/Test_CAP/tree/4c719bb99fb25a8fa25d17c5cf8662be64ae6db5/docs/features/products-rating-column (commit `4c719bb`).

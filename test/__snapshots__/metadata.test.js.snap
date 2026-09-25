@@ -67,6 +67,7 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         </NavigationProperty>
         <Property Name="currency_code" Type="Edm.String" MaxLength="3"/>
         <Property Name="stock" Type="Edm.Int32"/>
+        <Property Name="rating" Type="Edm.Int32"/>
         <NavigationProperty Name="category" Type="CatalogService.Categories">
           <ReferentialConstraint Property="category_code" ReferencedProperty="code"/>
         </NavigationProperty>
@@ -234,7 +235,19 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
             <Record Type="UI.DataField">
               <PropertyValue Property="Value" Path="stock"/>
             </Record>
+            <Record Type="UI.DataFieldForAnnotation">
+              <PropertyValue Property="Label" String="{i18n>Products.rating}"/>
+              <PropertyValue Property="Target" AnnotationPath="@UI.DataPoint#Rating"/>
+              <Annotation Term="UI.Importance" EnumMember="UI.ImportanceType/Low"/>
+            </Record>
           </Collection>
+        </Annotation>
+        <Annotation Term="UI.DataPoint" Qualifier="Rating">
+          <Record Type="UI.DataPointType">
+            <PropertyValue Property="Value" Path="rating"/>
+            <PropertyValue Property="TargetValue" Int="5"/>
+            <PropertyValue Property="Visualization" EnumMember="UI.VisualizationType/Rating"/>
+          </Record>
         </Annotation>
         <Annotation Term="UI.Facets">
           <Collection>
@@ -267,6 +280,10 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
                 </Record>
                 <Record Type="UI.DataField">
                   <PropertyValue Property="Value" Path="category_code"/>
+                </Record>
+                <Record Type="UI.DataFieldForAnnotation">
+                  <PropertyValue Property="Label" String="{i18n>Products.rating}"/>
+                  <PropertyValue Property="Target" AnnotationPath="@UI.DataPoint#Rating"/>
                 </Record>
                 <Record Type="UI.DataField">
                   <PropertyValue Property="Value" Path="imageUrl"/>
@@ -442,6 +459,11 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
         <Annotation Term="Validation.Minimum" Int="0"/>
         <Annotation Term="Validation.Maximum" Int="1000000"/>
+      </Annotations>
+      <Annotations Target="CatalogService.Products/rating">
+        <Annotation Term="Common.Label" String="{i18n>Products.rating}"/>
+        <Annotation Term="Validation.Minimum" Int="0"/>
+        <Annotation Term="Validation.Maximum" Int="5"/>
       </Annotations>
       <Annotations Target="CatalogService.Products/category">
         <Annotation Term="Common.Label" String="{i18n>Products.category}"/>

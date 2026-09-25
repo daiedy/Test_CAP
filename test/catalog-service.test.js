@@ -110,6 +110,32 @@ describe('CatalogService.Products', () => {
     expect(err).to.containSubset({ code: 'ASSERT_RANGE' });
   });
 
+  it('returns the seeded rating of a product', async () => {
+    const { data } = await GET(`${base}/Products?$select=name,rating`);
+    expect(data.value).to.have.length(15);
+    for (const { rating } of data.value) expect(rating).to.be.within(0, 5);
+    expect(data.value).to.containSubset([{ name: 'Laptop Pro 15', rating: 5 }]);
+  });
+
+  it('rejects a rating above 5 (@assert.range)', async () => {
+    const { data } = await GET(`${base}/Products?$filter=name eq 'Yoga Mat'&$select=ID`);
+    const key = activeKey(data.value[0].ID);
+    const err = await expect(PATCH(key, { rating: 6 })).to.be.rejectedWith(/400/);
+    expect(err).to.containSubset({ code: 'ASSERT_RANGE' });
+    expect(err.target).to.match(/rating$/);
+    const { data: stored } = await GET(`${key}?$select=rating`);
+    expect(stored).to.containSubset({ rating: 4 });
+  });
+
+  it('rejects a negative rating (@assert.range)', async () => {
+    const { data } = await GET(`${base}/Products?$filter=name eq 'Yoga Mat'&$select=ID`);
+    const err = await expect(PATCH(activeKey(data.value[0].ID), { rating: -1 })).to.be.rejectedWith(
+      /400/
+    );
+    expect(err).to.containSubset({ code: 'ASSERT_RANGE' });
+    expect(err.target).to.match(/rating$/);
+  });
+
   it('exposes Currencies as a code list for the value help', async () => {
     const { data } = await GET(`${base}/Currencies?$filter=code eq 'USD'&$select=code,name`);
     expect(data.value).to.containSubset([{ code: 'USD' }]);
@@ -214,6 +240,25 @@ describe('CatalogService.Products drafts', () => {
     } finally {
       await discard();
     }
+  });
+
+  it('rejects activation of a draft with a rating above 5 (@assert.range)', async () => {
+    await draftEdit();
+    let discarded;
+    try {
+      // On a draft, @assert.range is a message (200), not an error.
+      const { status, data } = await PATCH(draftKey(id), { rating: 6 });
+      expect(status).to.equal(200);
+      expect(data.DraftMessages).to.containSubset([{ code: 'ASSERT_RANGE' }]);
+      const err = await expect(draftActivate()).to.be.rejectedWith(/400/);
+      expect(err).to.containSubset({ code: 'ASSERT_RANGE' });
+      expect(err.target).to.match(/rating$/);
+    } finally {
+      discarded = await discard();
+    }
+    expect(discarded.status).to.equal(204);
+    const { data } = await GET(`${activeKey(id)}?$select=rating,HasDraftEntity`);
+    expect(data).to.containSubset({ rating: null, HasDraftEntity: false });
   });
 
   it("locks the active product while another user's draft exists", async () => {

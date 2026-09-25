@@ -1,8 +1,12 @@
 /* global QUnit */
 // Journey "russian locale shows translated categories" (PLAN step 13): started with
-// sap-ui-language=ru, the filter label, the column header, the dropdown items, the table cells and
-// the object page show the Russian texts of _i18n and Categories.texts.
-sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts'], function (opaTest, CategoryTexts) {
+// sap-ui-language=ru, the filter label, the column headers (Category, Rating), the dropdown items,
+// the table cells and the object page show the Russian texts of _i18n and Categories.texts.
+sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts', './data/RatingTexts'], function (
+  opaTest,
+  CategoryTexts,
+  RatingTexts
+) {
   'use strict';
 
   const names = CategoryTexts.names.ru;
@@ -10,6 +14,8 @@ sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts'], function (opaTes
     return names[sCode];
   });
   const label = CategoryTexts.labels.category.ru;
+  const ratingColumn = {};
+  ratingColumn[RatingTexts.columnKey] = { header: RatingTexts.labels.ru };
 
   return function () {
     QUnit.module('Russian locale shows translated categories');
@@ -19,6 +25,7 @@ sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts'], function (opaTes
       Then.onTheProductsList.iSeeThisPage();
       Then.onTheCategoryDropdown.iSeeFilterFieldLabel('category_code', label);
       Then.onTheProductsList.onTable().iCheckColumns(undefined, { category_code: { header: label } });
+      Then.onTheProductsList.onTable().iCheckColumns(undefined, ratingColumn);
       Then.onTheProductsList.onTable().iCheckRows({ category_code: names.ELECTRONICS }, 4);
     });
 

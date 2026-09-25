@@ -6,3 +6,4 @@
 - [cds 10 mocked auth and @restrict on drafts](cap-mocked-auth-behavior.md) — anonymous 401 only on demand, users merge, Viewer 403 on draft actions, metadata test needs auth; ADR-0013 accepted 2026-09-10
 - [Role-aware UI needs a singleton](role-aware-ui-singleton.md) — why a per-row element cannot hide Create; measured +50 EDMX lines; ADR-0013 part 8
 - [Test suite shape and auth](test-suite-shape.md) — re-derive test counts per plan; the hook test uses no cds.test, so no defaults.auth
+- [FE V4 rating DataPoint column](fe-v4-rating-datapoint.md) — stars need no fragment; editable in a form; sap.fe.test matchers by header and `{ value }`; +6 / net +15 EDMX

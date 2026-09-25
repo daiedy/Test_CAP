@@ -69,4 +69,32 @@ describe('OData contract of CatalogService', () => {
       );
     }
   });
+  // products-rating-column: FE V4 renders a DataFieldForAnnotation that targets a DataPoint with
+  // Visualization Rating as a sap.m.RatingIndicator (app/products/annotations/Products.cds).
+  it('exposes the rating column as a UI.DataPoint with Visualization Rating', async () => {
+    const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
+      headers: { 'Accept-Language': 'en' },
+    });
+    expect(status).toBe(200);
+    // The EDMX is pretty-printed, so compare without the whitespace between the tags.
+    const compact = data.replace(/>\s+</g, '><');
+    expect(compact).toContain(
+      '<Annotation Term="UI.DataPoint" Qualifier="Rating"><Record Type="UI.DataPointType">' +
+        '<PropertyValue Property="Value" Path="rating"/>' +
+        '<PropertyValue Property="TargetValue" Int="5"/>' +
+        '<PropertyValue Property="Visualization" EnumMember="UI.VisualizationType/Rating"/>' +
+        '</Record></Annotation>'
+    );
+    const column =
+      '<Record Type="UI.DataFieldForAnnotation"><PropertyValue Property="Label" String="Rating"/>' +
+      '<PropertyValue Property="Target" AnnotationPath="@UI.DataPoint#Rating"/>';
+    const lineItem = compact.match(/<Annotation Term="UI.LineItem">.*?<\/Annotation>/)[0];
+    expect(lineItem).toContain(
+      column + '<Annotation Term="UI.Importance" EnumMember="UI.ImportanceType/Low"/></Record>'
+    );
+    const generalInfo = compact.match(
+      /<Annotation Term="UI.FieldGroup" Qualifier="GeneralInfo">.*?<\/Annotation>/
+    )[0];
+    expect(generalInfo).toContain(column + '</Record>');
+  });
 });

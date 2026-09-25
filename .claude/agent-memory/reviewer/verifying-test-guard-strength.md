@@ -27,3 +27,10 @@ Two techniques that settle "is this test a real guard?" without editing the tree
 
 **How to apply:** whenever a plan claims a test "must fail on main" or an agent reports a green OPA5
 run for a framework-rendered control. See [[pipeline-review-conventions]] for which gates to re-run.
+
+3. **Adjudicating verifier observations from control source.** Fetch
+   `https://ui5.sap.com/<version>/resources/sap/m/<Control>-dbg.js` and read the setter and
+   `onBeforeRendering`: a correction made in `onBeforeRendering` (outside the model-to-control update)
+   is written back by a two-way binding, one made in the setter during binding update is not.
+   `sap/m/messagebundle.properties` gives the ARIA texts (e.g. `RATING_VALUEARIATEXT={0} of {1}`),
+   useful when a chrome-devtools a11y snapshot shows an empty `valuetext` (2026-09-25).

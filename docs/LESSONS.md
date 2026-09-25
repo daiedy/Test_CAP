@@ -4,7 +4,9 @@ This file is an inbox, not an archive. A lesson lives here only until `/retro` t
 
 ## Pending
 
-None. The retro of 2026-09-23 transferred the three entries of the `catalog-authorization` run (a mock fixture verified on a path the application never uses, a scratchpad figure read as a phase figure, a silent-hiding mechanism failing asymmetrically across pages) and the pipeline findings of that run (the registry gate deadlock, work lost at turn limits, the orchestrator fixing instead of verifying). Destinations are listed in `docs/CHANGELOG.md`, 2026-09-23, `pipeline`.
+- 2026-09-25. `products-rating-column` (#5): an edit-mode `sap.m.RatingIndicator` clamps a displayed value above `maxValue` and writes the clamped value back through its two-way binding on the very next render (`onBeforeRendering` calls `setValue`, UI5 1.152.0 `sap/m/RatingIndicator-dbg.js`). So a range violation left in a draft (for example a value injected directly through the OData API) self-corrects the instant the field is re-rendered or the page reloaded, even though the `ASSERT_RANGE` `DraftMessages` entry the server produced is still shown until the next refresh. A "Save is rejected by `@assert.range`" scenario is therefore only observable if the invalid value is written and Save is clicked before any reload or re-render of the field; reproducing it after a reload silently passes for the wrong reason. Status: pending triage by `/retro` (candidate: a PATTERNS or TESTING note for range checks on a clamping control).
+
+(The retro of 2026-09-23 transferred the three entries of the `catalog-authorization` run — a mock fixture verified on a path the application never uses, a scratchpad figure read as a phase figure, a silent-hiding mechanism failing asymmetrically across pages — and the pipeline findings of that run: the registry gate deadlock, work lost at turn limits, the orchestrator fixing instead of verifying. Destinations are listed in `docs/CHANGELOG.md`, 2026-09-23, `pipeline`.)
 
 ## Pending upstream
 

@@ -2,15 +2,14 @@
 
 Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): `## Now` holds only the six labeled lines, `## Open debt` only table rows, `## What works` only list items. The SessionStart hook prints `Now` and `Open debt` whole, every agent reads them at protocol step 2. Narrative belongs in `docs/CHANGELOG.md` and in the feature `SUMMARY.md`, not here. Updated by `docs-keeper` at the end of every task and by the `/feature` orchestrator after every phase gate.
 
-
 ## Now
 
 - Date: 2026-09-25
 - Branch: feature/products-rating-column
 - Feature: products-rating-column (#5)
-- Phase: 4 Verification done: ready for review (editor, range on Save, viewer, ru passed; mock mode skipped)
-- Last commit: 249a539 feat(app): products-rating-column ui
-- Next: phase 5 review by `reviewer`, then phase 6 docs.
+- Phase: 6 Documentation: review passed with zero blocking findings, docs updated
+- Last commit: dd6ba53 docs(products-rating-column): browser verification
+- Next: phase 7 completion by the `/feature` orchestrator (close issue #5, prune the feature folder).
 
 ## Open debt
 
@@ -29,11 +28,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## What works
 
-- Backend on cds 10.0.6, Node 22: `npm run watch` (`cds watch`, port 4004), `npm run lint`, `npm test` (57 tests: 26 in `test/catalog-service.test.js`, 6 in `test/metadata.test.js` incl. the `$metadata` snapshot, 6 in `test/hooks-protect-bash.test.js`, 7 in `test/hooks-registry-gate.test.js`, 9 in `test/doc-shapes.test.js`, 3 in `test/prompt-budget.test.js`), `npm run docs:registry`
+- Backend on cds 10.0.6, Node 22: `npm run watch` (`cds watch`, port 4004), `npm run lint`, `npm test` (69 tests in 7 files: 30 in `test/catalog-service.test.js`, 7 in `test/metadata.test.js` incl. the `$metadata` snapshot, 7 in `test/backlog.test.js`, 6 in `test/hooks-protect-bash.test.js`, 7 in `test/hooks-registry-gate.test.js`, 9 in `test/doc-shapes.test.js`, 3 in `test/prompt-budget.test.js`), `npm run docs:registry`
 - UI: `npm start` (proxy, :8080) and `npm run start-mock` in `app/products` both open the app from the FLP sandbox; `ui5lint` 0 problems; `npm run lint:js` (Fiori tools ESLint) 0 errors
 - Object Page editing of `Products` through drafts (ADR-0012): Edit, Save, Cancel with discard confirmation, Create and Delete on the List Report, Editing Status filter, draft lock across users
 - List Report row shows a draft/lock marker (ADR-0015, feature `products-draft-marker`): `Common.SemanticKey: [ name ]` renders a `sap.m.ObjectMarker` in the `Product Name` cell — text-only `Draft` for an own draft, icon-plus-text `LockedBy`/`UnsavedBy` for another user's draft; verified in `en` and `ru`, keyboard-reachable, with the Editing Status filter narrowing to the marked row
-- UI tests: `npm run test:ui` in `app/products` (`ui5-test-runner` against `npx cds serve --in-memory --port 4004`, credentials from `app/products/ui5-test-runner.json`): 25 passed, 0 skipped
+- List Report and Object Page show `Products.rating` as a `sap.m.RatingIndicator` star column/field (feature `products-rating-column`, #5): `UI.DataPoint #Rating` with `Visualization: #Rating` referenced by a `UI.DataFieldForAnnotation` in `UI.LineItem` (`#Low` importance, last column) and in `UI.FieldGroup #GeneralInfo`; `@assert.range: [0, 5]` rejects an out-of-range `PATCH` and `draftActivate`; editable for `alice`/`bob`, read-only for `viewer`; `en`/`ru` labels verified
+- UI tests: `npm run test:ui` in `app/products` (`ui5-test-runner` against `npx cds serve --in-memory --port 4004`, credentials from `app/products/ui5-test-runner.json`): 28 passed, 0 skipped
 - Project-level Claude Code plugins: `ui5`, `cap-developer`; MCP in `.mcp.json`: `cds-mcp`, `fiori-mcp`, `chrome-devtools`, `ui5-mcp-server` (pinned 0.2.18 since 2026-09-09; the plugin's unpinned server `plugin:ui5:ui5-mcp-server` is toggled off in `/mcp` on each machine). Setup on a new machine: `docs/architecture/STACK.md`
 - Pipeline: 11 subagents in `.claude/agents`, 12 skills, 11 path-based rules, 7 hook events in `.claude/settings.json` (incl. the MCP audit on PostToolUse and PostToolUseFailure), the `docs/registry` registry, the release watcher `scripts/watch-releases.mjs` and the `upstream-check.yml` and `ci.yml` workflows, `.github/dependabot.yml`
 - `CatalogService` requires authentication (ADR-0013): logging in as `alice` or `bob` (`CatalogEditor`, browser Basic prompt, empty password) shows Create, Delete and Edit as before; logging in as `viewer` (`CatalogViewer`) shows the same 15-row List Report and Object Page but without those four actions - the read-only singleton `CatalogService.Permissions` drives `UI.CreateHidden`/`UpdateHidden`/`DeleteHidden` in `app/products/annotations/Products.cds`. `npm test` **38 passed**, `npm run test:ui` **25 opaTests, 0 skipped**.

@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-09-25
 - Branch: feature/products-excel-upload
 - Feature: products-excel-upload (#7)
-- Phase: 3 UI gate green (101 backend tests, 42/42 OPA5 runner, ui5lint clean)
-- Last commit: 1a1199f feat(srv): products-excel-upload backend
-- Next: phase 4 verification (`ui-verifier`, PLAN step 11)
+- Phase: 4 verification done, ready for review
+- Last commit: 4fffc95 feat(app): products-excel-upload ui
+- Next: phase 5 review (`reviewer`, PLAN step 12)
 
 ## Open debt
 

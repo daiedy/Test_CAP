@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-09-25
 - Branch: feature/products-rating-filter
 - Feature: products-rating-filter (#6)
-- Phase: 4 Verification (UI phase done: steps 4, 4c, 5, 6, 6a; 36 OPA5 + 2 QUnit green)
-- Last commit: 3d56b96 docs(products-rating-filter): fiori-mcp gap record and ADR-0020 exception
-- Next: `ui-verifier` PLAN step 7, then review and documentation
+- Phase: 5 Review (verification ready for review; saved views lose filters in the sandbox, pre-existing, separate issue by user decision)
+- Last commit: 1b671d6 feat(app): products-rating-filter ui
+- Next: `reviewer` PLAN step 8, then `docs-keeper` step 9
 
 ## Open debt
 

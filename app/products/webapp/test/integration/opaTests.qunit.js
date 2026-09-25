@@ -11,6 +11,7 @@ sap.ui.define(
     './EditCategoryOnObjectPageJourney',
     './RussianLocaleJourney',
     './RatingShownAsStarsJourney',
+    './RatingRangeFilterJourney',
     './DraftMarkerInListReportJourney',
     './RoleAwareActionsJourney',
   ],
@@ -21,6 +22,7 @@ sap.ui.define(
     EditCategoryOnObjectPage,
     RussianLocale,
     RatingShownAsStars,
+    RatingRangeFilter,
     DraftMarkerInListReport,
     RoleAwareActions
   ) {
@@ -30,6 +32,8 @@ sap.ui.define(
     // only journey that creates a draft, so a leftover draft can never change that count.
     // RatingShownAsStarsJourney only reads; it runs before DraftMarkerInListReportJourney for the
     // same reason, so the seeded rating it asserts is never a draft value.
+    // RatingRangeFilterJourney asserts row counts per rating range and ends on the full range, so it
+    // also runs before DraftMarkerInListReportJourney.
     // RoleAwareActionsJourney runs last (PLAN step 11): it only reads and selects, so it depends on
     // no other journey and changes nothing for them.
     runner.run([
@@ -38,6 +42,7 @@ sap.ui.define(
       EditCategoryOnObjectPage,
       RussianLocale,
       RatingShownAsStars,
+      RatingRangeFilter,
       DraftMarkerInListReport,
       RoleAwareActions,
     ]);

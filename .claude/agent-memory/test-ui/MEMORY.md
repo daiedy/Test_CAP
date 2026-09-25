@@ -1,1 +1,1 @@
-- [sap.fe.test API verification](reference-sap-fe-test-api-verification.md) — CDN `-dbg.js` sources as fallback; DataPoint column/field ids; probing ids with a failing OPA assert
+- [sap.fe.test API verification](reference-sap-fe-test-api-verification.md) — CDN `-dbg.js` fallback; DataPoint ids; custom filter field id, liveMode Go button, $p13n; probing ids; per-test report parsing

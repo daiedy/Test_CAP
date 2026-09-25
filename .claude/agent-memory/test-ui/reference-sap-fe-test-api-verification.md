@@ -22,3 +22,10 @@ Related: [[test-cap-ui-test-run-baseline]]
 - Form: `FormElement::DataFieldForAnnotation::DataPoint::Rating`, so `iCheckField({ property: 'DataPoint::Rating' }, undefined, state)`. The typedef's `targetAnnotation` is not read by `BaseAPI` (ids come from `property`, inserted into a RegExp unescaped).
 - A non-text cell control (RatingIndicator) is asserted with the cell state `{ editor: { controlType, value, maxValue } }`: `MdcTableBuilder` Cell `editor` routes through `MacroFieldBuilder` which unwraps FE wrappers; a plain `{ value }` cell state failed (timeout).
 - Headless Chrome `--dump-dom` produces nothing in the agent sandbox. Probe ids instead with a temporary `opaTest` whose `Then.waitFor` success calls `sap.ui.test.Opa5.assert.ok(false, '<ids>')` while `runner.run([OnlyThisJourney])`: the runner's console output prints failure messages in full (only passes are reduced to counts). Restore both files afterwards.
+
+## Custom filter field and liveMode (measured 2026-09-25, FE 1.152.0, products-rating-filter)
+
+- A manifest `filterFields.<key>` custom filter renders as `sap.ui.mdc.FilterField` with id `...--fe::FilterBar::<Entity>::CustomFilterField::<key>` (content `CustomFilterFieldContentWrapper`); `sap.fe.test` field identifiers resolve to `::FilterField::<key>` and never match it, so use an own `OpaBuilder` page object (`pages/RatingRangeSlider.js`).
+- `liveMode: true`: `getLiveMode()` true, but `showGoButton` stays true; the `-btnSearch` button exists with `visible` false and no DOM ref. `iCheckSearch({ visible: false })` therefore cannot prove "no Go button".
+- Adapt Filters list items are `sap.m.CustomListItem` (dialog) bound to model `$p13n` (`name`, `label`, `visible`). Counting over all matched controls needs `OpaBuilder#check`, not `has` (per control).
+- Per-test results of a run: `node -e` with `require('<report-dir>/job.js')` and walk objects that have `testId` and `name` (`report.failed`, `logs[].message`). A mutation run (deliberately wrong expected values) proves a custom assertion can fail; each failure costs the 60 s OPA timeout.

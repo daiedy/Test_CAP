@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-09-25
-- Branch: feature/products-rating-column
+- Branch: feature/products-rating-filter
 - Feature: none
-- Phase: none (products-rating-column #5 done and closed, branch not merged)
-- Last commit: 4c719bb docs: products-rating-column summary and registry
-- Next: user merges `feature/products-rating-column` into `main` and pushes (the SUMMARY permalink needs the push); then `/spec #6`.
+- Phase: none (products-rating-filter #6 done and closed, branch not merged)
+- Last commit: 63abadb docs: products-rating-filter summary and registry
+- Next: user merges `feature/products-rating-filter` into `main` and pushes (the SUMMARY permalink needs the push); `/backlog` the sandbox flex-connector issue
 
 ## Open debt
 
@@ -23,8 +23,10 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 | The OPA5 suite for `catalog-authorization` authenticates as one user (`alice`) per run, so the hidden state for a `CatalogViewer` has no automated regression guard; only the backend tests (`@restrict`) and `ui-verifier`'s blocking viewer criterion cover it | Add a second runner config `ui5-test-runner-viewer.json` and a `test:ui:viewer` script only if the hidden state ever regresses (user decision 2026-09-10, PLAN "Open questions") | user |
 | CI and Dependabot added 2026-09-07 (`ci.yml`: backend, UI lint, OPA5 journeys; `dependabot.yml`: weekly, grouped, majors of CAP excluded). First run failed (root ESLint picked up the UI config, UI lockfile out of sync), fixed in `8ec176b`; run 34112716975 green: backend, UI lint, OPA5 journeys | Watch Dependabot PRs on Mondays | user |
 | `run_manifest_validation` of UI5 MCP 0.2.18 fails with a draft-06 schema error | Workaround via `ui5lint`; wait for a new `@ui5/mcp-server` version via `upstream-check`, then bump the pin in `.mcp.json` | upstream-watcher |
-| List Report needs the Go button before the table reloads (FE default, avoids server round trips on every filter change); the user finds it inconvenient for a 15-row catalog | Set `liveMode: true` on `ProductsList` via Fiori MCP `execute_functionality`; tiny feature, needs a PLAN because it changes `manifest.json` and the OPA5 filter journey | user |
 | UI tests run only against the live stack (`npm run watch`); the mock (`npm run start-mock`) does not serve `ru` | Known limitation of `sap-fe-mockserver`, no alternative found | |
+| `fiori-mcp` 1.12.2 `list_functionality` has no id for `filterFields` or `liveMode`; both set by hand under the ADR-0020 exception to ADR-0007 | `upstream-watcher` re-checks on each bump; drop the exception once covered | upstream-watcher |
+| FLP sandbox has no `data-sap-ui-flexibility-services`; variant `Save As` 404s and `eraseDirtyChangesOnVariant` erases the change on switch | Add a Session/LocalStorageConnector to `flpSandbox.html` (also needed for the New Sandbox migration); regress via an OPA5 `VariantManagement` select | user |
+| Root `.prettierrc` (single quotes, es5 commas) contradicts `app/products` ESLint (double quotes, no dangling comma) | ESLint wins today (orchestrator decision); align the configs | user |
 
 ## What works
 

@@ -1,6 +1,12 @@
 sap.ui.define(
-  ['sap/fe/test/JourneyRunner', './ProductsList.gen', './ProductsObjectPage.gen', './CategoryDropdown'],
-  function (JourneyRunner, ProductsList, ProductsObjectPage, CategoryDropdown) {
+  [
+    'sap/fe/test/JourneyRunner',
+    './ProductsList.gen',
+    './ProductsObjectPage.gen',
+    './CategoryDropdown',
+    './RatingRangeSlider',
+  ],
+  function (JourneyRunner, ProductsList, ProductsObjectPage, CategoryDropdown, RatingRangeSlider) {
     'use strict';
 
     // The app is started through the FLP sandbox (test/flpSandbox.html) with the intent
@@ -13,6 +19,7 @@ sap.ui.define(
         onTheProductsList: ProductsList,
         onTheProductsObjectPage: ProductsObjectPage,
         onTheCategoryDropdown: CategoryDropdown,
+        onTheRatingRangeSlider: RatingRangeSlider,
       },
     });
 

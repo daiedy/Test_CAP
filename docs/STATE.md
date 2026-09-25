@@ -8,9 +8,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-09-25
 - Branch: feature/products-rating-column
 - Feature: products-rating-column (#5)
-- Phase: 3 UI done: `npm test` 69, OPA5 28/28, ui5lint clean, contract +16/-0
-- Last commit: dc74131 feat(srv): products-rating-column backend
-- Next: phase 4 verification by `ui-verifier` (PLAN row 5), then review and docs.
+- Phase: 4 Verification done: ready for review (editor, range on Save, viewer, ru passed; mock mode skipped)
+- Last commit: 249a539 feat(app): products-rating-column ui
+- Next: phase 5 review by `reviewer`, then phase 6 docs.
 
 ## Open debt
 

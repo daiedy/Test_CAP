@@ -16,8 +16,16 @@ annotate CatalogService.Products with @(
     { $Type: 'UI.DataField', Value: name },
     { $Type: 'UI.DataField', Value: category_code },
     { $Type: 'UI.DataField', Value: price },
-    { $Type: 'UI.DataField', Value: stock }
+    { $Type: 'UI.DataField', Value: stock },
+    // Label is explicit: FE takes a DataFieldForAnnotation header from the record, not from @title.
+    { $Type: 'UI.DataFieldForAnnotation', Label: '{i18n>Products.rating}', Target: '@UI.DataPoint#Rating', ![@UI.Importance]: #Low }
   ],
+  // Read-only stars in the table, interactive stars in the Object Page edit mode; no Title/Description.
+  UI.DataPoint #Rating: {
+    Value        : rating,
+    TargetValue  : 5,
+    Visualization: #Rating
+  },
   UI.Facets: [
     { $Type: 'UI.ReferenceFacet', ID: 'GeneralInfo',  Label: '{i18n>Products.facet.general}', Target: '@UI.FieldGroup#GeneralInfo' },
     { $Type: 'UI.ReferenceFacet', ID: 'PricingStock', Label: '{i18n>Products.facet.pricing}', Target: '@UI.FieldGroup#PricingStock' },
@@ -27,6 +35,7 @@ annotate CatalogService.Products with @(
     { $Type: 'UI.DataField', Value: name },
     { $Type: 'UI.DataField', Value: description },
     { $Type: 'UI.DataField', Value: category_code },
+    { $Type: 'UI.DataFieldForAnnotation', Label: '{i18n>Products.rating}', Target: '@UI.DataPoint#Rating' },
     { $Type: 'UI.DataField', Value: imageUrl }
   ]},
   UI.FieldGroup #PricingStock: { Data: [

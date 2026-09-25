@@ -232,7 +232,19 @@
             <Record Type="UI.DataField">
               <PropertyValue Property="Value" Path="stock"/>
             </Record>
+            <Record Type="UI.DataFieldForAnnotation">
+              <PropertyValue Property="Label" String="Rating"/>
+              <PropertyValue Property="Target" AnnotationPath="@UI.DataPoint#Rating"/>
+              <Annotation Term="UI.Importance" EnumMember="UI.ImportanceType/Low"/>
+            </Record>
           </Collection>
+        </Annotation>
+        <Annotation Term="UI.DataPoint" Qualifier="Rating">
+          <Record Type="UI.DataPointType">
+            <PropertyValue Property="Value" Path="rating"/>
+            <PropertyValue Property="TargetValue" Int="5"/>
+            <PropertyValue Property="Visualization" EnumMember="UI.VisualizationType/Rating"/>
+          </Record>
         </Annotation>
         <Annotation Term="UI.Facets">
           <Collection>
@@ -265,6 +277,10 @@
                 </Record>
                 <Record Type="UI.DataField">
                   <PropertyValue Property="Value" Path="category_code"/>
+                </Record>
+                <Record Type="UI.DataFieldForAnnotation">
+                  <PropertyValue Property="Label" String="Rating"/>
+                  <PropertyValue Property="Target" AnnotationPath="@UI.DataPoint#Rating"/>
                 </Record>
                 <Record Type="UI.DataField">
                   <PropertyValue Property="Value" Path="imageUrl"/>

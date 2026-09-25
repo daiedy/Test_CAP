@@ -8,9 +8,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-09-25
 - Branch: feature/products-rating-column
 - Feature: products-rating-column (#5)
-- Phase: 2 Backend done: `npm test` 68 passed, `npm run lint` green, contract +6/-0
-- Last commit: 69eb82a docs(products-rating-column): plan, context and screens
-- Next: phase 3 UI, `fiori-app-dev` then `test-ui` with PLAN rows 3 and 4; push when the user says so.
+- Phase: 3 UI done: `npm test` 69, OPA5 28/28, ui5lint clean, contract +16/-0
+- Last commit: dc74131 feat(srv): products-rating-column backend
+- Next: phase 4 verification by `ui-verifier` (PLAN row 5), then review and docs.
 
 ## Open debt
 

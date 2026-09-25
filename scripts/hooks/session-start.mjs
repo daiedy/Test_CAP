@@ -16,6 +16,7 @@ import { stateShapeErrors, capped, STATE_PRINT_BUDGET } from '../lib/doc-shapes.
 import { collectBriefing, renderBriefing } from '../lib/backlog.mjs';
 
 /** `cds --version` colors its output even when piped; the codes break the version regex. */
+// eslint-disable-next-line no-control-regex -- ESC (\x1b) is intended: strips ANSI color codes
 const stripAnsi = (s) => s.replace(/\x1b\[[0-9;]*m/g, '');
 
 /** Emit the hook result: `systemMessage` for the user, `additionalContext` for Claude. */

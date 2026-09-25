@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-09-25
 - Branch: feature/products-rating-filter
 - Feature: products-rating-filter (#6)
-- Phase: 5 Review (verification ready for review; saved views lose filters in the sandbox, pre-existing, separate issue by user decision)
-- Last commit: 1b671d6 feat(app): products-rating-filter ui
-- Next: `reviewer` PLAN step 8, then `docs-keeper` step 9
+- Phase: 6 Documentation
+- Last commit: b6b5790 docs(products-rating-filter): browser verification
+- Next: close #6 and prune (orchestrator)
 
 ## Open debt
 
@@ -23,8 +23,10 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 | The OPA5 suite for `catalog-authorization` authenticates as one user (`alice`) per run, so the hidden state for a `CatalogViewer` has no automated regression guard; only the backend tests (`@restrict`) and `ui-verifier`'s blocking viewer criterion cover it | Add a second runner config `ui5-test-runner-viewer.json` and a `test:ui:viewer` script only if the hidden state ever regresses (user decision 2026-09-10, PLAN "Open questions") | user |
 | CI and Dependabot added 2026-09-07 (`ci.yml`: backend, UI lint, OPA5 journeys; `dependabot.yml`: weekly, grouped, majors of CAP excluded). First run failed (root ESLint picked up the UI config, UI lockfile out of sync), fixed in `8ec176b`; run 34112716975 green: backend, UI lint, OPA5 journeys | Watch Dependabot PRs on Mondays | user |
 | `run_manifest_validation` of UI5 MCP 0.2.18 fails with a draft-06 schema error | Workaround via `ui5lint`; wait for a new `@ui5/mcp-server` version via `upstream-check`, then bump the pin in `.mcp.json` | upstream-watcher |
-| List Report needs the Go button before the table reloads (FE default, avoids server round trips on every filter change); the user finds it inconvenient for a 15-row catalog | Set `liveMode: true` on `ProductsList` via Fiori MCP `execute_functionality`; tiny feature, needs a PLAN because it changes `manifest.json` and the OPA5 filter journey | user |
 | UI tests run only against the live stack (`npm run watch`); the mock (`npm run start-mock`) does not serve `ru` | Known limitation of `sap-fe-mockserver`, no alternative found | |
+| `fiori-mcp` 1.12.2 `list_functionality` has no id for `filterFields` or `liveMode`; both set by hand under the ADR-0020 exception to ADR-0007 | `upstream-watcher` re-checks on each bump; drop the exception once covered | upstream-watcher |
+| FLP sandbox has no `data-sap-ui-flexibility-services`; variant `Save As` 404s and `eraseDirtyChangesOnVariant` erases the change on switch | Add a Session/LocalStorageConnector to `flpSandbox.html` (also needed for the New Sandbox migration); regress via an OPA5 `VariantManagement` select | user |
+| Root `.prettierrc` (single quotes, es5 commas) contradicts `app/products` ESLint (double quotes, no dangling comma) | ESLint wins today (orchestrator decision); align the configs | user |
 
 ## What works
 

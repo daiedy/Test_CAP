@@ -6,6 +6,8 @@ Date: 2026-09-25. Author: `fiori-app-dev`. Feature `products-rating-filter` (#6)
 
 **No functionality covers either change.** `list_functionality` for `app/products` returns no id for `controlConfiguration` → `@com.sap.vocabularies.UI.v1.SelectionFields` → `filterFields.<key>` (custom filter field) and no id for `liveMode` on `ProductsList`. Per PLAN step 3 ("If no functionality covers a custom filter field: stop and report, do not edit `manifest.json`") steps 4 and 4c are **not started**. Decision needed from the user or `architect` (see "Options").
 
+**Resolved 2026-09-25:** option 1, ADR-0020 section "Exception to ADR-0007" (user decision); `fiori-app-dev` re-ran `list_functionality` immediately before the manifest edit in step 4, still unchanged (no `filterFields` or `liveMode` id, per the CHANGELOG entry for that phase).
+
 ## 1. `list_functionality` (`appPath` = `/Users/anton_straltsou/github/Test_CAP/app/products`)
 
 Full list of ids returned (descriptions shortened):

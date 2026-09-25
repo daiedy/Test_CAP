@@ -20,7 +20,7 @@ sap.ui.define([], function () {
     seeded: { name: 'Laptop Pro 15', rating: 5 },
     labels: {
       en: 'Rating',
-      ru: 'Рейтинг', // Reyting
+      ru: '\u0420\u0435\u0439\u0442\u0438\u043D\u0433', // Reyting
     },
   };
 });

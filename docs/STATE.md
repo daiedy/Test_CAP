@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-09-25
 - Branch: feature/products-rating-filter
 - Feature: products-rating-filter (#6)
-- Phase: 3 UI paused after step 3: fiori-mcp 1.12.2 lacks filterFields and liveMode; ADR-0020 amended with a one-off hand-edit exception (user decision)
-- Last commit: 5775578 docs(products-rating-filter): approved plan, screens and ADR-0020
-- Next: user restarts with `PIPELINE_ALLOW_PROTECTED=1 claude --continue`; then `fiori-app-dev` PLAN steps 4 and 4c
+- Phase: 4 Verification (UI phase done: steps 4, 4c, 5, 6, 6a; 36 OPA5 + 2 QUnit green)
+- Last commit: 3d56b96 docs(products-rating-filter): fiori-mcp gap record and ADR-0020 exception
+- Next: `ui-verifier` PLAN step 7, then review and documentation
 
 ## Open debt
 

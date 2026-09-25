@@ -1,0 +1,28 @@
+<!--
+    Custom filter field "rating" of the List Report filter bar (ADR-0020).
+    The range is displayed one-way from the filter bar condition (filterValues>) and written
+    only by the change handler through the ExtensionAPI setFilterValues; 0..5 means "no condition".
+-->
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+    <RangeSlider
+        id="RatingRangeSlider"
+        core:require="{
+            handler: 'products/ext/fragment/RatingRangeFilter',
+            Range: 'sap/fe/macros/filter/type/Range'
+        }"
+        min="0"
+        max="5"
+        step="1"
+        width="100%"
+        enableTickmarks="true"
+        showAdvancedTooltip="true"
+        inputsAsTooltips="true"
+        range="{
+            path: 'filterValues>',
+            type: 'Range',
+            mode: 'OneWay',
+            formatter: 'handler.formatRange'
+        }"
+        change="handler.onRangeChange"
+    />
+</core:FragmentDefinition>

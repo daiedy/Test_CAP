@@ -72,12 +72,12 @@ sap.ui.define(
         'The Editing Status filter Own Draft narrows the list to that row',
         function (Given, When, Then) {
           When.onTheProductsList.onFilterBar().iChangeEditingStatus(EditState.OwnDraft);
-          When.onTheProductsList.onFilterBar().iExecuteSearch();
+          // liveMode (no Go button): the filter bar reloads the table on the change; iCheckRows polls until the new count.
           Then.onTheProductsList.onTable().iCheckRows(1);
           Then.onTheProductsList.onTable().iCheckRows(laptopRow, 1, { isDraft: true });
           // Back to the default editing status, so the next case works on the whole list again.
           When.onTheProductsList.onFilterBar().iChangeEditingStatus(EditState.All);
-          When.onTheProductsList.onFilterBar().iExecuteSearch();
+          // liveMode (no Go button): the filter bar reloads the table on the change; iCheckRows polls until the new count.
           Then.onTheProductsList.onTable().iCheckRows(15);
         }
       );

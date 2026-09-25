@@ -29,7 +29,7 @@ sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts'], function (opaTes
       When.onTheProductsList.onFilterBar().iOpenValueHelp({ property: 'category_code' });
       Then.onTheCategoryDropdown.iSeeItems(allNames);
       When.onTheCategoryDropdown.iSelectItem(names.KITCHEN);
-      When.onTheProductsList.onFilterBar().iExecuteSearch();
+      // liveMode (no Go button): the filter bar reloads the table on the change; iCheckRows polls until the new count.
       Then.onTheProductsList.onFilterBar().iCheckFilterField({ property: 'category_code' }, 'KITCHEN');
       Then.onTheCategoryDropdown.iSeeFilterTokens('category_code', [names.KITCHEN]);
       Then.onTheProductsList.onTable().iCheckRows(3);
@@ -38,7 +38,7 @@ sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts'], function (opaTes
 
     opaTest('Two selected categories widen the result', function (Given, When, Then) {
       When.onTheProductsList.onFilterBar().iChangeFilterField({ property: 'category_code' }, names.SPORTS);
-      When.onTheProductsList.onFilterBar().iExecuteSearch();
+      // liveMode (no Go button): the filter bar reloads the table on the change; iCheckRows polls until the new count.
       Then.onTheProductsList.onFilterBar().iCheckFilterField({ property: 'category_code' }, [
         'KITCHEN',
         'SPORTS',

@@ -13,6 +13,9 @@ sap.ui.define(function () {
       loader: { paths: { products: '../' } },
     },
     tests: {
+      'unit/unitTests': {
+        title: 'Unit tests for products',
+      },
       'integration/opaTests': {
         title: 'OPA5 journeys for products (sap.fe.test)',
         ui5: { animationMode: 'none' },

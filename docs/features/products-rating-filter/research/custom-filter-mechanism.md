@@ -53,3 +53,36 @@ Ratings: 0 x1, 1 x1, 2 x2, 3 x3, 4 x4, 5 x4 (15 rows). Row counts by slider rang
 ## 7. Contract
 
 Way B changes no `db/`, `srv/` or `app/*/annotations` file: `test/__snapshots__/metadata.test.js.snap` and `localService/metadata.xml` stay byte-identical (check with `git diff --numstat` at the phase gate: no line for either file). Way A/A' would change both; the figure is to be measured with `git diff --numstat` in that phase, not predicted.
+
+## 8. Measurements of PLAN steps 4 and 4c (`fiori-app-dev`, 2026-09-25)
+
+Setup: `npx cds serve --in-memory --port 4004` (stopped after), UI5 1.152.0 from the CDN, `flpSandbox.html#products-display`, headless Chrome 152 through puppeteer (global install), basic auth `alice` or `viewer`, `sap-ui-log-level=WARNING` so that `Log.warning` reaches the console. Requests are the `GET Products?...` lines inside the `$batch` bodies; the constant draft filter `(IsActiveEntity eq false or SiblingEntity/IsActiveEntity eq null)` is omitted below.
+
+**Ids and structure (for `test-ui`).** Filter bar `products::ProductsList--fe::FilterBar::Products` (`sap.ui.mdc.FilterBar`), slider `products::ProductsList--rating--RatingRangeSlider` (`sap.m.RangeSlider`, `min 0`, `max 5`, `step 1`, tick marks and input tooltips on), table `products::ProductsList--fe::table::Products::LineItem`. `getFilterItems()` order and keys: `$editState`, `name`, `category_code`, `price`, `rating`. The rating item is a `sap.ui.mdc.FilterField` with key `rating`, and there is no second `rating` field. The Go button `...--fe::FilterBar::Products-btnSearch` exists as a control, `getVisible()` false and not rendered. `getLiveMode()` is true.
+
+**Label (PLAN risk 3 did not happen).** The fallback to `Common.Label` works: en "Rating", ru the `Products.rating` value of `_i18n/i18n_ru.properties` (U+0420 U+0435 U+0439 U+0442 U+0438 U+043D U+0433) (both `alice` and `viewer`). No manifest `label` and no i18n key needed.
+
+**First load.** Slider `[0, 5]`, `getConditions().rating` is `[]`, 15 rows, and the first `Products` request has no `rating` in `$filter`. The same holds for `viewer` (en, ru) and for `alice` in ru.
+
+**Changes (all measured in one session in this order; rows from `getRowBinding().getLength()`).**
+
+| Step | How | `Products` requests (`$filter` part) | Rows | Slider / condition |
+|---|---|---|---|---|
+| 0..5 → 4..5 | real mouse drag of the start handle across 4 ticks, 20 moves, released | 0 during the drag; on release 2: none, then `rating ge 4 and rating le 5` | 8 | `[4,5]` / `BT [4,5]` |
+| 4..5 → 4..4 | end handle focused, Arrow Left | 1: `rating ge 4 and rating le 4` | 4 | `[4,4]` / `BT [4,4]` |
+| 4..4 → 2..4 | `setRange([2,4])` + `fireChange` (the OPA path) | 1: `rating ge 2 and rating le 4` | 9 | `[2,4]` / `BT [2,4]` |
+| 2..4 → 0..5 | `setRange([0,5])` + `fireChange` | 1: none | 15 | `[0,5]` / `[]` (cleared) |
+| condition from outside | `StateUtil.applyExternalState(filterBar, { filter: { rating: [BT 4..5] } })` (the variant / app state path) | 1: `rating ge 4 and rating le 5` | 8 | the slider follows: `[4,5]` (the one-way display binding works; PLAN risk 2 did not happen) |
+| Name "Lamp" | typed with 120 ms per key, then Enter | 0 while typing; 1 on Enter: `rating ge 4 and rating le 5 and name eq 'Lamp'` | 0 | unchanged |
+
+**The first filter change after load sends two requests. This is `liveMode` behaviour of the filter bar, not of the slider.** Measured on fresh page loads with a `search` listener on the filter bar:
+- Slider as the first change (mouse drag, Arrow key or `fireChange`): one `change` event and two `search` events. The first `search` carries the conditions from before the change (`{}`), the second carries `BT`. Result: two requests, first without `rating`, then with it.
+- Name as the first change (type, then Enter): two `search` events, both with `name EQ Lamp`, so two identical requests.
+- Every later change, of any field: exactly one request.
+- Both searches come from `mdc` `FilterBarBase._checkAndNotify`, as the stack trace shows; the slider handler makes only one `setFilterValues` call.
+
+Only the table's first reload is doubled. The final rows always match the final conditions. It is neither a request per keystroke nor one per drag step (the PLAN risk). It is reported, not tuned. `ui-verifier` scenario M should expect it on the first change after load.
+
+**Console.** Across all runs (en/ru, `alice`/`viewer`), nothing matched "not in the range". Positive control on the same page: `setRange([-9007199254740991, 5])` logs `Warning: Min value (-9007199254740991) not in the range: [0,5] - Element sap.m.RangeSlider#products::ProductsList--rating--RatingRangeSlider`. So the probe does see such warnings, and `formatRange` prevents them. No other warning or error mentions the slider, the fragment or `filterValues`. The rest is the known sandbox noise: deprecated `sandbox.js`/`createRenderer`, the `Component-preload.js` 404, `LrepConnector`.
+
+**Not measured here (left to `ui-verifier`).** Variant save and restore through the UI, the Adapt Filters dialog, the typed input in the tooltip, the accessibility tree, mock mode, and the Category, Price and Editing Status request counts.

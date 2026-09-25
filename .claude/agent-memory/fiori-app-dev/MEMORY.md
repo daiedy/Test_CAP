@@ -1,1 +1,2 @@
 - [STATE.md session line is a hook artifact](project-state-md-precompact-artifact.md) — a lone `## Sessions` bullet appearing in docs/STATE.md mid-run is written by the PreCompact hook, not by you
+- [fiori-mcp lacks filterFields/liveMode](project-fiori-mcp-no-filterfields-livemode.md) — 1.12.2 exposes no custom filter field or liveMode functionality; stop and report

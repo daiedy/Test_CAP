@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-09-25
 - Branch: feature/products-rating-filter
 - Feature: products-rating-filter (#6)
-- Phase: 1 plan approved (Q1 RangeSlider, Q2 0..5 step 1, Q3 slider only, Q4 liveMode together); ADR-0020 accepted
-- Last commit: a2db70f Merge branch 'feature/products-rating-column'
-- Next: phase 2 skipped (no backend change), phase 3 UI by `fiori-app-dev` (PLAN steps 3-4, 4c)
+- Phase: 3 UI paused after step 3: fiori-mcp 1.12.2 lacks filterFields and liveMode; ADR-0020 amended with a one-off hand-edit exception (user decision)
+- Last commit: 5775578 docs(products-rating-filter): approved plan, screens and ADR-0020
+- Next: user restarts with `PIPELINE_ALLOW_PROTECTED=1 claude --continue`; then `fiori-app-dev` PLAN steps 4 and 4c
 
 ## Open debt
 

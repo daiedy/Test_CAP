@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-09-25
-- Branch: feature/products-rating-column
-- Feature: none
-- Phase: none (products-rating-column #5 done and closed, branch not merged)
-- Last commit: 4c719bb docs: products-rating-column summary and registry
-- Next: user merges `feature/products-rating-column` into `main` and pushes (the SUMMARY permalink needs the push); then `/spec #6`.
+- Branch: feature/products-rating-filter
+- Feature: products-rating-filter (#6)
+- Phase: 1 plan approved (Q1 RangeSlider, Q2 0..5 step 1, Q3 slider only, Q4 liveMode together); ADR-0020 accepted
+- Last commit: a2db70f Merge branch 'feature/products-rating-column'
+- Next: phase 2 skipped (no backend change), phase 3 UI by `fiori-app-dev` (PLAN steps 3-4, 4c)
 
 ## Open debt
 

@@ -7,3 +7,4 @@
 - [Role-aware UI needs a singleton](role-aware-ui-singleton.md) — why a per-row element cannot hide Create; measured +50 EDMX lines; ADR-0013 part 8
 - [Test suite shape and auth](test-suite-shape.md) — re-derive test counts per plan; the hook test uses no cds.test, so no defaults.auth
 - [FE V4 rating DataPoint column](fe-v4-rating-datapoint.md) — stars need no fragment; editable in a form; sap.fe.test matchers by header and `{ value }`; +6 / net +15 EDMX
+- [FE V4 custom filter field](fe-v4-custom-filter-field.md) — filterFields, Range type min-0 bug, RangeSlider write-back, setFilterValues, liveMode replaces iExecuteSearch; ADR-0020 accepted 2026-09-25

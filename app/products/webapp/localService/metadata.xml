@@ -147,6 +147,11 @@
         <Property Name="descr" Type="Edm.String" MaxLength="1000"/>
         <Property Name="code" Type="Edm.String" MaxLength="3" Nullable="false"/>
       </EntityType>
+      <ComplexType Name="ProductsImportFile">
+        <Property Name="content" Type="Edm.Stream"/>
+        <Property Name="mediaType" Type="Edm.String" MaxLength="100"/>
+        <Property Name="fileName" Type="Edm.String" MaxLength="255"/>
+      </ComplexType>
       <ComplexType Name="DRAFT_DraftAdministrativeData_DraftMessage">
         <Property Name="code" Type="Edm.String"/>
         <Property Name="message" Type="Edm.String"/>
@@ -156,6 +161,11 @@
         <Property Name="numericSeverity" Type="Edm.Byte"/>
         <Property Name="longtextUrl" Type="Edm.String"/>
       </ComplexType>
+      <Action Name="importProducts" IsBound="true">
+        <Parameter Name="in" Type="Collection(CatalogService.Products)" Nullable="true"/>
+        <Parameter Name="file" Type="CatalogService.ProductsImportFile" Nullable="false"/>
+        <ReturnType Type="Edm.Int32"/>
+      </Action>
       <Action Name="draftPrepare" IsBound="true" EntitySetPath="in">
         <Parameter Name="in" Type="CatalogService.Products"/>
         <Parameter Name="SideEffectsQualifier" Type="Edm.String"/>
@@ -507,6 +517,33 @@
       </Annotations>
       <Annotations Target="CatalogService.Products/DraftMessages">
         <Annotation Term="Core.Computed" Bool="true"/>
+      </Annotations>
+      <Annotations Target="CatalogService.importProducts(Collection(CatalogService.Products))">
+        <Annotation Term="Common.Label" String="Import Products"/>
+      </Annotations>
+      <Annotations Target="CatalogService.importProducts(Collection(CatalogService.Products))/file">
+        <Annotation Term="Common.Label" String="File"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductsImportFile/content">
+        <Annotation Term="Core.MediaType" Path="mediaType"/>
+        <Annotation Term="Core.AcceptableMediaTypes">
+          <Collection>
+            <String>application/vnd.openxmlformats-officedocument.spreadsheetml.sheet</String>
+          </Collection>
+        </Annotation>
+        <Annotation Term="Core.ContentDisposition">
+          <Record Type="Core.ContentDispositionType">
+            <PropertyValue Property="Filename" Path="fileName"/>
+          </Record>
+        </Annotation>
+        <Annotation Term="Common.Label" String="Excel File (.xlsx)"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductsImportFile/mediaType">
+        <Annotation Term="Core.IsMediaType" Bool="true"/>
+        <Annotation Term="Common.Label" String="File Type"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductsImportFile/fileName">
+        <Annotation Term="Common.Label" String="File Name"/>
       </Annotations>
       <Annotations Target="CatalogService.Categories">
         <Annotation Term="UI.Identification">

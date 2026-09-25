@@ -1,6 +1,15 @@
 // Service tests for CatalogService (Vitest + @cap-js/cds-test). Data comes from db/data/*.csv.
 // cds 10: Decimal values arrive as strings; write operations return { affected }.
 import cds from '@sap/cds';
+import { readFileSync } from 'node:fs';
+import {
+  HEADER,
+  VALID_ROWS,
+  fileParameter,
+  generatedRow,
+  proseDescription,
+  workbook,
+} from './fixtures/build-workbooks.mjs';
 
 const { GET, POST, PATCH, DELETE, expect, defaults } = cds.test(import.meta.dirname + '/..');
 defaults.auth = { username: 'alice' };
@@ -429,5 +438,263 @@ describe('CatalogService authorization', () => {
 
   it('does not allow writing the Permissions singleton', async () => {
     await expect(PATCH(`${base}/Permissions`, { isEditor: false })).to.be.rejectedWith(/405/);
+  });
+});
+
+// Excel import (ADR-0021): a collection-bound action that creates active products from an xlsx
+// workbook, all-or-nothing. Fixtures and in-memory workbooks come from test/fixtures. Every test
+// that imports deletes the created products, so the 15 seeded rows stay the baseline.
+describe('CatalogService.Products importProducts', () => {
+  const importUrl = `${base}/Products/CatalogService.importProducts`;
+  const fixture = (name) =>
+    readFileSync(`${import.meta.dirname}/fixtures/products-import-${name}.xlsx`);
+  const importFile = (bytes, options) => POST(importUrl, { file: fileParameter(bytes) }, options);
+  const importSheet = async (data, options) => importFile(await workbook(data), options);
+  // Rejects with 400 and returns the message codes and texts of the OData error details.
+  const rejected = async (request) => {
+    const err = await expect(request).to.be.rejectedWith(/400/);
+    const details = err.details ?? [];
+    return { err, codes: details.map((d) => d.code), messages: details.map((d) => d.message) };
+  };
+  const count = async () => {
+    const { data } = await GET(`${base}/Products?$count=true&$top=0`);
+    return data['@odata.count'];
+  };
+  // Active products whose name is one of the given names.
+  const byNames = async (names) => {
+    const list = names.map((n) => `'${n}'`).join(',');
+    const { data } = await GET(`${base}/Products?$filter=name in (${list})&$orderby=name`);
+    return data.value;
+  };
+  const removeByNames = async (names) => {
+    for (const { ID } of await byNames(names)) await DELETE(activeKey(ID));
+  };
+  const validNames = VALID_ROWS.map(([name]) => name);
+
+  afterEach(async () => {
+    await removeByNames([...validNames, 'Import Good Row', 'Import Only Row']);
+  });
+
+  it('importProducts creates one active product per row', async () => {
+    const { status, data, headers } = await importFile(fixture('valid'));
+    expect(status).to.equal(200);
+    expect(data.value).to.equal(3);
+    expect(JSON.parse(headers['sap-messages'])).to.containSubset([
+      { code: 'PRODUCTS_IMPORT_DONE', message: 'Products imported: 3.' },
+    ]);
+    expect(await count()).to.equal(18);
+    expect(await byNames(validNames)).to.containSubset([
+      {
+        name: 'Import Desk Organizer',
+        description: 'Bamboo organizer with five compartments',
+        price: '24.50',
+        currency_code: 'USD',
+        stock: 40,
+        category_code: 'STATIONERY',
+        rating: 4,
+        imageUrl: 'https://example.com/img/desk-organizer.png',
+        IsActiveEntity: true,
+      },
+      {
+        name: 'Import Resistance Bands',
+        price: '19.99',
+        currency_code: 'EUR',
+        stock: 120,
+        category_code: 'SPORTS',
+        rating: 5,
+        IsActiveEntity: true,
+      },
+      {
+        name: 'Import USB-C Hub',
+        price: '49.00',
+        currency_code: 'GBP',
+        stock: 15,
+        category_code: 'ELECTRONICS',
+        rating: 3,
+        IsActiveEntity: true,
+      },
+    ]);
+  });
+
+  it('importProducts creates active products, no drafts', async () => {
+    await importFile(fixture('valid'));
+    const created = await byNames(validNames);
+    expect(created).to.have.length(3);
+    for (const product of created) {
+      expect(product).to.containSubset({ IsActiveEntity: true, createdBy: 'alice' });
+    }
+    const { data: drafts } = await GET(
+      `${base}/Products?$filter=IsActiveEntity eq false&$count=true&$top=0`
+    );
+    expect(drafts['@odata.count']).to.equal(0);
+  });
+
+  it('importProducts rejects the whole file and reports every bad row', async () => {
+    const { err, codes, messages } = await rejected(importFile(fixture('invalid')));
+    expect(codes).to.deep.equal([
+      'PRODUCTS_IMPORT_NOTHING_IMPORTED',
+      'PRODUCTS_IMPORT_ROW_INVALID',
+      'PRODUCTS_IMPORT_ROW_INVALID',
+      'PRODUCTS_IMPORT_ROW_INVALID',
+      'PRODUCTS_IMPORT_ROW_INVALID',
+      'PRODUCTS_IMPORT_DUPLICATE_NAME',
+    ]);
+    expect(messages[0]).to.equal(
+      'No products were imported. Correct the rows listed below and import the file again.'
+    );
+    expect(messages[1]).to.match(/^Row 3, column "name": /);
+    expect(messages[2]).to.match(/^Row 4, column "stock": /);
+    expect(messages[3]).to.match(/^Row 5, column "category": /);
+    expect(messages[4]).to.match(/^Row 6, column "price": /);
+    expect(messages[5]).to.equal(
+      'Row 7, column "name": a product named "yoga MAT" already exists in the catalog or earlier in the file.'
+    );
+    // Row messages are not bound to a field of the form (no `target`).
+    for (const detail of err.details) expect(detail.target).to.equal(undefined);
+    // All-or-nothing: the good row 2 was rolled back.
+    expect(await count()).to.equal(15);
+    expect(await byNames(['Import Good Row'])).to.have.length(0);
+  });
+
+  it('importProducts reports every bad row without a cap', async () => {
+    const rows = Array.from({ length: 150 }, (_, i) => generatedRow(i, { stock: -1 }));
+    const { codes, messages } = await rejected(importSheet([HEADER, ...rows]));
+    expect(codes).to.have.length(151);
+    expect(codes[0]).to.equal('PRODUCTS_IMPORT_NOTHING_IMPORTED');
+    expect(new Set(codes.slice(1))).to.deep.equal(new Set(['PRODUCTS_IMPORT_ROW_INVALID']));
+    expect(messages[1]).to.match(/^Row 2, column "stock": /);
+    expect(messages[150]).to.match(/^Row 151, column "stock": /);
+    expect(await count()).to.equal(15);
+  });
+
+  it('importProducts reports duplicate names', async () => {
+    const { codes, messages } = await rejected(
+      importSheet([
+        HEADER,
+        generatedRow(1, { name: 'Import Only Row' }),
+        generatedRow(2, { name: 'BACKPACK' }),
+        generatedRow(3, { name: 'import only row' }),
+      ])
+    );
+    expect(codes).to.deep.equal([
+      'PRODUCTS_IMPORT_NOTHING_IMPORTED',
+      'PRODUCTS_IMPORT_DUPLICATE_NAME',
+      'PRODUCTS_IMPORT_DUPLICATE_NAME',
+    ]);
+    // Against an existing active product (case-insensitive) and against an earlier row.
+    expect(messages[1]).to.match(/^Row 3, column "name": a product named "BACKPACK" /);
+    expect(messages[2]).to.match(/^Row 4, column "name": a product named "import only row" /);
+    expect(await count()).to.equal(15);
+  });
+
+  it('importProducts rejects more than 1000 rows', async () => {
+    const rows = Array.from({ length: 1001 }, (_, i) => generatedRow(i));
+    const { codes, messages } = await rejected(importSheet([HEADER, ...rows]));
+    expect(codes).to.deep.equal([
+      'PRODUCTS_IMPORT_NOTHING_IMPORTED',
+      'PRODUCTS_IMPORT_TOO_MANY_ROWS',
+    ]);
+    expect(messages[1]).to.equal(
+      'The file has 1001 product rows; at most 1000 can be imported at once. Split the file.'
+    );
+    expect(await count()).to.equal(15);
+  });
+
+  it('importProducts accepts 1000 rows whose request body exceeds 100 KB', async () => {
+    const rows = Array.from({ length: 1000 }, (_, i) =>
+      generatedRow(i, { description: proseDescription(i) })
+    );
+    const file = fileParameter(await workbook([HEADER, ...rows]));
+    // Guards @cds.server.body_parser.limit on CatalogService: the default 100 KB would answer 413.
+    expect(Buffer.byteLength(JSON.stringify({ file }))).to.be.greaterThan(100_000);
+    try {
+      const { status, data } = await POST(importUrl, { file });
+      expect(status).to.equal(200);
+      expect(data.value).to.equal(1000);
+      expect(await count()).to.equal(1015);
+    } finally {
+      // 1,000 HTTP DELETEs would dominate the run; remove the generated rows in one statement.
+      await cds.run(cds.ql.DELETE.from('my.catalog.Products').where`name like 'Bulk Product %'`);
+    }
+    expect(await count()).to.equal(15);
+  });
+
+  it('importProducts rejects a malformed workbook', async () => {
+    const notXlsx = await rejected(importFile(Buffer.from('name;price\nLamp;10\n')));
+    expect(notXlsx.codes).to.deep.equal([
+      'PRODUCTS_IMPORT_NOTHING_IMPORTED',
+      'PRODUCTS_IMPORT_NOT_XLSX',
+    ]);
+
+    const empty = await rejected(importSheet([HEADER]));
+    expect(empty.codes).to.deep.equal([
+      'PRODUCTS_IMPORT_NOTHING_IMPORTED',
+      'PRODUCTS_IMPORT_EMPTY',
+    ]);
+
+    const unknown = await rejected(
+      importSheet([
+        [...HEADER, 'color'],
+        [...generatedRow(1), 'red'],
+      ])
+    );
+    expect(unknown.codes).to.deep.equal([
+      'PRODUCTS_IMPORT_NOTHING_IMPORTED',
+      'PRODUCTS_IMPORT_UNKNOWN_COLUMN',
+    ]);
+    expect(unknown.messages[1]).to.match(/^Column "color" is not supported\./);
+    expect(await count()).to.equal(15);
+  });
+
+  it('importProducts reports each missing mandatory column', async () => {
+    const header = ['name', 'currency', 'stock'];
+    const { codes, messages } = await rejected(
+      importSheet([header, ['Import Only Row', 'USD', 1]])
+    );
+    expect(codes).to.deep.equal([
+      'PRODUCTS_IMPORT_NOTHING_IMPORTED',
+      'PRODUCTS_IMPORT_MISSING_COLUMN',
+      'PRODUCTS_IMPORT_MISSING_COLUMN',
+    ]);
+    expect(messages.slice(1)).to.deep.equal([
+      'The header row has no column "price".',
+      'The header row has no column "category".',
+    ]);
+  });
+
+  it('importProducts is forbidden for a viewer', async () => {
+    const err = await expect(importFile(fixture('valid'), as('viewer'))).to.be.rejectedWith(/403/);
+    expect(err).to.containSubset({ code: '403' });
+    expect(await count()).to.equal(15);
+  });
+
+  it('importProducts requires authentication', async () => {
+    const err = await expect(importFile(fixture('valid'), anonymous)).to.be.rejectedWith(/401/);
+    expect(err.status).to.equal(401);
+    expect(await count()).to.equal(15);
+  });
+
+  it('importProducts reports errors in Russian', async () => {
+    const ru = { headers: { 'Accept-Language': 'ru' } };
+    const notXlsx = await rejected(importFile(Buffer.from('not a workbook'), ru));
+    expect(notXlsx.messages).to.deep.equal([
+      'Товары не импортированы. Исправьте указанные ниже строки и снова импортируйте файл.',
+      'Файл не является книгой Excel. Выберите файл .xlsx.',
+    ]);
+    // A row message wraps the framework's reason, localized too (ASSERT_MANDATORY has a ru text).
+    const row = await rejected(importSheet([HEADER, generatedRow(1, { name: null })], ru));
+    expect(row.messages[1]).to.equal('Строка 2, столбец "name": Укажите недостающее значение.');
+  });
+
+  it('importProducts reports success in Russian', async () => {
+    const ru = { headers: { 'Accept-Language': 'ru' } };
+    // The created row is deleted by afterEach.
+    const { headers } = await importSheet(
+      [HEADER, generatedRow(1, { name: 'Import Only Row' })],
+      ru
+    );
+    expect(JSON.parse(headers['sap-messages'])).to.containSubset([
+      { code: 'PRODUCTS_IMPORT_DONE', message: 'Импортировано товаров: 1.' },
+    ]);
   });
 });

@@ -12,3 +12,18 @@ annotate CatalogService.Products with {
   category    @title: '{i18n>Products.category}'     @mandatory  @assert.target;
   imageUrl    @title: '{i18n>Products.imageUrl}';
 };
+
+// Import from an xlsx workbook (ADR-0021): labels of the action and its file parameter.
+annotate CatalogService.Products with actions {
+  importProducts @title: '{i18n>Products.importProducts}'
+    (file @title: '{i18n>Products.importProducts.file}');
+};
+
+annotate CatalogService.ProductsImportFile with {
+  content   @title: '{i18n>ProductsImportFile.content}'
+            @Core.MediaType: mediaType
+            @Core.AcceptableMediaTypes: ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
+            @Core.ContentDisposition.Filename: fileName;
+  mediaType @title: '{i18n>ProductsImportFile.mediaType}'  @Core.IsMediaType;
+  fileName  @title: '{i18n>ProductsImportFile.fileName}';
+};

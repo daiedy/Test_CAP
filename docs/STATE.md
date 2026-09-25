@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-09-25
 - Branch: feature/products-excel-upload
 - Feature: products-excel-upload (#7)
-- Phase: 1 plan approved (autonomous gate mode)
-- Last commit: 63abadb docs: products-rating-filter summary and registry
-- Next: phase 2 backend (`cap-backend-dev`, PLAN steps 3-6)
+- Phase: 2 backend gate green (99 tests, lint clean)
+- Last commit: fdf5327 docs(products-excel-upload): approved plan, screens and ADR-0021
+- Next: phase 3 UI (`fiori-app-dev` step 8, `test-ui` step 9)
 
 ## Open debt
 
@@ -21,11 +21,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 | `mta.yaml`, `xs-security.json` are drafts without productive dependencies | Separate ADR before any deployment work; `cds add xsuaa --for production` will generate the `CatalogViewer`/`CatalogEditor` role templates and scopes from the CDS role names already in place (ADR-0013) | user |
 | `$edmJson` `$Path` through the entity container (`/CatalogService.EntityContainer/Permissions/isEditor`, used by the three `UI.*Hidden` annotations, ADR-0013) trips an unguarded UI5 1.152.0 defect once per page load on :4004: `Failed to read path ... - TypeError: Cannot read properties of undefined (reading '$select')` (`_Helper.aggregateExpandSelect`, `_Helper-dbg.js:238`). Deterministic, identical for both roles, no functional impact measured (full record linked from `docs/features/catalog-authorization/SUMMARY.md`) | Try the documented fallback short path `/Permissions/isEditor`, regenerate the contract, re-verify in a browser | architect |
 | The OPA5 suite for `catalog-authorization` authenticates as one user (`alice`) per run, so the hidden state for a `CatalogViewer` has no automated regression guard; only the backend tests (`@restrict`) and `ui-verifier`'s blocking viewer criterion cover it | Add a second runner config `ui5-test-runner-viewer.json` and a `test:ui:viewer` script only if the hidden state ever regresses (user decision 2026-09-10, PLAN "Open questions") | user |
-| CI and Dependabot added 2026-09-07 (`ci.yml`: backend, UI lint, OPA5 journeys; `dependabot.yml`: weekly, grouped, majors of CAP excluded). First run failed (root ESLint picked up the UI config, UI lockfile out of sync), fixed in `8ec176b`; run 34112716975 green: backend, UI lint, OPA5 journeys | Watch Dependabot PRs on Mondays | user |
+| CI and Dependabot (2026-09-07; history in CHANGELOG): `ci.yml` backend, UI lint, OPA5 journeys, green since `8ec176b`; `dependabot.yml` weekly, grouped, CAP majors excluded | Watch Dependabot PRs on Mondays | user |
 | `run_manifest_validation` of UI5 MCP 0.2.18 fails with a draft-06 schema error | Workaround via `ui5lint`; wait for a new `@ui5/mcp-server` version via `upstream-check`, then bump the pin in `.mcp.json` | upstream-watcher |
 | UI tests run only against the live stack (`npm run watch`); the mock (`npm run start-mock`) does not serve `ru` | Known limitation of `sap-fe-mockserver`, no alternative found | |
 | `fiori-mcp` 1.12.2 `list_functionality` has no id for `filterFields` or `liveMode`; both set by hand under the ADR-0020 exception to ADR-0007 | `upstream-watcher` re-checks on each bump; drop the exception once covered | upstream-watcher |
 | FLP sandbox has no `data-sap-ui-flexibility-services`; variant `Save As` 404s and `eraseDirtyChangesOnVariant` erases the change on switch | Add a Session/LocalStorageConnector to `flpSandbox.html` (also needed for the New Sandbox migration); regress via an OPA5 `VariantManagement` select | user |
+| `Products.currency` has no `@assert.target`: an unknown code (`XXX`) passes create and the Excel import (#7) | Decide on `@assert.target` for `currency` | architect |
 | Root `.prettierrc` (single quotes, es5 commas) contradicts `app/products` ESLint (double quotes, no dangling comma) | ESLint wins today (orchestrator decision); align the configs | user |
 
 ## What works

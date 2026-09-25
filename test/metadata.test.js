@@ -97,4 +97,33 @@ describe('OData contract of CatalogService', () => {
     )[0];
     expect(generalInfo).toContain(column + '</Record>');
   });
+
+  // ADR-0021: the Excel import is an action bound to the Products collection whose `file`
+  // parameter carries the workbook as an xlsx stream. The UI.LineItem part (DataFieldForAction
+  // with UI.Hidden) is added to this test in phase 3 (PLAN step 8).
+  it('importProducts is a collection-bound action shown in the List Report toolbar', async () => {
+    const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
+      headers: { 'Accept-Language': 'en' },
+    });
+    expect(status).toBe(200);
+    // The EDMX is pretty-printed, so compare without the whitespace between the tags.
+    const compact = data.replace(/>\s+</g, '><');
+    expect(compact).toContain(
+      '<Action Name="importProducts" IsBound="true">' +
+        '<Parameter Name="in" Type="Collection(CatalogService.Products)" Nullable="true"/>' +
+        '<Parameter Name="file" Type="CatalogService.ProductsImportFile" Nullable="false"/>' +
+        '<ReturnType Type="Edm.Int32"/></Action>'
+    );
+    expect(compact).toContain(
+      '<ComplexType Name="ProductsImportFile"><Property Name="content" Type="Edm.Stream"/>'
+    );
+    const content = compact.match(
+      /<Annotations Target="CatalogService.ProductsImportFile\/content">.*?<\/Annotations>/
+    )[0];
+    expect(content).toContain(
+      '<Annotation Term="Core.AcceptableMediaTypes"><Collection>' +
+        '<String>application/vnd.openxmlformats-officedocument.spreadsheetml.sheet</String>' +
+        '</Collection></Annotation>'
+    );
+  });
 });

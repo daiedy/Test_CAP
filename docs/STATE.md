@@ -1,22 +1,16 @@
 # Project state
 
-Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): `## Now
+Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): `## Now` holds only the six labeled lines, `## Open debt` only table rows, `## What works` only list items. The SessionStart hook prints `Now` and `Open debt` whole, every agent reads them at protocol step 2. Narrative belongs in `docs/CHANGELOG.md` and in the feature `SUMMARY.md`, not here. Updated by `docs-keeper` at the end of every task and by the `/feature` orchestrator after every phase gate.
 
-- Date: 2026-09-25
-- Branch: feature/products-rating-column
-- Feature: products-rating-column (#5)
-- Phase: 1 Research and plan done (approved, gate mode autonomous); next phase 2 Backend
-- Last commit: 831dd42 docs(state): record the merge of chore/briefing-visible
-- Next: phase 2 Backend, `cap-backend-dev` then `test-backend` with PLAN rows 1 and 2; push when the user says so; `liveMode` and the deployment ADR stay in Open debt.
 
 ## Now
 
 - Date: 2026-09-25
-- Branch: main
-- Feature: none
-- Phase: none
-- Last commit: bd8ff12 Merge branch 'chore/briefing-visible'
-- Next: restart the session (hooks are snapshotted at start) and check that the briefing appears in the terminal; then follow the "Recommended now" line of the briefing, today `/spec #5`; push when the user says so; `liveMode` and the deployment ADR stay in Open debt.
+- Branch: feature/products-rating-column
+- Feature: products-rating-column (#5)
+- Phase: 2 Backend done: `npm test` 68 passed, `npm run lint` green, contract +6/-0
+- Last commit: 69eb82a docs(products-rating-column): plan, context and screens
+- Next: phase 3 UI, `fiori-app-dev` then `test-ui` with PLAN rows 3 and 4; push when the user says so.
 
 ## Open debt
 

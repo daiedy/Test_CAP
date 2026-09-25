@@ -10,6 +10,7 @@ entity Products : cuid, managed {
   price       : Decimal(10, 2);
   currency    : Currency;
   stock       : Integer;
+  rating      : Integer;
   category    : Association to Categories;
   imageUrl    : String(500);
 }

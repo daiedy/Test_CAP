@@ -67,6 +67,7 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         </NavigationProperty>
         <Property Name="currency_code" Type="Edm.String" MaxLength="3"/>
         <Property Name="stock" Type="Edm.Int32"/>
+        <Property Name="rating" Type="Edm.Int32"/>
         <NavigationProperty Name="category" Type="CatalogService.Categories">
           <ReferentialConstraint Property="category_code" ReferencedProperty="code"/>
         </NavigationProperty>
@@ -442,6 +443,11 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
         <Annotation Term="Validation.Minimum" Int="0"/>
         <Annotation Term="Validation.Maximum" Int="1000000"/>
+      </Annotations>
+      <Annotations Target="CatalogService.Products/rating">
+        <Annotation Term="Common.Label" String="{i18n>Products.rating}"/>
+        <Annotation Term="Validation.Minimum" Int="0"/>
+        <Annotation Term="Validation.Maximum" Int="5"/>
       </Annotations>
       <Annotations Target="CatalogService.Products/category">
         <Annotation Term="Common.Label" String="{i18n>Products.category}"/>

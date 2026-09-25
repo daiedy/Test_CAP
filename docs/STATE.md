@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-09-25
-- Branch: feature/products-rating-filter
-- Feature: none
-- Phase: none (products-rating-filter #6 done and closed, branch not merged)
+- Branch: feature/products-excel-upload
+- Feature: products-excel-upload (#7)
+- Phase: 1 plan approved (autonomous gate mode)
 - Last commit: 63abadb docs: products-rating-filter summary and registry
-- Next: user merges `feature/products-rating-filter` into `main` and pushes (the SUMMARY permalink needs the push); `/backlog` the sandbox flex-connector issue
+- Next: phase 2 backend (`cap-backend-dev`, PLAN steps 3-6)
 
 ## Open debt
 

@@ -8,3 +8,4 @@
 - [Test suite shape and auth](test-suite-shape.md) — re-derive test counts per plan; the hook test uses no cds.test, so no defaults.auth
 - [FE V4 rating DataPoint column](fe-v4-rating-datapoint.md) — stars need no fragment; editable in a form; sap.fe.test matchers by header and `{ value }`; +6 / net +15 EDMX
 - [FE V4 custom filter field](fe-v4-custom-filter-field.md) — filterFields, Range min-0 bug, RangeSlider write-back, liveMode; fiori-mcp 1.12.2 gap, ADR-0020 manual exception
+- [Excel import mechanism](excel-import-mechanism.md) — ADR-0021 (accepted) facts: no standard FE file import, xlsx npm advisories, read-excel-file, FE file action param, 100 KB body limit, unmeasured CAP points

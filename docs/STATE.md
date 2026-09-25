@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-09-25
 - Branch: feature/products-excel-upload
 - Feature: products-excel-upload (#7)
-- Phase: 2 backend gate green (99 tests, lint clean)
-- Last commit: fdf5327 docs(products-excel-upload): approved plan, screens and ADR-0021
-- Next: phase 3 UI (`fiori-app-dev` step 8, `test-ui` step 9)
+- Phase: 3 UI gate green (101 backend tests, 42/42 OPA5 runner, ui5lint clean)
+- Last commit: 1a1199f feat(srv): products-excel-upload backend
+- Next: phase 4 verification (`ui-verifier`, PLAN step 11)
 
 ## Open debt
 

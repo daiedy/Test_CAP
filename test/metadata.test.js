@@ -99,8 +99,8 @@ describe('OData contract of CatalogService', () => {
   });
 
   // ADR-0021: the Excel import is an action bound to the Products collection whose `file`
-  // parameter carries the workbook as an xlsx stream. The UI.LineItem part (DataFieldForAction
-  // with UI.Hidden) is added to this test in phase 3 (PLAN step 8).
+  // parameter carries the workbook as an xlsx stream; the List Report table toolbar shows it
+  // through a UI.DataFieldForAction hidden for non-editors like Create and Delete (ADR-0013).
   it('importProducts is a collection-bound action shown in the List Report toolbar', async () => {
     const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
       headers: { 'Accept-Language': 'en' },
@@ -124,6 +124,43 @@ describe('OData contract of CatalogService', () => {
       '<Annotation Term="Core.AcceptableMediaTypes"><Collection>' +
         '<String>application/vnd.openxmlformats-officedocument.spreadsheetml.sheet</String>' +
         '</Collection></Annotation>'
+    );
+    const lineItem = compact.match(
+      /<Annotation Term="UI.LineItem"><Collection>.*?<\/Collection><\/Annotation>/
+    )[0];
+    expect(lineItem).toContain(
+      '<Record Type="UI.DataFieldForAction">' +
+        '<PropertyValue Property="Action" String="CatalogService.importProducts"/>' +
+        '<PropertyValue Property="Label" String="Import from Excel"/>' +
+        '<Annotation Term="UI.Hidden"><Not>' +
+        '<Path>/CatalogService.EntityContainer/Permissions/isEditor</Path>' +
+        '</Not></Annotation></Record>'
+    );
+  });
+
+  // ADR-0021 "Amendment: list refresh and required file": after the import Fiori Elements
+  // reloads the Products list (side effect on the action), and the dialog requires a file.
+  it('importProducts refreshes the Products list and requires a file', async () => {
+    const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
+      headers: { 'Accept-Language': 'en' },
+    });
+    expect(status).toBe(200);
+    // The EDMX is pretty-printed, so compare without the whitespace between the tags.
+    const compact = data.replace(/>\s+</g, '><');
+    const target = 'CatalogService.importProducts(Collection(CatalogService.Products))';
+    const annotations = (path) => {
+      const start = compact.indexOf(`<Annotations Target="${path}">`);
+      expect(start).toBeGreaterThan(-1);
+      return compact.slice(start, compact.indexOf('</Annotations>', start));
+    };
+    expect(annotations(target)).toContain(
+      '<Annotation Term="Common.SideEffects"><Record Type="Common.SideEffectsType">' +
+        '<PropertyValue Property="TargetEntities"><Collection>' +
+        '<NavigationPropertyPath>/CatalogService.EntityContainer/Products</NavigationPropertyPath>' +
+        '</Collection></PropertyValue></Record></Annotation>'
+    );
+    expect(annotations(`${target}/file`)).toContain(
+      '<Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>'
     );
   });
 });

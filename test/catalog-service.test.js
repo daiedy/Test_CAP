@@ -619,6 +619,15 @@ describe('CatalogService.Products importProducts', () => {
     expect(await count()).to.equal(15);
   });
 
+  it('importProducts rejects a request without a file', async () => {
+    // @mandatory on the parameter `file` (ADR-0021 amendment): the framework rejects the request
+    // before the handler runs (research 6.5). An explicit `file: null` is not "missing" and
+    // reaches the handler instead, so the body carries no `file` at all.
+    const err = await expect(POST(importUrl, {})).to.be.rejectedWith(/400/);
+    expect(err).to.containSubset({ code: 'ASSERT_MANDATORY', target: 'file' });
+    expect(await count()).to.equal(15);
+  });
+
   it('importProducts rejects a malformed workbook', async () => {
     const notXlsx = await rejected(importFile(Buffer.from('name;price\nLamp;10\n')));
     expect(notXlsx.codes).to.deep.equal([

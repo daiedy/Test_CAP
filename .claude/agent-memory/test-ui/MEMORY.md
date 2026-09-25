@@ -1,1 +1,1 @@
-- [sap.fe.test API verification](reference-sap-fe-test-api-verification.md) — CDN `-dbg.js` fallback; DataPoint ids; custom filter field id, liveMode Go button, $p13n; probing ids; per-test report parsing
+- [sap.fe.test API verification](reference-sap-fe-test-api-verification.md) — CDN `-dbg.js` fallback; DataPoint ids; custom filter field id, liveMode Go button, $p13n; action dialog with a file field; runner counts, single-journey runs

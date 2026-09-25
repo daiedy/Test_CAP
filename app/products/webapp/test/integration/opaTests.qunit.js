@@ -12,6 +12,7 @@ sap.ui.define(
     './RussianLocaleJourney',
     './RatingShownAsStarsJourney',
     './RatingRangeFilterJourney',
+    './ImportProductsJourney',
     './DraftMarkerInListReportJourney',
     './RoleAwareActionsJourney',
   ],
@@ -23,6 +24,7 @@ sap.ui.define(
     RussianLocale,
     RatingShownAsStars,
     RatingRangeFilter,
+    ImportProducts,
     DraftMarkerInListReport,
     RoleAwareActions
   ) {
@@ -34,6 +36,9 @@ sap.ui.define(
     // same reason, so the seeded rating it asserts is never a draft value.
     // RatingRangeFilterJourney asserts row counts per rating range and ends on the full range, so it
     // also runs before DraftMarkerInListReportJourney.
+    // ImportProductsJourney asserts the seeded row count and never sends the action (OPA5 cannot
+    // choose a file), so it changes no data; it runs before DraftMarkerInListReportJourney for the
+    // same reason as the other row-count journeys.
     // RoleAwareActionsJourney runs last (PLAN step 11): it only reads and selects, so it depends on
     // no other journey and changes nothing for them.
     runner.run([
@@ -43,6 +48,7 @@ sap.ui.define(
       RussianLocale,
       RatingShownAsStars,
       RatingRangeFilter,
+      ImportProducts,
       DraftMarkerInListReport,
       RoleAwareActions,
     ]);

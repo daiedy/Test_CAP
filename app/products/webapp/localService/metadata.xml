@@ -247,6 +247,15 @@
               <PropertyValue Property="Target" AnnotationPath="@UI.DataPoint#Rating"/>
               <Annotation Term="UI.Importance" EnumMember="UI.ImportanceType/Low"/>
             </Record>
+            <Record Type="UI.DataFieldForAction">
+              <PropertyValue Property="Action" String="CatalogService.importProducts"/>
+              <PropertyValue Property="Label" String="Import from Excel"/>
+              <Annotation Term="UI.Hidden">
+                <Not>
+                  <Path>/CatalogService.EntityContainer/Permissions/isEditor</Path>
+                </Not>
+              </Annotation>
+            </Record>
           </Collection>
         </Annotation>
         <Annotation Term="UI.DataPoint" Qualifier="Rating">
@@ -519,10 +528,20 @@
         <Annotation Term="Core.Computed" Bool="true"/>
       </Annotations>
       <Annotations Target="CatalogService.importProducts(Collection(CatalogService.Products))">
+        <Annotation Term="Common.SideEffects">
+          <Record Type="Common.SideEffectsType">
+            <PropertyValue Property="TargetEntities">
+              <Collection>
+                <NavigationPropertyPath>/CatalogService.EntityContainer/Products</NavigationPropertyPath>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
         <Annotation Term="Common.Label" String="Import Products"/>
       </Annotations>
       <Annotations Target="CatalogService.importProducts(Collection(CatalogService.Products))/file">
         <Annotation Term="Common.Label" String="File"/>
+        <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
       </Annotations>
       <Annotations Target="CatalogService.ProductsImportFile/content">
         <Annotation Term="Core.MediaType" Path="mediaType"/>

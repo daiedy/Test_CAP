@@ -16,7 +16,7 @@ annotate CatalogService.Products with {
 // Import from an xlsx workbook (ADR-0021): labels of the action and its file parameter.
 annotate CatalogService.Products with actions {
   importProducts @title: '{i18n>Products.importProducts}'
-    (file @title: '{i18n>Products.importProducts.file}');
+    (file @title: '{i18n>Products.importProducts.file}' @mandatory);
 };
 
 annotate CatalogService.ProductsImportFile with {

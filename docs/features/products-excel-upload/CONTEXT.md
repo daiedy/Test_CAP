@@ -25,19 +25,23 @@ Plan gate, 2026-09-25 (user):
 14. Each missing mandatory column gets its own `PRODUCTS_IMPORT_MISSING_COLUMN` message.
 15. The format hint lives only in the file field label ("Excel File (.xlsx)") and in `README.md`.
 
+Phase 3, 2026-09-25 (user, on research 6.2 and 6.3):
+16. The List Report refreshes after the import through `@Common.SideEffects` on `importProducts` (absolute `TargetEntities` `/CatalogService.EntityContainer/Products`), and PATTERNS gets the row "Refresh after an action" (ADR-0021 amendment A).
+17. An empty submit of the import dialog is validated, not accepted as framework behaviour: `@mandatory` on the parameter `file` makes Fiori Elements mark the field required and show its own value-state error on an empty submit; no controller extension (ADR-0021 amendment B).
+
 ## Affected entities and services
 From `mcp__cds-mcp__search_model` (`CatalogService.Products`) and `docs/registry/DOMAIN-MODEL.md`, `SERVICES.md`:
 
 | Object | Exists now | What changes |
 |---|---|---|
-| `CatalogService.Products` | projection on `my.catalog.Products`, `@odata.draft.enabled`, `@restrict` READ → `CatalogViewer`, `*` → `CatalogEditor`; only the draft actions `draftPrepare`, `draftActivate`, `draftEdit` | add the collection-bound action `importProducts(in: many $self, file: ProductsImportFile not null) returns Integer` (ADR-0021) |
+| `CatalogService.Products` | projection on `my.catalog.Products`, `@odata.draft.enabled`, `@restrict` READ → `CatalogViewer`, `*` → `CatalogEditor`; only the draft actions `draftPrepare`, `draftActivate`, `draftEdit` | add the collection-bound action `importProducts(in: many $self, file: ProductsImportFile not null) returns Integer` (ADR-0021); `@mandatory` on its parameter `file` in `srv/annotations/Products.cds` (amendment B) |
 | `CatalogService.ProductsImportFile` | does not exist | new service type: `content : LargeBinary` (`@Core.MediaType: mediaType`, `@Core.AcceptableMediaTypes` xlsx, `@Core.ContentDisposition.Filename: fileName`), `mediaType : String(100)` (`@Core.IsMediaType`), `fileName : String(255)` |
 | `my.catalog.Products` | `name` String(100) `@mandatory`; `description` String(500); `price` Decimal(10,2) `@mandatory` `@assert.range [0, 99999999.99]`; `currency` → `Currencies` `@mandatory`; `stock` Integer `@mandatory` `@assert.range [0, 1000000]`; `rating` Integer `@assert.range [0, 5]`; `category` → `Categories` `@mandatory` `@assert.target`; `imageUrl` String(500) | no change; these annotations are the row checks of the import |
 | `my.catalog.Categories` | code list, codes `ACCESSORIES`, `ELECTRONICS`, `FURNITURE`, `KITCHEN`, `SPORTS`, `STATIONERY` | no change; the workbook uses these codes |
 | `sap.common.Currencies` | ISO codes from `@sap/cds-common-content` | no change; the workbook uses ISO codes |
 | `CatalogService.Permissions` | read-only singleton, `isEditor` (ADR-0013) | no change; a fourth consumer: `UI.Hidden` on the new toolbar action |
 | `srv/catalog-service.js` | one handler, `on READ Permissions` | add `on importProducts Products` |
-| `app/products/annotations/Products.cds` | `UI.LineItem` with 5 data fields, `UI.CreateHidden`/`UpdateHidden`/`DeleteHidden` | add a `UI.DataFieldForAction` for `CatalogService.importProducts` with `UI.Hidden` for non-editors |
+| `app/products/annotations/Products.cds` | `UI.LineItem` with 5 data fields, `UI.CreateHidden`/`UpdateHidden`/`DeleteHidden` | add a `UI.DataFieldForAction` for `CatalogService.importProducts` with `UI.Hidden` for non-editors; `@Common.SideEffects` on the action (amendment A) |
 
 The change adds an operation inside `@requires: 'authenticated-user'`; what an unauthenticated caller gets from any endpoint is unchanged (401), so the CI readiness probe, the `run-app`/`test-all` smoke curls, the `ui-verifier` server check and the README examples need no update.
 
@@ -48,15 +52,16 @@ The change adds an operation inside `@requires: 'authenticated-user'`; what an u
 - `_i18n/messages.properties`, `messages_ru.properties`: exist with 0 keys; the import adds the first `PRODUCTS_IMPORT_*` keys.
 - `test/catalog-service.test.js` auth and draft idioms (`defaults.auth`, `{ auth: null }` → 401, `rejectedWith(/403/)`, `IsActiveEntity=true` reads).
 - OPA5 page objects `ProductsList.gen.js`, `JourneyRunner.js`; `RoleAwareActionsJourney.js` as the reference for a toolbar-visibility assertion.
+- The Fiori Elements action parameter dialog's own required-file check (value state Error, framework text, no request), switched on by the `Common.FieldControl` that `@mandatory` emits (research 7.2); no project text, no controller.
 - Nothing suitable exists for parsing, a file parameter, a bulk create or a controller extension: `docs/registry/REUSE-CATALOG.md` lists no `srv/lib` function, `HANDLERS.md` one handler, `UI-ARTIFACTS.md` only the `RatingRangeFilter` fragment.
 
 ## Applicable patterns
 - "Action on a set or without context" (bound to the collection, ADR-0021 decision 2); "Business logic error" (`req.error`/`req.reject` with `_i18n/messages.properties` keys); "Logging"; "Shared function for several handlers" (`srv/lib/products-import.js`).
-- "Mandatory field", "Format or range check", "Association target existence check": reused as the row checks, not re-implemented.
+- "Mandatory field", "Format or range check", "Association target existence check": reused as the row checks, not re-implemented; "Mandatory field" also for the action parameter `file` (amendment B).
 - "Authorization" (`@restrict` inherited) and "Role-aware UI visibility" (singleton, `UI.Hidden` on the action record).
-- "Action button" (`DataFieldForAction` in `UI.LineItem`); "Client-side logic" only in the ADR-0021 fallback.
-- "Texts" (en and ru), "Service test", "OData contract", "metadata.xml snapshot update", "User scenario".
-- ADR needed: parsing library, file transport, bulk create on a draft root, all-or-nothing, duplicates, workbook contract, first new runtime dependency: `docs/decisions/ADR-0021-products-excel-import.md` (proposed).
+- "Action button" (`DataFieldForAction` in `UI.LineItem`); "Refresh after an action" (`Common.SideEffects`, amendment A); "Client-side logic" only in the ADR-0021 fallback.
+- "Texts" (en and ru; annotation labels in `_i18n`), "Service test", "OData contract", "metadata.xml snapshot update", "User scenario".
+- ADR needed: parsing library, file transport, bulk create on a draft root, all-or-nothing, duplicates, workbook contract, first new runtime dependency: `docs/decisions/ADR-0021-products-excel-import.md` (accepted 2026-09-25; amended in phase 3 for the refresh and the required file).
 
 ## Relevant lessons
 - `docs/architecture/TESTING.md` "cds 10 specifics": a POST without `IsActiveEntity: true` creates a draft and skips `@mandatory`; the import writes active rows through the service, never through a draft.

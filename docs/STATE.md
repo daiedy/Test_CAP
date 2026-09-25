@@ -6,10 +6,10 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 - Date: 2026-09-25
 - Branch: feature/products-rating-filter
-- Feature: products-rating-filter (#6)
-- Phase: 6 Documentation
-- Last commit: b6b5790 docs(products-rating-filter): browser verification
-- Next: close #6 and prune (orchestrator)
+- Feature: none
+- Phase: none (products-rating-filter #6 done and closed, branch not merged)
+- Last commit: 63abadb docs: products-rating-filter summary and registry
+- Next: user merges `feature/products-rating-filter` into `main` and pushes (the SUMMARY permalink needs the push); `/backlog` the sandbox flex-connector issue
 
 ## Open debt
 

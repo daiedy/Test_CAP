@@ -29,3 +29,7 @@ Four entries added to `docs/LESSONS.md`:
 - `fiori-mcp` 1.12.2 exposes no functionality for `filterFields` or `liveMode`; both entries are hand edits under the ADR-0020 exception until upstream adds coverage.
 - Category, Price and Editing Status request-per-change counts were not individually measured (only Rating and Name); the "one request after the first" rule held for both fields measured.
 - `app/products/webapp/ext/fragment/RatingRangeFilter.js` was not Prettier-formatted at review time (fixed by `fiori-app-dev` per `REVIEW.md`); the root `.prettierrc`/`app/products` ESLint mismatch that let it through unnoticed by any gate is unrelated pre-existing debt, now also recorded in `STATE.md`.
+
+## Full record
+
+Pruned to this file (ADR-0019). CONTEXT.md, PLAN.md, REVIEW.md, SCREENS.md, VERIFICATION.md, research, screenshots of this feature stay in git history at https://github.com/daiedy/Test_CAP/tree/63abadb8f82ae582a5593d3eefa2c98b9a3b763f/docs/features/products-rating-filter (commit `63abadb`).

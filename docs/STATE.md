@@ -4,12 +4,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## Now
 
-- Date: 2026-09-25
+- Date: 2026-09-29
 - Branch: feature/products-excel-upload
 - Feature: products-excel-upload (#7)
-- Phase: 4 verification done, ready for review
-- Last commit: 4fffc95 feat(app): products-excel-upload ui
-- Next: phase 5 review (`reviewer`, PLAN step 12)
+- Phase: 5a gate green (102 tests, no contract change)
+- Last commit: 3551425 docs(products-excel-upload): browser verification
+- Next: 5b decompression guard (12e-12i); phase 6 incl. approved edits of `.claude/rules/ui-annotations.md`, `srv-handlers.md`
 
 ## Open debt
 

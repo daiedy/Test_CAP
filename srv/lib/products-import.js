@@ -43,19 +43,33 @@ export function decodeContent(content) {
  * Map the header row to workbook columns.
  * @param {Array<unknown>} header cells of the first sheet row
  * @returns {{ columns: Array<string|null>, errors: Array<{ code: string, args: Array<string> }> }}
- *   `columns[i]` is the documented column name of cell i (null for an empty header cell);
- *   `errors` holds one PRODUCTS_IMPORT_UNKNOWN_COLUMN per unknown header, then one
- *   PRODUCTS_IMPORT_MISSING_COLUMN per missing mandatory column
+ *   `columns[i]` is the documented column name of cell i (null for an empty or unknown header
+ *   cell; a repeated column maps every one of its cells);
+ *   `errors` holds, in header order, one PRODUCTS_IMPORT_UNKNOWN_COLUMN per unknown header
+ *   (argument: the header text) and one PRODUCTS_IMPORT_DUPLICATE_COLUMN per documented column
+ *   named more than once, case-insensitive (argument: the documented column name; reported at
+ *   its second cell, once even for three cells); then one PRODUCTS_IMPORT_MISSING_COLUMN per
+ *   missing mandatory column (ADR-0021 decision 7 and amendment C)
  */
 export function mapHeader(header) {
   const byLowerName = new Map(Object.keys(IMPORT_COLUMNS).map((c) => [c.toLowerCase(), c]));
   const errors = [];
+  const seen = new Set();
+  const repeated = new Set();
   const columns = header.map((cell) => {
     const text = cell == null ? '' : String(cell).trim();
     if (!text) return null;
     const column = byLowerName.get(text.toLowerCase());
-    if (!column) errors.push({ code: 'PRODUCTS_IMPORT_UNKNOWN_COLUMN', args: [text] });
-    return column ?? null;
+    if (!column) {
+      errors.push({ code: 'PRODUCTS_IMPORT_UNKNOWN_COLUMN', args: [text] });
+      return null;
+    }
+    if (seen.has(column) && !repeated.has(column)) {
+      repeated.add(column);
+      errors.push({ code: 'PRODUCTS_IMPORT_DUPLICATE_COLUMN', args: [column] });
+    }
+    seen.add(column);
+    return column;
   });
   for (const column of MANDATORY_COLUMNS) {
     if (!columns.includes(column)) {

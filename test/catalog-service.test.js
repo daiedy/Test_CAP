@@ -473,6 +473,8 @@ describe('CatalogService.Products importProducts', () => {
 
   afterEach(async () => {
     await removeByNames([...validNames, 'Import Good Row', 'Import Only Row']);
+    // Generated rows of a rejection test that unexpectedly succeeded; keeps later counts at 15.
+    await cds.run(cds.ql.DELETE.from('my.catalog.Products').where`name like 'Bulk Product %'`);
   });
 
   it('importProducts creates one active product per row', async () => {
@@ -652,6 +654,20 @@ describe('CatalogService.Products importProducts', () => {
       'PRODUCTS_IMPORT_UNKNOWN_COLUMN',
     ]);
     expect(unknown.messages[1]).to.match(/^Column "color" is not supported\./);
+
+    // A documented column named twice, case-insensitive (ADR-0021 "Amendment 2" C).
+    const repeated = await rejected(
+      importSheet([
+        [...HEADER, 'Name'],
+        [...generatedRow(1), 'Second Name'],
+      ])
+    );
+    expect(repeated.codes).to.deep.equal([
+      'PRODUCTS_IMPORT_NOTHING_IMPORTED',
+      'PRODUCTS_IMPORT_DUPLICATE_COLUMN',
+    ]);
+    expect(repeated.messages[1]).to.contain('"name"');
+    expect(repeated.err.details[1].target).to.equal(undefined);
     expect(await count()).to.equal(15);
   });
 

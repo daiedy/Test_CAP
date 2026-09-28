@@ -53,6 +53,32 @@ describe('products-import mapHeader', () => {
       { code: 'PRODUCTS_IMPORT_MISSING_COLUMN', args: ['category'] },
     ]);
   });
+
+  it('reports a column that appears twice in the header', () => {
+    const twice = mapHeader(['name', 'price', 'currency', 'stock', 'category', 'Name']);
+    expect(twice.errors).toEqual([{ code: 'PRODUCTS_IMPORT_DUPLICATE_COLUMN', args: ['name'] }]);
+
+    const threeTimes = mapHeader([
+      'NAME',
+      'price',
+      'name',
+      'currency',
+      'stock',
+      'category',
+      'Name',
+    ]);
+    expect(threeTimes.errors).toEqual([
+      { code: 'PRODUCTS_IMPORT_DUPLICATE_COLUMN', args: ['name'] },
+    ]);
+
+    // In header order together with unknown columns, before the missing mandatory columns.
+    const mixed = mapHeader(['stock', 'Color', 'STOCK', 'name', 'price', 'currency']);
+    expect(mixed.errors).toEqual([
+      { code: 'PRODUCTS_IMPORT_UNKNOWN_COLUMN', args: ['Color'] },
+      { code: 'PRODUCTS_IMPORT_DUPLICATE_COLUMN', args: ['stock'] },
+      { code: 'PRODUCTS_IMPORT_MISSING_COLUMN', args: ['category'] },
+    ]);
+  });
 });
 
 describe('products-import coerceCell', () => {

@@ -8,7 +8,7 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Branch: feature/products-excel-upload
 - Feature: none
 - Phase: none (products-excel-upload #7 done and closed, branch not merged)
-- Last commit: 107ea14 fix(srv): products-excel-upload guard the unzipped workbook size
+- Last commit: fabe6f0 docs: products-excel-upload close #7 and prune
 - Next: user merges `feature/products-excel-upload` into `main` and pushes (the SUMMARY permalink needs the push)
 
 ## Open debt

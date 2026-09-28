@@ -1,6 +1,6 @@
 # Products Excel upload: plan
 
-Date: 2026-09-25. Status: approved (user, 2026-09-25); phase 3 amendment (user decisions 16 and 17 of 2026-09-25, ADR-0021 "Amendment", steps 8, 8a-8c, 9-13) implemented per user decisions 16 and 17 of 2026-09-25 (the orchestrator started the steps without a separate approval of the step list; committed in 4fffc95); phase 5 amendment (user decisions 18 and 19 of 2026-09-28, ADR-0021 "Amendment 2" C and D, steps 12a-12i, phases 5a and 5b) approved (user, 2026-09-29, including the en wording of `PRODUCTS_IMPORT_DUPLICATE_COLUMN` and `PRODUCTS_IMPORT_TOO_LARGE`). Gate mode: semi-autonomous.
+Date: 2026-09-25. Status: approved (user, 2026-09-25); phase 3 amendment (user decisions 16 and 17 of 2026-09-25, ADR-0021 "Amendment", steps 8, 8a-8c, 9-13) implemented per user decisions 16 and 17 of 2026-09-25 (the orchestrator started the steps without a separate approval of the step list; committed in 4fffc95); phase 5 amendment (user decisions 18 and 19 of 2026-09-28, ADR-0021 "Amendment 2" C and D, steps 12a-12i, phases 5a and 5b) approved (user, 2026-09-29, including the en wording of `PRODUCTS_IMPORT_DUPLICATE_COLUMN` and `PRODUCTS_IMPORT_TOO_LARGE`). Gate mode: autonomous (user choice at phase 0; corrected from the header's original "semi-autonomous").
 
 Shape (ADR-0018): one criterion per line under "Acceptance criteria", table rows only under "Steps"; explanations belong in `CONTEXT.md` or `research/`. `node scripts/check-feature-docs.mjs <name>` verifies the shape at the phase 1 gate.
 
@@ -36,8 +36,8 @@ This plan follows the user's answers of 2026-09-25 (CONTEXT "User decisions" 1-1
 - [ ] `npm test` green with 99 tests at the phase 2 gate, 101 at the phase 3 gate, 102 at the phase 5a gate and 106 at the phase 5b gate; `npm run test:ui` green with 28 plus the ones added in phase 3, 0 skipped.
 - [ ] `ui-verifier` in a browser: `alice` uploads the valid fixture (chrome-devtools `upload_file`) and sees 18 rows behind the success message box before closing it, without a reload; presses "Import from Excel" in the dialog with no file and sees the file field in value state Error and no request; uploads the invalid fixture and sees every bad row reported and still 15 rows; `viewer` sees no "Import from Excel" button; `ru` texts; recorded in `VERIFICATION.md`.
 - [ ] `npm run lint` clean in the root; `ui5lint` 0 problems and `npm run lint:js` 0 errors in `app/products`; `npm audit --omit=dev` reports no high or critical advisory introduced by `read-excel-file`.
-- [ ] ADR-0021 accepted and amended; `PATTERNS.md` has the rows "File upload through an action", "Bulk create from a file" and "Refresh after an action" and the updated rows "Action on a set or without context", "Role-aware UI visibility", "Dependency update", "Mandatory field" (action parameter), each with this feature as the example.
-- [ ] Documentation updated: registry, STATE, CHANGELOG, README (workbook columns), LESSONS (action parameter requiredness, no refresh after a scalar-returning action), SUMMARY.
+- [x] ADR-0021 accepted and amended; `PATTERNS.md` has the rows "File upload through an action", "Bulk create from a file" and "Refresh after an action" and the updated rows "Action on a set or without context", "Role-aware UI visibility", "Dependency update", "Mandatory field" (action parameter), each with this feature as the example.
+- [x] Documentation updated: registry, STATE, CHANGELOG, README (workbook columns), LESSONS (action parameter requiredness, no refresh after a scalar-returning action), SUMMARY.
 
 ## Steps
 

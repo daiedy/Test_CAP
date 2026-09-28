@@ -1,6 +1,6 @@
 ---
 name: sap-fe-test-api-verification
-description: Where to verify sap.fe.test OPA API signatures when fiori-mcp is down; measured ids for a DataFieldForAnnotation DataPoint column and form field; how to probe rendered ids via a failing OPA assert
+description: Where to verify sap.fe.test OPA API signatures when fiori-mcp is down; measured ids (DataPoint column, custom filter field, action parameter dialog with a file field); absence checks; probing and mutation runs; runner test counting
 metadata:
   type: reference
 ---
@@ -29,3 +29,16 @@ Related: [[test-cap-ui-test-run-baseline]]
 - `liveMode: true`: `getLiveMode()` true, but `showGoButton` stays true; the `-btnSearch` button exists with `visible` false and no DOM ref. `iCheckSearch({ visible: false })` therefore cannot prove "no Go button".
 - Adapt Filters list items are `sap.m.CustomListItem` (dialog) bound to model `$p13n` (`name`, `label`, `visible`). Counting over all matched controls needs `OpaBuilder#check`, not `has` (per control).
 - Per-test results of a run: `node -e` with `require('<report-dir>/job.js')` and walk objects that have `testId` and `name` (`report.failed`, `logs[].message`). A mutation run (deliberately wrong expected values) proves a custom assertion can fail; each failure costs the 60 s OPA timeout.
+
+## Action parameter dialog with a file parameter (measured 2026-09-25, FE 1.152.0, products-excel-upload)
+
+- `onActionDialog()` is the default `DialogActions`/`DialogAssertions` on the top-most `sap.m.Dialog`; confirm and cancel are picked by button position, and `iCheckActionParameterDialogField` matches only `sap.ui.mdc.Field` (`APD_::<property>`). A stream parameter renders `sap.m.Label` + `sap.ui.unified.FileUploader`, so use an own `OpaBuilder` page object (`pages/ImportProductsDialog.js`).
+- Dialog, button and label ids are global, no view prefix (`generate([...])` in `sap/fe/macros/coreUI/OperationParameterDialog`), and the dialog is destroyed in `afterClose`. "Closed" = a plain `waitFor({ check })` over `Opa5.getPlugin().getMatchingControls({ id: /regex/, controlType, visible: false })` (returns `[]`, no retry); a builder with `hasId` would time out on a destroyed control.
+- Table toolbar action by id: `iCheckAction({ service, action }, { visible, enabled, text })` (state keys fall through to control properties) and `iExecuteAction({ service, action })`; the id regex tolerates the `DataFieldForAction::` prefix.
+- "No draft left" through the UI: `iCheckRows({}, N, { isDraft: false })` (rendered rows without a visible `sap.m.ObjectMarker`); the `{ isDraft: true }` mutation fails, so the state is evaluated.
+- The `cds serve` log lists bound actions inside `$batch` (`> POST /Products(...)/CatalogService.draftEdit`); grep it for an action name as evidence the UI never sent it.
+
+## Runner counting and single-journey runs (2026-09-25)
+
+- PLAN baselines ("28 opaTests") count non-teardown OPA tests. The runner total adds one `Teardown` per journey and the 2 QUnit unit tests (main before #7: 36 OPA + 2 unit = 38).
+- One journey only: `npx ui5-test-runner --url .../testsuite.qunit.html --page-filter opaTests --page-params "filter=<QUnit module name>" --report-dir <scratch>`. It runs the module, but the page ends as BROWSER TIMEOUT after `--page-timeout` because the runner waits for all tests; read per-test results from `job.js` and never use it as the gate run. Temporary mutation module + `Opa5.extendConfig({ timeout: 8 })` makes each expected failure cost 8 s instead of 60 s.

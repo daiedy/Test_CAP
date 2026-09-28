@@ -2,10 +2,14 @@
 // Journey "russian locale shows translated categories" (PLAN step 13): started with
 // sap-ui-language=ru, the filter labels (Category, Rating), the column headers (Category, Rating), the dropdown items,
 // the table cells and the object page show the Russian texts of _i18n and Categories.texts.
-sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts', './data/RatingTexts'], function (
+// products-excel-upload (PLAN step 9): the Import from Excel toolbar button and its action parameter
+// dialog (title, file label, OK button) show the ru texts of _i18n; Cancel is a framework text and
+// is not asserted.
+sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts', './data/RatingTexts', './data/ImportTexts'], function (
   opaTest,
   CategoryTexts,
-  RatingTexts
+  RatingTexts,
+  ImportTexts
 ) {
   'use strict';
 
@@ -28,6 +32,19 @@ sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts', './data/RatingTex
       Then.onTheProductsList.onTable().iCheckColumns(undefined, { category_code: { header: label } });
       Then.onTheProductsList.onTable().iCheckColumns(undefined, ratingColumn);
       Then.onTheProductsList.onTable().iCheckRows({ category_code: names.ELECTRONICS }, 4);
+    });
+
+    opaTest('The import action and its dialog show Russian texts', function (Given, When, Then) {
+      const importLabel = ImportTexts.labels.action.ru;
+      Then.onTheProductsList
+        .onTable()
+        .iCheckAction(ImportTexts.action, { visible: true, enabled: true, text: importLabel });
+      When.onTheProductsList.onTable().iExecuteAction(ImportTexts.action);
+      Then.onTheImportDialog.iSeeTheDialog(importLabel);
+      Then.onTheImportDialog.iSeeTheFileField(ImportTexts.labels.file.ru);
+      Then.onTheImportDialog.iSeeTheButtons(importLabel);
+      When.onTheImportDialog.iPressCancel();
+      Then.onTheImportDialog.iSeeTheDialogClosed();
     });
 
     opaTest('The category dropdown lists Russian names and filters the table', function (Given, When, Then) {

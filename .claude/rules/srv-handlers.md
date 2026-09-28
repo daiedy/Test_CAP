@@ -13,7 +13,7 @@ paths:
 ## Rules
 - ESM. `import cds from '@sap/cds'`. Class `export default class <Service> extends cds.ApplicationService`, all registration in `async init()`, `return super.init()` at the end.
 - Order in `init()`: `before` → `on` → `after`.
-- Errors: `req.reject(<status>, '<MESSAGE_KEY>', [args])`, the key in `_i18n/messages.properties` and `_i18n/messages_ru.properties`.
+- Errors: `req.reject(<status>, '<MESSAGE_KEY>', [args])`, the key in `_i18n/messages.properties` and `_i18n/messages_ru.properties`. When a handler collects several messages with `req.error`, use the object form `req.error({ status, code: '<MESSAGE_KEY>', args })`: the positional form leaves the status in `details[].code` (cds 10).
 - Logs: `const LOG = cds.log('<module>')` at module level. `console.*` is forbidden.
 - Queries only through `cds.ql`. No manual transactions, do not open `cds.tx()` manually.
 - Shared code: `srv/lib/<topic>.js`, named exports, JSDoc, no access to `req`.

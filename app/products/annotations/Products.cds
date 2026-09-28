@@ -18,7 +18,14 @@ annotate CatalogService.Products with @(
     { $Type: 'UI.DataField', Value: price },
     { $Type: 'UI.DataField', Value: stock },
     // Label is explicit: FE takes a DataFieldForAnnotation header from the record, not from @title.
-    { $Type: 'UI.DataFieldForAnnotation', Label: '{i18n>Products.rating}', Target: '@UI.DataPoint#Rating', ![@UI.Importance]: #Low }
+    { $Type: 'UI.DataFieldForAnnotation', Label: '{i18n>Products.rating}', Target: '@UI.DataPoint#Rating', ![@UI.Importance]: #Low },
+    // Excel import (ADR-0021): collection-bound action in the table toolbar, hidden for non-editors (ADR-0013).
+    {
+      $Type         : 'UI.DataFieldForAction',
+      Action        : 'CatalogService.importProducts',
+      Label         : '{i18n>Products.action.import}',
+      ![@UI.Hidden] : { $edmJson: { $Not: { $Path: '/CatalogService.EntityContainer/Permissions/isEditor' } } }
+    }
   ],
   // Read-only stars in the table, interactive stars in the Object Page edit mode; no Title/Description.
   UI.DataPoint #Rating: {
@@ -68,3 +75,9 @@ annotate CatalogService.Products with @(
   UI.UpdateHidden: { $edmJson: { $Not: { $Path: '/CatalogService.EntityContainer/Permissions/isEditor' } } },
   UI.DeleteHidden: { $edmJson: { $Not: { $Path: '/CatalogService.EntityContainer/Permissions/isEditor' } } }
 );
+
+// Refresh after the Excel import (ADR-0021 amendment A): the action returns a count, so Fiori Elements
+// reloads the Products list only through this side effect on the whole entity set.
+annotate CatalogService.Products with actions {
+  importProducts @Common.SideEffects: { TargetEntities: ['/CatalogService.EntityContainer/Products'] };
+};

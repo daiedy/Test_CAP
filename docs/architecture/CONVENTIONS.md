@@ -66,7 +66,7 @@ A read-only permission singleton (e.g. `CatalogService.Permissions`, ADR-0013) i
 - ESM (`"type": "module"` in package.json). Import: `import cds from '@sap/cds'`.
 - Handlers in a class: `export default class CatalogService extends cds.ApplicationService { async init() { ...; return super.init() } }`.
 - Order in `init()`: `before` validations, then `on` actions, then `after` side effects. One handler per event and entity.
-- Errors: `req.reject(400, 'PRODUCT_STOCK_NEGATIVE', [args])`. The message key is in `_i18n/messages.properties`. No strings in code.
+- Errors: `req.reject(400, 'PRODUCT_STOCK_NEGATIVE', [args])` for a single error; when a handler collects several messages into one response, use the object form `req.error({ status, code: 'KEY', args })` per message instead (cds 10 leaves the status in `details[].code` for the positional form once more than one message is collected, PATTERNS "Business logic error"). The message key is in `_i18n/messages.properties`. No strings in code.
 - Logging: `const LOG = cds.log('catalog')` at module level. `console.*` is forbidden.
 - Database queries through `cds.ql` (`SELECT`, `INSERT`, `UPDATE`, `DELETE`), no raw SQL and no manual transactions.
 - Shared code in `srv/lib/<topic>.js` with named exports and JSDoc on every exported function.

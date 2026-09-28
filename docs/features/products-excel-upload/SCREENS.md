@@ -51,8 +51,9 @@ Initial focus: the file field (framework default for the first parameter) **(inf
 | Duplicate name | A `name` equal to an existing active product or to an earlier row | one row message `PRODUCTS_IMPORT_DUPLICATE_NAME` in the same list | unchanged |
 | Empty file | Header row only, or only empty rows | one message `PRODUCTS_IMPORT_EMPTY` | unchanged |
 | Wrong format | Not an xlsx workbook (renamed file, csv, xls) | one message `PRODUCTS_IMPORT_NOT_XLSX` (after the client-side type filter was bypassed) | unchanged |
-| Bad header | Unknown column, or a mandatory column (`name`, `price`, `currency`, `stock`, `category`) missing | one message `PRODUCTS_IMPORT_UNKNOWN_COLUMN` per unknown column and one `PRODUCTS_IMPORT_MISSING_COLUMN` per missing mandatory column (user decision 14); no row messages for those columns | unchanged |
+| Bad header | Unknown column, a documented column named more than once (case-insensitive: `name` and `Name`), or a mandatory column (`name`, `price`, `currency`, `stock`, `category`) missing | one message `PRODUCTS_IMPORT_UNKNOWN_COLUMN` per unknown column and one `PRODUCTS_IMPORT_DUPLICATE_COLUMN` per repeated column (named by its documented name, one message even for three occurrences), both in header order; then one `PRODUCTS_IMPORT_MISSING_COLUMN` per missing mandatory column (user decision 14; ADR-0021 amendment C); no row is read, so no row messages | unchanged |
 | Too many rows | More than 1,000 data rows | one message `PRODUCTS_IMPORT_TOO_MANY_ROWS` with the count and the limit; no row messages | unchanged |
+| Too much data | A workbook that unzips beyond 10 MB: extra sheets, tens of thousands of rows, or a crafted archive (a 19 KB upload can unzip to 11 MiB). A 1,000-row product sheet unzips to 2.4 MB at most (ADR-0021 amendment D) | one message `PRODUCTS_IMPORT_TOO_LARGE` "The file contains more than 10 MB of data ...", checked before any row is read: no row messages and no `PRODUCTS_IMPORT_TOO_MANY_ROWS`. Not the 413 of "Too large request": the upload itself is within the body limit | unchanged (15 rows) |
 | Too large request | Body over the body-parser limit (413) | the framework's generic technical error **(inferred)**; PLAN step 6 sizes the limit so that a 1,000-row file never gets here | unchanged |
 | Not authorized | `viewer` calls the action by URL (no button) | not a UI path; 403 is covered by the backend tests | unchanged |
 
@@ -94,8 +95,10 @@ Every row message starts with the row number (sheet row, header = row 1) and the
 | `PRODUCTS_IMPORT_NOT_XLSX` | The file is not an Excel workbook. Choose an .xlsx file. | Fajl ne yavlyaetsya knigoj Excel. Vyberite fajl .xlsx. |
 | `PRODUCTS_IMPORT_EMPTY` | The file contains no product rows. Add rows below the header row. | V fajle net strok s tovarami. Dobavte stroki pod strokoj zagolovkov. |
 | `PRODUCTS_IMPORT_UNKNOWN_COLUMN` | Column "{0}" is not supported. Allowed columns: name, description, price, currency, stock, category, rating, imageUrl. | Stolbec "{0}" ne podderzhivaetsya. Dopustimye stolbcy: name, description, price, currency, stock, category, rating, imageUrl. |
+| `PRODUCTS_IMPORT_DUPLICATE_COLUMN` (one per repeated documented column, ADR-0021 amendment C) | The header row names column "{0}" more than once. | V stroke zagolovkov stolbec "{0}" ukazan bolee odnogo raza. |
 | `PRODUCTS_IMPORT_MISSING_COLUMN` (one per missing mandatory column) | The header row has no column "{0}". | V stroke zagolovkov net stolbca "{0}". |
 | `PRODUCTS_IMPORT_TOO_MANY_ROWS` | The file has {0} product rows; at most {1} can be imported at once. Split the file. | V fajle strok: {0}; za odin raz mozhno importirovat ne bolee {1}. Razdelite fajl. |
+| `PRODUCTS_IMPORT_TOO_LARGE` (`{0}` = the limit of the unpacked workbook in MB, 10; ADR-0021 amendment D) | The file contains more than {0} MB of data and cannot be imported at once. Keep only the product sheet and split the file. | Fajl soderzhit bolee {0} MB dannyh, ego nelzya importirovat za odin raz. Ostavte tolko list s tovarami i razdelite fajl. |
 
 `{2}` of `PRODUCTS_IMPORT_ROW_INVALID` is the framework's localized reason (`ASSERT_MANDATORY`, `ASSERT_RANGE`, `ASSERT_TARGET`); whether CAP ships it in Russian is a UX risk below. Exact key names and arguments are the backend's (PLAN step 5); only the wording is proposed here.
 

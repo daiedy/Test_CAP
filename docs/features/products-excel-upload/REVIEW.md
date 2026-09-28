@@ -43,3 +43,45 @@ None.
 
 ## Verdict
 ready to commit (0 blocking findings). The Important items are phase 6 work for `docs-keeper` (PATTERNS rows and examples, LESSONS) and one ADR note for `architect`; the Minor code items (`mapHeader` duplicate header, decompression guard, i18n comment types) do not affect any acceptance criterion.
+
+# Addendum: phases 5a and 5b (PLAN step 12h, ADR-0021 "Amendment 2")
+
+Date: 2026-09-29. Agent: `reviewer`. Scope: `git diff 3551425` (5aba890 docs/amendment, 8d0d7d9 repeated-header fix, plus the uncommitted 5b working tree). Blocking findings in the addendum: **0**.
+
+## Blocking (addendum)
+None.
+
+## Important (addendum)
+None.
+
+## Minor (addendum)
+- `test/products-import.test.js:224-290` (`describe('products-import unzippedSize')`): the branches zip64 size marker (`TOO_LARGE`), stored entry (method 0), missing data descriptor (`INVALID`) and zlib data error (`INVALID`) have no unit test; research 8.5 did not ask for them, so the tests match the plan. The reviewer ran them in a scratch probe against the working tree: zip64 marker → `{ error: 'TOO_LARGE' }`, stored entry with descriptor → `{ size: 5000 }`, flag bit 3 without descriptor → `INVALID`, corrupt deflate with a known size → `INVALID`. → `test-backend`, optional: give `zipEntry` a `flags`/`method` parameter and pin these four outcomes, so a later `read-excel-file` bump (PLAN risk) re-checks every branch.
+- `docs/STATE.md` `Now`: "Phase: 5b guard and tests done (106)" and "Next: 5b decompression guard (12e-12i)" contradict each other. → orchestrator at the 5b gate, or `docs-keeper`.
+
+## Earlier findings: status
+- ADR-0021 decision 4 note (Important 1, `architect`): done in 5aba890, decision 4 now carries the implementation note on the object form with the source lines. Closed. The PATTERNS/CONVENTIONS part stays with `docs-keeper` (step 13).
+- i18n text-type comments (Minor, `cap-backend-dev`): done; `Products.importProducts` is `#XTIT`, `mediaType`/`fileName` have `#XFLD`, every `PRODUCTS_IMPORT_*` key in both message bundles has an `#XMSG` comment naming its placeholders. Closed.
+- Repeated header column (Minor, `architect`/`cap-backend-dev`): decided by the user (decision 18, amendment C) and implemented in 8d0d7d9: `mapHeader` (`srv/lib/products-import.js`) reports one `PRODUCTS_IMPORT_DUPLICATE_COLUMN` per documented column at its second cell, in header order with the unknown columns, before the missing ones, and maps no row; unit test "reports a column that appears twice in the header" (twice, three times, mixed order) and the service case in "importProducts rejects a malformed workbook" (no `target`). Closed.
+- Decompression guard (Minor, `architect`): decided by the user (decision 19, amendment D) and implemented in the 5b working tree; reviewed below. Closed.
+- Open for phase 6 as before: Important 2 and 3 and the documentation Minors (`docs-keeper`), the focus note (Minor 1).
+
+## Checked and in order (addendum)
+- The walk (`srv/lib/products-import.js`, `unzippedSize`) is the reference walk of research 8.4 with named constants and JSDoc, and matches the reader it guards, re-read in `node_modules/unzipper-esm/lib/parse.js` (0.13.3):
+  - local headers from offset 0, `0x04034b50` checked before the central directory signature, also after it (`_readRecord` lines 44-63);
+  - `sizeKnown = !(flags & 0x08) || compressedSize > 0` is the library's `fileSizeKnown` (line 172);
+  - with an unknown size the data runs to `50 4b 07 08` and the offset moves 16 bytes on, the signature included, as `self.stream(eof)` + `_processDataDescriptor` `pull(16)`;
+  - central records are skipped by their three lengths; the walk stops at the end record, and after the central directory at any other signature, where the reader pulls to the end record and then calls `self.end()` (lines 54-59, 274-276), so no local entry after it is ever inflated by the library;
+  - method != 0 is inflated, as the library's `compressionMethod && !__autodraining`; the walk also inflates the entries the library autodrains (stricter);
+  - a `Cr24` CRX prefix, which the library skips, is `INVALID` for the walk (stricter, no bypass).
+- Inflate is capped: `zlib.inflateRawSync(data, { maxOutputLength: Math.max(1, limit - total) })`, the `ERR_BUFFER_TOO_LARGE` code maps to `TOO_LARGE`, every other zlib error to `INVALID`; declared sizes above the remaining budget and the zip64 marker `0xFFFFFFFF` are refused before any inflate; the budget spans the archive.
+- Scratch probe (reviewer, working tree): a 203,889-byte archive holding a 200 MiB data-descriptor entry → `TOO_LARGE` in 3.7 ms; the 1,000-row test workbook (165,893 bytes, 748,371 unpacked) → `{ size }` in 0.9 ms; the valid fixture re-zipped by the macOS `zip` CLI (sizes in the local headers, flags 0, the path `write-excel-file` never produces) → `{ size: 5403 }` and `readImportRows` returns its 3 rows, so the declared-size branch accepts a legitimate archive.
+- Only `srv/lib/products-import.js` changed in `srv/`; `readImportRows` runs the guard before `readSheet`, and the handler reports its errors through the existing `rejectImport` (`PRODUCTS_IMPORT_NOTHING_IMPORTED` first).
+- No new dependency (`node:zlib` is core): `git diff --stat 3551425` of `package.json`, `package-lock.json`, `app/products/webapp/localService/metadata.xml`, `test/__snapshots__/`, `srv/catalog-service.*`, `app/` and `db/` is empty, so the OData contract and the UI are unchanged.
+- No user-facing string in code: `readImportRows` returns codes and the numeric argument `MAX_UNZIPPED_BYTES / 2 ** 20` (10); `PRODUCTS_IMPORT_DUPLICATE_COLUMN` and `PRODUCTS_IMPORT_TOO_LARGE` exist in `messages.properties` and `messages_ru.properties` with `#XMSG` comments, wording as in SCREENS "Messages".
+- The service test "importProducts rejects a workbook that unzips beyond the limit" asserts `['PRODUCTS_IMPORT_NOTHING_IMPORTED', 'PRODUCTS_IMPORT_TOO_LARGE']`, the full en text and the count 15; the 1,000-row test still imports under the guard.
+- The new `afterEach` in `test/catalog-service.test.js:477-478` deletes `Bulk Product %` rows directly in the DB after every import test. Acceptable for the same reasons as orchestrator item 3: active rows only, generated names only, and a rejection test that succeeded anyway still fails on its own `rejectedWith(/400/)`, so the net hides no defect; it only keeps the later counts at 15.
+- SCREENS "Bad header" and the new state "Too much data", the Messages rows, CONTEXT decisions 18-19, PLAN criteria and steps 12a-12i, and research section 8 agree with the code; the CHANGELOG top section has the 5a and 5b lines; the registry is fresh.
+- Gates run by the reviewer: `npm test` → "Test Files 8 passed (8), Tests 106 passed (106)" (the 5b gate figure); `npm run lint` → no findings; `node scripts/check-docs-fresh.mjs` → "docs/registry is fresh."; `npx prettier --list-different` on the three changed JS files → clean; Cyrillic only in the `_ru` bundles.
+
+## Verdict (addendum)
+ready to commit (0 blocking findings in phases 5a and 5b; the earlier architect and cap-backend-dev findings are closed, the docs-keeper items stay for phase 6).

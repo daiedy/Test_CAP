@@ -1,5 +1,8 @@
-// Unit tests of srv/lib/products-import.js (ADR-0021 decision 7): header mapping, numeric
-// coercion, skipping of empty rows and the sheet row numbering. Pure functions, no server.
+// Unit tests of srv/lib/products-import.js (ADR-0021 decision 7 and amendment D): header mapping,
+// numeric coercion, skipping of empty rows, the sheet row numbering and the decompression guard.
+// Pure functions, no server.
+import { readFileSync } from 'node:fs';
+import { deflateRawSync } from 'node:zlib';
 import {
   IMPORT_COLUMNS,
   columnOf,
@@ -8,8 +11,9 @@ import {
   mapHeader,
   readImportRows,
   toImportRows,
+  unzippedSize,
 } from '../srv/lib/products-import.js';
-import { HEADER, VALID_ROWS, workbook } from './fixtures/build-workbooks.mjs';
+import { HEADER, VALID_ROWS, generatedRow, workbook } from './fixtures/build-workbooks.mjs';
 
 describe('products-import mapHeader', () => {
   it('maps header cells case-insensitively and in any order', () => {
@@ -214,5 +218,73 @@ describe('products-import decodeContent and columnOf', () => {
     }
     expect(columnOf('ID')).toBe('ID');
     expect(columnOf(undefined)).toBe('');
+  });
+});
+
+describe('products-import unzippedSize', () => {
+  const limit = 64 * 2 ** 10;
+
+  /**
+   * A one-entry zip archive whose local header carries the sizes (research 8.5): write-excel-file
+   * always uses data descriptors, so the declared-size branch of the walk needs a hand-built one.
+   * @param {Buffer} content unpacked bytes of the entry, deflated into the archive
+   * @param {number} declaredSize uncompressed size written into the local header
+   * @returns {Buffer} local file header, name and deflated data (no central directory)
+   */
+  const zipEntry = (content, declaredSize) => {
+    const name = Buffer.from('xl/worksheets/sheet1.xml');
+    const data = deflateRawSync(content);
+    const header = Buffer.alloc(30);
+    header.writeUInt32LE(0x04034b50, 0); // local file header signature
+    header.writeUInt16LE(20, 4); // version needed to extract
+    header.writeUInt16LE(0, 6); // flags: no data descriptor, the sizes below are known
+    header.writeUInt16LE(8, 8); // method: deflate
+    header.writeUInt32LE(data.length, 18); // compressed size
+    header.writeUInt32LE(declaredSize, 22); // uncompressed size
+    header.writeUInt16LE(name.length, 26); // file name length
+    return Buffer.concat([header, name, data]);
+  };
+
+  it('counts the unzipped bytes of a workbook and rejects one above the limit', async () => {
+    const valid = readFileSync(`${import.meta.dirname}/fixtures/products-import-valid.xlsx`);
+    const { size } = unzippedSize(valid, limit);
+    expect(size).toBeGreaterThan(valid.length);
+    expect(size).toBeLessThan(limit);
+
+    // write-excel-file writes data descriptors: rejected by the inflate cap of the walk.
+    const large = await workbook([HEADER, generatedRow(1, { description: 'a'.repeat(4 * limit) })]);
+    expect(large.length).toBeLessThan(limit);
+    expect(unzippedSize(large, limit)).toEqual({ error: 'TOO_LARGE' });
+  });
+
+  it('rejects an entry that declares too much or understates its size', () => {
+    // Positive control: the hand-built archive is readable when its sizes are honest.
+    const honest = Buffer.alloc(1000, 'a');
+    expect(unzippedSize(zipEntry(honest, honest.length), limit)).toEqual({ size: 1000 });
+
+    // Declares more than the limit: refused on the header, before any inflate.
+    expect(unzippedSize(zipEntry(Buffer.from('x'), limit + 1), limit)).toEqual({
+      error: 'TOO_LARGE',
+    });
+
+    // Declares 0 but inflates to 256 KiB: the declared size is not trusted.
+    expect(unzippedSize(zipEntry(Buffer.alloc(4 * limit, 'a'), 0), limit)).toEqual({
+      error: 'TOO_LARGE',
+    });
+
+    // The budget spans the archive: two honest entries of 40,000 bytes exceed 64 KiB together.
+    const entry = zipEntry(Buffer.alloc(40_000, 'a'), 40_000);
+    expect(unzippedSize(entry, limit)).toEqual({ size: 40_000 });
+    expect(unzippedSize(Buffer.concat([entry, entry]), limit)).toEqual({ error: 'TOO_LARGE' });
+  });
+
+  it('reports bytes that are not a zip archive', () => {
+    expect(unzippedSize(Buffer.from('name;price'), limit)).toEqual({ error: 'INVALID' });
+    // A local header cut off after its signature.
+    expect(unzippedSize(zipEntry(Buffer.from('x'), 1).subarray(0, 10), limit)).toEqual({
+      error: 'INVALID',
+    });
+    // Empty input is not a bomb; readSheet reports it as PRODUCTS_IMPORT_NOT_XLSX.
+    expect(unzippedSize(Buffer.alloc(0), limit)).toEqual({ size: 0 });
   });
 });

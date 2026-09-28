@@ -10,6 +10,7 @@ import {
   proseDescription,
   workbook,
 } from './fixtures/build-workbooks.mjs';
+import { MAX_UNZIPPED_BYTES } from '../srv/lib/products-import.js';
 
 const { GET, POST, PATCH, DELETE, expect, defaults } = cds.test(import.meta.dirname + '/..');
 defaults.auth = { username: 'alice' };
@@ -627,6 +628,21 @@ describe('CatalogService.Products importProducts', () => {
     // reaches the handler instead, so the body carries no `file` at all.
     const err = await expect(POST(importUrl, {})).to.be.rejectedWith(/400/);
     expect(err).to.containSubset({ code: 'ASSERT_MANDATORY', target: 'file' });
+    expect(await count()).to.equal(15);
+  });
+
+  it('importProducts rejects a workbook that unzips beyond the limit', async () => {
+    // One 11 MiB cell: about 14 KB of xlsx and 19 KB of request, 11 MiB unpacked (research 8.5).
+    const bomb = await workbook([
+      HEADER,
+      generatedRow(1, { description: 'a'.repeat(MAX_UNZIPPED_BYTES + 2 ** 20) }),
+    ]);
+    const { codes, messages } = await rejected(importFile(bomb));
+    expect(codes).to.deep.equal(['PRODUCTS_IMPORT_NOTHING_IMPORTED', 'PRODUCTS_IMPORT_TOO_LARGE']);
+    expect(messages[1]).to.equal(
+      'The file contains more than 10 MB of data and cannot be imported at once. ' +
+        'Keep only the product sheet and split the file.'
+    );
     expect(await count()).to.equal(15);
   });
 

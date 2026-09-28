@@ -34,3 +34,14 @@ run for a framework-rendered control. See [[pipeline-review-conventions]] for wh
    is written back by a two-way binding, one made in the setter during binding update is not.
    `sap/m/messagebundle.properties` gives the ARIA texts (e.g. `RATING_VALUEARIATEXT={0} of {1}`),
    useful when a chrome-devtools a11y snapshot shows an empty `valuetext` (2026-09-25).
+
+4. **Proving a model-annotation guard with a scratch server (2026-09-25, `products-excel-upload`).**
+   Put an `index.cds` in the scratchpad with `using from '<relative path to srv/catalog-service>'`
+   (absolute paths in `using from` fail with "Can't find local module") plus an override such as
+   `annotate CatalogService with @cds.server.body_parser.limit: null;`, then from the project root
+   `npx cds serve <scratch>/index.cds --in-memory --port 4012`: the impl `srv/catalog-service.js` and
+   `db/data` are still found. POST the test's payload (import the fixture builders by absolute path) to
+   see the red state (413 here). For `npm run test:ui` while someone else's `cds watch` holds :4004,
+   run `npx ui5-test-runner --url http://localhost:<port>/products/webapp/test/testsuite.qunit.html
+   --parallel 1 --split-opa --report-dir <scratchpad>` from `app/products` against your own
+   `cds serve` on another port, and never stop the :4004 process.

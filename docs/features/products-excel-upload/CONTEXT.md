@@ -29,6 +29,10 @@ Phase 3, 2026-09-25 (user, on research 6.2 and 6.3):
 16. The List Report refreshes after the import through `@Common.SideEffects` on `importProducts` (absolute `TargetEntities` `/CatalogService.EntityContainer/Products`), and PATTERNS gets the row "Refresh after an action" (ADR-0021 amendment A).
 17. An empty submit of the import dialog is validated, not accepted as framework behaviour: `@mandatory` on the parameter `file` makes Fiori Elements mark the field required and show its own value-state error on an empty submit; no controller extension (ADR-0021 amendment B).
 
+Phase 5, 2026-09-28 (user, on REVIEW.md Minor findings):
+18. A header that names a column twice (case-insensitive) is rejected with one `PRODUCTS_IMPORT_DUPLICATE_COLUMN` per column instead of letting the right-most cell win (option (a); ADR-0021 amendment C; PLAN phase 5a).
+19. Decompression is guarded now, not recorded as debt: the upload is measured by counting inflated bytes with `node:zlib` before `read-excel-file` parses it, and a workbook that unzips to more than 10 MB is rejected with `PRODUCTS_IMPORT_TOO_LARGE`; no new dependency, no contract or UI change (ADR-0021 amendment D; PLAN phase 5b; measurements in `research/import-mechanism.md` section 8).
+
 ## Affected entities and services
 From `mcp__cds-mcp__search_model` (`CatalogService.Products`) and `docs/registry/DOMAIN-MODEL.md`, `SERVICES.md`:
 
@@ -61,7 +65,7 @@ The change adds an operation inside `@requires: 'authenticated-user'`; what an u
 - "Authorization" (`@restrict` inherited) and "Role-aware UI visibility" (singleton, `UI.Hidden` on the action record).
 - "Action button" (`DataFieldForAction` in `UI.LineItem`); "Refresh after an action" (`Common.SideEffects`, amendment A); "Client-side logic" only in the ADR-0021 fallback.
 - "Texts" (en and ru; annotation labels in `_i18n`), "Service test", "OData contract", "metadata.xml snapshot update", "User scenario".
-- ADR needed: parsing library, file transport, bulk create on a draft root, all-or-nothing, duplicates, workbook contract, first new runtime dependency: `docs/decisions/ADR-0021-products-excel-import.md` (accepted 2026-09-25; amended in phase 3 for the refresh and the required file).
+- ADR needed: parsing library, file transport, bulk create on a draft root, all-or-nothing, duplicates, workbook contract, first new runtime dependency: `docs/decisions/ADR-0021-products-excel-import.md` (accepted 2026-09-25; amended in phase 3 for the refresh and the required file, and in phase 5 for the repeated header column and the decompression guard, amendment 2: C and D).
 
 ## Relevant lessons
 - `docs/architecture/TESTING.md` "cds 10 specifics": a POST without `IsActiveEntity: true` creates a draft and skips `@mandatory`; the import writes active rows through the service, never through a draft.

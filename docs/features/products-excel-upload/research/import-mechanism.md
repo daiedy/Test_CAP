@@ -1,6 +1,6 @@
 # products-excel-upload: import mechanism research
 
-Author: `architect`, 2026-09-25. Read by `architect` and `reviewer`; implementers read only the sections a PLAN step names. Sections 5 and 6 are filled by the implementers at the phase 2 and phase 3 measurements; section 7 (architect) holds the framework facts behind the phase 3 amendment of ADR-0021.
+Author: `architect`, 2026-09-25. Read by `architect` and `reviewer`; implementers read only the sections a PLAN step names. Sections 5 and 6 are filled by the implementers at the phase 2 and phase 3 measurements; section 7 (architect) holds the framework facts behind the phase 3 amendment of ADR-0021; section 8 (architect, 2026-09-28) the measurements and the reference walk behind amendment D (decompression guard).
 
 ## 1. Parser candidates (`npm view`, npm bulk advisory endpoint, 2026-09-25)
 
@@ -81,3 +81,101 @@ Not stated by any fiori-mcp document; read from the UI5 1.152.0 CDN debug source
 | Phase 2 commit `1a1199f` | 678 | |
 | Step 8 as delivered (`UI.DataFieldForAction`, uncommitted) | 687 | +9 −0 |
 | Phase 3 with amendment A (`Common.SideEffects`, +9) and B (`Common.FieldControl`, +1) | 697 | +19 −0 (the phase 3 gate figure) |
+
+## 8. Phase 5 amendment D: decompression guard (`architect`, 2026-09-28)
+
+Scratchpad measurements, Node 22.23.2 on macOS, 4,144 MB heap limit, `read-excel-file` 9.3.10, `unzipper-esm` 0.13.3. Crafted files are the valid fixture unzipped, with `xl/worksheets/sheet1.xml` or `xl/sharedStrings.xml` replaced and zipped with `zip -9`; "dd" means zipped to a pipe (`zip -r - ... | cat`), so every entry has flag bit 3 and a data descriptor. The functions were called directly (`readImportRows`, the prototype `unzippedSize` of 8.4), not through the action handler. RSS is the peak of the process (`/usr/bin/time -l`); the baseline of a process that has loaded both is 53-55 MB. The figures describe the phase 5 branch state (`3551425`) plus the prototype, not an implemented guard.
+
+### 8.1 Without the guard (`readImportRows` of `3551425`)
+| Crafted workbook | xlsx / JSON body | Unzipped | Result | Time | Peak RSS |
+|---|---|---|---|---|---|
+| One shared string of 200 MB | 207,036 / 276,178 B | 210 MB | accepted as a 1-row workbook | 295 ms | 489 MB |
+| One shared string of 700 MB, sizes in the headers | 715,842 / 954,586 B | 734 MB | `NOT_XLSX` (V8 string limit) | 651 ms | 791 MB |
+| The same, dd | 716,646 / 955,658 B | 734 MB | `NOT_XLSX` | 660 ms | 1,475 MB |
+| The same, local header declares 100 bytes | 715,842 B | 734 MB | `NOT_XLSX` (the reader truncates into `Buffer.alloc(100)`, but inflates everything) | 426 ms | 90 MB |
+| The valid fixture re-zipped with sizes in the headers, `xl/sharedStrings.xml` declaring 1.5 GiB | 3,547 B | 5 KB | `NOT_XLSX` (the reader allocates `Buffer.alloc(1.5 GiB)`; zero pages are not resident on macOS) | 10 ms | 53 MB |
+| 1,000,000 one-cell rows with cell references | 5,033,683 B (over the body limit) | 55 MB | parsed | 1.2 s | 834 MB |
+| 200,000 one-cell rows with cell references | 1,010,280 B (over the body limit) | 10.8 MB | parsed | 229 ms | 182 MB |
+| 1,000,000 rows without cell references, or repeating `r="2"` | 654,935 / 134,371 B | 168 / 45 MB | `NOT_XLSX` (the parser needs `r` on every `<c>`) | 70-166 ms | 164-409 MB |
+| The 700 MB files in a `worker_threads` Worker, `resourceLimits: { maxOldGenerationSizeMb: 64, maxYoungGenerationSizeMb: 16 }` | as above | 734 MB | `NOT_XLSX` | 550-663 ms | 772 MB (sizes in headers), 1,478 MB (dd) |
+
+Row-count bombs are bounded by the body limit (a cell reference per cell deflates only ~10:1, ~155,000 one-cell rows per 1 MB body); a single large text value deflates ~1000:1, and one request costs up to 1.5 GB. `resourceLimits` does not bound it: inflated entries are `Buffer`s, external memory outside the V8 heap.
+
+### 8.2 With the prototype guard (`unzippedSize`, limit 10 MiB = 10,485,760 B)
+| Workbook | xlsx / JSON body | Guard result | Guard time | Peak RSS |
+|---|---|---|---|---|
+| `test/fixtures/products-import-valid.xlsx` (also re-zipped dd, and with directory entries) | 3,201 / 4,398 B | `{ size: 5403 }`, then 3 rows parsed | 0-1 ms | 55 MB |
+| `test/fixtures/products-import-invalid.xlsx` | 3,176 / 4,366 B | `{ size: 5460 }`, then 6 rows parsed | 0 ms | 55 MB |
+| 1,000 rows, 500-character prose descriptions (the test "accepts 1000 rows whose request body exceeds 100 KB") | 165,893 / 221,322 B | `{ size: 748371 }` (0.71 MB), then 1,000 rows | 1 ms | 81 MB |
+| 1,000 rows, every text column at its maximum length (100 / 500 / 500), repetitive Cyrillic | 178,251 / 237,798 B | `{ size: 1019768 }` (0.97 MB) | 2 ms | 102 MB |
+| 1,000 rows at maximum lengths, random printable ASCII | 979,392 / 1,305,986 B (over the body limit) | `{ size: 1533937 }` (1.46 MB) | 3 ms | 101 MB |
+| 1,000 rows at maximum lengths, random Cyrillic | 1,119,628 / 1,492,970 B (over the body limit) | `{ size: 2495163 }` (2.38 MB) | 5 ms | 107 MB |
+| One description of 9 MiB (built in memory with `write-excel-file`) | 12,191 / 16,386 B | `{ size: 9441591 }`, then parsed | 3 ms | 142 MB (incl. building the 9 MiB string) |
+| One description of 11 MiB (the regression-test size) | 14,236 / 19,114 B, built in 107 ms | `TOO_LARGE` (inflate cap: `write-excel-file` writes data descriptors) | 3 ms | 113 MB (incl. building the string) |
+| 700 MB shared string, sizes in the headers | 715,842 B | `TOO_LARGE` (declared size) | 0 ms | 53 MB |
+| 700 MB shared string, dd | 716,646 B | `TOO_LARGE` (inflate cap) | 3 ms | 63 MB |
+| 700 MB shared string, local header declares 100 bytes | 715,842 B | `TOO_LARGE` (inflate cap) | 3 ms | 63 MB |
+| Valid fixture, `xl/sharedStrings.xml` declaring 1.5 GiB | 3,547 B | `TOO_LARGE` (declared size) | 1 ms | 52 MB |
+| 200 MB shared string; the row-count files of 8.1 | 134 KB - 26 MB | `TOO_LARGE` | 0-1 ms | 53-78 MB |
+
+A legitimate 1,000-row workbook unzips to at most 2.4 MB even with random text at every maximum length, and those files already exceed the 1 MB body limit; the limit leaves 4x room over that and 14x over the test workbook. What the guard admits costs at most ~150 MB RSS (the 9 MiB row, parsed), against 1.5 GB without it.
+
+### 8.3 Library facts behind the walk (sources in `node_modules`, 2026-09-28)
+- `read-excel-file/node` exports `readSheet(input, sheet?, options?)` with `input` a path, `Stream`, `Buffer` or `Blob`; `readSheetNode.js` calls `unpackXlsxFile(input)` then `parseSheet(...)`. No option takes pre-unzipped entries or a custom unzip; `parseSheet` is internal.
+- `unpackXlsxFileNode.js` pipes the input through `InputValidationStream` into `unzipFromStream` (`modules/zip/unzipFromStream.js`, which re-exports the `unzipper` implementation). Entries whose path does not end in `.xml` or `.xml.rels` are autodrained, not inflated. For a kept entry with a known size it allocates `Buffer.alloc(<declared uncompressed size>)` and copies the chunks into it (truncating extra bytes); with an unknown size (flag bit 3 and compressed size 0) it collects every chunk and concatenates them at the end.
+- `unzipper-esm` 0.13.3 `lib/parse.js` `_readRecord`: reads a 4-byte signature and dispatches on `0x04034b50` (local file, checked first, also after the central directory), `0x02014b50` (central directory, sets `reachedCD`), `0x06054b50` (end record: reads it and ends the stream), and after `reachedCD` any other signature skips to the next end-record signature; before the central directory any other signature is an `INVALID_SIGNATURE` error. `_readFile`: `compressionMethod` non-zero means `zlib.createInflateRaw()`, zero means stored; `fileSizeKnown = !(flags & 0x08) || compressedSize > 0`; known: exactly `compressedSize` bytes; unknown: bytes up to the data-descriptor signature `50 4b 07 08`, then 16 descriptor bytes. `lib/parseExtraField.js` replaces a size of `0xFFFFFFFF` by the zip64 extra field (`0x0001`).
+- `write-excel-file` 4.1.1 writes every entry with flag bit 3 and sizes 0 in the local header (checked on an in-memory workbook), so the committed fixtures and every test workbook take the "unknown size" path of the walk and are bounded by the inflate cap, not by a declared size. The declared-size check is defence in depth for archives with sizes in the headers (Excel, `zip`): on macOS a 1.5 GiB declaration cost no resident memory (8.1), another allocator may commit it.
+- Node.js 22 `zlib.inflateRawSync(buffer, { maxOutputLength })` throws a `RangeError` with `code` `ERR_BUFFER_TOO_LARGE` as soon as the output would exceed the limit, so the guard's own memory stays within the budget (measured in 8.2: 63 MB peak for the 700 MB files).
+
+### 8.4 Reference walk (prototype of 8.2; `cap-backend-dev` writes the production version with JSDoc, named constants and the error codes of ADR-0021 amendment D)
+```js
+import zlib from 'node:zlib';
+const LOCAL = 0x04034b50, CENTRAL = 0x02014b50, END = 0x06054b50;
+const DESCRIPTOR = Buffer.from([0x50, 0x4b, 0x07, 0x08]);
+const ZIP64 = 0xffffffff;
+export function unzippedSize(bytes, limit) {
+  let offset = 0, total = 0, reachedCentral = false;
+  while (offset + 4 <= bytes.length) {
+    const signature = bytes.readUInt32LE(offset);
+    if (signature === LOCAL) {
+      if (offset + 30 > bytes.length) return { error: 'INVALID' };
+      const flags = bytes.readUInt16LE(offset + 6);
+      const method = bytes.readUInt16LE(offset + 8);
+      const compressed = bytes.readUInt32LE(offset + 18);
+      const declared = bytes.readUInt32LE(offset + 22);
+      const start = offset + 30 + bytes.readUInt16LE(offset + 26) + bytes.readUInt16LE(offset + 28);
+      if (compressed === ZIP64 || declared === ZIP64) return { error: 'TOO_LARGE' };
+      const sizeKnown = !(flags & 0x08) || compressed > 0;
+      if (sizeKnown && declared > limit - total) return { error: 'TOO_LARGE' };
+      const end = sizeKnown ? start + compressed : bytes.indexOf(DESCRIPTOR, start);
+      if (end < 0 || end > bytes.length) return { error: 'INVALID' };
+      const data = bytes.subarray(start, end);
+      let size = data.length;
+      if (method !== 0 && data.length) {
+        try {
+          size = zlib.inflateRawSync(data, { maxOutputLength: Math.max(1, limit - total) }).length;
+        } catch (err) {
+          return { error: err.code === 'ERR_BUFFER_TOO_LARGE' ? 'TOO_LARGE' : 'INVALID' };
+        }
+      }
+      total += size;
+      if (total > limit) return { error: 'TOO_LARGE' };
+      offset = sizeKnown ? end : end + 16;
+    } else if (signature === CENTRAL) {
+      if (offset + 46 > bytes.length) return { error: 'INVALID' };
+      reachedCentral = true;
+      offset += 46 + bytes.readUInt16LE(offset + 28) + bytes.readUInt16LE(offset + 30) + bytes.readUInt16LE(offset + 32);
+    } else if (signature === END || reachedCentral) {
+      break; // the reader stops at the end record; after the central directory it skips to it
+    } else {
+      return { error: 'INVALID' };
+    }
+  }
+  return { size: total };
+}
+```
+
+### 8.5 Test sizing
+- Service test: one row whose `description` is `'a'.repeat(MAX_UNZIPPED_BYTES + 2 ** 20)` built with `workbook()` of `test/fixtures/build-workbooks.mjs`: 14 KB xlsx, 19 KB body, about 0.1 s to build, rejected by the inflate cap (data descriptors).
+- Unit tests pass a small `limit` (for example 64 KiB) to `unzippedSize`: a `workbook()` with a 256 KiB `description` gives `TOO_LARGE` (inflate cap), the valid fixture gives `{ size }` between its byte length and 64 KiB (5,403 in the prototype), `Buffer.from('name;price')` gives `INVALID`, an empty buffer gives `{ size: 0 }` (then `readSheet` reports `NOT_XLSX`, as today).
+- The two declared-size branches need sizes in the local header, which `write-excel-file` never writes: a test helper builds a one-entry archive by hand (a 30-byte local header with signature `0x04034b50`, method 8 at offset 8, compressed length at 18, declared size at 22, name length at 26, then the name and `zlib.deflateRawSync(content)`). Declared `limit + 1` with the content `'x'` gives `TOO_LARGE` without inflating; declared 0 with 256 KiB of `'a'` gives `TOO_LARGE` by the inflate cap; an honest 1,000-byte entry gives `{ size: 1000 }`; two honest 40,000-byte entries against 64 KiB give `TOO_LARGE` (the budget spans the archive). Dry run against the prototype, 2026-09-28: all cases as stated.

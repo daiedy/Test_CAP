@@ -8,7 +8,7 @@
  */
 import path from 'node:path';
 import fs from 'node:fs';
-import { isUnder } from './hook-utils.mjs';
+import { isUnder, readJsonl } from './hook-utils.mjs';
 
 export const AUDIT_DIR = '.pipeline';
 
@@ -63,36 +63,64 @@ export function agentKey(input) {
   return input.agent_id || 'main';
 }
 
-export function auditFile(root, sessionId) {
+/**
+ * `.pipeline/<prefix>-<session>.jsonl`: the layout shared by the MCP audit (`mcp-audit`) and the
+ * metrics event log (`metrics`, scripts/lib/metrics-log.mjs, ADR-0022).
+ */
+export function sessionLogFile(root, prefix, sessionId) {
   const safe = String(sessionId || 'unknown').replace(/[^A-Za-z0-9_-]/g, '_');
-  return path.join(root, AUDIT_DIR, `mcp-audit-${safe}.jsonl`);
+  return path.join(root, AUDIT_DIR, `${prefix}-${safe}.jsonl`);
 }
 
-export function appendAudit(root, sessionId, record) {
-  const file = auditFile(root, sessionId);
+/** Appends one record with a leading `ts` (ISO) to a session log file. */
+export function appendSessionLog(file, record) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.appendFileSync(file, JSON.stringify({ ts: new Date().toISOString(), ...record }) + '\n');
 }
 
+/** Removes `<prefix>-*.jsonl` files older than `maxAgeDays`; called by SessionStart. */
+export function pruneSessionLogs(root, prefix, maxAgeDays) {
+  const dir = path.join(root, AUDIT_DIR);
+  if (!fs.existsSync(dir)) return;
+  const limit = Date.now() - maxAgeDays * 86_400_000;
+  for (const name of fs.readdirSync(dir)) {
+    if (!name.startsWith(`${prefix}-`) || !name.endsWith('.jsonl')) continue;
+    const file = path.join(dir, name);
+    try {
+      if (fs.statSync(file).mtimeMs < limit) fs.unlinkSync(file);
+    } catch {
+      // best effort
+    }
+  }
+}
+
+export function auditFile(root, sessionId) {
+  return sessionLogFile(root, 'mcp-audit', sessionId);
+}
+
+export function appendAudit(root, sessionId, record) {
+  appendSessionLog(auditFile(root, sessionId), record);
+}
+
 export function readAudit(root, sessionId) {
-  const file = auditFile(root, sessionId);
-  if (!fs.existsSync(file)) return [];
-  return fs
-    .readFileSync(file, 'utf8')
-    .split('\n')
-    .filter(Boolean)
-    .flatMap((line) => {
-      try {
-        return [JSON.parse(line)];
-      } catch {
-        return [];
-      }
-    });
+  return readJsonl(auditFile(root, sessionId));
 }
 
 /** `mcp__plugin_<plugin>_<server>__tool` (plugin-bundled server) counts as `mcp__<server>__tool`. */
 function normalizeTool(name) {
   return String(name || '').replace(/^mcp__plugin_[^_]+_/, 'mcp__');
+}
+
+/** The `MCP_RULES` entry a repo-relative path falls under, or undefined. */
+export function ruleFor(file) {
+  return MCP_RULES.find((x) => isUnder(file, x.files) && !(x.exclude && isUnder(file, x.exclude)));
+}
+
+/** Distinct files of the agent's `edit` records. */
+export function editedFiles(records, agent) {
+  return [
+    ...new Set(records.filter((r) => r.agent === agent && r.event === 'edit').map((r) => r.file)),
+  ];
 }
 
 /**
@@ -105,12 +133,9 @@ export function mcpGaps(records, agent) {
   const attempted = new Set(
     mine.filter((r) => r.event === 'mcp' || r.event === 'skill').map((r) => normalizeTool(r.tool))
   );
-  const edited = [...new Set(mine.filter((r) => r.event === 'edit').map((r) => r.file))];
   const gaps = [];
-  for (const file of edited) {
-    const rule = MCP_RULES.find(
-      (x) => isUnder(file, x.files) && !(x.exclude && isUnder(file, x.exclude))
-    );
+  for (const file of editedFiles(records, agent)) {
+    const rule = ruleFor(file);
     if (!rule) continue;
     if (!rule.needs.some((n) => attempted.has(normalizeTool(n))))
       gaps.push({ file, label: rule.label, needs: rule.needs });
@@ -120,16 +145,5 @@ export function mcpGaps(records, agent) {
 
 /** Removes audit files older than `maxAgeDays`; called by SessionStart. */
 export function pruneAudit(root, maxAgeDays = 14) {
-  const dir = path.join(root, AUDIT_DIR);
-  if (!fs.existsSync(dir)) return;
-  const limit = Date.now() - maxAgeDays * 86_400_000;
-  for (const name of fs.readdirSync(dir)) {
-    if (!/^mcp-audit-.*\.jsonl$/.test(name)) continue;
-    const file = path.join(dir, name);
-    try {
-      if (fs.statSync(file).mtimeMs < limit) fs.unlinkSync(file);
-    } catch {
-      // best effort
-    }
-  }
+  pruneSessionLogs(root, 'mcp-audit', maxAgeDays);
 }

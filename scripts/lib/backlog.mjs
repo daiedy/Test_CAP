@@ -165,8 +165,13 @@ export function fetchIssues(root = repoRoot(), { timeoutMs = 8_000 } = {}) {
       /* fall through to the cache */
     }
   }
+  return readIssuesCache(root);
+}
+
+/** The issues cache `.pipeline/issues.json` without a network call; never throws. */
+export function readIssuesCache(root = repoRoot()) {
   try {
-    const cached = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+    const cached = JSON.parse(fs.readFileSync(path.join(root, CACHE_FILE), 'utf8'));
     return { issues: cached.issues || [], source: 'cache', fetchedAt: cached.fetchedAt };
   } catch {
     return { issues: [], source: 'none', fetchedAt: null };

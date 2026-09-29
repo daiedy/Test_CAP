@@ -12,7 +12,7 @@ Plan approved by the user on 2026-09-29 with the eight gate answers below (numbe
 1. Idle threshold: two caps, a turn gap counts up to 5 min and a tool gap up to 10 min (`IDLE_MS`, `TOOL_MS`); step 4 still reports #7 under a single 5-minute cap so the difference is a measured figure.
 2. Committed artifacts: both `docs/metrics/history.jsonl` (one line per finished feature, `metrics.mjs record`) and the `## Cost` section of `SUMMARY.md`; raw data stays in `.pipeline/`.
 3. Briefing: one line from the last `history.jsonl` entry (feature, cost, active time, rework share) in `PIPELINE_LANG`; no regression warning in v1, `metrics.mjs compare` on demand.
-4. Reconciliation: v1 accepts a documented gap once step 4 names the cause per kind and model; the card warns below 0.95 recovered and shows an `unattributed` row; 95% is not a gate.
+4. Reconciliation: v1 accepts a documented gap once step 4 names the cause per kind and model; the card shows the recovered ratio and an `unattributed` row as information, without a threshold; 95% is not a gate. Amended by the user on 2026-09-29 after step 4 (the ratio is structurally 62-97% in auto mode with subagents): the card and `reconcile` warn when a model's pricing self-check diverges by more than `PRICING_TOLERANCE` = 0.05 (`research/definitions.md` section 5).
 5. OpenTelemetry: a v1 non-goal; a later cross-check only.
 6. Feature join key: `gitBranch` on every record plus the `/spec` or `/feature` prompt marker for sessions on `main`; the STATE `Feature:` line is not the join key.
 7. Retention of `.pipeline/metrics-*.jsonl`: 30 days, pruned by SessionStart.
@@ -66,7 +66,7 @@ None open: all eight were decided on 2026-09-29 (see "User decisions"); kept her
 1. Idle threshold: two caps (turn gap 5 min, tool gap 10 min) or the prototype's single 5-minute cap?
 2. Committed artifacts: `docs/metrics/history.jsonl` and the `## Cost` section of `SUMMARY.md`, or one of them?
 3. Briefing: one line from the last history entry without a regression warning, or a warning when cost exceeds the previous feature by a factor?
-4. Reconciliation: is a documented, per-kind explained gap (88% recovered today) acceptable for v1, or is 95% a phase 2 gate?
+4. Reconciliation: is a documented, per-kind explained gap (73% recovered today with the verified 5m/1h prices; 88% when every cache write is priced at 1h) acceptable for v1, or is 95% a phase 2 gate?
 5. OpenTelemetry: v1 non-goal (recommended) or a cross-check now?
 6. Feature join key: `gitBranch` plus the `/spec` prompt marker (recommended), or the STATE `Feature:` marker only?
 7. Retention of `.pipeline/metrics-*.jsonl`: 30 days (recommended, Claude Code's transcript retention) or 14 (the MCP audit)?

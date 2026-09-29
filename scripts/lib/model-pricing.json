@@ -1,0 +1,42 @@
+{
+  "recordedAt": "2026-09-29",
+  "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+  "note": "USD per million tokens, Claude API first-party global endpoint, standard (not fast, not batch) pricing; verified against the source on recordedAt. Keys are message.model values seen in the transcripts; a '[1m]' suffix (cost-state key of the 1M-context variant) resolves to the base id because 4.6+ models bill long context at standard rates.",
+  "perMTok": {
+    "claude-fable-5-1": {
+      "input": 10,
+      "cacheWrite5m": 12.5,
+      "cacheWrite1h": 20,
+      "cacheRead": 0.25,
+      "output": 50
+    },
+    "claude-opus-5-5": {
+      "input": 4,
+      "cacheWrite5m": 5,
+      "cacheWrite1h": 8,
+      "cacheRead": 0.2,
+      "output": 20
+    },
+    "claude-opus-5": {
+      "input": 5,
+      "cacheWrite5m": 6.25,
+      "cacheWrite1h": 10,
+      "cacheRead": 0.5,
+      "output": 25
+    },
+    "claude-sonnet-5": {
+      "input": 2,
+      "cacheWrite5m": 2.5,
+      "cacheWrite1h": 4,
+      "cacheRead": 0.2,
+      "output": 10
+    },
+    "claude-haiku-4-5-20251001": {
+      "input": 1,
+      "cacheWrite5m": 1.25,
+      "cacheWrite1h": 2,
+      "cacheRead": 0.1,
+      "output": 5
+    }
+  }
+}

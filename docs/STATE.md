@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-09-29
-- Branch: feature/products-excel-upload
+- Branch: main
 - Feature: none
-- Phase: none (products-excel-upload #7 done and closed, branch not merged)
-- Last commit: fabe6f0 docs: products-excel-upload close #7 and prune
-- Next: user merges `feature/products-excel-upload` into `main` and pushes (the SUMMARY permalink needs the push)
+- Phase: none (spec for pipeline-metrics #14 in progress, plan gate pending)
+- Last commit: 0485310 Merge branch 'feature/products-excel-upload'
+- Next: approve or amend `docs/features/pipeline-metrics/PLAN.md` (#14), then `/feature #14`
 
 ## Open debt
 

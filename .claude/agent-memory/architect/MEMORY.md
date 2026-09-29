@@ -11,3 +11,4 @@
 - [Excel import mechanism](excel-import-mechanism.md) — ADR-0021 (accepted, amended) facts: no standard FE file import, read-excel-file, internal INSERT runs @mandatory/@assert, 1mb limit, object-form req.error, zlib decompression guard (amendment D)
 - [FE V4 action dialog and refresh](fe-v4-action-dialog-and-refresh.md) — required only via parameter FieldControl (@mandatory), Nullable ignored; SideEffects for refresh; _i18n for labels; CDN-source and scratch-compile probes
 - [Fix review gaps in-feature](feedback-fix-review-gaps-in-feature.md) — user prefers a costed extra phase over open debt for wrong-data or DoS gaps; stop conditions
+- [Claude Code transcript facts](claude-code-transcript-facts.md) — requestId dedupe by field max, gitBranch join, cost-state fields and the thinkingTokens oddity, sessions per feature; ADR-0022 accepted 2026-09-29

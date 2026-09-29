@@ -1,0 +1,18 @@
+---
+name: claude-code-transcript-facts
+description: Measured facts about Claude Code transcripts and cost-state used by the pipeline-metrics plan (ADR-0022 accepted 2026-09-29, all eight gate recommendations taken as-is); dedupe rule, gitBranch join, thinkingTokens oddity, which sessions hold which feature
+metadata:
+  type: project
+---
+
+Facts measured on 2026-09-29 (Claude Code 2.1.282, session `6ecbd7a4` = feature #7) with narrow `jq` filters; the basis of `docs/features/pipeline-metrics/research/definitions.md` and ADR-0022 (accepted 2026-09-29; the user took all eight gate recommendations as-is: two time caps, both committed artifacts, briefing line without regression warning, explained gap instead of a 95% gate, OTel later, branch + prompt-marker join, 30-day retention, baseline #5-#7 + catalog-authorization).
+
+- One API response = several `assistant` records sharing `requestId` (main: 287 records, 162 requests). In the main file every record of a request carries identical usage; in subagent files the usage grows with the stream (opus output: first-record sum 126K, last-record sum 227K). Rule: per request take the per-field maximum. Summing every record overcounts 1.75x.
+- `message.usage` has `cache_creation.ephemeral_5m_input_tokens` / `ephemeral_1h_input_tokens` (opus in #7: 3.52M / 0.65M; sonnet all 5m), `output_tokens_details.thinking_tokens`, `iterations[]` (always one entry so far). Every record also carries `gitBranch`, `version`, `advisorModel`, `serverClassifierRequest`.
+- `cost-state` (one record, `timestamp: null`) exists only in closed sessions; `modelUsage.<model>` has `inputTokens`, `outputTokens`, `thinkingTokens`, `cacheReadInputTokens`, `cacheCreationInputTokens`, `costUSD`; plus `totalAPIDuration`, `totalToolDuration`, `totalLinesAdded/Removed`, `hasUnknownModelCost`. Transcript recovers 75-89% of cache tokens and 35-46% of `outputTokens`; the transcript output equals `thinkingTokens` within 0.1% for opus (unexplained, hypothesis list H1-H5 in the research file). Haiku appears only in cost-state (title generation).
+- Subagent meta (`agent-<id>.meta.json`): `agentType`, `description`, `requestShape` (`background`), `toolUseId`, `spawnDepth`; `<id>` = hook `agent_id` = MCP audit `agent`. Main `Agent` tool input: `subagent_type`, `description`, `prompt` (no `run_in_background`); `SendMessage.input.to` = agent id (23 resumes over 8 agents in #7).
+- Sessions and features (project dir `~/.claude/projects/-Users-anton-straltsou-github-Test-CAP/`): #7 in `6ecbd7a4` only; #5 and #6 both in `0bb70a42`, #6 also in `0f92618d` (no cost-state); `catalog-authorization` in `e9ead85a` and `29ece8c2`; the 2026-09-06 session `488be2d6` ($382) spans 14 branches. Claude Code prunes transcripts after 30 days by default.
+
+**Why:** these facts took a session to establish and are not in the repo; the plan's definitions (D1-D12) and the reconciliation step depend on them.
+
+**How to apply:** when the `/feature` run for #14 starts, re-verify the dedupe rule and the cost-state field names on a fresh session before pinning the fixture; if the transcript output vs `thinkingTokens` question is answered, update `research/definitions.md` section 5 and this note. See [[test-suite-shape]] for the test-count rule and [[feedback-fix-review-gaps-in-feature]] for how the user treats review gaps.

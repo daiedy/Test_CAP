@@ -37,6 +37,7 @@ import {
   renderCard,
   renderCompare,
   renderReconcile,
+  loadPricing,
 } from './lib/pipeline-metrics.mjs';
 import {
   pickLang,
@@ -49,9 +50,7 @@ import {
 
 const root = repoRoot();
 const HISTORY = 'docs/metrics/history.jsonl';
-const pricing = JSON.parse(
-  fs.readFileSync(path.join(root, 'scripts', 'lib', 'model-pricing.json'), 'utf8')
-);
+const pricing = loadPricing(root);
 const bundle = loadBundle(pickLang(process.env, readLocalSettings(root)), root);
 
 function parseArgs(argv) {

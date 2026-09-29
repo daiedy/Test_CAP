@@ -2,6 +2,7 @@
  * PreToolUse hook (Edit|Write|MultiEdit): denies edits to protected files and
  * reminds about the reuse registry when a new shared module is created.
  * Bypass for deliberate maintenance: PIPELINE_ALLOW_PROTECTED=1
+ * Metrics (ADR-0022): a deny appends `{ event: 'gate', hook: 'protect-files', reason: 'protected' }`.
  */
 import path from 'node:path';
 import {
@@ -14,6 +15,7 @@ import {
   exists,
 } from '../lib/hook-utils.mjs';
 import { protectedHit, reasonFor } from '../lib/protected-paths.mjs';
+import { recordGate } from '../lib/metrics-log.mjs';
 
 const REUSE_WATCH = ['srv/lib/**', 'app/**/webapp/ext/**'];
 
@@ -31,6 +33,7 @@ try {
     const hit = protectedHit(r);
     if (hit) {
       const why = reasonFor(hit);
+      recordGate(input, 'protect-files', 'protected', root);
       emitJson({
         hookSpecificOutput: {
           hookEventName: 'PreToolUse',

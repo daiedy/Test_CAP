@@ -6,6 +6,10 @@
  * Write route (ADR-0016): changed files with no `edit` audit record were written outside Edit/Write,
  * so post-edit.mjs never saw them; their per-file-type checks run here and a protected path blocks.
  * Generated files (docs/registry/**) are not audited as protected writes; their gate is freshness (ADR-0017).
+ * Metrics (ADR-0022): before any check, the agent's transcript aggregate is appended as `agent-stop`
+ * (so a blocked stop still records); every exit 2 appends `{ event: 'gate', reason }`. A Claude Code
+ * internal agent (`internalAgent`: empty agent_type and no transcript file) gets the same checks but
+ * no metrics record.
  */
 import path from 'node:path';
 import fs from 'node:fs';
@@ -23,8 +27,65 @@ import {
 import { agentKey, readAudit, appendAudit, mcpGaps } from '../lib/mcp-audit.mjs';
 import { protectedWriteHit, reasonFor } from '../lib/protected-paths.mjs';
 import { runFileChecks } from '../lib/file-checks.mjs';
+import {
+  appendMetric,
+  recordGate,
+  internalAgent,
+  metricsAgent,
+  agentTranscriptPath,
+} from '../lib/metrics-log.mjs';
 
 const TIMEOUT = 150_000;
+const HOOK = 'subagent-stop';
+
+/**
+ * The `agent-stop` record (research/data-flow.md section 2 of pipeline-metrics): the subagent's own
+ * transcript through transcript-usage.mjs, priced and timed with pipeline-metrics.mjs (D1-D6, default
+ * caps). The transcript is cumulative, so a resumed agent's last record wins. Best effort: the libs
+ * load lazily, and any failure only loses the record, never the checks below.
+ */
+async function recordAgentStop(root, input) {
+  try {
+    const { readTranscript, requests, usageByModel, timelinePoints, toolUses, TOKEN_KINDS } =
+      await import('../lib/transcript-usage.mjs');
+    const { costOf, activeTime, loadPricing } = await import('../lib/pipeline-metrics.mjs');
+    let pricing = null;
+    try {
+      pricing = loadPricing(root);
+    } catch {
+      // no table: costUSD stays null (D4), never zero
+    }
+    const file = agentTranscriptPath(input);
+    const records = readTranscript(file);
+    const models = Object.entries(usageByModel(requests(records)).byModel).sort(
+      (a, b) => b[1].calls - a[1].calls
+    );
+    const sum = (k) => models.reduce((s, [, u]) => s + u[k], 0);
+    const cost = costOf(Object.fromEntries(models), pricing).costUSD;
+    const points = timelinePoints(records);
+    const first = points[0]?.t;
+    const last = points.at(-1)?.t;
+    const min = (ms) => Number((ms / 60_000).toFixed(1));
+    const iso = (t) => (t == null ? undefined : new Date(t).toISOString());
+    appendMetric(root, input.session_id, {
+      event: 'agent-stop',
+      agent: metricsAgent(input),
+      agentType: input.agent_type || 'main',
+      transcriptPath: file || undefined,
+      model: models[0]?.[0] ?? null,
+      requests: sum('calls'),
+      tokens: Object.fromEntries(TOKEN_KINDS.map((k) => [k, sum(k)])),
+      costUSD: cost == null ? null : Number(cost.toFixed(4)),
+      activeMin: min(activeTime(points)),
+      leadMin: first == null ? 0 : min(last - first),
+      toolCalls: toolUses(records).length,
+      firstTs: iso(first),
+      lastTs: iso(last),
+    });
+  } catch {
+    // metrics are best effort
+  }
+}
 
 function eslintErrors(root, files) {
   if (!files.length) return [];
@@ -92,6 +153,10 @@ function ui5Errors(root, files) {
 try {
   const input = readStdinJson();
   const root = repoRoot();
+  // Metrics for pipeline agents only; an internal agent passes the same checks without records.
+  const metered = !internalAgent(input);
+  const gate = (reason) => metered && recordGate(input, HOOK, reason, root);
+  if (metered) await recordAgentStop(root, input);
   const changed = changedFiles(root)
     .filter((c) => c.status !== 'D' && !c.status.startsWith('D'))
     .map((c) => c.path)
@@ -108,6 +173,7 @@ try {
 
   const errors = [...eslintErrors(root, cdsAndSrv), ...ui5Errors(root, ui5)];
   if (errors.length) {
+    gate('lint');
     process.stderr.write(
       `The subagent cannot finish: ${errors.length} linter errors in changed files. Fix them and finish again.\n` +
         errors.slice(0, 30).join('\n') +
@@ -134,6 +200,7 @@ try {
     const allowedRoute = process.env.PIPELINE_ALLOW_PROTECTED === '1';
     const list = protectedWrites.map((x) => `  ${x.p} (${reasonFor(x.hit)})`).join('\n');
     if (!allowedRoute) {
+      gate('protected');
       process.stderr.write(
         'Protected files were changed outside Edit/Write, so the PreToolUse guard never saw them ' +
           '(rule pipeline-config.md, ADR-0016):\n' +
@@ -186,6 +253,7 @@ try {
       );
     } else {
       const list = gaps.map((g) => `  ${g.file} (${g.label}) → ${g.needs.join(' or ')}`).join('\n');
+      gate('mcp');
       process.stderr.write(
         'MCP check (rule pipeline-config.md, ADR-0014): you edited files that expect an MCP query first, but this agent made no attempt:\n' +
           list +

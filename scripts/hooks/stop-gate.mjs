@@ -10,6 +10,8 @@
  *      output never trips check 4 (ADR-0017).
  *   5. docs/STATE.md keeps the shape of templates/STATE.md whenever it changed (ADR-0018).
  * Bypass: PIPELINE_SKIP_GATE=1. Loop guard: stop_hook_active.
+ * Metrics (ADR-0022): every block appends `{ event: 'gate', hook: 'stop-gate', reason }`, and every
+ * run ends with one `{ event: 'turn-end', blocked }`.
  */
 import path from 'node:path';
 import fs from 'node:fs';
@@ -25,9 +27,22 @@ import {
 } from '../lib/hook-utils.mjs';
 import { protectedWriteHit, reasonFor } from '../lib/protected-paths.mjs';
 import { stateShapeErrors, statePrintedBytes, STATE_PRINT_BUDGET } from '../lib/doc-shapes.mjs';
+import { appendMetric, recordGate } from '../lib/metrics-log.mjs';
 
 const CODE_PATHS = ['db', 'srv', 'app', 'test', '_i18n'];
 const TEST_TIMEOUT = 10 * 60 * 1000;
+const HOOK = 'stop-gate';
+
+let input = {};
+
+// One `turn-end` per Stop, whichever exit path ends the run; exit code 2 is a block.
+process.on('exit', (code) => {
+  try {
+    appendMetric(repoRoot(), input.session_id, { event: 'turn-end', blocked: code === 2 });
+  } catch {
+    // metrics are best effort
+  }
+});
 
 function porcelain(root, paths) {
   const res = run('git', ['status', '--porcelain', '-uall', '--', ...paths], {
@@ -37,13 +52,15 @@ function porcelain(root, paths) {
   return res.code === 0 ? res.stdout : '';
 }
 
-function block(msg) {
+/** Blocks the stop; `reason` is one of GATE_REASONS (scripts/lib/metrics-log.mjs). */
+function block(reason, msg) {
+  recordGate(input, HOOK, reason);
   process.stderr.write(msg.trimEnd() + '\n');
   process.exit(2);
 }
 
 try {
-  const input = readStdinJson();
+  input = readStdinJson();
   if (input.stop_hook_active === true) process.exit(0);
   if (process.env.PIPELINE_SKIP_GATE === '1') {
     process.stdout.write('Stop gate skipped (PIPELINE_SKIP_GATE=1).\n');
@@ -63,6 +80,7 @@ try {
     // environment variable counts as sanction (ADR-0016).
     if (process.env.PIPELINE_ALLOW_PROTECTED !== '1') {
       block(
+        'protected',
         'Protected files are changed in the working tree and this is not the sanctioned route ' +
           '(rule pipeline-config.md, ADR-0016):\n' +
           protectedChanged.map((x) => `  ${x.p} (${reasonFor(x.hit)})`).join('\n') +
@@ -77,6 +95,7 @@ try {
   if (exists(stateDoc) && porcelain(root, ['docs/STATE.md']).trim()) {
     const text = fs.readFileSync(stateDoc, 'utf8');
     const errors = stateShapeErrors(text);
+    const shapeBroken = errors.length > 0;
     const bytes = statePrintedBytes(text);
     if (bytes > STATE_PRINT_BUDGET)
       errors.push(
@@ -84,6 +103,7 @@ try {
       );
     if (errors.length)
       block(
+        shapeBroken ? 'state-shape' : 'state-budget',
         'docs/STATE.md does not keep the shape of templates/STATE.md (ADR-0018):\n' +
           errors.map((e) => `  ${e}`).join('\n') +
           '\nKeep only the template sections; narrative belongs in docs/CHANGELOG.md or the feature SUMMARY.md.'
@@ -114,6 +134,7 @@ try {
       const fix = run('node', [checker, '--fix'], { cwd: root, timeoutMs: 180_000 });
       if (fix.code !== 0) {
         block(
+          'registry',
           `The documentation registry is stale and automatic regeneration failed:\n${truncate(fix.stderr || fix.stdout, 1200)}\nRun \`npm run docs:registry\` and fix the error.`
         );
       }
@@ -134,6 +155,7 @@ try {
   const missing = ['docs/STATE.md', 'docs/CHANGELOG.md'].filter((f) => !touched.has(f));
   if (missing.length) {
     block(
+      'docs',
       `Code changed (db/, srv/, app/, test/, _i18n/), but not updated: ${missing.join(', ')}.\n` +
         'Update docs/STATE.md (current position, open debt) and docs/CHANGELOG.md (what changed), then finish the work.'
     );
@@ -147,10 +169,12 @@ try {
     const tests = run('npm', ['test', '--silent'], { cwd: root, timeoutMs: TEST_TIMEOUT });
     if (tests.timedOut)
       block(
+        'tests-timeout',
         'npm test did not finish within 10 minutes. Sort out the hanging tests and finish again.'
       );
     if (tests.code !== 0) {
       block(
+        'tests',
         `npm test failed (exit code ${tests.code}). Last lines of the output:\n${lastLines(tests.stdout + '\n' + tests.stderr, 40)}\nFix the tests or the code and finish again.`
       );
     }

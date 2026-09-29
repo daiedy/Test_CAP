@@ -6,8 +6,9 @@
  * text, tool output, file content or a transcript excerpt.
  */
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
-import { repoRoot, readJsonl } from './hook-utils.mjs';
+import { repoRoot, readJsonl, exists } from './hook-utils.mjs';
 import {
   AUDIT_DIR,
   agentKey,
@@ -50,6 +51,30 @@ export function pruneMetrics(root, maxAgeDays = METRICS_RETENTION_DAYS) {
 }
 
 /**
+ * The agent id of a metrics record: the hook's `agent_id` without a leading `agent-`, else 'main'.
+ * The hooks reference shows `agent-abc123` for SubagentStart and `def456` for SubagentStop, and the
+ * transcript file is `agent-<id>.jsonl`; the bare id joins all three.
+ */
+export function metricsAgent(input) {
+  return agentKey(input || {}).replace(/^agent-/, '');
+}
+
+/** The SubagentStop `agent_transcript_path` with a leading `~/` expanded; '' when absent. */
+export function agentTranscriptPath(input) {
+  return String(input?.agent_transcript_path || '').replace(/^~(?=\/)/, os.homedir());
+}
+
+/**
+ * A Claude Code internal agent at SubagentStop (prompt suggestions, `/btw`): empty `agent_type`
+ * and no file at `agent_transcript_path`. Not a pipeline agent, so subagent-stop.mjs writes neither
+ * `agent-stop` nor `gate` for it (pipeline-metrics research/data-flow.md section 2).
+ */
+export function internalAgent(input) {
+  const file = agentTranscriptPath(input);
+  return !input?.agent_type && !(file && exists(file));
+}
+
+/**
  * The `gate` record of a blocking hook exit; never throws, a hook must not fail on its metrics.
  * @param {object} input hook input (session_id, agent_id, agent_type)
  */
@@ -58,7 +83,7 @@ export function recordGate(input, hook, reason, root = repoRoot()) {
     appendMetric(root, input?.session_id, {
       event: 'gate',
       hook,
-      agent: agentKey(input || {}),
+      agent: metricsAgent(input),
       agentType: input?.agent_type || 'main',
       reason,
     });

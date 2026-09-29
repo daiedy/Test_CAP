@@ -20,6 +20,7 @@ import {
   IDLE_MS,
   TOOL_MS,
   PRICING_TOLERANCE,
+  loadPricing,
   activeTime,
   priceOf,
   costOf,
@@ -56,9 +57,7 @@ import {
 } from './fixtures/transcript-fixture.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
-const pricing = JSON.parse(
-  fs.readFileSync(path.join(root, 'scripts', 'lib', 'model-pricing.json'), 'utf8')
-);
+const pricing = loadPricing(root);
 const bundle = loadBundle('en', root);
 const MIN = 60_000;
 

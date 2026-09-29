@@ -3,8 +3,11 @@
  * feature, the committed history line, the comparison and the Markdown card. Definitions D4-D12:
  * docs/features/pipeline-metrics/research/definitions.md. Pure functions over slim transcript
  * records (transcript-usage.mjs) and event-log records (metrics-log.mjs); scripts/metrics.mjs does
- * the I/O. Aggregates only: no text of a prompt, a tool call or a response reaches a report.
+ * the I/O, except `loadPricing`, the one reader of the price table. Aggregates only: no text of a
+ * prompt, a tool call or a response reaches a report.
  */
+import fs from 'node:fs';
+import path from 'node:path';
 import {
   TOKEN_KINDS,
   SYNTHETIC_MODEL,
@@ -68,6 +71,14 @@ export function agentMinutes(threadPoints, caps) {
 }
 
 // ---------- D4: cost ----------
+
+/** Location of the dated price table, relative to the repo root. */
+export const PRICING_FILE = path.join('scripts', 'lib', 'model-pricing.json');
+
+/** The price table (`recordedAt`, `source`, `perMTok`); throws when it is missing or unparsable. */
+export function loadPricing(root) {
+  return JSON.parse(fs.readFileSync(path.join(root, PRICING_FILE), 'utf8'));
+}
 
 /** Price row of a model; a `[1m]`-style suffix (cost-state key) resolves to the base id. */
 export function priceOf(model, pricing) {

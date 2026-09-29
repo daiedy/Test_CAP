@@ -3,16 +3,25 @@
 // protected path, leave reads alone, deny a subagent, ask the main thread, and always yield to
 // PIPELINE_ALLOW_PROTECTED, which only the user can set.
 import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
 import path from 'node:path';
+import { metricsFile } from '../scripts/lib/metrics-log.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const hook = path.join(root, 'scripts', 'hooks', 'protect-files-bash.mjs');
+// A subagent deny appends a `gate` record to the session's metrics log (ADR-0022): a test session
+// id keeps it out of `.pipeline/metrics-unknown.jsonl`, and the file goes in afterAll.
+const SESSION = `test-metrics-bash-${process.pid}`;
+
+afterAll(() => {
+  fs.rmSync(metricsFile(root, SESSION), { force: true });
+});
 
 function decide(command, { agentId, allowProtected } = {}) {
   const env = { ...process.env };
   delete env.PIPELINE_ALLOW_PROTECTED;
   if (allowProtected) env.PIPELINE_ALLOW_PROTECTED = '1';
-  const payload = { tool_name: 'Bash', cwd: root, tool_input: { command } };
+  const payload = { session_id: SESSION, tool_name: 'Bash', cwd: root, tool_input: { command } };
   if (agentId) payload.agent_id = agentId;
   const res = spawnSync('node', [hook], { input: JSON.stringify(payload), encoding: 'utf8', env });
   const out = res.stdout || '';

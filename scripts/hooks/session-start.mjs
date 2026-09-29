@@ -10,14 +10,52 @@
  */
 import path from 'node:path';
 import fs from 'node:fs';
-import { readStdinJson, repoRoot, run, readSection, exists, emitJson } from '../lib/hook-utils.mjs';
+import {
+  readStdinJson,
+  repoRoot,
+  run,
+  readSection,
+  exists,
+  emitJson,
+  currentBranch,
+} from '../lib/hook-utils.mjs';
 import { pruneAudit } from '../lib/mcp-audit.mjs';
+import {
+  appendMetric,
+  pruneMetrics,
+  METRICS_RETENTION_DAYS,
+  CURRENT_SESSION_FILE,
+} from '../lib/metrics-log.mjs';
 import { stateShapeErrors, capped, STATE_PRINT_BUDGET } from '../lib/doc-shapes.mjs';
 import { collectBriefing, renderBriefing } from '../lib/backlog.mjs';
 
 /** `cds --version` colors its output even when piped; the codes break the version regex. */
 // eslint-disable-next-line no-control-regex -- ESC (\x1b) is intended: strips ANSI color codes
 const stripAnsi = (s) => s.replace(/\x1b\[[0-9;]*m/g, '');
+
+/**
+ * Metrics (ADR-0022): prune event logs older than 30 days, remember the running session for the
+ * CLI default and append `{ event: 'session', source, transcriptPath, branch }`. Best effort: a
+ * failure here never touches the briefing.
+ */
+function recordSession(root, input) {
+  try {
+    pruneMetrics(root, METRICS_RETENTION_DAYS);
+    if (input.session_id) {
+      const file = path.join(root, CURRENT_SESSION_FILE);
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      fs.writeFileSync(file, `${input.session_id}\n`);
+    }
+    appendMetric(root, input.session_id, {
+      event: 'session',
+      source: input.source,
+      transcriptPath: input.transcript_path,
+      branch: currentBranch(root) || undefined,
+    });
+  } catch {
+    // metrics are best effort
+  }
+}
 
 /** Emit the hook result: `systemMessage` for the user, `additionalContext` for Claude. */
 function emit(userLines, contextLines) {
@@ -35,6 +73,7 @@ try {
   const root = repoRoot();
   const out = [];
   pruneAudit(root); // MCP audit files older than 14 days (ADR-0014)
+  recordSession(root, input);
 
   out.push(`# Test_CAP project context (SessionStart, source=${input.source || 'unknown'})`);
   // ADR-0019: the briefing comes first, in PIPELINE_LANG; the queue comes from GitHub Issues with a cache.

@@ -1,6 +1,6 @@
 # Stack and versions
 
-State as of 2026-09-09. Versions are updated through `upstream-check` (see `docs/upstream/UPDATES.md`), changes are recorded in `docs/CHANGELOG.md`.
+State as of 2026-09-29. Versions are updated through `upstream-check` (see `docs/upstream/UPDATES.md`) and the weekly Dependabot pull requests, changes are recorded in `docs/CHANGELOG.md`.
 
 ## Environment
 
@@ -8,22 +8,22 @@ State as of 2026-09-09. Versions are updated through `upstream-check` (see `docs
 |---|---|---|
 | Node.js | 22 LTS (22.23.2) | Installed via Homebrew `node@22`. cds 10 and the SAP tools require >= 22 |
 | npm | 10.x | |
-| `@sap/cds-dk` globally | 10.0.7 | `npm i -g @sap/cds-dk@10`, provides the `cds` command |
+| `@sap/cds-dk` globally | 10.0.7 | `npm i -g @sap/cds-dk@10`, provides the `cds` command; the project's own dev dependency is 10.1.0 and `npx cds` uses that one |
 | Claude Code | 2.1.x | Plugins `ui5@claude-plugins-official`, `cap-developer@cap` enabled at project level; they are not installed automatically, see "Setup on a new machine" |
 
 ## Backend
 
 | Package | Version | Why |
 |---|---|---|
-| `@sap/cds` | ^10 (10.0.6) | CAP runtime. Yearly major, the previous major is supported for 12 months |
-| `@sap/cds-dk` | ^10 (10.0.7) | CLI: `cds watch`, `cds compile`, `cds add`, `cds lint` |
-| `@cap-js/sqlite` | ^3 (3.0.2) | SQLite for development and tests, `node:sqlite` driver by default |
+| `@sap/cds` | ^10 (10.1.1) | CAP runtime. Yearly major, the previous major is supported for 12 months |
+| `@sap/cds-dk` | ^10 (10.1.0) | CLI: `cds watch`, `cds compile`, `cds add`, `cds lint` |
+| `@cap-js/sqlite` | ^3 (3.1.1) | SQLite for development and tests, `node:sqlite` driver by default |
 | `@cap-js/cds-test` | ^1 (1.0.2) | `cds.test()` for service tests |
-| `vitest`, `@vitest/coverage-v8` | ^5 | Main test runner as recommended by capire since April 2026 |
-| `eslint`, `@sap/eslint-plugin-cds` | ^10, ^4 | `cds lint`, config `eslint.config.mjs` |
-| `prettier` | ^3 | JS formatting |
+| `vitest`, `@vitest/coverage-v8` | ^5 (5.0.1) | Main test runner as recommended by capire since April 2026 |
+| `eslint`, `@sap/eslint-plugin-cds` | ^10 (10.11.0), ^4 (4.2.5) | `cds lint`, config `eslint.config.mjs` |
+| `prettier` | ^3 (3.9.8) | JS formatting |
 | `@sap/cds-common-content` | ^3 (3.2.0) | ISO code lists for currencies, countries, languages for `sap.common.*`; imported in `db/schema.cds` |
-| `express` | ^4 | Transitively for CAP |
+| `express` | ^5 (5.2.1) | Web server under CAP. `@sap/cds` 10 declares `express ^4.22.1 \|\| ^5`; the project has no custom `server.js` or express middleware, so the major bump (Dependabot #1) needed no code change |
 
 Database in development: SQLite in-memory, CSV deployed on every start (`cds watch`). The `db.sqlite` file is created only by `cds deploy` and is not committed. The productive database is not chosen (HANA Cloud per `mta.yaml`, decision postponed).
 
@@ -32,14 +32,14 @@ Database in development: SQLite in-memory, CSV deployed on every start (`cds wat
 | Package | Version | Why |
 |---|---|---|
 | SAPUI5 from CDN `https://ui5.sap.com` | current, minUI5Version 1.136.0 | Fiori Elements V4 (`sap.fe.templates`), FLP sandbox |
-| `@ui5/cli` | ^4 (4.0.65) | Build and development server |
+| `@ui5/cli` | ^4 (4.0.69) | Build and development server |
 | `@sap/ux-ui5-tooling` | ^1.32 | `fiori run`, proxy, appreload |
-| `@sap-ux/ui5-middleware-fe-mockserver` | ^2 (2.4.16) | OData V4 mock without backend, `ui5-mock.yaml` |
-| `@ui5/linter` | ^1 (1.23.5) | `ui5lint`, deprecated APIs, CSP, manifest |
-| `@sap-ux/eslint-plugin-fiori-tools` | ^10 | ESLint for Fiori applications (wired in phase 3) |
+| `@sap-ux/ui5-middleware-fe-mockserver` | ^2 (2.4.17) | OData V4 mock without backend, `ui5-mock.yaml` |
+| `@ui5/linter` | ^1 (1.23.6) | `ui5lint`, deprecated APIs, CSP, manifest |
+| `@sap-ux/eslint-plugin-fiori-tools` | ^10 (10.11.0) | ESLint for Fiori applications (wired in phase 3) |
 | `@sap/ux-specification` | ^1.144 | Schemas for Fiori tools and the page editor |
-| `@sap-ux/ui5-test-writer` | ^1.9.6 (1.9.6) | Generates OPA5 page objects for Fiori Elements V4 from the app model |
-| `ui5-test-runner` | ^5.14.0 (5.14.0) | Runs QUnit/OPA5 without a browser via `npm run test:ui` (`app/products`) |
+| `@sap-ux/ui5-test-writer` | ^1.13.1 (1.13.1) | Generates OPA5 page objects for Fiori Elements V4 from the app model |
+| `ui5-test-runner` | ^5.14.1 (5.14.1) | Runs QUnit/OPA5 without a browser via `npm run test:ui` (`app/products`) |
 
 ## Agent tools
 

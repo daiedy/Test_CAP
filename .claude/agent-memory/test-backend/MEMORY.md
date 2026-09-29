@@ -1,4 +1,5 @@
 - [Probing runtime behavior](project-probing-runtime-behavior.md) — throwaway probe under test/ logging to the scratchpad; Vitest 5 hides console output; delete before npm test
 - [Hook sandbox](project-hook-sandbox.md) — hooks with side effects run from a realpath temp git repo with copied scripts; /var vs /private/var pitfall
 - [Metrics CLI offline](project-metrics-cli-offline.md) — CLAUDE_CONFIG_DIR fixture + empty GH_CONFIG_DIR, no token: gh fails fast, no network; `--history` temp file
-- [Proving a contract test red](project-contract-test-red-proof.md) — scratchpad copy + grep -c to prove an EDMX assertion red (or green for a future phase); normalize EDMX whitespace
+- [Claude Code hook runtime](project-claude-code-hook-runtime.md) — hot reload, fork copies, SubagentStop flush race, what fires UserPromptSubmit (2.1.284)
+- [Proving a test red](project-contract-test-red-proof.md) — scratchpad copy: EDMX grep -c red/green proof; per-rule mutations for pure-function tests; rm by literal path

@@ -24,6 +24,13 @@
       "cacheRead": 0.5,
       "output": 25
     },
+    "claude-sonnet-5-5": {
+      "input": 2,
+      "cacheWrite5m": 2.5,
+      "cacheWrite1h": 4,
+      "cacheRead": 0.2,
+      "output": 10
+    },
     "claude-sonnet-5": {
       "input": 2,
       "cacheWrite5m": 2.5,

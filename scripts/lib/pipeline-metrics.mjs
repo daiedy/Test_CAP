@@ -12,11 +12,13 @@ import {
   TOKEN_KINDS,
   SYNTHETIC_MODEL,
   scopeThreads,
+  requests,
   usageByModel,
   timelinePoints,
   toolUses,
   costState,
   emptyTokens,
+  contextOf,
 } from './transcript-usage.mjs';
 import { sections } from './doc-shapes.mjs';
 import { ruleFor, editedFiles, mcpGaps } from './mcp-audit.mjs';
@@ -30,7 +32,11 @@ export const TOOL_MS = 10 * 60_000;
  * 2026-09-29): cost-state tokens priced with model-pricing.json against cost-state's own costUSD.
  */
 export const PRICING_TOLERANCE = 0.05;
-/** Largest tolerated difference between a live `agent-stop` aggregate and a re-parse. */
+/**
+ * Largest tolerated difference between a live `agent-stop` aggregate and the re-parse of the same
+ * transcript cut at the record's `lastTs` (SubagentStop fires before the agent's final message is
+ * written, so the whole file always holds one request more than the live record).
+ */
 export const DRIFT_MAX = 0.01;
 export const MAIN = 'main';
 export const ORCHESTRATION = 'orchestration';
@@ -114,6 +120,23 @@ export function costOf(byModel, pricing) {
   return { costUSD: priced || empty ? total : null, byModel: models, warnings };
 }
 
+/**
+ * D4 over parts (requests or threads), consistent with `costOf`: the priced parts summed, `partial`
+ * when a part holds an unpriced model (`costUSD: null` or `costPartial`); `null` when no part is
+ * priced, `0` only when nothing was requested. A part without calls (an empty thread) prices
+ * nothing and is neutral. Never a silent zero for an unpriced model.
+ */
+export function sumCost(parts) {
+  let costUSD = null;
+  let partial = false;
+  for (const p of parts) {
+    if (p.calls === 0) continue;
+    if (p.costPartial || p.costUSD == null) partial = true;
+    if (p.costUSD != null) costUSD = (costUSD ?? 0) + p.costUSD;
+  }
+  return { costUSD: costUSD ?? (partial ? null : 0), partial };
+}
+
 // ---------- D11, D12: phases and rework ----------
 
 /** First integer 0-7 of a `Phase:` value, else 'none' (`none (#7 done)` is phase 7 by design). */
@@ -174,27 +197,102 @@ export function phaseAt(markers, t) {
   return phase;
 }
 
+/** Cells of a Markdown table row, split on unescaped pipes. */
+function cellsOf(line) {
+  return line
+    .trim()
+    .replace(/^\||\|$/g, '')
+    .split(/(?<!\\)\|/)
+    .map((c) => c.trim());
+}
+
 /**
- * D12 on launches sorted by `ts` (`{ agentType, ts }`): with markers, a launch whose phase at
- * launch time differs from its home phase; a launch before the first marker is in its home phase
- * and never rework (user decision 2026-09-29: the first `architect` of a feature is not rework).
- * Without markers, a launch whose home phase is lower than the highest home phase launched before
- * it. Types without a home phase are never rework.
+ * D12 plan assignment: the (phase, agent type) pairs of the `## Steps` table of a PLAN.md text, as
+ * a Map from agent type to its set of phases. Phase = D11's first integer 0-7 of the `Phase` cell;
+ * agent types = the backticked `HOME_PHASE` keys of the `Agent` cell (not `main`; prose, file names
+ * and `orchestrator` are ignored). Null, the home-phase fallback, when there is no text, no Steps
+ * section, no `Phase` or `Agent` header column, or no row with both.
+ * @returns {Map<string, Set<string>>|null}
+ */
+export function planAssignments(text) {
+  if (!text) return null;
+  const steps = sections(text).find((s) => s.heading === '## Steps');
+  const rows = (steps?.lines || []).filter((l) => l.trim().startsWith('|')).map(cellsOf);
+  const phaseCol = rows[0]?.indexOf('Phase') ?? -1;
+  const agentCol = rows[0]?.indexOf('Agent') ?? -1;
+  if (phaseCol < 0 || agentCol < 0) return null;
+  const plan = new Map();
+  for (const cells of rows.slice(1)) {
+    const phase = phaseOf(cells[phaseCol]);
+    if (phase === 'none') continue;
+    for (const [, type] of String(cells[agentCol] ?? '').matchAll(/`([^`]+)`/g)) {
+      if (type === MAIN || !Object.hasOwn(HOME_PHASE, type)) continue;
+      if (!plan.has(type)) plan.set(type, new Set());
+      plan.get(type).add(phase);
+    }
+  }
+  return plan.size ? plan : null;
+}
+
+/**
+ * D12: whether a PLAN.md text is the plan as approved at the plan gate: its first `Status:` value
+ * begins with `approved`, optionally in backticks (`draft`, `proposed` and a later `done` status
+ * that mentions the approval do not qualify). The status line decides, never a commit message.
+ */
+export function planApproved(text) {
+  const m = String(text ?? '').match(/Status:[ \t]*([^\n]*)/);
+  return !!m && /^`?approved\b/i.test(m[1]);
+}
+
+/**
+ * The commit a pruned feature's final documents (`criteria`, `review`) are read at, from the
+ * `## Full record` section of its SUMMARY.md: the `tree/<sha>/` segment of the permalink, else
+ * the backticked short sha that `prune-feature.mjs` writes; null without that section.
+ */
+export function permalinkCommit(summary) {
+  const record = sections(summary ?? '').find((s) => s.heading === '## Full record');
+  if (!record) return null;
+  const body = record.lines.join('\n');
+  return (
+    body.match(/\/tree\/([0-9a-f]{40})\//)?.[1] ?? body.match(/`([0-9a-f]{7,40})`/)?.[1] ?? null
+  );
+}
+
+/**
+ * D12 on launches sorted by `ts` (`{ agentType, ts }`), plan first: a launch whose agent type the
+ * plan (`planAssignments`) lists for the phase of the launch is never rework. Otherwise, with
+ * markers, a launch whose phase at launch time differs from its home phase; a launch before the
+ * first marker is in its home phase and never rework (user decision 2026-09-29). Without markers
+ * the phase is unknown but at least `H`, the highest home phase launched before it: planned when
+ * the plan lists its type in a phase >= `H`, else rework when its home phase is lower than `H`.
+ * Types without a home phase are never rework.
  * @returns {boolean[]} rework flag per launch
  */
-export function reworkOf(launches, markers) {
+export function reworkOf(launches, markers, plan = null) {
+  const planned = (type, test) => [...(plan?.get(type) ?? [])].some(test);
   let highest = 0;
   return launches.map((l) => {
     const home = HOME_PHASE[l.agentType];
     if (typeof home !== 'number') return false;
     if (markers.length) {
       if (l.ts == null || l.ts < markers[0].t) return false;
-      return phaseAt(markers, l.ts) !== String(home);
+      const phase = phaseAt(markers, l.ts);
+      return !planned(l.agentType, (p) => p === phase) && phase !== String(home);
     }
-    const rework = home < highest;
+    const before = highest;
     highest = Math.max(highest, home);
-    return rework;
+    return !planned(l.agentType, (p) => Number(p) >= before) && home < before;
   });
+}
+
+/**
+ * D13 over main-thread records (copies already dropped, D5): turn inputs by their `input` kind.
+ * @returns {{prompts:number, handbacks:number, notifications:number}}
+ */
+export function turnInputs(records) {
+  const n = { human: 0, peer: 0, 'task-notification': 0 };
+  for (const r of records) if (r.input in n) n[r.input]++;
+  return { prompts: n.human, handbacks: n.peer, notifications: n['task-notification'] };
 }
 
 // ---------- D10: feature scope ----------
@@ -219,7 +317,9 @@ export function promptWindows(events, name, issue = null) {
 
 /**
  * D10 for one session: records on branch `feature/<name>` or inside a prompt window. Events and
- * the MCP audit are kept inside the session's first..last in-scope record.
+ * the MCP audit are kept inside the session's first..last in-scope record. `agentFiles` keeps the
+ * ids of every agent transcript on disk, so an agent filtered out of scope is not mistaken for one
+ * whose transcript is gone (the live `agent-stop` fallback of `buildReport`).
  */
 export function featureRecords(session, name, { issue = null } = {}) {
   const branch = `feature/${name}`;
@@ -243,10 +343,17 @@ export function featureRecords(session, name, { issue = null } = {}) {
     sessionId: session.sessionId,
     main,
     agents,
+    agentFiles: agentFilesOf(session),
+    // Every record kept: the session's processes lie wholly in scope (`processShare`).
+    complete: recordCount({ main, agents }) === recordCount(session),
     events: (session.events || []).filter(within),
     audit: (session.audit || []).filter(within),
     specAttributed: windows.length > 0,
   };
+}
+
+function recordCount(s) {
+  return s.main.length + s.agents.reduce((n, a) => n + a.records.length, 0);
 }
 
 /** Transcript cost of sessions after D1 (requests deduplicated over all their files). */
@@ -297,6 +404,19 @@ export function scopeProcesses(sessions, scopeIds, pricing) {
       ...p,
       wholeCostUSD: transcriptCost(p.sessionIds.map((id) => byId.get(id)).filter(Boolean), pricing),
     }));
+}
+
+/**
+ * Definitions section 5, for the card and `reconcile` alike: the share of a process's last total
+ * that a scope carries. A process whose records are all in scope carries 1, whatever is priced.
+ * Otherwise the scope's priced transcript cost over the process's (`transcriptCost`), at most 1.
+ * With nothing priced in the process's sessions and records outside the scope there is no basis
+ * for a split: null, so the caller reports the cost-state figure as n/a with a warning (D4: never a
+ * silent 0; a request-count split would be a second rule next to the cost one).
+ */
+export function processShare(whollyInScope, scopedUSD, wholeUSD) {
+  if (whollyInScope) return 1;
+  return wholeUSD > 0 ? Math.min(1, (scopedUSD ?? 0) / wholeUSD) : null;
 }
 
 /**
@@ -367,19 +487,78 @@ function threadOf(st, pricing, caps) {
     toolUseId: st.toolUseId,
     records: st.records,
     reqs,
+    calls: reqs.length,
     skipped,
     points,
     tools,
+    toolCalls: Object.values(tools).reduce((s, n) => s + n, 0),
     activeMs: activeTime(points, caps),
     byModel: usage.byModel,
-    costUSD: cost.costUSD ?? 0,
+    // D4: the priced part, `null` when nothing is priced; `costPartial` marks an unpriced model.
+    costUSD: cost.costUSD,
+    costPartial: cost.warnings.length > 0,
     warnings: cost.warnings,
     first: points[0]?.t ?? null,
   };
 }
 
+/** Ids of the agent transcripts on disk (`featureRecords` keeps them before its scope filter). */
+function agentFilesOf(session) {
+  return session.agentFiles ?? session.agents.map((a) => a.id);
+}
+
+/** The latest `agent-stop` per agent over sessions (the transcript is cumulative), with its session. */
+function lastAgentStops(sessions) {
+  const out = new Map();
+  for (const s of sessions)
+    for (const e of s.events || []) {
+      if (e.event !== 'agent-stop' || !e.agent) continue;
+      const prev = out.get(e.agent);
+      if (!prev || !(Date.parse(e.ts) < Date.parse(prev.ts)))
+        out.set(e.agent, { ...e, sessionId: s.sessionId });
+    }
+  return out;
+}
+
+/**
+ * Fallback thread of an agent whose transcript file is gone (data-flow section 3: the re-parse is
+ * the source whenever the file exists): the last live `agent-stop` aggregate, its tokens under the
+ * record's `model` priced with the current table (D4), its own active time. It adds no timeline
+ * point, so lead time and merged active time stay transcript-only; its context peak is unknown (0).
+ */
+function liveThread(e, pricing) {
+  const u = { calls: e.requests || 0, ...emptyTokens(), context: 0, ctxPeak: 0 };
+  for (const k of TOKEN_KINDS) u[k] = e.tokens?.[k] || 0;
+  u.context = contextOf(u);
+  const byModel = e.model && u.calls ? { [e.model]: u } : {};
+  const cost = costOf(byModel, pricing);
+  const first = Date.parse(e.firstTs);
+  const ts = Number.isFinite(first) ? first : Date.parse(e.ts);
+  return {
+    live: true,
+    sessionId: e.sessionId,
+    agent: e.agent,
+    agentType: e.agentType,
+    toolUseId: null,
+    records: [],
+    // One request-like entry carrying the aggregate, so phase rows get its calls and cost.
+    reqs: e.model && u.calls ? [{ model: e.model, ts, calls: u.calls, costUSD: cost.costUSD }] : [],
+    calls: u.calls,
+    skipped: 0,
+    points: [],
+    tools: {},
+    toolCalls: e.toolCalls || 0,
+    activeMs: (e.activeMin || 0) * MIN,
+    byModel,
+    costUSD: cost.costUSD,
+    costPartial: cost.warnings.length > 0,
+    warnings: cost.warnings,
+    first: ts,
+  };
+}
+
 function phaseRow() {
-  return { rounds: null, activeMs: 0, waitingMs: 0, calls: 0, costUSD: 0, reworkUSD: 0 };
+  return { rounds: null, activeMs: 0, waitingMs: 0, calls: 0, reqs: [], reworkReqs: [] };
 }
 
 function phaseOrder(a, b) {
@@ -432,8 +611,9 @@ export function mcpCompliance(audit) {
 /**
  * A report over sessions already cut to the scope. Each session:
  * `{ sessionId, main, agents: [{ id, agentType, toolUseId, records }], events, audit,
- * specAttributed }`; `processes` from `scopeProcesses`. `extras`: `{ review, criteria, lines,
- * maxTurns: { type: n }, compactions }`.
+ * specAttributed }`; `processes` from `scopeProcesses`; `plan` from `planAssignments` (D12, null:
+ * home-phase fallback). `extras`: `{ review, criteria, lines, maxTurns: { type: n }, compactions,
+ * planCommit }`.
  */
 export function buildReport({
   scope,
@@ -442,6 +622,7 @@ export function buildReport({
   sessions,
   processes = [],
   pricing,
+  plan = null,
   idleMs = IDLE_MS,
   toolMs = TOOL_MS,
   extras = {},
@@ -453,6 +634,15 @@ export function buildReport({
   const audit = sessions.flatMap((s) => s.audit || []);
   // D1, D5, D8: one thread per main file and per agent id, copies dropped, requests counted once.
   for (const st of scopeThreads(sessions)) threads.push(threadOf(st, pricing, caps));
+  // The transcript re-parse is the source; the live aggregate only stands in for a gone file. A
+  // record without requests stands in for nothing (its file never existed: an internal agent).
+  const lastStop = lastAgentStops(sessions);
+  const onDisk = new Set(sessions.flatMap(agentFilesOf));
+  for (const [agent, e] of lastStop)
+    if (!onDisk.has(agent) && e.requests > 0) {
+      threads.push(liveThread(e, pricing));
+      warnings.add(`agent-transcript-missing:${agent}`);
+    }
   threads.forEach((th) => th.warnings.forEach((w) => warnings.add(w)));
 
   // D9: launches are the agent threads, timed by their Agent tool_use; resumes are SendMessage.
@@ -461,10 +651,9 @@ export function buildReport({
   let resumes = 0;
   let toolCalls = 0;
   for (const th of threads) {
-    const uses = toolUses(th.records);
-    toolCalls += uses.length;
+    toolCalls += th.toolCalls;
     if (th.agent !== MAIN) continue;
-    for (const u of uses) {
+    for (const u of toolUses(th.records)) {
       if (u.name === 'Agent' && u.id) launchTs.set(u.id, u.ts);
       if (u.name === 'SendMessage' && u.to) {
         resumes++;
@@ -491,7 +680,7 @@ export function buildReport({
     th.agent !== MAIN && (launchOf.get(th) == null || launchOf.get(th) < markers[0].t);
   const phaseFor = (th, time) =>
     !markers.length || beforeMarkers(th) ? homePhase(th.agentType) : phaseAt(markers, time);
-  reworkOf(launches, markers).forEach((flag, i) => (launches[i].thread.rework = flag));
+  reworkOf(launches, markers, plan).forEach((flag, i) => (launches[i].thread.rework = flag));
 
   const phases = {};
   const row = (k) => (phases[k] ??= phaseRow());
@@ -508,9 +697,9 @@ export function buildReport({
   for (const th of threads)
     for (const q of th.reqs) {
       const r = row(phaseFor(th, q.ts));
-      r.calls++;
-      r.costUSD += q.costUSD ?? 0;
-      if (th.rework) r.reworkUSD += q.costUSD ?? 0;
+      r.calls += q.calls ?? 1;
+      r.reqs.push(q);
+      if (th.rework) r.reworkReqs.push(q);
     }
   // Rounds exist only with markers; the home-phase fallback leaves them n/a (further-metrics.md).
   for (const m of markers) row(m.phase).rounds = (row(m.phase).rounds || 0) + 1;
@@ -541,36 +730,58 @@ export function buildReport({
 
   // Reference total (definitions section 5): per process in scope its last total, or its
   // proportional share when its sessions also hold records outside the scope.
-  const costUSD = threads.reduce((s, th) => s + th.costUSD, 0);
+  const total = sumCost(threads);
+  const costUSD = total.costUSD;
   const scopeIds = sessions.map((s) => s.sessionId);
   const inScope = processes.filter((p) => p.sessionIds.some((id) => scopeIds.includes(id)));
+  // Shares and the attributed sum go by priced cost, like `transcriptCost` (the denominator); the
+  // share's numerator counts transcript threads only, since the denominator has no live fallback.
   const costBySession = new Map();
-  for (const th of threads)
-    costBySession.set(th.sessionId, (costBySession.get(th.sessionId) || 0) + th.costUSD);
+  const transcriptBySession = new Map();
+  for (const th of threads) {
+    const add = (m) => m.set(th.sessionId, (m.get(th.sessionId) || 0) + (th.costUSD ?? 0));
+    add(costBySession);
+    if (!th.live) add(transcriptBySession);
+  }
+  // A session of the scope is whole unless `featureRecords` cut records out of it.
+  const complete = new Map(sessions.map((s) => [s.sessionId, s.complete !== false]));
   let costStateUSD = null;
+  let shareUnknown = false;
   const covered = new Set();
   for (const p of inScope) {
-    const scoped = p.sessionIds.reduce((sum, id) => sum + (costBySession.get(id) || 0), 0);
-    const whole = p.wholeCostUSD ?? scoped;
-    costStateUSD = (costStateUSD ?? 0) + (whole > 0 ? (p.record.totalCostUSD * scoped) / whole : 0);
+    const scoped = p.sessionIds.reduce((sum, id) => sum + (transcriptBySession.get(id) || 0), 0);
+    const wholly = p.sessionIds.every((id) => complete.get(id) === true);
+    const share = processShare(wholly, scoped, p.wholeCostUSD ?? scoped);
+    if (share == null) {
+      shareUnknown = true;
+      warnings.add(`cost-state-share-unknown:${p.startTime ?? 'unknown'}`);
+    } else costStateUSD = (costStateUSD ?? 0) + p.record.totalCostUSD * share;
     p.sessionIds.forEach((id) => covered.add(id));
     if (p.record.hasUnknownModelCost) warnings.add('cost-state-unknown-model-cost');
   }
+  // One process without a share leaves the reference total unknown: n/a, not a smaller figure.
+  if (shareUnknown) costStateUSD = null;
   const attributed = [...covered].reduce((sum, id) => sum + (costBySession.get(id) || 0), 0);
-  const recovered = costStateUSD ? attributed / costStateUSD : null;
+  // D4: nothing priced gives no recovered ratio (as in `reconcile`), never 0%.
+  const recovered = costStateUSD && costUSD != null ? attributed / costStateUSD : null;
   const pricing5 = pricingCheck(inScope, byModelTokens(threads), pricing);
   for (const [model, c] of Object.entries(pricing5)) {
     if (c.pricedUSD == null) warnings.add(`unknown-model:${model}`);
     else if (c.divergence > PRICING_TOLERANCE) warnings.add(`pricing-check:${model}`);
   }
 
-  // Live self-check: the last agent-stop aggregate per agent against the re-parse.
-  const lastStop = new Map();
-  for (const e of events) if (e.event === 'agent-stop' && e.agent) lastStop.set(e.agent, e);
+  // Live self-check: SubagentStop fires before the agent's final message reaches its transcript,
+  // so the last live aggregate per agent is compared with the re-parse cut at the record's
+  // `lastTs` (like with like); a difference above DRIFT_MAX then signals a changed format.
   for (const [agent, e] of lastStop) {
-    const th = threads.find((x) => x.agent === agent);
+    const th = threads.find((x) => x.agent === agent && !x.live);
     if (!th) continue;
-    const parsed = Object.values(th.byModel).reduce((s, u) => s + tokenSum(u), 0);
+    const cut = Date.parse(e.lastTs);
+    const upTo = Number.isFinite(cut) ? th.records.filter((r) => !(r.ts > cut)) : th.records;
+    const parsed = Object.values(usageByModel(requests(upTo)).byModel).reduce(
+      (s, u) => s + tokenSum(u),
+      0
+    );
     const live = tokenSum(e.tokens);
     if (Math.max(parsed, live) > 0 && Math.abs(parsed - live) / Math.max(parsed, live) > DRIFT_MAX)
       warnings.add(`agent-stop-drift:${agent}`);
@@ -580,23 +791,31 @@ export function buildReport({
   const types = [MAIN, ...new Set(launches.map((l) => l.agentType))];
   const agents = types.map((type) => {
     const mine = threads.filter((th) => th.agentType === type);
+    const cost = sumCost(mine);
+    const rework = sumCost(mine.filter((th) => th.rework));
     return {
       agentType: type,
       launches: type === MAIN ? null : mine.length,
       resumes: type === MAIN ? null : mine.reduce((s, th) => s + (resumesTo.get(th.agent) || 0), 0),
       activeMin: minutes(mine.reduce((s, th) => s + th.activeMs, 0)),
-      calls: mine.reduce((s, th) => s + th.reqs.length, 0),
+      calls: mine.reduce((s, th) => s + th.calls, 0),
       maxTurns: extras.maxTurns?.[type] ?? null,
-      costUSD: usd(mine.reduce((s, th) => s + th.costUSD, 0)),
+      costUSD: usd(cost.costUSD),
+      costPartial: cost.partial,
       reworkLaunches: mine.filter((th) => th.rework).length,
-      reworkUSD: usd(mine.filter((th) => th.rework).reduce((s, th) => s + th.costUSD, 0)),
+      reworkUSD: usd(rework.costUSD),
+      reworkPartial: rework.partial,
       tools: mine.reduce((acc, th) => {
         for (const [k, n] of Object.entries(th.tools)) acc[k] = (acc[k] || 0) + n;
         return acc;
       }, {}),
     };
   });
-  const reworkUSD = threads.filter((th) => th.rework).reduce((s, th) => s + th.costUSD, 0);
+  const rework = sumCost(threads.filter((th) => th.rework));
+  const reworkUSD = rework.costUSD;
+  // Priced rework over priced cost; n/a when either is not priced at all.
+  const reworkShare =
+    costUSD == null || reworkUSD == null ? null : costUSD ? round(reworkUSD / costUSD, 3) : 0;
   const relaunches = types
     .filter((x) => x !== MAIN)
     .reduce((s, x) => s + Math.max(0, launches.filter((l) => l.agentType === x).length - 1), 0);
@@ -624,10 +843,8 @@ export function buildReport({
     const blocked = stopSummaries.filter((r) => r.stopHookBlocked).length;
     gateBlocks = blocked ? { 'stop-gate': blocked } : {};
   }
-  const promptEvents = events.filter((e) => e.event === 'prompt').length;
-  const transcriptPrompts = threads
-    .filter((th) => th.agent === MAIN)
-    .reduce((s, th) => s + th.records.filter((r) => r.prompt).length, 0);
+  // D13: from the transcript for history and live alike; `prompt` events are command markers only.
+  const inputs = turnInputs(threads.filter((th) => th.agent === MAIN).flatMap((th) => th.records));
   // Session lines from cost-state, only when no process is shared with another session.
   const csLines = inScope.every((p) => p.sessionIds.length === 1)
     ? inScope.map((p) => p.record).filter((cs) => cs.totalLinesAdded != null)
@@ -656,6 +873,9 @@ export function buildReport({
     toolMin: toolMs / MIN,
     pricingDate: pricing?.recordedAt ?? null,
     phaseSource,
+    reworkSource: plan ? 'plan' : 'home-phase',
+    // The commit the approved plan was read at (null: the working tree, or no plan).
+    planCommit: plan ? (extras.planCommit ?? null) : null,
     specAttributed: sessions.some((s) => s.specAttributed),
     leadMin: minutes(leadMs),
     activeMin: minutes(activeMs),
@@ -663,6 +883,7 @@ export function buildReport({
     agentMin: minutes(agentMs),
     parallelism: activeMs ? round(agentMs / activeMs, 2) : null,
     costUSD: usd(costUSD),
+    costPartial: total.partial,
     costStateUSD: usd(costStateUSD),
     costStateProcesses: inScope.length,
     recovered: round(recovered, 3),
@@ -684,22 +905,29 @@ export function buildReport({
     resumes,
     relaunches,
     reworkUSD: usd(reworkUSD),
-    reworkShare: costUSD ? round(reworkUSD / costUSD, 3) : 0,
+    reworkPartial: rework.partial,
+    reworkShare,
     toolCalls,
     phases: Object.fromEntries(
       Object.keys(phases)
         .sort(phaseOrder)
-        .map((k) => [
-          k,
-          {
-            rounds: phases[k].rounds,
-            activeMin: minutes(phases[k].activeMs),
-            waitingMin: minutes(phases[k].waitingMs),
-            calls: phases[k].calls,
-            costUSD: usd(phases[k].costUSD),
-            reworkUSD: usd(phases[k].reworkUSD),
-          },
-        ])
+        .map((k) => {
+          const cost = sumCost(phases[k].reqs);
+          const reworkCost = sumCost(phases[k].reworkReqs);
+          return [
+            k,
+            {
+              rounds: phases[k].rounds,
+              activeMin: minutes(phases[k].activeMs),
+              waitingMin: minutes(phases[k].waitingMs),
+              calls: phases[k].calls,
+              costUSD: usd(cost.costUSD),
+              costPartial: cost.partial,
+              reworkUSD: usd(reworkCost.costUSD),
+              reworkPartial: reworkCost.partial,
+            },
+          ];
+        })
     ),
     agents,
     gateBlocks,
@@ -708,7 +936,7 @@ export function buildReport({
     criteria: extras.criteria ?? null,
     mcp: audit.length ? mcpCompliance(audit) : null,
     compactions: extras.compactions ?? null,
-    prompts: events.length ? promptEvents : transcriptPrompts,
+    ...inputs,
     lines,
     warnings: [...warnings].sort(),
   };
@@ -794,6 +1022,8 @@ export function historyLine(r, recordedAt) {
     waitingMin: r.waitingMin,
     agentMin: r.agentMin,
     costUSD: r.costUSD,
+    // D4: always written; true only through `record --force` (metrics.mjs refuses otherwise).
+    costPartial: !!r.costPartial,
     costStateUSD: r.costStateUSD,
     recovered: r.recovered,
     tokens: Object.fromEntries(TOKEN_KINDS.map((k) => [k, r.tokens[k]])),
@@ -805,10 +1035,11 @@ export function historyLine(r, recordedAt) {
     resumes: r.resumes,
     reworkShare: r.reworkShare,
     gateBlocks: r.gateBlocks,
-    gateSource: r.gateSource,
     review: r.review,
     criteria: r.criteria,
     prompts: r.prompts,
+    handbacks: r.handbacks,
+    notifications: r.notifications,
     lines: r.lines,
     phases: Object.fromEntries(
       Object.entries(r.phases).map(([k, p]) => [
@@ -820,6 +1051,8 @@ export function historyLine(r, recordedAt) {
     idleMin: r.idleMin,
     toolMin: r.toolMin,
     phaseSource: r.phaseSource,
+    reworkSource: r.reworkSource,
+    gateSource: r.gateSource,
   };
 }
 
@@ -850,6 +1083,10 @@ export function compareLines(lines) {
       // Counts of different sources are not comparable (data-flow section 4): no delta.
       dGateBlocks: comparable ? delta(gates, gateTotal(prev.gateBlocks), 0) : null,
       gatesComparable: prev ? comparable : null,
+      // D13 turn inputs, shown without a delta; null for a line that lacks the field.
+      prompts: l.prompts ?? null,
+      handbacks: l.handbacks ?? null,
+      notifications: l.notifications ?? null,
     };
   });
 }
@@ -865,16 +1102,29 @@ export function reconcileSession(session, pricing, related = []) {
   const processes = scopeProcesses([session, ...related], [session.sessionId], pricing);
   const reqs = scopeThreads([session]).flatMap((th) => th.requests);
   const { byModel, skipped } = usageByModel(reqs);
-  const sessionUSD = costOf(byModel, pricing).costUSD ?? 0;
+  // D4: the priced part, `null` when nothing is priced (n/a, never zero).
+  const sessionCost = costOf(byModel, pricing);
+  const sessionUSD = sessionCost.costUSD;
   const csModels = {};
   let costStateUSD = null;
+  let shareUnknown = false;
   for (const p of processes) {
-    const share = p.wholeCostUSD > 0 ? Math.min(1, sessionUSD / p.wholeCostUSD) : 1;
+    const wholly = p.sessionIds.every((id) => id === session.sessionId);
+    const share = processShare(wholly, sessionUSD, p.wholeCostUSD);
+    if (share == null) {
+      shareUnknown = true;
+      continue;
+    }
     costStateUSD = (costStateUSD ?? 0) + p.record.totalCostUSD * share;
     for (const [model, u] of Object.entries(p.record.modelUsage || {})) {
       const m = (csModels[model.replace(/\[[^\]]*\]$/, '')] ??= {});
       for (const [k, v] of Object.entries(u)) m[k] = (m[k] || 0) + (v || 0) * share;
     }
+  }
+  // As on the card: one process without a share leaves the cost-state side n/a.
+  if (shareUnknown) {
+    costStateUSD = null;
+    for (const k of Object.keys(csModels)) delete csModels[k];
   }
   const models = [...new Set([...Object.keys(byModel), ...Object.keys(csModels)])].sort();
   const rows = [];
@@ -915,8 +1165,9 @@ export function reconcileSession(session, pricing, related = []) {
     shared: processes.some((p) => p.sessionIds.length > 1),
     rows,
     transcriptUSD: usd(sessionUSD),
+    transcriptPartial: sessionCost.warnings.length > 0,
     costStateUSD: usd(costStateUSD),
-    recovered: costStateUSD ? round(sessionUSD / costStateUSD, 3) : null,
+    recovered: costStateUSD && sessionUSD != null ? round(sessionUSD / costStateUSD, 3) : null,
     pricingCheck: check,
     pricingOk: processes.length
       ? Object.values(check).every((c) => c.divergence != null && c.divergence <= PRICING_TOLERANCE)
@@ -950,6 +1201,9 @@ export function fmtTokens(n) {
 }
 
 const fmtUSD = (x) => (x == null ? '-' : `$${x.toFixed(2)}`);
+/** A cost cell (D4): n/a when nothing is priced; `≥` marks a priced part (a model has no price). */
+const fmtCost = (x, partial, bundle) =>
+  x == null ? t(bundle, 'metrics.card.na') : `${partial ? '≥' : ''}${fmtUSD(x)}`;
 const fmtPct = (x) => (x == null ? '-' : `${Math.round(x * 100)}%`);
 const fmtInt = (n) => (n == null ? '-' : n.toLocaleString('en-US'));
 const signed = (x, f) => (x == null ? '-' : `${x > 0 ? '+' : x < 0 ? '-' : '±'}${f(Math.abs(x))}`);
@@ -1002,6 +1256,8 @@ function summaryLine(r, bundle) {
     r.criteria ? `${r.criteria.closed}/${r.criteria.total}` : na,
     mcp,
     r.prompts,
+    r.handbacks,
+    r.notifications,
     r.lines ? `+${r.lines.added} / -${r.lines.removed}` : na
   );
   if (r.compactions != null) line += `; ${t(bundle, 'metrics.card.compactions', r.compactions)}`;
@@ -1032,6 +1288,10 @@ export function renderCard(r, bundle) {
       bundle,
       r.phaseSource === 'markers' ? 'metrics.card.phases.markers' : 'metrics.card.phases.fallback'
     ),
+    t(
+      bundle,
+      r.reworkSource === 'plan' ? 'metrics.card.rework.plan' : 'metrics.card.rework.fallback'
+    ),
     r.pricingDate ?? '-',
     r.versions.join(', ') || '-'
   );
@@ -1050,7 +1310,7 @@ export function renderCard(r, bundle) {
   const cost = t(
     bundle,
     'metrics.card.cost',
-    fmtUSD(r.costUSD),
+    fmtCost(r.costUSD, r.costPartial, bundle),
     cs,
     fmtTokens(r.tokens.input),
     fmtTokens(r.tokens.cacheWrite5m + r.tokens.cacheWrite1h),
@@ -1060,13 +1320,14 @@ export function renderCard(r, bundle) {
     fmtTokens(r.ctxAvg),
     fmtTokens(r.ctxPeak)
   );
+  const money = (x, partial) => fmtCost(x, partial, bundle);
   const phaseRows = Object.entries(r.phases).map(
     ([k, p]) =>
-      `| ${k} | ${p.rounds ?? '-'} | ${dur(p.activeMin)} | ${dur(p.waitingMin)} | ${p.calls} | ${fmtUSD(p.costUSD)} | ${fmtUSD(p.reworkUSD)} |`
+      `| ${k} | ${p.rounds ?? '-'} | ${dur(p.activeMin)} | ${dur(p.waitingMin)} | ${p.calls} | ${money(p.costUSD, p.costPartial)} | ${money(p.reworkUSD, p.reworkPartial)} |`
   );
   const agentRows = r.agents.map(
     (a) =>
-      `| ${a.agentType} | ${a.launches ?? '-'} | ${a.resumes ?? '-'} | ${dur(a.activeMin)} | ${a.calls} / ${a.maxTurns ?? '-'} | ${fmtUSD(a.costUSD)} | ${a.reworkLaunches ? `${a.reworkLaunches} (${fmtUSD(a.reworkUSD)})` : '0'} |`
+      `| ${a.agentType} | ${a.launches ?? '-'} | ${a.resumes ?? '-'} | ${dur(a.activeMin)} | ${a.calls} / ${a.maxTurns ?? '-'} | ${money(a.costUSD, a.costPartial)} | ${a.reworkLaunches ? `${a.reworkLaunches} (${money(a.reworkUSD, a.reworkPartial)})` : '0'} |`
   );
   if (r.unattributedUSD != null)
     agentRows.push(
@@ -1097,12 +1358,14 @@ export function renderCard(r, bundle) {
 export function renderCompare(rows, bundle) {
   const dur = (m) => fmtDuration(m, bundle);
   const pp = (x) => `${Math.round(x * 100)} ${t(bundle, 'metrics.unit.pp')}`;
+  const na = t(bundle, 'metrics.card.na');
+  const inputs = (r) => [r.prompts, r.handbacks, r.notifications].map((n) => n ?? na).join(' / ');
   return [
     t(bundle, 'metrics.compare.header'),
-    '|---|---|---|---|---|---|---|---|---|---|',
+    '|---|---|---|---|---|---|---|---|---|---|---|',
     ...rows.map(
       (r) =>
-        `| ${r.feature}${r.issue ? ` (#${r.issue})` : ''} | ${r.recordedAt} | ${fmtUSD(r.costUSD)} | ${signed(r.dCostUSD, fmtUSD)} | ${dur(r.activeMin)} | ${signed(r.dActiveMin, dur)} | ${fmtPct(r.reworkShare)} | ${signed(r.dReworkShare, pp)} | ${r.gateBlocks ?? '-'} | ${r.gatesComparable === false ? t(bundle, 'metrics.card.na') : signed(r.dGateBlocks, String)} |`
+        `| ${r.feature}${r.issue ? ` (#${r.issue})` : ''} | ${r.recordedAt} | ${fmtUSD(r.costUSD)} | ${signed(r.dCostUSD, fmtUSD)} | ${dur(r.activeMin)} | ${signed(r.dActiveMin, dur)} | ${fmtPct(r.reworkShare)} | ${signed(r.dReworkShare, pp)} | ${r.gateBlocks ?? '-'} | ${r.gatesComparable === false ? na : signed(r.dGateBlocks, String)} | ${inputs(r)} |`
     ),
   ].join('\n');
 }
@@ -1137,7 +1400,7 @@ export function renderReconcile(rec, bundle) {
     t(
       bundle,
       'metrics.reconcile.total',
-      fmtUSD(rec.transcriptUSD),
+      fmtCost(rec.transcriptUSD, rec.transcriptPartial, bundle),
       fmtUSD(rec.costStateUSD),
       fmtPct(rec.recovered),
       rec.skipped,

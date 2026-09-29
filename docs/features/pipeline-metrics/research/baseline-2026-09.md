@@ -1,6 +1,6 @@
 # pipeline-metrics: baseline 2026-09
 
-Date: 2026-09-29. Author: `cap-backend-dev` (PLAN step 5). Every card below is the verbatim output of `PIPELINE_LANG=en node scripts/metrics.mjs feature <name>`, and every line of `docs/metrics/history.jsonl` was written by `node scripts/metrics.mjs record <name>` (no hand-written line). Rules: D1-D12 of `research/definitions.md` after the second amendment (D1 and D5 deduplicate over the whole scope, section 5 reference total per process, pricing self-check with `PRICING_TOLERANCE` 0.05), caps 5 min idle and 10 min tool, prices of `scripts/lib/model-pricing.json` (recorded 2026-09-29). No conversation content was read.
+Date: 2026-09-29, re-recorded 2026-09-30 (fix round 1, PLAN step 11c: every line replaced with `node scripts/metrics.mjs record <name> --force` in the same order). Author: `cap-backend-dev` (PLAN steps 5 and 11c). Every card below is the verbatim output of `PIPELINE_LANG=en node scripts/metrics.mjs feature <name>`, and every line of `docs/metrics/history.jsonl` was written by `node scripts/metrics.mjs record <name>` (no hand-written line). Rules: D1-D13 of `research/definitions.md` as amended 2026-09-30 (D13 turn inputs, D12 against the plan approved at the plan gate, D4 partial cost; D1 and D5 deduplicate over the whole scope, section 5 reference total per process, pricing self-check with `PRICING_TOLERANCE` 0.05), caps 5 min idle and 10 min tool, prices of `scripts/lib/model-pricing.json` (recorded 2026-09-29). No conversation content was read.
 
 ## Features and sessions
 
@@ -18,12 +18,12 @@ Order: first record of each feature, the order of `docs/metrics/history.jsonl`.
 Command: `PIPELINE_LANG=en node scripts/metrics.mjs compare` (4 rows):
 
 ```
-| Feature | Recorded | Cost | Δ cost | Active | Δ active | Rework | Δ rework | Gates | Δ gates |
-|---|---|---|---|---|---|---|---|---|---|
-| catalog-authorization | 2026-09-29 | $65.39 | - | 3h 39m | - | 0% | - | 2 | - |
-| products-rating-column (#5) | 2026-09-29 | $13.93 | -$51.46 | 1h 11m | -2h 29m | 3% | +3 pp | 2 | ±0 |
-| products-rating-filter (#6) | 2026-09-29 | $27.81 | +$13.88 | 1h 56m | +45m | 12% | +9 pp | 1 | -1 |
-| products-excel-upload (#7) | 2026-09-29 | $62.02 | +$34.21 | 3h 30m | +1h 35m | 21% | +10 pp | 7 | +6 |
+| Feature | Recorded | Cost | Δ cost | Active | Δ active | Rework | Δ rework | Gates | Δ gates | Prompts / hand-backs / notifications |
+|---|---|---|---|---|---|---|---|---|---|---|
+| catalog-authorization | 2026-09-29 | $65.39 | - | 3h 39m | - | 0% | - | 2 | - | 9 / 0 / 11 |
+| products-rating-column (#5) | 2026-09-29 | $13.93 | -$51.46 | 1h 11m | -2h 29m | 0% | ±0 pp | 2 | ±0 | 4 / 9 / 10 |
+| products-rating-filter (#6) | 2026-09-29 | $27.81 | +$13.88 | 1h 56m | +45m | 12% | +12 pp | 1 | -1 | 1 / 13 / 16 |
+| products-excel-upload (#7) | 2026-09-29 | $62.02 | +$34.21 | 3h 30m | +1h 35m | 21% | +10 pp | 7 | +6 | 7 / 29 / 35 |
 ```
 
 All four lines have `gateSource: stop-hook-summary`, so the gate deltas are comparable among them; a later line from the live event log (`gateSource: events`) prints `n/a` against them (data-flow section 4).
@@ -32,17 +32,18 @@ All four lines have `gateSource: stop-hook-summary`, so the gate deltas are comp
 
 These features ran before the event log exists, so the cards use the history fallbacks of `research/further-metrics.md`:
 - phases: home-phase fallback (D11); rounds are n/a without markers;
+- rework (D12): against the plan as approved at the plan gate, the first commit of `git log --full-history --reverse -- docs/features/<name>/PLAN.md` whose `Status:` begins with `approved` (`catalog-authorization` `3fdd195`, #5 `69eb82a`, #6 `5775578`, #7 `fdf5327`; `rework: plan` on every card); without markers the phase of a launch is unknown but at least `H`, the highest home phase launched before it, so a launch whose type the approved plan lists in a phase >= `H` counts as planned (#5's `test-backend` after `fiori-app-dev`); rework launches 0, 0, 2, 4;
 - gates: Stop-hook summaries with a non-empty `hookErrors` (the Stop gate only, reason not recorded);
 - `spec: not attributed`: the `/spec` runs on `main` have no prompt marker (D10);
-- prompts: main-thread `user` records with string content and no `toolUseResult`;
-- review: items under `## Blocking`, `## Important`, `## Minor` of the last `REVIEW.md` in git (n/a for `catalog-authorization`, whose review predates that format);
-- criteria: checkboxes of the last `PLAN.md` in git; lines: `git log --shortstat` over commits whose subject names the feature;
+- prompts, hand-backs, notifications (D13): main-thread string `user` records and `queued_command` attachments by `origin.kind` (`human`, `peer`, `task-notification`; `commandMode` where 2.1.282 writes no `origin`), `uuid` copies counted once; `catalog-authorization` (2.1.267-2.1.280) has no `peer` kind, so its hand-backs are 0 and its agent reports arrive inside the 11 notifications;
+- review: items under `## Blocking`, `## Important`, `## Minor` of `REVIEW.md` at the SUMMARY permalink commit (n/a for `catalog-authorization`, whose review predates that format);
+- criteria: checkboxes of `PLAN.md` at the SUMMARY permalink commit (the final plan, not the approved one); lines: `git log --shortstat` over commits whose subject names the feature;
 - MCP: the audit files still present in `.pipeline/` (14-day retention), cut to the feature's time window;
 - cost-state: the reference total of definitions section 5; the recovered ratio and the `unattributed` row are information without a threshold; the pricing self-check is within 5% for every model of every feature.
 
 ## Cost: catalog-authorization
 
-Sessions 2 (2026-09-10 .. 2026-09-23), lead 13d 11h, active 3h 39m, waiting 13d 7h, agent-minutes 4h 39m (parallelism 1.3); idle cap 5 min, tool cap 10 min; phases: home-phase fallback; pricing 2026-09-29; Claude Code 2.1.267, 2.1.268, 2.1.273, 2.1.280; spec: not attributed
+Sessions 2 (2026-09-10 .. 2026-09-23), lead 13d 11h, active 3h 39m, waiting 13d 7h, agent-minutes 4h 39m (parallelism 1.3); idle cap 5 min, tool cap 10 min; phases: home-phase fallback; rework: plan; pricing 2026-09-29; Claude Code 2.1.267, 2.1.268, 2.1.273, 2.1.280; spec: not attributed
 
 Cost $65.39 (cost-state $82.54, recovered 79%; pricing check within 5%); tokens in 1.2K / cache write 3.1M / cache read 72.7M / out 450K; cache hit 96%; context avg 131K, peak 291K
 
@@ -70,17 +71,17 @@ Cost $65.39 (cost-state $82.54, recovered 79%; pricing check within 5%); tokens 
 | docs-keeper | 1 | 0 | 9m | 66 / 80 | $2.89 | 0 |
 | unattributed | | | | | $17.15 | |
 
-Gates: 2 Stop-gate blocks (history: Stop hook summaries, reason not recorded); review n/a; criteria 30/31; MCP 112 queries, 0 unjustified, 4 failed; rule-covered edits with a query 3/4; prompts 27; lines +1565 / -298
+Gates: 2 Stop-gate blocks (history: Stop hook summaries, reason not recorded); review n/a; criteria 30/31; MCP 112 queries, 0 unjustified, 4 failed; rule-covered edits with a query 3/4; prompts 9, hand-backs 0, notifications 11; lines +1565 / -298
 
 ## Cost: products-rating-column (#5)
 
-Sessions 1 (2026-09-24 .. 2026-09-25), lead 3h 19m, active 1h 11m, waiting 2h 8m, agent-minutes 1h 57m (parallelism 1.7); idle cap 5 min, tool cap 10 min; phases: home-phase fallback; pricing 2026-09-29; Claude Code 2.1.282; spec: not attributed
+Sessions 1 (2026-09-24 .. 2026-09-25), lead 3h 19m, active 1h 11m, waiting 2h 8m, agent-minutes 1h 57m (parallelism 1.7); idle cap 5 min, tool cap 10 min; phases: home-phase fallback; rework: plan; pricing 2026-09-29; Claude Code 2.1.282; spec: not attributed
 
 Cost $13.93 (cost-state $19.37, recovered 72%; pricing check within 5%); tokens in 764 / cache write 1.1M / cache read 37.8M / out 74.2K; cache hit 97%; context avg 106K, peak 202K
 
 | Phase | Rounds | Active | Waiting | Calls | Cost | Rework cost |
 |---|---|---|---|---|---|---|
-| 2 | - | 9m | 2h 8m | 41 | $1.27 | $0.41 |
+| 2 | - | 9m | 2h 8m | 41 | $1.27 | $0.00 |
 | 3 | - | 19m | 0m | 63 | $2.78 | $0.00 |
 | 4 | - | 15m | 0m | 124 | $3.59 | $0.00 |
 | 5 | - | 4m | 0m | 20 | $0.91 | $0.00 |
@@ -91,7 +92,7 @@ Cost $13.93 (cost-state $19.37, recovered 72%; pricing check within 5%); tokens 
 |---|---|---|---|---|---|---|
 | main | - | - | 56m | 58 / - | $3.49 | 0 |
 | cap-backend-dev | 1 | 0 | 1m | 12 / 60 | $0.39 | 0 |
-| test-backend | 2 | 0 | 3m | 29 / 60 | $0.88 | 1 ($0.41) |
+| test-backend | 2 | 0 | 3m | 29 / 60 | $0.88 | 0 |
 | fiori-app-dev | 1 | 0 | 1m | 12 / 60 | $0.46 | 0 |
 | test-ui | 1 | 1 | 27m | 51 / 80 | $2.32 | 0 |
 | ui-verifier | 1 | 1 | 15m | 124 / 80 | $3.59 | 0 |
@@ -99,11 +100,11 @@ Cost $13.93 (cost-state $19.37, recovered 72%; pricing check within 5%); tokens 
 | docs-keeper | 1 | 0 | 10m | 61 / 80 | $1.90 | 0 |
 | unattributed | | | | | $5.44 | |
 
-Gates: 2 Stop-gate blocks (history: Stop hook summaries, reason not recorded); review 0 blocking / 9 findings; criteria 13/22; MCP 112 queries, 0 unjustified, 4 failed; rule-covered edits with a query 0/0; prompts 16; lines +970 / -593
+Gates: 2 Stop-gate blocks (history: Stop hook summaries, reason not recorded); review 0 blocking / 9 findings; criteria 13/22; MCP 112 queries, 0 unjustified, 4 failed; rule-covered edits with a query 0/0; prompts 4, hand-backs 9, notifications 10; lines +970 / -593
 
 ## Cost: products-rating-filter (#6)
 
-Sessions 2 (2026-09-25 .. 2026-09-25), lead 5h 25m, active 1h 56m, waiting 3h 30m, agent-minutes 3h 10m (parallelism 1.6); idle cap 5 min, tool cap 10 min; phases: home-phase fallback; pricing 2026-09-29; Claude Code 2.1.282; spec: not attributed
+Sessions 2 (2026-09-25 .. 2026-09-25), lead 5h 25m, active 1h 56m, waiting 3h 30m, agent-minutes 3h 10m (parallelism 1.6); idle cap 5 min, tool cap 10 min; phases: home-phase fallback; rework: plan; pricing 2026-09-29; Claude Code 2.1.282; spec: not attributed
 
 Cost $27.81 (cost-state $38.54, recovered 72%; pricing check within 5%); tokens in 1.2K / cache write 2.2M / cache read 80.9M / out 135K; cache hit 97%; context avg 146K, peak 409K
 
@@ -128,11 +129,11 @@ Cost $27.81 (cost-state $38.54, recovered 72%; pricing check within 5%); tokens 
 | docs-keeper | 1 | 0 | 9m | 51 / 80 | $1.48 | 0 |
 | unattributed | | | | | $10.72 | |
 
-Gates: 1 Stop-gate blocks (history: Stop hook summaries, reason not recorded); review 0 blocking / 6 findings; criteria 20/20; MCP 195 queries, 0 unjustified, 10 failed; rule-covered edits with a query 8/8; prompts 22; lines +1279 / -543
+Gates: 1 Stop-gate blocks (history: Stop hook summaries, reason not recorded); review 0 blocking / 6 findings; criteria 20/20; MCP 195 queries, 0 unjustified, 10 failed; rule-covered edits with a query 8/8; prompts 1, hand-backs 13, notifications 16; lines +1279 / -543
 
 ## Cost: products-excel-upload (#7)
 
-Sessions 1 (2026-09-25 .. 2026-09-28), lead 3d 12h, active 3h 30m, waiting 3d 9h, agent-minutes 6h 38m (parallelism 1.9); idle cap 5 min, tool cap 10 min; phases: home-phase fallback; pricing 2026-09-29; Claude Code 2.1.282; spec: not attributed
+Sessions 1 (2026-09-25 .. 2026-09-28), lead 3d 12h, active 3h 30m, waiting 3d 9h, agent-minutes 6h 38m (parallelism 1.9); idle cap 5 min, tool cap 10 min; phases: home-phase fallback; rework: plan; pricing 2026-09-29; Claude Code 2.1.282; spec: not attributed
 
 Cost $62.02 (cost-state $84.56, recovered 73%; pricing check within 5%); tokens in 2.2K / cache write 5.3M / cache read 156M / out 305K; cache hit 97%; context avg 155K, peak 307K
 
@@ -160,5 +161,4 @@ Cost $62.02 (cost-state $84.56, recovered 73%; pricing check within 5%); tokens 
 | docs-keeper | 1 | 3 | 28m | 105 / 80 | $6.19 | 0 |
 | unattributed | | | | | $22.54 | |
 
-Gates: 7 Stop-gate blocks (history: Stop hook summaries, reason not recorded); review 0 blocking / 9 findings; criteria 25/29; MCP 230 queries, 0 unjustified, 7 failed; rule-covered edits with a query 13/13; prompts 54; lines +2992 / -864
-
+Gates: 7 Stop-gate blocks (history: Stop hook summaries, reason not recorded); review 0 blocking / 9 findings; criteria 25/29; MCP 230 queries, 0 unjustified, 7 failed; rule-covered edits with a query 13/13; prompts 7, hand-backs 29, notifications 35; lines +2992 / -864

@@ -1,6 +1,6 @@
 ---
 name: contract-test-red-proof
-description: How to prove a new $metadata/EDMX assertion was red before the feature without reverting the working tree, how to avoid a tautological substring assertion, and how to write a contract test for annotations that a later phase adds
+description: How to prove a new test is a real guard without reverting the working tree - EDMX red/green proof in a scratchpad copy, avoiding tautological substrings, contract tests for a later phase, and per-rule mutations of pure-function libs
 metadata:
   type: project
 ---
@@ -35,7 +35,18 @@ compiler pretty-prints, so an `$edmJson` expression copied from a plan as
 `<Not><Path>...</Path></Not>` matches nothing, and comparing the term and its expression in one
 normalized string is what keeps the test from only proving that the term exists somewhere.
 
-**How to apply:** whenever a plan asks for a contract test that "must fail on main". Count the
-asserted substring in the pre-feature EDMX; if the count is not 0, say so in the report instead of
-claiming the test proves the change. See [[project-probing-runtime-behavior]] for the in-repo probe
-variant used for runtime behavior.
+Mutation variant for pure-function tests (pipeline-metrics 11d, 2026-09-30), when the pre-feature
+code lacks the exports and would only fail on import: tar the working tree's `scripts test
+package.json` into a scratch dir, symlink `node_modules`, scratch `vitest.config.mjs` with
+`cacheDir` and `include: ['test/<file>.test.js']`, then per mutation restore the lib file from a
+saved original, apply one string replace with a uniqueness assert (a tiny node script), and run
+`npx vitest run -t '<it name>'`. One mutation per rule the new `it` claims to guard; every one must
+turn red, and the restored copy must be green again. 15 of 15 went red for criteria 30-32.
+
+Cleanup: `rm -rf $(cat file)` or `rm -rf "$VAR"` is refused by Claude Code's built-in safety check
+(an unresolvable target). Print the path first, then `rm -rf` the literal path.
+
+**How to apply:** whenever a plan asks for a contract test that "must fail on main", or a new `it`
+could pass vacuously. Count the asserted substring in the pre-feature EDMX; if the count is not 0,
+say so in the report instead of claiming the test proves the change. See
+[[project-probing-runtime-behavior]] for the in-repo probe variant used for runtime behavior.

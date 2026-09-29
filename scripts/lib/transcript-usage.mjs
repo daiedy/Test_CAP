@@ -136,10 +136,32 @@ function pick(obj, fields) {
   return out;
 }
 
+/** The D13 kinds of a turn input: `origin.kind` and `commandMode` values, never other text. */
+export const INPUT_KINDS = Object.freeze(['human', 'peer', 'task-notification']);
+
+/** An enum value kept as is when it is one of INPUT_KINDS, else null (D13: not counted). */
+function inputKindOf(value) {
+  return INPUT_KINDS.includes(value) ? value : null;
+}
+
+/**
+ * D13: the kind of a turn input of a record, or null. A `user` record with string content
+ * carries it as `origin.kind`; a `queued_command` attachment (a prompt, hand-back or notice
+ * absorbed into a running turn) as `attachment.origin.kind`, and without `origin` (Claude Code
+ * 2.1.282) `attachment.commandMode` `task-notification` decides.
+ */
+function turnInputOf(r, content) {
+  if (r.type === 'user') return typeof content === 'string' ? inputKindOf(r.origin?.kind) : null;
+  const a = r.attachment;
+  if (r.type !== 'attachment' || a?.type !== 'queued_command') return null;
+  if (a.origin) return inputKindOf(a.origin.kind);
+  return a.commandMode === 'task-notification' ? 'task-notification' : null;
+}
+
 /**
  * One raw transcript record reduced to the fields the metrics use (definitions section 1).
- * `lastTool` is the name of the last content block when that block is a `tool_use`; `prompt` marks
- * a user record that is neither a tool result nor structured content (the prototype's rule).
+ * `lastTool` is the name of the last content block when that block is a `tool_use`; `input` is
+ * the D13 kind of a turn input (`human`, `peer`, `task-notification`), set only when there is one.
  */
 export function slim(r) {
   const out = { type: r.type, ts: r.timestamp ? Date.parse(r.timestamp) : null };
@@ -158,7 +180,6 @@ export function slim(r) {
     out.lastTool = last?.type === 'tool_use' ? last.name : null;
   } else if (r.type === 'user') {
     out.toolResult = r.toolUseResult !== undefined;
-    out.prompt = !out.toolResult && typeof m.content === 'string';
   } else if (r.type === 'system') {
     out.subtype = r.subtype || null;
     // History fallback of the gate metric: a Stop hook that blocked (count only, errors unread).
@@ -170,6 +191,8 @@ export function slim(r) {
     for (const [model, u] of Object.entries(r.modelUsage || {}))
       out.costState.modelUsage[model] = pick(u, MODEL_USAGE_FIELDS);
   }
+  const input = turnInputOf(r, m.content);
+  if (input) out.input = input;
   return out;
 }
 

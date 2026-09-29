@@ -20,14 +20,20 @@ import {
   IDLE_MS,
   TOOL_MS,
   PRICING_TOLERANCE,
+  DRIFT_MAX,
   loadPricing,
   activeTime,
   priceOf,
   costOf,
+  sumCost,
   phaseOf,
   phaseMarkers,
+  planAssignments,
+  planApproved,
+  permalinkCommit,
   reworkOf,
   processesOf,
+  processShare,
   scopeProcesses,
   buildReport,
   promptWindows,
@@ -41,6 +47,7 @@ import {
   reconcileSession,
   renderCard,
   renderCompare,
+  renderReconcile,
 } from '../scripts/lib/pipeline-metrics.mjs';
 import { loadBundle } from '../scripts/lib/backlog.mjs';
 import {
@@ -48,8 +55,15 @@ import {
   EXPECTED,
   VERSION,
   EVENT_LOG,
+  DEMO_EVENTS,
+  TIME_EVENTS,
+  MISSING_AGENT_EVENTS,
+  PLAN_STEPS,
+  PLAN_NO_PHASE,
+  PLAN_UNNUMBERED,
   OPUS,
   SONNET,
+  SONNET_55,
   UNKNOWN_MODEL,
   ms,
   iso,
@@ -101,7 +115,7 @@ function cli(args) {
   });
 }
 
-/** The keys of a history line (research/data-flow.md section 4). */
+/** The keys of a history line (research/data-flow.md section 4, fix round 1 fields included). */
 const HISTORY_KEYS = [
   'feature',
   'issue',
@@ -112,6 +126,7 @@ const HISTORY_KEYS = [
   'waitingMin',
   'agentMin',
   'costUSD',
+  'costPartial',
   'costStateUSD',
   'recovered',
   'tokens',
@@ -126,14 +141,23 @@ const HISTORY_KEYS = [
   'review',
   'criteria',
   'prompts',
+  'handbacks',
+  'notifications',
   'lines',
   'phases',
   'pricingDate',
   'idleMin',
   'toolMin',
   'phaseSource',
+  'reworkSource',
   'gateSource',
 ];
+/** The D13 figures of a report or a history line. */
+const turnInputsOf = ({ prompts, handbacks, notifications }) => ({
+  prompts,
+  handbacks,
+  notifications,
+});
 
 /** Allowed key paths of a transcript record (research/data-flow.md section 5, definitions section 1). */
 const TRANSCRIPT_KEYS = new Set([
@@ -166,6 +190,14 @@ const TRANSCRIPT_KEYS = new Set([
   'message.content[].input',
   'message.content[].input.subagent_type',
   'message.content[].input.to',
+  // D13 (fix round 1): the kind of a turn input, on a `user` and a `queued_command` record.
+  'origin',
+  'origin.kind',
+  'attachment',
+  'attachment.type',
+  'attachment.commandMode',
+  'attachment.origin',
+  'attachment.origin.kind',
   'startTime',
   'totalCostUSD',
   'modelUsage',
@@ -380,6 +412,110 @@ describe('pipeline metrics (ADR-0022)', () => {
     expect(report.warnings).toContain(`unknown-model:${UNKNOWN_MODEL}`);
     expect(report.byModel[UNKNOWN_MODEL].costUSD).toBeNull();
     expect(report.pricingDate).toBe(pricing.recordedAt);
+    // The D4 seed row of the model docs-keeper, ui-verifier and upstream-watcher resolve to (F2).
+    expect(priceOf(SONNET_55, pricing)).toEqual({
+      input: 2,
+      cacheWrite5m: 2.5,
+      cacheWrite1h: 4,
+      cacheRead: 0.2,
+      output: 10,
+    });
+
+    // D4 partial cost over parts: the priced parts summed, partial when a part holds an unpriced
+    // model, null when no part is priced, 0 only when nothing was requested.
+    expect(sumCost([])).toEqual({ costUSD: 0, partial: false });
+    expect(sumCost([{ calls: 1, costUSD: null }])).toEqual({ costUSD: null, partial: true });
+    expect(
+      sumCost([
+        { calls: 1, costUSD: 0.5 },
+        { calls: 1, costUSD: null },
+      ])
+    ).toEqual({
+      costUSD: 0.5,
+      partial: true,
+    });
+    expect(
+      sumCost([
+        { calls: 2, costUSD: 0.25, costPartial: true },
+        { calls: 1, costUSD: 0.5 },
+      ])
+    ).toEqual({ costUSD: 0.75, partial: true });
+    // A part without calls prices nothing and is neutral.
+    expect(
+      sumCost([
+        { calls: 0, costUSD: null },
+        { calls: 1, costUSD: 0.5 },
+      ])
+    ).toEqual({
+      costUSD: 0.5,
+      partial: false,
+    });
+
+    // A row that mixes a priced and an unpriced model is the priced part, printed `≥$`.
+    expect(report).toMatchObject({ costUSD: EXPECTED.unknown.pricedUSD, costPartial: true });
+    expect(report.agents).toEqual([
+      expect.objectContaining({ agentType: 'main', costUSD: 0.1, costPartial: true }),
+    ]);
+    expect(report.phases.orchestration).toMatchObject({ costUSD: 0.1, costPartial: true });
+    const mixed = renderCard(report, bundle);
+    expect(mixed).toContain('Cost ≥$0.10 (no cost-state record)');
+    expect(mixed).toMatch(/^\| orchestration \|.*\| ≥\$0\.10 \| \$0\.00 \|$/m);
+    expect(mixed).toMatch(/^\| main \|.*\| ≥\$0\.10 \| 0 \|$/m);
+
+    // Only an unpriced model: null and n/a, never a silent $0.00, and no rework share.
+    const k = load('k-unpriced');
+    const none = sessionReport(k, { pricing });
+    expect(none).toMatchObject({ costUSD: null, costPartial: true, reworkShare: null });
+    expect(none.agents).toEqual([
+      expect.objectContaining({ agentType: 'main', costUSD: null, costPartial: true }),
+    ]);
+    // Card and reconcile agree on the process total: its only session is the scope (share 1).
+    const U = EXPECTED.unknown;
+    expect(none).toMatchObject({
+      costStateUSD: U.unpricedCostStateUSD,
+      recovered: null,
+      unattributedUSD: U.unpricedCostStateUSD,
+    });
+    const na = renderCard(none, bundle);
+    expect(na).toContain('Cost n/a (cost-state $0.50, recovered -;');
+    expect(na).toMatch(/^\| main \|.*\| n\/a \| 0 \|$/m);
+    expect(na).toMatch(/^\| unattributed \|.*\| \$0\.50 \|/m);
+    // reconcile: no transcript total and no recovered ratio next to the process total.
+    const rec = reconcileSession(k, pricing);
+    expect(rec).toMatchObject({
+      transcriptUSD: null,
+      transcriptPartial: true,
+      costStateUSD: EXPECTED.unknown.unpricedCostStateUSD,
+      recovered: null,
+    });
+    expect(renderReconcile(rec, bundle)).toContain(
+      'Total: transcript n/a of cost-state $0.50, recovered -;'
+    );
+    // The same process shared with a second session, nothing priced: no basis for a split, so no
+    // cost-state figure (never a silent share) and a warning naming the process.
+    const other = { ...k, sessionId: 'k-other' };
+    const shared = sessionReport(k, { pricing, related: [other] });
+    expect(shared).toMatchObject({ costStateUSD: null, recovered: null, unattributedUSD: null });
+    expect(shared.warnings).toContain(`cost-state-share-unknown:${U.unpricedStartTime}`);
+    const sharedRec = reconcileSession(k, pricing, [other]);
+    expect(sharedRec).toMatchObject({ transcriptUSD: null, costStateUSD: null, recovered: null });
+    expect(renderReconcile(sharedRec, bundle)).toContain(
+      'Total: transcript n/a of cost-state -, recovered -;'
+    );
+
+    // `record` refuses a partial line; --force writes it, marked `costPartial: true`.
+    const file = path.join(home, 'history-unknown.jsonl');
+    const refused = cli(['record', 'fixture-unknown', '--history', file]);
+    expect(refused.status).toBe(1);
+    expect(refused.stderr).toContain(
+      `fixture-unknown has models without a price (${UNKNOWN_MODEL})`
+    );
+    expect(fs.existsSync(file)).toBe(false);
+    const forced = cli(['record', 'fixture-unknown', '--history', file, '--force']);
+    expect(forced.status, forced.stderr).toBe(0);
+    expect(readJsonl(file)).toEqual([
+      expect.objectContaining({ feature: 'fixture-unknown', costUSD: 0.1, costPartial: true }),
+    ]);
   });
 
   it('reconciles against cost-state per process and warns on pricing drift', () => {
@@ -452,7 +588,18 @@ describe('pipeline metrics (ADR-0022)', () => {
     });
     expect(whole).toMatchObject({ costUSD: D.wholeUSD, costStateUSD: D.processUSD });
 
-    // A process whose sessions hold records outside the scope contributes its proportional share.
+    // The share of a process's total a scope carries (definitions section 5): 1 when the process
+    // lies wholly in scope, whatever is priced; else the priced share, at most 1; no priced cost
+    // and records outside the scope: no basis for a split (null).
+    expect(processShare(true, null, 0)).toBe(1);
+    expect(processShare(false, 1, 4)).toBe(0.25);
+    expect(processShare(false, 5, 4)).toBe(1);
+    expect(processShare(false, null, 0)).toBeNull();
+
+    // A process whose sessions hold records outside the scope contributes its proportional share:
+    // the feature cuts r-b-2 (on `main`) out of b-resumed, while c-time keeps every record.
+    expect(featureRecords(b, 'fixture-demo').complete).toBe(false);
+    expect(featureRecords(load('c-time'), 'fixture-time').complete).toBe(true);
     const feature = featureReport([a, b], 'fixture-demo', { pricing });
     expect(feature).toMatchObject({
       costUSD: D.featureUSD,
@@ -460,6 +607,7 @@ describe('pipeline metrics (ADR-0022)', () => {
       recovered: D.featureRecovered,
       unattributedUSD: D.featureUnattributedUSD,
     });
+    expect(feature.warnings).toEqual([]);
   });
 
   it('attributes phases from markers and falls back to home phases', () => {
@@ -600,6 +748,7 @@ describe('pipeline metrics (ADR-0022)', () => {
 
   it('builds the history line and refuses a duplicate record', () => {
     const D = EXPECTED.demo;
+    const I = EXPECTED.inputs;
 
     // `feature --json` over the fixture project dir carries every figure of the history line.
     const shown = cli(['feature', 'fixture-demo', '--json']);
@@ -616,12 +765,17 @@ describe('pipeline metrics (ADR-0022)', () => {
       activeMin: D.featureActiveMin,
       leadMin: D.featureLeadMin,
       costUSD: D.featureUSD,
+      costPartial: false,
       costStateUSD: D.featureCostStateUSD,
-      prompts: D.featurePrompts,
+      ...I.figures,
+      // No approved PLAN for fixture-demo: the home-phase fallback, no plan commit.
+      reworkSource: 'home-phase',
+      planCommit: null,
       versions: [VERSION],
     });
     const line = historyLine(report, '2026-09-29');
     expect(Object.keys(line).sort()).toEqual([...HISTORY_KEYS].sort());
+    expect(line).toMatchObject({ costPartial: false, reworkSource: 'home-phase', ...I.figures });
     expect(Object.keys(line.tokens)).toEqual([
       'input',
       'cacheWrite5m',
@@ -642,6 +796,8 @@ describe('pipeline metrics (ADR-0022)', () => {
     expect(recorded[0]).toMatchObject({
       feature: 'fixture-demo',
       costUSD: D.featureUSD,
+      costPartial: false,
+      ...I.figures,
       recordedAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
     });
     const duplicate = cli(['record', 'fixture-demo', '--history', file]);
@@ -652,8 +808,10 @@ describe('pipeline metrics (ADR-0022)', () => {
     expect(forced.status, forced.stderr).toBe(0);
     expect(readJsonl(file)).toHaveLength(1);
 
-    // Live figures of the line: gate blocks by reason from the event log, prompts from its markers.
+    // Live figures of the line: gate blocks by reason from the event log; the turn inputs from the
+    // transcript (D13: 3 human prompts), not from the log's 2 `prompt` records.
     const events = readJsonl(EVENT_LOG);
+    expect(events.filter((e) => e.event === 'prompt')).toHaveLength(2);
     const live = sessionReport({ ...load('h-live'), events }, { pricing });
     expect(historyLine(live, '2026-09-29')).toMatchObject({
       gateSource: 'events',
@@ -669,16 +827,22 @@ describe('pipeline metrics (ADR-0022)', () => {
         'state-budget': 1,
       },
       prompts: EXPECTED.live.prompts,
+      handbacks: 0,
+      notifications: 0,
+      reworkSource: 'home-phase',
+      costPartial: false,
     });
-    // History fallback without an event log: Stop-hook summaries, prompts from the transcript.
+    // History fallback without an event log: Stop-hook summaries, the same D13 rule.
     const history = sessionReport(load('g-history'), { pricing });
     expect(historyLine(history, '2026-09-29')).toMatchObject({
       gateSource: 'stop-hook-summary',
       gateBlocks: EXPECTED.history.gateBlocks,
       prompts: EXPECTED.history.prompts,
+      handbacks: 0,
+      notifications: 0,
     });
 
-    // The agent-stop aggregates match the re-parse; a skewed one is flagged.
+    // The agent-stop aggregates match the re-parse cut at their lastTs; a skewed one is flagged.
     expect(live.warnings).toEqual([]);
     const skewed = events.map((e) =>
       e.event === 'agent-stop' && e.agent === 'h2'
@@ -732,6 +896,10 @@ describe('pipeline metrics (ADR-0022)', () => {
         reworkShare: 0.2,
         gateBlocks: { lint: 3, mcp: 1 },
         gateSource: 'events',
+        // D13 fields of a fix-round line; alpha and beta lack them (lines recorded before).
+        prompts: 7,
+        handbacks: 29,
+        notifications: 35,
       },
     ];
     const rows = compareLines(lines);
@@ -752,6 +920,9 @@ describe('pipeline metrics (ADR-0022)', () => {
       gateBlocks: 1,
       dGateBlocks: -1,
       gatesComparable: true,
+      prompts: null,
+      handbacks: null,
+      notifications: null,
     });
     // Stop-hook summaries and live gate records count different things: no gate delta.
     expect(rows[2]).toMatchObject({
@@ -762,12 +933,17 @@ describe('pipeline metrics (ADR-0022)', () => {
       gateBlocks: 4,
       dGateBlocks: null,
       gatesComparable: false,
+      prompts: 7,
+      handbacks: 29,
+      notifications: 35,
     });
     const table = renderCompare(rows, bundle).split('\n');
     expect(table).toHaveLength(2 + 3);
+    expect(table[0]).toMatch(/\| Prompts \/ hand-backs \/ notifications \|$/);
     expect(table[3]).toContain('+$2.50');
-    expect(table[3]).toMatch(/\| 1 \| -1 \|$/);
-    expect(table[4]).toMatch(/\| 4 \| n\/a \|$/);
+    // The last column holds the turn inputs, n/a for a line that lacks them.
+    expect(table[3]).toMatch(/\| 1 \| -1 \| n\/a \/ n\/a \/ n\/a \|$/);
+    expect(table[4]).toMatch(/\| 4 \| n\/a \| 7 \/ 29 \/ 35 \|$/);
 
     // The CLI: one row per line of the history file, a name filter keeps the file's deltas.
     const file = path.join(home, 'compare.jsonl');
@@ -781,6 +957,213 @@ describe('pipeline metrics (ADR-0022)', () => {
     expect(betaRows[2]).toContain('+$2.50');
     const json = JSON.parse(cli(['compare', '--history', file, '--json']).stdout);
     expect(json.map((r) => r.dCostUSD)).toEqual([null, 2.5, -1.5]);
+  });
+
+  it('counts prompts, hand-backs and notifications from the transcript', () => {
+    const I = EXPECTED.inputs;
+    const a = load('a-main');
+    const b = load('b-resumed');
+
+    // slim() keeps the D13 kind of a turn input only: `origin.kind` of a string user record or of a
+    // `queued_command` attachment, else (Claude Code 2.1.282) its `commandMode` task-notification.
+    const kinds = Object.fromEntries(a.main.filter((r) => r.input).map((r) => [r.uuid, r.input]));
+    expect(kinds).toEqual(I.kinds);
+    expect(a.main.find((r) => r.uuid === 'a-m-q2')).toEqual({
+      type: 'attachment',
+      ts: ms(0, 2.92),
+      uuid: 'a-m-q2',
+      gitBranch: 'feature/fixture-demo',
+      version: VERSION,
+      input: 'human',
+    });
+    // A string user record without `origin` and a `coordinator` delivery in an agent file: none.
+    expect(a.main.find((r) => r.uuid === 'a-m-u5')).not.toHaveProperty('input');
+    const a1 = a.agents.find((x) => x.id === 'a1');
+    expect(a1.records.find((r) => r.uuid === 'a-1-u2')).not.toHaveProperty('input');
+
+    // History path (no event log): the copied hand-back of b-resumed counts once in the feature,
+    // although alone it is b-resumed's own record.
+    const history = featureReport([a, b], 'fixture-demo', { pricing });
+    expect(turnInputsOf(history)).toEqual(I.figures);
+    expect(turnInputsOf(sessionReport(b, { pricing }))).toEqual(I.resumed);
+
+    // Live path: the hook's six `prompt` records in the same window move none of the figures.
+    expect(DEMO_EVENTS.filter((e) => e.event === 'prompt')).toHaveLength(I.promptEvents);
+    const live = featureReport([{ ...a, events: DEMO_EVENTS }, b], 'fixture-demo', { pricing });
+    expect(live.gateSource).toBe('events');
+    expect(turnInputsOf(live)).toEqual(I.figures);
+    // One rule for history and live: both history lines carry the same three values.
+    expect(turnInputsOf(historyLine(live, '2026-09-30'))).toEqual(I.figures);
+    expect(turnInputsOf(historyLine(history, '2026-09-30'))).toEqual(I.figures);
+    expect(renderCard(live, bundle)).toContain('prompts 2, hand-backs 1, notifications 3;');
+  });
+
+  it("judges rework against the plan's Steps table", () => {
+    const P = EXPECTED.plan;
+    const launchAt = ([agentType, min]) => ({ agentType, ts: ms(6, min) });
+
+    // The (phase, agent type) pairs of the Steps table: `5a` is phase 5; `orchestrator`, prose and
+    // file names are no agent types.
+    const plan = planAssignments(PLAN_STEPS);
+    expect(plan).toEqual(new Map(P.assignments.map(([type, phases]) => [type, new Set(phases)])));
+    // No Phase column, a Phase column without numbers, no Steps section, no text: no assignment.
+    expect(planAssignments(PLAN_NO_PHASE)).toBeNull();
+    expect(planAssignments(PLAN_UNNUMBERED)).toBeNull();
+    expect(planAssignments(PLAN_STEPS.replace('## Steps', '## Tasks'))).toBeNull();
+    expect(planAssignments(null)).toBeNull();
+
+    // Live, markers 2, 4, 2: a launch the plan lists for its phase is never rework; any other one
+    // is judged by its home phase.
+    const markers = phaseMarkers(
+      ['2', '4', '2'].map((phase, k) => ({
+        ts: iso(6, 10 * (k + 1)),
+        event: 'phase',
+        feature: 'fixture-plan (#9)',
+        phase,
+        raw: `${phase}: step`,
+      }))
+    );
+    expect(markers.map((m) => m.phase)).toEqual(['2', '4', '2']);
+    const live = P.live.map(launchAt);
+    expect(reworkOf(live, markers, plan)).toEqual(P.liveRework);
+    expect(reworkOf(live, markers)).toEqual(P.liveFallback);
+
+    // History, no markers: planned when the plan lists the type in a phase >= H.
+    const history = P.history.map((agentType, k) => launchAt([agentType, 100 + 10 * k]));
+    expect(reworkOf(history, [], plan)).toEqual(P.historyRework);
+    expect(reworkOf(history, [], planAssignments(PLAN_NO_PHASE))).toEqual(P.historyFallback);
+
+    // The report names its rework basis; the plan commit is null without a plan and for a
+    // working-tree plan.
+    const g = load('g-history');
+    const planned = sessionReport(g, { pricing, plan });
+    expect(planned).toMatchObject({ reworkSource: 'plan', planCommit: null, ...P.gHistory });
+    expect(planned.agents.find((x) => x.agentType === 'architect').reworkLaunches).toBe(0);
+    expect(renderCard(planned, bundle)).toContain('; rework: plan;');
+    expect(historyLine(planned, '2026-09-30').reworkSource).toBe('plan');
+    const committed = sessionReport(g, { pricing, plan, extras: { planCommit: 'c10c4f0' } });
+    expect(committed.planCommit).toBe('c10c4f0');
+    const fallback = sessionReport(g, {
+      pricing,
+      plan: planAssignments(PLAN_NO_PHASE),
+      extras: { planCommit: 'c10c4f0' },
+    });
+    expect(fallback).toMatchObject({
+      reworkSource: 'home-phase',
+      planCommit: null,
+      reworkShare: EXPECTED.history.reworkShare,
+    });
+    expect(renderCard(fallback, bundle)).toContain('; rework: home-phase fallback;');
+
+    // The plan as approved at the plan gate: the first `Status:` value begins with `approved`,
+    // optionally in backticks (real status lines of this repo's plans).
+    const statuses = [
+      ['Date: 2026-09-25. Status: approved (user, 2026-09-25). Gate mode: semi-autonomous.', true],
+      ['Date: 2026-09-29. Status: approved 2026-09-29. Gate mode: semi-autonomous.', true],
+      ['Date: 2026-09-30. Status: `approved` (user, 2026-09-30).', true],
+      ['Date: 2026-09-07. Status: draft. Gate mode: semi-autonomous.', false],
+      ['Date: 2026-09-29. Status: proposed.', false],
+      [
+        'Date: 2026-09-07. Status: `done` (set by `docs-keeper`, 2026-09-16; approved by the user 2026-09-10).',
+        false,
+      ],
+      ['Date: YYYY-MM-DD. Status: draft | approved | done.', false],
+      ['Date: 2026-09-07. Status: draft.\n\nStatus: approved.', false],
+      ['# plan\n\nDate: 2026-09-07. Gate mode: autonomous.\n', false],
+      [null, false],
+    ];
+    for (const [text, approved] of statuses) expect(planApproved(text), text).toBe(approved);
+    expect(planApproved(PLAN_STEPS)).toBe(true);
+
+    // The commit a pruned feature's final documents are read at, from SUMMARY.md's `## Full record`.
+    const sha = '94a991df29046b88f8f2a0d7e6a178deb08e76ac';
+    const summary = (where) =>
+      `# x: summary\n\n## Cost\n\n## Full record\n\nPruned to this file (ADR-0019). PLAN.md of this feature stays in git history at ${where} (commit \`${sha.slice(0, 7)}\`).\n`;
+    expect(permalinkCommit(summary(`https://github.com/o/r/tree/${sha}/docs/features/x`))).toBe(
+      sha
+    );
+    expect(permalinkCommit(summary(`docs/features/x at ${sha}`))).toBe(sha.slice(0, 7));
+    expect(permalinkCommit('# x: summary\n\n## Cost\n')).toBeNull();
+  });
+
+  it('compares a live agent-stop with the re-parse cut at its lastTs', () => {
+    const R = EXPECTED.race;
+    const T = EXPECTED.time;
+    const c = load('c-time');
+    const stop = TIME_EVENTS.at(-1);
+    expect(stop).toMatchObject({ event: 'agent-stop', agent: 'c1', requests: R.liveRequests });
+
+    // SubagentStop fired before c1's final message reached the file: the file holds one request
+    // more than the last live record, the file cut at its lastTs exactly as many.
+    const c1 = c.agents.find((x) => x.id === 'c1');
+    expect(requests(c1.records)).toHaveLength(R.liveRequests + 1);
+    const cut = c1.records.filter((r) => r.ts <= Date.parse(stop.lastTs));
+    expect(requests(cut)).toHaveLength(R.liveRequests);
+
+    // One request short is the race, not drift; the figures come from the whole file.
+    expect(DRIFT_MAX).toBe(0.01);
+    const live = sessionReport({ ...c, events: TIME_EVENTS }, { pricing });
+    expect(live.warnings).toEqual([]);
+    expect(live).toMatchObject({
+      calls: R.calls,
+      costUSD: R.costUSD,
+      leadMin: T.leadMin,
+      activeMin: T.mergedMin,
+      agentMin: T.agentMinutes,
+    });
+    expect(live.agents.find((x) => x.agentType === 'cap-backend-dev')).toMatchObject(R.agent);
+
+    // A real skew of the last record still warns; a difference below DRIFT_MAX does not.
+    const withOutput = (output) =>
+      TIME_EVENTS.map((e) => (e === stop ? { ...e, tokens: { ...e.tokens, output } } : e));
+    const skewed = sessionReport({ ...c, events: withOutput(R.skewOutput) }, { pricing });
+    expect(skewed.warnings).toEqual(['agent-stop-drift:c1']);
+    const close = sessionReport({ ...c, events: withOutput(R.toleratedOutput) }, { pricing });
+    expect(close.warnings).toEqual([]);
+
+    // A stop without an agent file is the fallback row: priced under its model, no timeline point,
+    // a warning. A zero-request stop without a file (an internal agent) stands in for nothing.
+    const M = R.missing;
+    const events = [...TIME_EVENTS, ...MISSING_AGENT_EVENTS];
+    const missing = sessionReport({ ...c, events }, { pricing });
+    expect(missing.warnings).toEqual(['agent-transcript-missing:c2']);
+    expect(missing).toMatchObject({
+      leadMin: M.leadMin,
+      activeMin: M.activeMin,
+      agentMin: M.agentMin,
+      parallelism: M.parallelism,
+      launches: M.launches,
+      calls: M.calls,
+      costUSD: M.costUSD,
+    });
+    expect(missing.agents.map((x) => x.agentType)).toEqual([
+      'main',
+      'cap-backend-dev',
+      'docs-keeper',
+    ]);
+    expect(missing.agents.find((x) => x.agentType === 'docs-keeper')).toMatchObject(M.agent);
+    expect(missing.byModel[SONNET_55]).toMatchObject({ calls: 2, costUSD: 0.1 });
+    expect(missing.phases['6']).toMatchObject(M.phase6);
+
+    // Feature scope: an agent whose records are all out of scope still has its file, so its stop
+    // gets no fallback; the same stop with the file gone does.
+    const away = {
+      ...c,
+      events: TIME_EVENTS,
+      agents: c.agents.map((a) => ({
+        ...a,
+        records: a.records.map((r) => ({ ...r, gitBranch: 'main' })),
+      })),
+    };
+    const scoped = featureReport([away], 'fixture-time', { pricing });
+    expect(scoped.warnings).toEqual([]);
+    expect(scoped).toMatchObject({ launches: 0, calls: 6 });
+    expect(scoped.agents.map((x) => x.agentType)).toEqual(['main']);
+    const gone = featureReport([{ ...c, agents: [], events: TIME_EVENTS }], 'fixture-time', {
+      pricing,
+    });
+    expect(gone.warnings).toEqual(['agent-transcript-missing:c1']);
+    expect(gone.agents.find((x) => x.agentType === 'cap-backend-dev')).toMatchObject(R.gone);
   });
 
   it('the fixture holds only the allowed record keys', () => {
@@ -801,6 +1184,10 @@ describe('pipeline metrics (ADR-0022)', () => {
           if ('id' in c) expect(c.name).toBe('Agent');
         // Only whether hookErrors is empty is read: its entries are empty objects.
         for (const e of r.hookErrors || []) expect(e).toEqual({});
+        // D13 enums only: `origin` on a user record, a `queued_command` attachment without text.
+        if ('origin' in r) expect(r.type).toBe('user');
+        if ('attachment' in r) expect(r).toMatchObject({ type: 'attachment' });
+        if (r.type === 'attachment') expect(r.attachment.type).toBe('queued_command');
         for (const v of strings(r)) expect(v.length).toBeLessThanOrEqual(80);
       }
     }
@@ -811,8 +1198,13 @@ describe('pipeline metrics (ADR-0022)', () => {
     );
     expect(records).toBe(built);
 
-    // The event log: only the keys of the hook records, a prompt record without any prompt text.
-    for (const e of readJsonl(EVENT_LOG)) {
+    // The event logs: only the keys of the hook records, a prompt record without any prompt text.
+    for (const e of [
+      ...readJsonl(EVENT_LOG),
+      ...DEMO_EVENTS,
+      ...TIME_EVENTS,
+      ...MISSING_AGENT_EVENTS,
+    ]) {
       expect(keyPaths(e).filter((k) => !EVENT_KEYS.has(k))).toEqual([]);
       if (e.event === 'prompt')
         expect(

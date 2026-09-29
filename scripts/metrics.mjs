@@ -6,6 +6,7 @@
  *                             newest transcript of this project)
  *   feature <name|#N>         card over every session that carries the feature (D10)
  *   record <name> [--force]   append the feature's history line to docs/metrics/history.jsonl
+ *                             (refuses a duplicate line or an unknown-model warning without --force)
  *   compare [name...]         history lines with deltas against the previous line
  *   reconcile <id>            transcript against cost-state per model and token kind
  * Options: --json (the report object), --idle <min>, --tool <min> (D6 caps), --history <file>.
@@ -38,6 +39,10 @@ import {
   renderCompare,
   renderReconcile,
   loadPricing,
+  planAssignments,
+  planApproved,
+  permalinkCommit,
+  featureNameOf,
   HISTORY_FILE,
 } from './lib/pipeline-metrics.mjs';
 import {
@@ -107,24 +112,55 @@ function maxTurns() {
   return out;
 }
 
-/** A feature document, or its last version from git once the prune removed it. */
+/**
+ * A final feature document (`criteria`, `review`): the working tree while the folder holds it,
+ * else its version at the commit of the SUMMARY.md permalink once the prune removed it
+ * (`permalinkCommit`). With `reworkPlan` the only git reader of feature docs. Null when neither.
+ */
 function featureDoc(name, file) {
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(name)) return null;
   const rel = `docs/features/${name}/${file}`;
   const abs = path.join(root, rel);
   if (fs.existsSync(abs)) return fs.readFileSync(abs, 'utf8');
-  const git = (a) => run('git', a, { cwd: root, timeoutMs: 20_000 });
-  const sha = git([
-    'log',
-    '--all',
-    '-1',
-    '--format=%H',
-    '--diff-filter=D',
-    '--',
-    rel,
-  ]).stdout.trim();
+  const summary = path.join(root, 'docs', 'features', name, 'SUMMARY.md');
+  const sha = fs.existsSync(summary) ? permalinkCommit(fs.readFileSync(summary, 'utf8')) : null;
   if (!sha) return null;
-  const res = git(['show', `${sha}^:${rel}`]);
+  const res = run('git', ['show', `${sha}:${rel}`], { cwd: root, timeoutMs: 20_000 });
   return res.code === 0 ? res.stdout : null;
+}
+
+/**
+ * D12 plan source: the plan as approved at the plan gate, apart from `criteria` and `review` (the
+ * final plan, `featureDoc`). The first commit of the path's full history whose text passes
+ * `planApproved` (the deletion commit holds no file and is skipped; `--full-history` keeps a path
+ * created and deleted on a merged branch); before the approval is committed, the working tree when
+ * its own status passes. No approved version: no plan, the home-phase fallback.
+ * @returns {{plan: Map<string, Set<string>>|null, commit: string|null}}
+ */
+function reworkPlan(name) {
+  const none = { plan: null, commit: null };
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(name)) return none;
+  const rel = `docs/features/${name}/PLAN.md`;
+  const git = (args) => run('git', args, { cwd: root, timeoutMs: 20_000 });
+  const log = git(['log', '--full-history', '--reverse', '--format=%H', '--', rel]);
+  for (const commit of log.code === 0 ? log.stdout.split('\n').filter(Boolean) : []) {
+    const res = git(['show', `${commit}:${rel}`]);
+    if (res.code === 0 && planApproved(res.stdout))
+      return { plan: planAssignments(res.stdout), commit };
+  }
+  const abs = path.join(root, rel);
+  const text = fs.existsSync(abs) ? fs.readFileSync(abs, 'utf8') : null;
+  return planApproved(text) ? { plan: planAssignments(text), commit: null } : none;
+}
+
+/** D12 for a session: the plan of the feature named by its latest `phase` marker, else none. */
+function sessionPlan(events) {
+  const marker = events
+    .filter((e) => e.event === 'phase' && e.ts)
+    .sort((a, b) => Date.parse(a.ts) - Date.parse(b.ts))
+    .at(-1);
+  const name = marker ? featureNameOf(marker.feature) : 'none';
+  return name === 'none' ? { plan: null, commit: null } : reworkPlan(name);
 }
 
 /** Lines added and removed by the commits whose subject names the feature. */
@@ -170,15 +206,18 @@ function featureOf(arg) {
   const sessions = listSessions(dir)
     .map((id) => load(id, dir))
     .filter(Boolean);
+  const approved = reworkPlan(name);
   const report = featureReport(sessions, name, {
     issue,
     pricing,
+    plan: approved.plan,
     ...caps,
     extras: {
       review: reviewCounts(featureDoc(name, 'REVIEW.md')),
       criteria: criteriaCounts(featureDoc(name, 'PLAN.md')),
       lines: gitLines(name),
       maxTurns: maxTurns(),
+      planCommit: approved.commit,
     },
   });
   if (!report.sessions) fail('metrics.error.noFeature', name, dir);
@@ -222,11 +261,17 @@ function sessionOf(id) {
 switch (cmd) {
   case 'session': {
     const session = sessionOf(args[0]);
+    const approved = sessionPlan(session.events);
     const report = sessionReport(session, {
       pricing,
+      plan: approved.plan,
       related: relatedSessions(session),
       ...caps,
-      extras: { maxTurns: maxTurns(), compactions: compactionsOf(session) },
+      extras: {
+        maxTurns: maxTurns(),
+        compactions: compactionsOf(session),
+        planCommit: approved.commit,
+      },
     });
     print(report, renderCard(report, bundle));
     break;
@@ -237,7 +282,16 @@ switch (cmd) {
     break;
   }
   case 'record': {
-    const line = historyLine(featureOf(args[0]), new Date().toISOString().slice(0, 10));
+    const report = featureOf(args[0]);
+    // D4: a partial cost would compare as a real drop; complete the price table or --force.
+    const unpriced = report.warnings.filter((w) => w.startsWith('unknown-model:'));
+    if (unpriced.length && !flags.force)
+      fail(
+        'metrics.record.unknownModel',
+        report.feature,
+        unpriced.map((w) => w.slice('unknown-model:'.length)).join(', ')
+      );
+    const line = historyLine(report, new Date().toISOString().slice(0, 10));
     const lines = readJsonl(historyFile);
     const at = lines.findIndex((l) => l.feature === line.feature);
     if (at >= 0 && !flags.force) fail('metrics.record.duplicate', line.feature, historyShown);

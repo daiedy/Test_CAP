@@ -19,6 +19,12 @@ Plan approved by the user on 2026-09-29 with the eight gate answers below (numbe
 8. Baseline scope: `products-rating-column` (#5), `products-rating-filter` (#6), `products-excel-upload` (#7) and `catalog-authorization`, recorded before 2026-10-10.
 The whole implementation touches protected paths (`scripts/lib/**`, `scripts/hooks/**`, `.claude/settings.json`, skills, agent prompts), so the `/feature` session is started by the user with `PIPELINE_ALLOW_PROTECTED=1` (rule `pipeline-config.md`, ADR-0016); hooks load at session start, so step 11 needs one restart.
 
+Fix round 1 after step 11, decided by the user on 2026-09-29 (letters as in the PLAN status line; definitions in `research/definitions.md` D11-D13 and `research/data-flow.md` section 3):
+- A. Turn inputs (D13, VERIFICATION F3): `prompts`, `handbacks` and `notifications` are three separate figures counted from the main-thread transcript by `origin.kind` (`human`, `peer`, `task-notification`) of string `user` records and `queued_command` attachments, by the same rule for history and live sessions; the `prompt` event records are command markers only (the `/spec` and `/feature` join of D10) and count none of the three.
+- B. Phases and rework (D11, D12, VERIFICATION F6): phase numbers follow the `/feature` skill (0 preparation, 1 plan, 2 backend, 3 UI, 4 verification, 5 review, 6 documentation, 7 completion) and rework is plan-aware: a launch that the approved PLAN's Steps table assigns to its phase is never rework, any other launch is judged by the home-phase rule; the PLAN is the version approved at the plan gate, the first commit in the path's full git history whose `Status:` begins with `approved` (amended by the user 2026-09-30, PLAN question 9), so a fix-round step whose agent type the approved plan does not list in that phase is rework; a plan without `Phase`/`Agent` columns falls back to home phases (`reworkSource: 'home-phase'`).
+- C. Agent figures (VERIFICATION F4): taken from the transcript re-parse when the agent file exists; the live `agent-stop` aggregate is the fallback only when the file is gone (`agent-transcript-missing:<agent>`); drift compares the live aggregate with the re-parse cut at its `lastTs`, so a stop one request short raises no `agent-stop-drift` warning.
+- D. Forked sessions (VERIFICATION F5): a forked session's `session` card includes the parent's copied pre-fork history (the `feature` card dedupes it by `uuid` and `requestId`, D1); recorded as open debt in `docs/STATE.md`, not fixed in this feature.
+
 ## Affected entities and services
 No CDS entity, service, action or annotation is touched; `mcp__cds-mcp__search_model` was not run because the request names none, and the OData contract does not change (no `npx vitest -u`, no `metadata.xml`). The affected artifacts are pipeline files:
 
@@ -62,7 +68,7 @@ No CDS entity, service, action or annotation is touched; `mcp__cds-mcp__search_m
 - `docs/LESSONS.md` 2026-09-29 (the `Write`/`Edit` tools decode `\u` escapes): the `ru` texts go into `pipeline_ru.properties` only.
 
 ## Open questions
-None open: all eight were decided on 2026-09-29 (see "User decisions"); kept here as the numbering the decisions refer to:
+None open: all eight were decided on 2026-09-29 (see "User decisions"; PLAN question 9 is decided by B); kept here as the numbering the decisions refer to:
 1. Idle threshold: two caps (turn gap 5 min, tool gap 10 min) or the prototype's single 5-minute cap?
 2. Committed artifacts: `docs/metrics/history.jsonl` and the `## Cost` section of `SUMMARY.md`, or one of them?
 3. Briefing: one line from the last history entry without a regression warning, or a warning when cost exceeds the previous feature by a factor?

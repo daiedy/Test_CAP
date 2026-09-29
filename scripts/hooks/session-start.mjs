@@ -1,6 +1,7 @@
 /**
  * SessionStart hook: the briefing (ADR-0019: language, now, backlog queue from GitHub Issues,
- * recommendation), the project state and the toolchain check.
+ * recommendation; ADR-0022: the last docs/metrics/history.jsonl line), the project state and the
+ * toolchain check.
  * Output is JSON. Plain stdout of a SessionStart hook is never displayed: Claude Code only adds
  * it to the model's context. So `systemMessage` shows the briefing (and the environment line when
  * it warns) to the user in the terminal, and `hookSpecificOutput.additionalContext` carries the
@@ -77,6 +78,7 @@ try {
 
   out.push(`# Test_CAP project context (SessionStart, source=${input.source || 'unknown'})`);
   // ADR-0019: the briefing comes first, in PIPELINE_LANG; the queue comes from GitHub Issues with a cache.
+  // ADR-0022: collectBriefing passes the last history line, renderBriefing prints it (none: no line).
   let briefing;
   try {
     briefing = renderBriefing(collectBriefing(root));

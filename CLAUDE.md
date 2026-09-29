@@ -22,6 +22,7 @@ Product Catalog: SAP CAP (Node.js 22, `@sap/cds` 10, OData V4, SQLite in-memory 
 | Feature specifications (while in work; `SUMMARY.md` with a permalink after) | `docs/features/<name>/` |
 | Lessons learned, typical mistakes | `docs/LESSONS.md` |
 | What changed | `docs/CHANGELOG.md` |
+| Pipeline cost per feature | `docs/metrics/history.jsonl`, SUMMARY.md "Cost" |
 | What is new in the upstream dependencies | `docs/upstream/UPDATES.md` |
 | Reference files | `templates/` |
 

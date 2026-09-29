@@ -38,6 +38,7 @@ import {
   renderCompare,
   renderReconcile,
   loadPricing,
+  HISTORY_FILE,
 } from './lib/pipeline-metrics.mjs';
 import {
   pickLang,
@@ -49,7 +50,6 @@ import {
 } from './lib/backlog.mjs';
 
 const root = repoRoot();
-const HISTORY = 'docs/metrics/history.jsonl';
 const pricing = loadPricing(root);
 const bundle = loadBundle(pickLang(process.env, readLocalSettings(root)), root);
 
@@ -68,7 +68,7 @@ function parseArgs(argv) {
 const { cmd, args, flags } = parseArgs(process.argv.slice(2));
 const capMs = (value, fallback) => (Number(value) > 0 ? Number(value) * 60_000 : fallback);
 const caps = { idleMs: capMs(flags.idle, IDLE_MS), toolMs: capMs(flags.tool, TOOL_MS) };
-const historyFile = path.resolve(root, flags.history || HISTORY);
+const historyFile = path.resolve(root, flags.history || HISTORY_FILE);
 const historyShown = historyFile.startsWith(root + path.sep)
   ? path.relative(root, historyFile)
   : historyFile;

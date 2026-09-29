@@ -779,6 +779,9 @@ export function criteriaCounts(text) {
 
 // ---------- history ----------
 
+/** The committed history of finished features, one `historyLine` per line (ADR-0022 decision 4). */
+export const HISTORY_FILE = path.join('docs', 'metrics', 'history.jsonl');
+
 /** The committed aggregate of a feature report (research/data-flow.md section 4). */
 export function historyLine(r, recordedAt) {
   return {
@@ -1102,6 +1105,19 @@ export function renderCompare(rows, bundle) {
         `| ${r.feature}${r.issue ? ` (#${r.issue})` : ''} | ${r.recordedAt} | ${fmtUSD(r.costUSD)} | ${signed(r.dCostUSD, fmtUSD)} | ${dur(r.activeMin)} | ${signed(r.dActiveMin, dur)} | ${fmtPct(r.reworkShare)} | ${signed(r.dReworkShare, pp)} | ${r.gateBlocks ?? '-'} | ${r.gatesComparable === false ? t(bundle, 'metrics.card.na') : signed(r.dGateBlocks, String)} |`
     ),
   ].join('\n');
+}
+
+/** The SessionStart briefing line of a history line (data-flow section 6); no regression logic in v1. */
+export function renderBriefingLine(l, bundle) {
+  return t(
+    bundle,
+    'metrics.briefing',
+    l.feature,
+    l.issue ? ` (#${l.issue})` : '',
+    fmtUSD(l.costUSD),
+    fmtDuration(l.activeMin, bundle),
+    fmtPct(l.reworkShare)
+  );
 }
 
 /** The `reconcile` table. */

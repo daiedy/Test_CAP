@@ -44,11 +44,11 @@ Delegate to `docs-keeper`: registry, CHANGELOG, STATE, SUMMARY, LESSONS, and a l
 
 ## Phase 7. Completion
 
-For an issue: `node scripts/backlog.mjs close N --summary docs/features/<name>/SUMMARY.md` (posts the summary, drops the labels, closes), then `node scripts/prune-feature.mjs <name>` keeps only `SUMMARY.md` with a permalink to the full record (ADR-0019); commit `docs: <name> close #N and prune`; STATE `Feature: none`. Show the user: the list of commits, what is closed from the acceptance criteria, what remains in the open debt. Push and pull request only on the user's instruction.
+For an issue: `node scripts/backlog.mjs close N --summary docs/features/<name>/SUMMARY.md` (posts the summary, drops the labels, closes), then `node scripts/prune-feature.mjs <name>` keeps only `SUMMARY.md` with a permalink to the full record (ADR-0019); commit `docs: <name> close #N and prune`; STATE `Feature: none`. After the prune run `node scripts/metrics.mjs feature <name>` and show the card. Show the user: the list of commits, what is closed from the acceptance criteria, what remains in the open debt. Push and pull request only on the user's instruction.
 
 ## Orchestrator rules
 
-- After every phase gate, update the `Feature`, `Phase`, `Last commit` and `Next` lines of the `## Now` section of `docs/STATE.md` before starting the next phase; never add a paragraph there (ADR-0018). The Stop hook requires STATE to reflect changed code and to keep the template shape, and the orchestrator is the one who knows the phase state.
+- After every phase gate, update the `Feature`, `Phase`, `Last commit` and `Next` lines of the `## Now` section of `docs/STATE.md` before starting the next phase; never add a paragraph there (ADR-0018). The `Phase:` value reads `<N>: <label>`; the phase marker parser takes the first integer. The Stop hook requires STATE to reflect changed code and to keep the template shape, and the orchestrator is the one who knows the phase state.
 - All artifacts of the feature (CONTEXT, PLAN, SUMMARY, VERIFICATION, ADRs, commit messages, code comments) are written in English; the conversation with the user is in `PIPELINE_LANG` (printed by the SessionStart briefing) or, unset, in the user's language.
 
 - Pass to every agent: the feature name, the path to the feature directory, the plan step numbers, the gate mode, the requirement of a report in the protocol format, and its reading list (ADR-0018):

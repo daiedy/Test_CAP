@@ -2,11 +2,14 @@
  * Backlog in GitHub Issues (ADR-0019). Pure functions over `gh issue list` JSON plus the fetch
  * with a cache, used by scripts/backlog.mjs (CLI, the /backlog skill) and by the SessionStart hook
  * for the briefing. User-facing texts come from scripts/i18n/pipeline*.properties, selected by
- * PIPELINE_LANG; everything stored (issue bodies, docs) stays English.
+ * PIPELINE_LANG; everything stored (issue bodies, docs) stays English. The briefing also prints
+ * the last line of docs/metrics/history.jsonl (ADR-0022), rendered by pipeline-metrics.mjs; that
+ * module imports `t` from here, a cycle that is safe because neither side calls the other at load.
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { run, repoRoot, readSection, exists } from './hook-utils.mjs';
+import { run, repoRoot, readSection, exists, readJsonl } from './hook-utils.mjs';
+import { HISTORY_FILE, renderBriefingLine } from './pipeline-metrics.mjs';
 
 export const FEATURE_LABEL = 'feature';
 export const PRIOS = ['P1', 'P2', 'P3'];
@@ -203,6 +206,11 @@ export function debtCount(root = repoRoot()) {
     .filter((l) => /^\|/.test(l) && !/^\|\s*Item\s*\|/.test(l) && !/^\|\s*-+/.test(l)).length;
 }
 
+/** The last line of docs/metrics/history.jsonl, or null when the file is missing or empty. */
+export function lastHistoryLine(root = repoRoot()) {
+  return readJsonl(path.join(root, HISTORY_FILE)).at(-1) ?? null;
+}
+
 // ---------- rendering ----------
 
 function queueEntry(bundle, i) {
@@ -230,8 +238,21 @@ export function renderRecommendation(bundle, rec) {
   return t(bundle, `briefing.recommend.${rec.kind}`, number, prio);
 }
 
-/** The briefing block printed by the SessionStart hook and by `backlog.mjs briefing`. */
-export function renderBriefing({ lang, bundle, now, queue, rec, debt, source, fetchedAt }) {
+/**
+ * The briefing block printed by the SessionStart hook and by `backlog.mjs briefing`. The metrics
+ * line goes after the GitHub status line: `backlog.mjs list` prints line index 3.
+ */
+export function renderBriefing({
+  lang,
+  bundle,
+  now,
+  queue,
+  rec,
+  debt,
+  source,
+  fetchedAt,
+  metrics,
+}) {
   const tree = now.dirty
     ? t(bundle, 'briefing.tree.dirty', now.dirty)
     : t(bundle, 'briefing.tree.clean');
@@ -245,6 +266,7 @@ export function renderBriefing({ lang, bundle, now, queue, rec, debt, source, fe
     lines.push(t(bundle, 'briefing.github.cached', (fetchedAt || '').slice(0, 10)));
   if (source === 'none') lines.push(t(bundle, 'briefing.github.down'));
   else lines.push(renderQueueLine(bundle, queue), renderRecommendation(bundle, rec));
+  if (metrics) lines.push(renderBriefingLine(metrics, bundle));
   lines.push(t(bundle, 'briefing.debt', debt));
   return lines.join('\n');
 }
@@ -277,5 +299,6 @@ export function collectBriefing(root = repoRoot(), env = process.env) {
     debt: debtCount(root),
     source,
     fetchedAt,
+    metrics: lastHistoryLine(root),
   };
 }

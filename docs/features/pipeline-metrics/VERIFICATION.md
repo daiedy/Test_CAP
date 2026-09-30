@@ -317,3 +317,169 @@ None of these blocks criterion 27. F2, F3 and F6 change the figures that step 13
 ## Verdict
 
 Ready for review. Criterion 27 holds: the forked session `9be203c7-d642-4363-8948-bb5450d2d5fc` (`source: fork`, after `273c615`) logged `session` 1, `prompt` 6, `phase` 2, `agent-start` 3, `agent-stop` 2 (and `turn-end` 4). `node scripts/metrics.mjs session <id> --json` parses it (exit 0). Every live `agent-stop` joins an `agent-start` on the bare id, and no internal-agent record exists. The six findings go to review and to the decision before step 13; none of them is blocking.
+
+## Round 2
+
+Date: 2026-09-30. Agent: `test-backend`. Plan step 11e, phase 4 verification round 2, acceptance criteria 27 and 30-32 (30: D13 turn inputs, 31: D12 rework against the approved plan, 32: drift cut at `lastTs`). Fix round 1 is committed (`71c2976`). No hook changed since round 1, so no restart: the session under test is the same orchestrator session `9be203c7-d642-4363-8948-bb5450d2d5fc`, passed explicitly to every command. Only record `type`, `timestamp`, `uuid`, `origin.kind`, `attachment.type`, `attachment.origin.kind`, `commandMode` and whether `message.content` is a string are read; no text.
+
+Scratch scripts (in `/tmp`, not committed) import the project parser (`scripts/lib/transcript-usage.mjs`, `scripts/lib/pipeline-metrics.mjs`) only where the check is "the same rule on the same input"; the D13 count and the launch list read the raw JSONL independently.
+
+### R2-1. Turn inputs equal an independent count by `origin.kind` (criterion 30): pass
+
+```
+$ node scripts/metrics.mjs session 9be203c7-d642-4363-8948-bb5450d2d5fc --json > /tmp/claude-vr2-session.json; echo "exit=$?"
+exit=0
+prompts 7 | handbacks 25 | notifications 30 | reworkSource "plan" | planCommit "c10c4f0ac2654bf47c11ee0e91f4a7bea1251b64" | warnings [] | phaseSource "markers" | calls 521
+$ node /tmp/claude-vr2-d13.mjs <main transcript of 9be203c7> 2026-09-29T17:37:01.109Z   # uuid-deduped; user(string) by origin.kind, queued_command by attachment.origin.kind, else commandMode
+unique uuids 633 duplicate uuid lines skipped 0 isSidechain 0
+combos {"user(string) origin=-":3,"user(string) origin=human":7,"user(string) origin=peer":25,"qc origin=task-notification recOrigin=- mode=task-notification":20,"user(string) origin=task-notification":10}
+all      {"none":3,"human":7,"peer":25,"task-notification":30 (20 queued_command + 10 user)}
+preFork  {"none":3,"human":3,"peer":13,"task-notification":15 (12 queued_command + 3 user)}
+postFork {"human":4,"peer":12,"task-notification":15 (8 queued_command + 7 user)}
+$ node /tmp/claude-vr2-d13.mjs <main transcript of the parent 1b11fc6b>
+unique uuids 328 ... {"none":3,"human":3,"peer":13,"task-notification":15}
+$ node /tmp/claude-vr2-drift.mjs ...   # first line: the event log by kind
+log records 91 {"session":1,"prompt":31,"agent-start":16,"turn-end":22,"agent-stop":14,"phase":5,"gate":2}
+```
+
+| Count | CLI `session --json` | Independent count, whole file | Pre-fork copy (F5) | Parent `1b11fc6b` whole file | Post-fork |
+|---|---|---|---|---|---|
+| `prompts` (`human`) | 7 | 7 | 3 | 3 | 4 |
+| `handbacks` (`peer`) | 25 | 25 | 13 | 13 | 12 |
+| `notifications` (`task-notification`) | 30 | 30 | 15 | 15 | 15 |
+| no `origin` (not counted) | - | 3 | 3 | 3 | 0 |
+
+- The session scope reads the whole forked file, copied history included (F5, open debt), and the CLI equals the independent count over the whole file on all three figures. Like with like on the copy: the pre-fork part equals the parent's own file (3/13/15).
+- The 3 string `user` records without `origin` are counted by neither side (D13 "not counted").
+- No `queued_command` attachment carries `origin.kind` `human` or `peer` in this session; all 20 are `task-notification` in both `attachment.origin.kind` and `commandMode`.
+- Cross-check with the live hook: the 31 `prompt` event records (all after the fork, when the hook existed) equal the post-fork turn inputs 4 + 12 + 15 = 31. UserPromptSubmit fires once per turn input of any kind, which is why D13 no longer counts the events (F3), and the CLI no longer reads them (`prompts` 7, not 31).
+
+### R2-2. No `agent-stop-drift`; every live `agent-stop` equals its re-parse cut at `lastTs` (criterion 32): pass
+
+`warnings: []` on the session report (R2-1). Each live record was compared with the agent file re-parsed by the project parser (`readTranscript`, `requests`, `usageByModel`), once cut at the record's `lastTs` (the rule the report applies) and once in full:
+
+```
+$ node /tmp/claude-vr2-drift.mjs .pipeline/metrics-9be203c7-....jsonl <session dir>
+stop ts                  agent             agentType       start last  lastTs                    req live/cut/full  tokens live / cut / full           drift cut / full
+2026-09-29T17:40:57.532Z a73cd8b16c3527834 docs-keeper     true  true  2026-09-29T17:40:53.176Z  7/7/8        207719 / 207719 / 243870                 0.00% / 14.82%
+2026-09-29T17:46:57.341Z a66bf678b09121d7e cap-backend-dev true  true  2026-09-29T17:46:48.655Z  31/31/32     2992370 / 2992370 / 3132492              0.00% / 4.47%
+2026-09-29T18:52:01.105Z a4b01183c4c95fc09 test-backend    true  true  2026-09-29T18:51:46.746Z  63/63/64     5485890 / 5485890 / 5629204              0.00% / 2.55%
+2026-09-29T19:14:25.452Z a681308637609d94b cap-backend-dev true  false 2026-09-29T19:14:06.496Z  59/59/144    8689284 / 8689284 / 34092785             0.00% / 74.51%
+2026-09-29T22:56:13.906Z a03ef8f00e8372b1a architect       true  false 2026-09-29T22:56:07.053Z  9/9/27       478887 / 478887 / 2141255                0.00% / 77.64%
+2026-09-29T22:56:57.560Z a03ef8f00e8372b1a architect       true  false 2026-09-29T22:56:51.700Z  13/13/27     758106 / 758106 / 2141255                0.00% / 64.60%
+2026-09-29T23:03:34.325Z a681308637609d94b cap-backend-dev true  false 2026-09-29T23:03:23.486Z  105/105/144  21030140 / 21030140 / 34092785           0.00% / 38.31%
+2026-09-29T23:06:24.780Z a03ef8f00e8372b1a architect       true  true  2026-09-29T23:06:24.700Z  27/27/27     2141255 / 2141255 / 2141255              0.00% / 0.00%
+2026-09-29T23:11:00.018Z a681308637609d94b cap-backend-dev true  false 2026-09-29T23:10:50.268Z  133/133/144  30121422 / 30121422 / 34092785           0.00% / 11.65%
+2026-09-29T23:32:58.003Z afb6622aacd744453 test-backend    true  false 2026-09-29T23:32:45.973Z  52/52/64     10887265 / 10887265 / 14636406           0.00% / 25.62%
+2026-09-29T23:33:03.979Z afb6622aacd744453 test-backend    true  false 2026-09-29T23:33:02.552Z  54/54/64     11489483 / 11489483 / 14636406           0.00% / 21.50%
+2026-09-29T23:35:55.409Z a681308637609d94b cap-backend-dev true  true  2026-09-29T23:35:55.294Z  144/144/144  34092785 / 34092785 / 34092785           0.00% / 0.00%
+2026-09-29T23:38:32.283Z afb6622aacd744453 test-backend    true  false 2026-09-29T23:38:31.997Z  63/63/64     14313803 / 14313803 / 14636406           0.00% / 2.20%
+2026-09-29T23:38:39.277Z afb6622aacd744453 test-backend    true  true  2026-09-29T23:38:38.946Z  64/64/64     14636406 / 14636406 / 14636406           0.00% / 0.00%
+```
+
+- 14 live `agent-stop` records for 6 agents; every one has an `agent-start` on the bare id. The report compares the last stop per agent (`last true`, 6 rows); cut at `lastTs`, all 14 equal the re-parse in requests and tokens (0.00%).
+- The full-file column shows what the old comparison would have warned on: the F4 race (one request short, 2.5% to 14.8%) and, new in this round, the earlier stops of resumed agents (`a681...`, `a03e...`, `afb6...`), which are short by the whole later resume (up to 77.6%). The cut handles both.
+- Three last stops (`a03e...` 23:06:24, `a681...` 23:35:55, `afb6...` 23:38:39) are not one request short: `lastTs` is within 0.1-0.3 s of the stop, and the full file equals the live record. The race is not constant. Where the file was already complete, the cut changes nothing.
+
+### R2-3. Rework launches against the approved plan `c10c4f0` (criterion 31): pass
+
+```
+$ node scripts/metrics.mjs feature pipeline-metrics --json > /tmp/claude-vr2-feature.json; echo "exit=$?"
+exit=0
+reworkSource "plan" | planCommit "c10c4f0ac2654bf47c11ee0e91f4a7bea1251b64" | phaseSource "markers" | launches 12 | resumes 23 | reworkUSD 16.6523 | reworkShare 0.174
+agent rows: cap-backend-dev launches=4 reworkLaunches=1 reworkUSD=12.1447; architect launches=3 reworkLaunches=2 reworkUSD=4.0448; test-backend launches=4 reworkLaunches=1 reworkUSD=0.4628; docs-keeper launches=1 reworkLaunches=0
+$ node /tmp/claude-vr2-launches.mjs   # agent files of the report's 8 sessions (meta agentType, toolUseId), Agent tool_use ts from the main transcripts,
+                                      # phase markers of the feature (phaseMarkers), planAssignments(git show c10c4f0:PLAN.md), reworkOf
+markers 2026-09-29T17:47:37.200Z 5 | 2026-09-29T19:02:47.478Z 2 | 2026-09-29T23:39:09.735Z 4
+plan c10c4f0 {"architect":["1"],"cap-backend-dev":["2","3","4"],"test-backend":["2","3","5"],"docs-keeper":["4","7"],"reviewer":["6"]}
+```
+
+| # | Launch (Agent tool_use, UTC) | Session | Agent | Type | Phase at launch | Planned in `c10c4f0` | Rework |
+|---|---|---|---|---|---|---|---|
+| - | 09-28 23:57:05 | `d84a82c7` | no agent file | `claude-code-guide` | before first marker | - | no (not a thread, see below) |
+| - | 09-29 00:24:29 | `d84a82c7` | no agent file | `architect` | before first marker | - | no (not a thread) |
+| 1 | 09-29 01:44:35 | `1b11fc6b` | `aea1f448...` | `cap-backend-dev` | before first marker (home 2) | n/a | no |
+| 2 | 02:09:18 | `1b11fc6b` | `a56c6b78...` | `architect` | before first marker (home 1) | n/a | no |
+| 3 | 11:39:54 | `1b11fc6b` | `a3627842...` | `test-backend` | before first marker (home 2) | n/a | no |
+| 4 | 17:01:02 | `1b11fc6b` | `af71b644...` | `cap-backend-dev` | before first marker (home 2) | n/a | no |
+| 5 | 17:40:00 | `9be203c7` | `a66bf678...` | `cap-backend-dev` | before first marker (home 2) | n/a | no |
+| 6 | 17:40:11 | `9be203c7` | `a73cd8b1...` | `docs-keeper` | before first marker (home 6) | n/a | no |
+| 7 | 18:37:43 | `9be203c7` | `a4b01183...` | `test-backend` (step 11) | 5 | yes (5) | no |
+| 8 | 19:02:35 | `9be203c7` | `aa9d8972...` | `architect` | 5 | no | **yes** |
+| 9 | 19:02:44 | `9be203c7` | `a6813086...` | `cap-backend-dev` | 5 | no | **yes** |
+| 10 | 22:54:29 | `9be203c7` | `a03ef8f0...` | `architect` | 2 | no (only 1) | **yes** |
+| 11 | 23:11:11 | `9be203c7` | `afb6622a...` | `test-backend` | 2 | yes (2) | no |
+| 12 | 09-30 00:26:59 | `9be203c7` | `a2464f6c...` | `test-backend` (this step, 11e) | 4 | no (2, 3, 5) | **yes** |
+
+- 4 rework launches = the expected 3 of the first 12 (19:02:35, 19:02:44, 22:54) + 0 later `architect` launches in phase 2 (none happened after 22:54) + 1 for this step's `test-backend` in phase 4. The CLI's agent rows agree: `architect` 2, `cap-backend-dev` 1, `test-backend` 1 (its $0.46 is this run so far, the phase 4 `reworkUSD`).
+- The 4 `fork` threads of `1321a167` (09-29 00:32-00:34, branch `main`) are outside the feature scope and not in the table; the CLI's `launches` 12 excludes them too.
+- Count difference, not a flag difference: `research/definitions.md` D12 live counts "12 launches up to 22:54, 8 before the first marker" by `Agent` tool uses, which includes the two `d84a82c7` launches. That session has no session directory at all (`ls .../d84a82c7-.../subagents`: no such file or directory), so D9 (launches are agent threads) gives the CLI 10 launches up to 22:54 and 12 with this step. Both launches precede the first marker, so no rework flag changes. Their cost is outside every transcript and shows up in `unattributedUSD` and in R2-4.
+
+### R2-4. The feature report and its pricing self-check warnings: parses; the warnings are not a table error
+
+```
+$ node scripts/metrics.mjs feature pipeline-metrics --json   # R2-3, exit=0, 1.5 s
+sessionIds 8 | costUSD 95.7681 | costPartial false | costStateUSD 89.5506 | costStateProcesses 7 | recovered 0.7 | unattributedUSD 26.8206 | pricingOk false
+prompts 25 | handbacks 28 | notifications 34
+warnings ["pricing-check:claude-fable-5-1","pricing-check:claude-haiku-4-5-20251001"]
+pricingCheck {"claude-opus-5-5":{"costUSD":69.5544,"pricedUSD":69.9169,"share5m":0.848,"divergence":0.0052},
+              "claude-haiku-4-5-20251001":{"costUSD":0.4629,"pricedUSD":0.5135,"share5m":0,"divergence":0.1094},
+              "claude-fable-5-1":{"costUSD":69.8375,"pricedUSD":75.781,"share5m":0,"divergence":0.0851}}
+$ node /tmp/claude-vr2-pricing.mjs    # processesOf over the 8 sessions; per process: cost-state modelUsage priced with the table at all-5m and all-1h cache writes, and the 5m share that reproduces costUSD
+$ node /tmp/claude-vr2-pricing2.mjs   # the same, with the 5m/1h split of the process's own whole-session transcripts, and those transcripts' tokens
+```
+
+`pricingCheck()` sums the cost-state tokens of the processes' last records (whole, not apportioned) and prices their cache writes at the 5m/1h split of the feature-scoped transcript (`share5m`), then compares with the same records' `costUSD`. Per process (tokens: input / cache write / cache read / output):
+
+| Model | Process (session) | cost-state tokens | Whole-session transcript tokens | `costUSD` | Table, all 5m | Table, all 1h | Implied 5m share | Table at the session's own split |
+|---|---|---|---|---|---|---|---|---|
+| `claude-fable-5-1` | `1790641666617` (`1321a167`) | 53,239 / 921,673 / 35,468,043 / 329,787 | 3,322 / 822,421 (5m 269,863, 1h 552,558) / 27,613,769 / 127,710 | 41.5938 | 37.4097 | 44.3222 (+6.56%) | 0.395 | 42.0540 (+1.11%, share 0.328) |
+| `claude-fable-5-1` | `1790631844695` (`d84a82c7`) | 101,251 / 688,271 / 24,137,659 / 170,230 | 1,592 / 241,983 (all 1h) / 13,830,117 / 87,559 | 26.1088 | 24.1618 | 29.3238 (+12.31%) | 0.623 | 29.3238 (+12.31%, share 0) |
+| `claude-fable-5-1` | `1790643101956` (`ecb6d00e`) | 162 / 69,532 / 397,648 / 12,865 | identical | 2.1349 | 1.6134 | **2.1349 (0.00%)** | 0.000 | 2.1349 (0.00%) |
+| `claude-fable-5-1` | sum (the card) | | scope: 270,254 writes, all 1h (`share5m` 0) | 69.8375 | 63.1849 | 75.7810 (+8.51%) | 0.472 | |
+| `claude-haiku-4-5-20251001` | `1790646078927` (`1b11fc6b`) | 907 / 0 / 0 / 16 | none | 0.0010 | 0.0010 | 0.0010 | - | 0.0010 (0.00%) |
+| `claude-haiku-4-5-20251001` | `1790631844695` (`d84a82c7`) | 144,170 / 80,835 / 650,162 / 20,391 | none | 0.4222 | 0.4122 | 0.4728 (+11.98%) | 0.835 | 0.4122 (-2.37%, no writes: all 5m) |
+| `claude-haiku-4-5-20251001` | `1790645541750` (`265a4208`) | 18 / 17,294 / 44,528 / 125 | identical | 0.0397 | 0.0267 | **0.0397 (0.00%)** | 0.000 | 0.0397 (0.00%) |
+| `claude-haiku-4-5-20251001` | sum (the card) | | scope: 17,294 writes, all 1h (`share5m` 0) | 0.4629 | 0.4399 | 0.5135 (+10.94%) | 0.688 | |
+
+Cause, per the three candidates:
+
+- **Not the table.** Where cost-state and the transcript hold the same tokens (`ecb6d00e` fable, `265a4208` and `1b11fc6b` haiku), the table reproduces `costUSD` to the cent. For every other process, `costUSD` lies between the all-5m and the all-1h price (implied 5m share 0.395, 0.623, 0.835, all within 0-1). A wrong price would put it outside that interval.
+- **Not the process apportioning.** The check does not apportion: `processShare()` scales only `costStateUSD`, and `pricingCheck()` prices and compares the same whole-process records.
+- **Cost-state includes usage outside the transcripts, priced at the wrong cache split.** `d84a82c7`'s cost-state holds 64x the fable input, 2.8x the cache writes and 1.7x the cache reads of its transcript, and all its haiku usage. Its two `Agent` launches have no agent transcript (R2-3), and the other auxiliary calls are not in any transcript either. `1321a167` holds 16x the input and 2.6x the output of its transcript. The check prices those tokens at the feature scope's split (fable and haiku: all 1h, `share5m` 0), while the implied splits show that 40-84% of the process writes were 5m. A second, smaller part is the scope cut: `1321a167`'s whole session writes 33% at 5m, but its feature-scoped records only at 1h. At its own split the process diverges +1.11% instead of +6.56%.
+- `claude-opus-5-5` passes (0.52%) only because the scope's split (0.848) happens to be close to the implied one (0.869).
+
+Finding R2-F7 (important, not blocking criteria 27 and 30-32): the pricing self-check raises `pricing-check` for two models whose table prices are exact, so `pricingOk: false` and both warnings will stand on this feature's `## Cost` card at step 13 (`record` refuses only on `unknown-model`, so step 13 is not blocked). The check cannot tell a wrong price from an unknown 5m/1h split of tokens that no transcript holds. Directions for `architect` (definitions section 5) and `cap-backend-dev`, not decided here: warn only when no split in 0-1 reproduces a process's `costUSD` within the tolerance (the implied-share test above, which is exact at 0 or 1 for the fully transcribed processes), or run the check only on processes whose cost-state tokens do not exceed their transcripts'. The table was not changed.
+
+### R2-5. Round 1 findings F2, F3, F4, F6
+
+| # | Status | Evidence |
+|---|---|---|
+| F2 | resolved | `scripts/lib/model-pricing.json` has `claude-sonnet-5-5` (input 2, cacheWrite5m 2.5, cacheWrite1h 4, cacheRead 0.2, output 10). The feature report shows `byModel["claude-sonnet-5-5"].costUSD` 0.1383, the `docs-keeper` row $0.1383 and phase 6 $0.1383 (round 1: $0.00), with no `unknown-model` warning. `threadOf()` now carries `costUSD: cost.costUSD` with `costPartial` (line 498), not `?? 0`, and `sumCost()` returns `null` when only unpriced parts exist. The Sonnet 5.5 price was not re-checked against the published list in this step. |
+| F3 | resolved | R2-1: `prompts`/`handbacks`/`notifications` 7/25/30 from the transcript by `origin.kind` equal the independent count. The 31 `prompt` event records (= 4 + 12 + 15 post-fork turn inputs) are no longer counted. |
+| F4 | resolved | R2-2: all 14 live `agent-stop` records equal the re-parse cut at `lastTs` (0.00%), and `warnings: []`. Round 1 had `agent-stop-drift` on both agents at 4.47% and 14.82%, the same two stops that now show 0.00% at the cut. |
+| F6 | resolved (by the 2026-09-30 decision; residual stated in PLAN Risks) | The markers from 19:02:47 use the skill's numbers (`5` 17:47:37 → `2` 19:02:47 → `4` 23:39:09). STATE reads `Phase: 4: verification (round 2, plan step 11e; ...)`, which parses to `4` (`11e` is not matched: the digit rule excludes adjacent digits). `8: completion` cannot recur (skill phases 0-7). Step 11's `test-backend` under the old marker `5` is planned against `c10c4f0` (R2-3 row 7). The residual is intended: this step's launch is rework (row 12) because the approved plan numbers verification 5. `SUMMARY.md` states it at step 13. |
+
+F1 (nothing reads `agent-start`) and F5 (a forked session's card counts the copied history) stay open, as listed in `docs/STATE.md`. R2-1 shows F5 in numbers: 3/13/15 of the session's 7/25/30 turn inputs are the parent's copies.
+
+### Automated tests
+
+Run to record the committed state `71c2976`; this step changed no code or test.
+
+```
+$ npm test
+ Test Files  10 passed (10)
+      Tests  130 passed (130)
+   Duration  40.39s
+```
+
+### Round 2 findings
+
+| # | Severity | Finding | Evidence | For |
+|---|---|---|---|---|
+| R2-F7 | important | The pricing self-check flags `claude-fable-5-1` (8.51%) and `claude-haiku-4-5-20251001` (10.94%), although the table is exact: it prices cost-state tokens outside any transcript at the feature scope's 5m/1h split (all 1h), so `pricingOk: false` on this feature's card | R2-4: fully transcribed processes 0.00%; others between the all-5m and all-1h prices (implied 5m share 0.395, 0.623, 0.835) | architect (definitions section 5 rule), then cap-backend-dev |
+| R2-F8 | minor | `research/definitions.md` D12 live counts launches by `Agent` tool uses ("12 up to 22:54, 8 before the first marker"), while the CLI counts agent threads (D9): 10 up to 22:54, 12 with step 11e. The difference is the 2 `d84a82c7` launches, whose session has no directory. No rework flag differs | R2-3 | architect (wording), docs-keeper at step 13 (`SUMMARY.md` quotes the CLI's figure) |
+
+## Round 2 verdict
+
+Ready for review. On the live session `9be203c7-d642-4363-8948-bb5450d2d5fc`: criterion 27 still holds (the log holds `session` 1, `prompt` 31, `phase` 5, `agent-start` 16, `agent-stop` 14; `session --json` exit 0). Criterion 30 holds: 7/25/30 equals the independent `origin.kind` count. Criterion 31 holds: `reworkSource: "plan"`, `planCommit` `c10c4f0`, 4 rework launches as expected (3 of the first 12 by D12's count plus this step). Criterion 32 holds: no `agent-stop-drift`, and all 14 stops equal the cut re-parse. F2, F3, F4 and F6 are resolved. R2-F7 is a false positive of the pricing warning, not a defect in any figure the card computes. It needs a decision before step 13 writes the `## Cost` card, but it is not blocking. R2-F8 is wording.

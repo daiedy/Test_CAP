@@ -3,3 +3,4 @@
 - [Metrics CLI offline](project-metrics-cli-offline.md) — CLAUDE_CONFIG_DIR fixture + empty GH_CONFIG_DIR, no token: gh fails fast, no network; `--history` temp file
 - [Claude Code hook runtime](project-claude-code-hook-runtime.md) — hot reload, fork copies, SubagentStop flush race, what fires UserPromptSubmit (2.1.284)
 - [Proving a test red](project-contract-test-red-proof.md) — scratchpad copy: EDMX grep -c red/green proof; per-rule mutations for pure-function tests; rm by literal path
+- [Pricing-check diagnosis](project-pricing-check-diagnosis.md) — per-process all-5m/all-1h interval test tells a wrong price from a cache-split artefact; prompt events = D13 sum

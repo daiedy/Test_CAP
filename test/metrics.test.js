@@ -504,6 +504,18 @@ describe('pipeline metrics (ADR-0022)', () => {
     expect(renderReconcile(sharedRec, bundle)).toContain(
       'Total: transcript n/a of cost-state -, recovered -;'
     );
+    // The card says why the figure is missing (share unknown), not that no record exists.
+    const sharedCard = renderCard(shared, bundle);
+    expect(sharedCard).toContain(
+      '(cost-state n/a: its share of this scope is unknown, no model is priced)'
+    );
+    expect(sharedCard).not.toContain('(no cost-state record)');
+    // Feature scope: every record with a gitBranch is on feature/fixture-unpriced (the cost-state
+    // record has none, so `complete` ignores it), the process lies wholly in scope: share 1.
+    const kFeature = featureReport([k], 'fixture-unpriced', { pricing });
+    expect(kFeature).toMatchObject({ costUSD: null, costStateUSD: U.unpricedCostStateUSD });
+    expect(kFeature.warnings.filter((w) => w.startsWith('cost-state-share-unknown'))).toEqual([]);
+    expect(renderCard(kFeature, bundle)).not.toContain('(no cost-state record)');
 
     // `record` refuses a partial line; --force writes it, marked `costPartial: true`.
     const file = path.join(home, 'history-unknown.jsonl');

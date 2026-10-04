@@ -87,3 +87,50 @@ EXIT 0
 ## Verdict
 
 ready to commit. There are no blocking findings. Three findings are Important: the R2-F7 interval rule, the D4 partial line in `compare`, and the `internalAgent` shape. Each changes figures that step 13 commits (`## Cost` card, the `history.jsonl` line, `gateBlocks`), so they belong in the planned fix batch before step 13. There are 8 Minor findings; they can go into that batch or into STATE open debt.
+
+## Re-review 2026-10-04
+
+Scope: only the items fixed in commit `127be1f` (plan step 12 fix batch). The rest of the feature is not re-reviewed. The original findings above stay as written so `reviewCounts()` keeps counting them (0 blocking, 3 important, 8 minor). The status of each item and the new issues live in this section only, under `###` headings that `reviewCounts()` does not read.
+
+### Status per item
+
+- Important 1 (R2-F7, pricing interval): fixed. `scripts/lib/pipeline-metrics.mjs:434` `intervalDivergence` (below: relative to `low`, above: relative to `high`, 0 inside, 1 for a zero price against a non-zero cost), `:449` `pricingCheck(processes, pricing)` returns `{ costUSD, lowUSD, highUSD, divergence }`, `null`s for an unpriced model. Warning at `:772-775` (`divergence == null` gives `unknown-model`, above `PRICING_TOLERANCE` gives `pricing-check`); `reconcileSession` uses the same call at `:1165`. `divergence > 0.05` equals the decided rule `costUSD < low × 0.95` or `> high × 1.05`. The transcript share, `pricedUSD`, `share5m` and `byModelTokens` are gone (grep finds no reader left in `scripts/`; `pricedUSD` survives only as an unrelated fixture constant `EXPECTED.unknown.pricedUSD`). Definitions section 5 states the interval, the formula and the blind spot ("#7 opus: about 16% of its cost"); PLAN criterion 6 is reworded. Live check on this feature: `warnings` is `[]`, every model has `divergence: 0` (`claude-fable-5-1` 69.84 in [63.18, 75.78], `claude-haiku-4-5-20251001` 0.4629 in [0.4399, 0.5135], the two models flagged before).
+- Test data change (e-drift opus `costUSD` 2.1428 to 2.4728): accepted. Under the interval rule 2.1428 lies inside [1.648, 2.248], so the old value would give divergence 0 and the drift test would assert nothing. 2.4728 = 2.248 × 1.1 keeps the "10% off" meaning against the high edge, `totalCostUSD` moves with it (2.4728 + 0.052 = 2.5248, `test/fixtures/transcript-fixture.mjs:320`), and the expected divergence 0.2248 / 2.248 = 0.1 is exact. The inside case is tested separately (the base fixture 1.948 and the 2.0 variant give 0), and the edges at `test/metrics.test.js:592-614` check by hand: 2.36 gives 0.112 / 2.248 = 0.0498 with no warning (high × 1.05 = 2.3604), 2.37 gives 0.0543 with a warning, 1.5 gives 0.148 / 1.648 = 0.0898 with a warning.
+- Important 2 (D4 partial line in `compare` and the briefing): fixed. `compareLines` carries `costPartial` and `costComparable` (`pipeline-metrics.mjs:1077`), so `dCostUSD` is `null` for a partial line and for the line after it. `renderCompare` prints `fmtCost` and `n/a` (`:1381`), and `renderBriefingLine` prints `fmtCost` (`:1393`). Test at `test/metrics.test.js:1003` (`≥$12.50 | n/a` for the partial line, `$11.00 | n/a` for the next one, `dActiveMin` kept). The briefing has no unit test, but a probe of `renderBriefingLine` gives `cost ≥$12.50` with `costPartial: true` and `cost $12.50` without it. data-flow sections 4 and 6 are amended.
+- Important 3 (`internalAgent` shape): fixed. `scripts/lib/metrics-log.mjs:75-77`: `p ? !exists(p) : !input?.agent_type` matches the restated data-flow section 2 rule: internal when the path is given and has no file, or when there is neither a type nor a file. A typed agent without the path field is still metered. Test: the typed case `agent_type: 'claude'` with a missing path (`test/hooks-metrics.test.js:385-395`) exits 2 and appends no record. See new issue 1 for a stale comment.
+- Minor 1 (`featureRecords` `complete`, card text): code fixed, test missing (new issue 2). `branchRecords` (`pipeline-metrics.mjs:350, 361`) counts only records with a `gitBranch`; key `metrics.card.costState.shareUnknown` in `pipeline.properties:37` and `pipeline_ru.properties:34`, selected at `:1310` when `costStateProcesses > 0`. A probe gives `complete: true` for an on-branch record plus a cost-state record, and `false` with one off-branch record. A record with a `ts` but no `gitBranch` outside every prompt window is cut without making the scope incomplete. Definitions section 5 states this ("other records without `gitBranch` never make a scope incomplete"), so it is not a finding.
+- Minor 2 (`agent-start` without a consumer): fixed. data-flow section 2, `subagent-start.mjs` row: "Kept for later use", naming the cross-check `resumes` = `agent-start` count − 1.
+- Minor 3 (`slim()` sentinel): fixed. `test/metrics.test.js:1279-1356` seeds `SENTINEL-7f3a` into thinking, signature, text, `Agent` `prompt`/`description`, `SendMessage` `message`, `Bash` `command`, string user content, `tool_result` content, `toolUseResult`, the system `content`, `hookErrors` and `attachment.prompt`, and asserts that it is absent from every slimmed record and that the kept names, ids and enums are present. One field is left out: `origin` carries only `kind` and no `body`. `slim()` reads only `origin.kind` (`transcript-usage.mjs:154,157`), so this is a gap in the test, not a defect, and is not counted as a finding.
+- Minor 4 (`user-prompt.mjs` header): fixed. `scripts/hooks/user-prompt.mjs:1-11`: "marks `/spec` and `/feature` commands … counts nothing (D13 …)".
+- Minor 5 (`arg` for every command): fixed. `user-prompt.mjs:19,26` (`FEATURE_COMMANDS`); `test/hooks-metrics.test.js:201` expects `/backlog #12 prio P1` to give `{ command: 'backlog' }`; data-flow section 2 and PLAN criterion 23 are reworded.
+- Minor 8 (import cycle): fixed. `grep -rn "backlog.mjs" scripts/lib/pipeline-metrics.mjs` finds nothing (exit 1). The only definitions of `pickLang`, `readLocalSettings`, `loadBundle` and `t` are in `scripts/lib/i18n.mjs:19,31,61,77`, so no second i18n loader exists. `backlog.mjs:14` imports them and `:16` re-exports them for existing importers (`test/metrics.test.js:54` still imports `loadBundle` through the re-export, which is fine). `i18n.mjs` imports only `hook-utils.mjs`.
+- Minor 6 (STATE F5 row) and Minor 7 (`/feature` skill STATE-edit rule): scheduled for docs-keeper in step 13, not counted as open here.
+
+### New issues
+
+1. Minor. `scripts/hooks/subagent-stop.mjs:11`: the header still states the old rule, "A Claude Code internal agent (`internalAgent`: empty agent_type and no transcript file)". Since `127be1f` that is one of the two shapes, and a typed agent with a given path that has no file is internal too. Fix: reword it to "(`internalAgent`: a given `agent_transcript_path` without a file, or neither a type nor a file; data-flow section 2)". The path is protected, so the change needs `PIPELINE_ALLOW_PROTECTED=1` like the fix batch. Owner: cap-backend-dev, or docs-keeper in step 13.
+2. Minor. `test/metrics.test.js:468-505` against `pipeline-metrics.mjs:350,1310`: the test that the original Minor 1 asked of test-backend ("a feature-scope variant of `k-unpriced`") was not added. `grep -n "shareUnknown\|share of this scope" test/*.js` gives 0 hits. The `shared` report at `:499` is exactly the `shareUnknown` case (`costStateUSD: null` with a cost-state process), but its card is never rendered. No test pins `complete: true` for a feature scope that holds a `cost-state` record. Reverting `branchRecords` or `csNone` would leave the card text silently wrong again. Behaviour today is correct (probe above). Fix (test-backend): assert `renderCard(shared, bundle)` contains `(cost-state n/a: its share of this scope is unknown`, and add one `featureReport` over `k-unpriced` (records on the fixture branch plus its cost-state record) expecting `costStateUSD` equal to the session total (share 1) and `metrics.card.costState.none` absent.
+
+### Checks (fresh output)
+
+Run once in one background shell call on 2026-10-04 at HEAD `127be1f` (working tree: only the uncommitted `docs/STATE.md`):
+
+```
+npm test
+ Test Files  10 passed (10)
+      Tests  130 passed (130)
+exit 0
+npx eslint scripts test
+exit 0
+npx prettier --check scripts test
+Checking formatting...
+All matched files use Prettier code style!
+exit 0
+PIPELINE_LANG=en node scripts/metrics.mjs feature pipeline-metrics --json | node -e "...console.log(j.warnings, JSON.stringify(j.pricingCheck))"
+[] {"claude-opus-5-5":{"costUSD":121.2,"lowUSD":117.8831,"highUSD":143.6673,"divergence":0},"claude-haiku-4-5-20251001":{"costUSD":0.4629,"lowUSD":0.4399,"highUSD":0.5135,"divergence":0},"claude-sonnet-5-5":{"costUSD":0.1818,"lowUSD":0.1818,"highUSD":0.2352,"divergence":0},"claude-fable-5-1":{"costUSD":69.8375,"lowUSD":63.1849,"highUSD":75.781,"divergence":0}}
+exit 0
+```
+
+### Re-review verdict
+
+ready to commit. There are zero blocking findings, and all three Important items are fixed and verified. Minors 1-5 and 8 are fixed; Minor 1's test is missing (new issue 2). The two new issues are Minor (a stale hook comment and a missing test). Neither changes a figure that step 13 commits, so they can go into step 13 or STATE open debt.

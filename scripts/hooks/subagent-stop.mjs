@@ -8,8 +8,9 @@
  * Generated files (docs/registry/**) are not audited as protected writes; their gate is freshness (ADR-0017).
  * Metrics (ADR-0022): before any check, the agent's transcript aggregate is appended as `agent-stop`
  * (so a blocked stop still records); every exit 2 appends `{ event: 'gate', reason }`. A Claude Code
- * internal agent (`internalAgent`: empty agent_type and no transcript file) gets the same checks but
- * no metrics record.
+ * internal agent (`internalAgent`: an `agent_transcript_path` is given but no file exists there, or
+ * neither an `agent_type` nor a transcript file exists; pipeline-metrics research/data-flow.md
+ * section 2) records no `agent-stop` and no `gate`; its checks and exit codes are unchanged.
  */
 import path from 'node:path';
 import fs from 'node:fs';

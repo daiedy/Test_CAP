@@ -45,14 +45,8 @@ import {
   featureNameOf,
   HISTORY_FILE,
 } from './lib/pipeline-metrics.mjs';
-import {
-  pickLang,
-  readLocalSettings,
-  loadBundle,
-  t,
-  fetchIssues,
-  readIssuesCache,
-} from './lib/backlog.mjs';
+import { pickLang, readLocalSettings, loadBundle, t } from './lib/i18n.mjs';
+import { fetchIssues, readIssuesCache } from './lib/backlog.mjs';
 
 const root = repoRoot();
 const pricing = loadPricing(root);

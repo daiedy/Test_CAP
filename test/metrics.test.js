@@ -11,6 +11,8 @@ import {
   readJsonl,
   projectDir,
   loadSession,
+  costState,
+  slim,
   requests,
   scopeThreads,
   usageByModel,
@@ -533,9 +535,16 @@ describe('pipeline metrics (ADR-0022)', () => {
       unattributedUSD: E.unattributedUSD,
       pricingOk: true,
     });
-    expect(report.pricingCheck[OPUS]).toMatchObject({ pricedUSD: E.opusPricedUSD, divergence: 0 });
-    expect(report.pricingCheck[SONNET]).toMatchObject({
-      pricedUSD: E.sonnetPricedUSD,
+    expect(report.pricingCheck[OPUS]).toEqual({
+      costUSD: 1.948,
+      lowUSD: E.opusLowUSD,
+      highUSD: E.opusHighUSD,
+      divergence: 0,
+    });
+    expect(report.pricingCheck[SONNET]).toEqual({
+      costUSD: 0.052,
+      lowUSD: E.sonnetLowUSD,
+      highUSD: E.sonnetHighUSD,
       divergence: 0,
     });
     expect(report.warnings).toEqual([]);
@@ -559,19 +568,50 @@ describe('pipeline metrics (ADR-0022)', () => {
       ratio: 0.5,
     });
 
-    // cost-state's costUSD 10% above its priced tokens: a pricing warning on the card.
+    // cost-state's costUSD 10% above the high end of its interval: a pricing warning on the card.
     const e = load('e-drift');
     const drift = sessionReport(e, { pricing });
     expect(drift.pricingOk).toBe(false);
     expect(drift.warnings).toEqual([`pricing-check:${OPUS}`]);
+    expect(drift.pricingCheck[OPUS]).toEqual({
+      costUSD: E.driftOpusCostUSD,
+      lowUSD: E.opusLowUSD,
+      highUSD: E.opusHighUSD,
+      divergence: E.driftOpusDivergence,
+    });
     expect(drift.pricingCheck[OPUS].divergence).toBeGreaterThan(PRICING_TOLERANCE);
-    expect(drift.pricingCheck[OPUS].divergence).toBeGreaterThanOrEqual(0.09);
-    expect(drift.pricingCheck[OPUS].divergence).toBeLessThanOrEqual(0.1);
     expect(drift.pricingCheck[SONNET].divergence).toBe(0);
     expect(renderCard(drift, bundle)).toContain(
       `WARNING pricing check off by more than 5%: ${OPUS}`
     );
     expect(reconcileSession(e, pricing).pricingOk).toBe(false);
+
+    // The interval edges on e-drift's tokens, only its opus costUSD changed (low 1.648, high 2.248):
+    // 2.0 inside -> 0; 2.36 below high * 1.05 = 2.3604 -> 0.112 / 2.248 = 0.0498, no warning;
+    // 2.37 just above -> 0.122 / 2.248 = 0.0543, a warning; 1.5 below low -> 0.148 / 1.648 = 0.0898.
+    const withOpusCost = (costUSD) => {
+      const variant = structuredClone(e);
+      const [last] = costState(variant.main);
+      last.modelUsage[OPUS].costUSD = costUSD;
+      last.totalCostUSD = costUSD + 0.052;
+      return sessionReport(variant, { pricing });
+    };
+    for (const [costUSD, divergence, warns] of [
+      [2, 0, false],
+      [2.36, 0.0498, false],
+      [2.37, 0.0543, true],
+      [1.5, 0.0898, true],
+    ]) {
+      const r = withOpusCost(costUSD);
+      expect(r.pricingCheck[OPUS], String(costUSD)).toEqual({
+        costUSD,
+        lowUSD: E.opusLowUSD,
+        highUSD: E.opusHighUSD,
+        divergence,
+      });
+      expect(r.pricingOk, String(costUSD)).toBe(!warns);
+      expect(r.warnings, String(costUSD)).toEqual(warns ? [`pricing-check:${OPUS}`] : []);
+    }
 
     // One process writing into two sessions: its last, larger total once, never the sum.
     const a = load('a-main');
@@ -957,6 +997,27 @@ describe('pipeline metrics (ADR-0022)', () => {
     expect(betaRows[2]).toContain('+$2.50');
     const json = JSON.parse(cli(['compare', '--history', file, '--json']).stdout);
     expect(json.map((r) => r.dCostUSD)).toEqual([null, 2.5, -1.5]);
+
+    // D4: a `record --force` line is a lower bound: its cost prints with `≥`, and neither it nor
+    // the next line gets a cost delta (n/a), while the other deltas stay.
+    const partialRows = compareLines([lines[0], { ...lines[1], costPartial: true }, lines[2]]);
+    expect(partialRows[1]).toMatchObject({
+      feature: 'beta',
+      costPartial: true,
+      dCostUSD: null,
+      costComparable: false,
+      dActiveMin: -10,
+    });
+    expect(partialRows[2]).toMatchObject({
+      feature: 'gamma',
+      costPartial: false,
+      dCostUSD: null,
+      costComparable: false,
+      dActiveMin: 30,
+    });
+    const partialTable = renderCompare(partialRows, bundle).split('\n');
+    expect(partialTable[3]).toContain('| beta (#6) | 2026-09-25 | ≥$12.50 | n/a |');
+    expect(partialTable[4]).toContain('| gamma | 2026-09-29 | $11.00 | n/a |');
   });
 
   it('counts prompts, hand-backs and notifications from the transcript', () => {
@@ -1212,5 +1273,87 @@ describe('pipeline metrics (ADR-0022)', () => {
         ).toEqual([]);
       for (const v of strings(e)) expect(v.length).toBeLessThanOrEqual(80);
     }
+
+    // slim() keeps none of a transcript's text (definitions section 1): message text, thinking,
+    // tool input and output, hook error text; a sentinel in each of them never survives.
+    const SENTINEL = 'SENTINEL-7f3a';
+    const timestamp = '2026-09-29T10:00:00.000Z';
+    const raw = [
+      {
+        type: 'assistant',
+        uuid: 's-a1',
+        requestId: 's-r1',
+        timestamp,
+        message: {
+          model: OPUS,
+          usage: { input_tokens: 1, output_tokens: 2 },
+          content: [
+            { type: 'thinking', thinking: SENTINEL, signature: SENTINEL },
+            { type: 'text', text: SENTINEL },
+            {
+              type: 'tool_use',
+              id: 'toolu_s1',
+              name: 'Agent',
+              input: { subagent_type: 'reviewer', description: SENTINEL, prompt: SENTINEL },
+            },
+            {
+              type: 'tool_use',
+              id: 'toolu_s2',
+              name: 'SendMessage',
+              input: { to: 'reviewer', message: SENTINEL },
+            },
+            { type: 'tool_use', id: 'toolu_s3', name: 'Bash', input: { command: SENTINEL } },
+          ],
+        },
+      },
+      {
+        type: 'user',
+        uuid: 's-u1',
+        timestamp,
+        origin: { kind: 'human' },
+        message: { role: 'user', content: SENTINEL },
+      },
+      {
+        type: 'user',
+        uuid: 's-u2',
+        timestamp,
+        message: {
+          role: 'user',
+          content: [{ type: 'tool_result', tool_use_id: 'toolu_s3', content: SENTINEL }],
+        },
+        toolUseResult: { stdout: SENTINEL, stderr: SENTINEL },
+      },
+      {
+        type: 'system',
+        subtype: 'stop_hook_summary',
+        uuid: 's-s1',
+        timestamp,
+        content: SENTINEL,
+        hookErrors: [{ error: SENTINEL }],
+      },
+      {
+        type: 'attachment',
+        uuid: 's-q1',
+        timestamp,
+        attachment: { type: 'queued_command', prompt: SENTINEL, commandMode: 'task-notification' },
+      },
+    ];
+    const slimmed = raw.map(slim);
+    for (const r of slimmed) expect(JSON.stringify(r), r.uuid).not.toContain(SENTINEL);
+    // What stays: names, ids and enums only.
+    expect(slimmed[0]).toMatchObject({
+      type: 'assistant',
+      model: OPUS,
+      tools: [
+        { name: 'Agent', id: 'toolu_s1', subagentType: 'reviewer' },
+        { name: 'SendMessage', to: 'reviewer' },
+        { name: 'Bash' },
+      ],
+      lastTool: 'Bash',
+    });
+    expect(slimmed[1]).toMatchObject({ type: 'user', toolResult: false, input: 'human' });
+    expect(slimmed[2]).toMatchObject({ type: 'user', toolResult: true });
+    expect(slimmed[3]).toMatchObject({ subtype: 'stop_hook_summary', stopHookBlocked: true });
+    expect(slimmed[4]).toMatchObject({ type: 'attachment', input: 'task-notification' });
   });
 });

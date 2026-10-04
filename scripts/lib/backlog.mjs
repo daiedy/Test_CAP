@@ -2,14 +2,18 @@
  * Backlog in GitHub Issues (ADR-0019). Pure functions over `gh issue list` JSON plus the fetch
  * with a cache, used by scripts/backlog.mjs (CLI, the /backlog skill) and by the SessionStart hook
  * for the briefing. User-facing texts come from scripts/i18n/pipeline*.properties, selected by
- * PIPELINE_LANG; everything stored (issue bodies, docs) stays English. The briefing also prints
- * the last line of docs/metrics/history.jsonl (ADR-0022), rendered by pipeline-metrics.mjs; that
- * module imports `t` from here, a cycle that is safe because neither side calls the other at load.
+ * PIPELINE_LANG (loaded by i18n.mjs, re-exported here for the existing importers); everything
+ * stored (issue bodies, docs) stays English. The briefing also prints the last line of
+ * docs/metrics/history.jsonl (ADR-0022), rendered by pipeline-metrics.mjs, which takes its texts
+ * from i18n.mjs and does not import this module.
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { run, repoRoot, readSection, exists, readJsonl } from './hook-utils.mjs';
+import { run, repoRoot, readSection, readJsonl } from './hook-utils.mjs';
 import { HISTORY_FILE, renderBriefingLine } from './pipeline-metrics.mjs';
+import { pickLang, readLocalSettings, loadBundle, t } from './i18n.mjs';
+
+export { DEFAULT_LANG, pickLang, readLocalSettings, loadBundle, t } from './i18n.mjs';
 
 export const FEATURE_LABEL = 'feature';
 export const PRIOS = ['P1', 'P2', 'P3'];
@@ -28,51 +32,6 @@ export const LABELS = [
   { name: 'in-progress', color: '5319E7', description: 'Feature branch in work' },
 ];
 export const CACHE_FILE = '.pipeline/issues.json';
-export const DEFAULT_LANG = 'en';
-
-// ---------- language and texts ----------
-
-/** PIPELINE_LANG from the environment, else from .claude/settings.local.json `env`, else 'en'. */
-export function pickLang(env = process.env, settings = null) {
-  const fromEnv = (env.PIPELINE_LANG || '').trim().toLowerCase();
-  if (fromEnv) return fromEnv;
-  const fromSettings = (settings?.env?.PIPELINE_LANG || '').trim().toLowerCase();
-  return fromSettings || DEFAULT_LANG;
-}
-
-export function readLocalSettings(root = repoRoot()) {
-  try {
-    return JSON.parse(fs.readFileSync(path.join(root, '.claude', 'settings.local.json'), 'utf8'));
-  } catch {
-    return null;
-  }
-}
-
-function parseProperties(text) {
-  const out = {};
-  for (const line of text.split('\n')) {
-    if (!line.trim() || line.startsWith('#')) continue;
-    const i = line.indexOf('=');
-    if (i < 0) continue;
-    out[line.slice(0, i).trim()] = line.slice(i + 1).trim();
-  }
-  return out;
-}
-
-/** Base bundle overlaid with pipeline_<lang>.properties when it exists. */
-export function loadBundle(lang = DEFAULT_LANG, root = repoRoot()) {
-  const dir = path.join(root, 'scripts', 'i18n');
-  const base = parseProperties(fs.readFileSync(path.join(dir, 'pipeline.properties'), 'utf8'));
-  const file = path.join(dir, `pipeline_${lang}.properties`);
-  if (lang !== DEFAULT_LANG && exists(file))
-    return { ...base, ...parseProperties(fs.readFileSync(file, 'utf8')) };
-  return base;
-}
-
-export function t(bundle, key, ...args) {
-  const text = bundle[key] ?? key;
-  return text.replace(/\{(\d+)\}/g, (_, i) => String(args[Number(i)] ?? ''));
-}
 
 // ---------- issues ----------
 

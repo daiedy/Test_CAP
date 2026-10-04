@@ -282,7 +282,8 @@ const cTime = {
 
 // D4 and the pricing self-check: two requests ($1.648 opus + $0.152 sonnet = $1.80) and one
 // process with two snapshots. `d-cost`: the last snapshot's tokens priced with the table equal its
-// costUSD ($2.00, recovered 0.90); `e-drift`: the opus costUSD is 10% above its priced tokens.
+// costUSD ($2.00, recovered 0.90); `e-drift`: the opus costUSD is 10% above the high end of its
+// pricing interval (every cache write at the 1h price, definitions section 5).
 const COST = 'feature/fixture-cost';
 function costSession(id, prefix, startTime, opusCostUSD, totalCostUSD) {
   const t = thread(2, COST);
@@ -316,7 +317,7 @@ function costSession(id, prefix, startTime, opusCostUSD, totalCostUSD) {
   };
 }
 const dCost = costSession('d-cost', 'd', 1_788_100_000_000, 1.948, 2);
-const eDrift = costSession('e-drift', 'e', 1_788_200_000_000, 2.1428, 2.1948);
+const eDrift = costSession('e-drift', 'e', 1_788_200_000_000, 2.4728, 2.5248);
 
 // D4: a model missing from the price table next to a priced one ($0.10).
 const f = thread(3, 'feature/fixture-unknown');
@@ -732,14 +733,19 @@ export const EXPECTED = {
     costStateUSD: 2, // the last snapshot, not 1 + 2
     recovered: 0.9,
     unattributedUSD: 0.2,
-    // Pricing check of the last snapshot, cache writes split by the transcript share (opus 5m
-    // 100,000 of 200,000 = 0.5 -> 6.5 per MTok; sonnet has no writes -> all 5m):
-    // opus 2,000*4 + 200,000*6.5 + 1,200,000*0.2 + 20,000*20 = 1,948,000 / 1e6 = 1.948 = costUSD;
-    // sonnet 1,000*2 + 240,000*0.2 + 200*10 = 52,000 / 1e6 = 0.052 = costUSD.
-    opusPricedUSD: 1.948,
-    sonnetPricedUSD: 0.052,
-    // e-drift: opus costUSD 2.1428 = 1.948 * 1.1, divergence 0.1948 / 2.1428 = 0.0909.
-    driftOpusCostUSD: 2.1428,
+    // Pricing check of the last snapshot (definitions section 5): cost-state's own tokens with
+    // every cache write at the 5m price (low) and at the 1h price (high).
+    // opus rest 2,000*4 + 1,200,000*0.2 + 20,000*20 = 648,000;
+    //   low (648,000 + 200,000*5) / 1e6 = 1.648, high (648,000 + 200,000*8) / 1e6 = 2.248;
+    //   costUSD 1.948 lies inside: divergence 0.
+    // sonnet 1,000*2 + 240,000*0.2 + 200*10 = 52,000, no cache writes: low = high = 0.052 = costUSD.
+    opusLowUSD: 1.648,
+    opusHighUSD: 2.248,
+    sonnetLowUSD: 0.052,
+    sonnetHighUSD: 0.052,
+    // e-drift: opus costUSD 2.4728 = 2.248 * 1.1 above high, divergence 0.2248 / 2.248 = 0.1.
+    driftOpusCostUSD: 2.4728,
+    driftOpusDivergence: 0.1,
   },
   unknown: {
     pricedUSD: 0.1, // f-2: 5,000 * 20 / 1e6; f-1 has no price

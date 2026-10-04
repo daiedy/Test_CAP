@@ -22,14 +22,15 @@ import {
 } from './transcript-usage.mjs';
 import { sections } from './doc-shapes.mjs';
 import { ruleFor, editedFiles, mcpGaps } from './mcp-audit.mjs';
-import { t } from './backlog.mjs';
+import { t } from './i18n.mjs';
 
 /** D6: a turn gap counts up to 5 min, a tool gap up to 10 min (the Bash tool's maximum timeout). */
 export const IDLE_MS = 5 * 60_000;
 export const TOOL_MS = 10 * 60_000;
 /**
- * Largest tolerated divergence of the pricing self-check (definitions section 5, user decision
- * 2026-09-29): cost-state tokens priced with model-pricing.json against cost-state's own costUSD.
+ * Largest tolerated divergence of the pricing self-check (definitions section 5, user decisions
+ * 2026-09-29 and 2026-10-02): how far cost-state's own costUSD may lie outside the interval of its
+ * tokens priced with model-pricing.json, every cache write at the 5m rate up to all at the 1h rate.
  */
 export const PRICING_TOLERANCE = 0.05;
 /**
@@ -344,16 +345,22 @@ export function featureRecords(session, name, { issue = null } = {}) {
     main,
     agents,
     agentFiles: agentFilesOf(session),
-    // Every record kept: the session's processes lie wholly in scope (`processShare`).
-    complete: recordCount({ main, agents }) === recordCount(session),
+    // Every record the filter can judge kept: the session's processes lie wholly in scope
+    // (`processShare`, definitions section 5).
+    complete: branchRecords({ main, agents }) === branchRecords(session),
     events: (session.events || []).filter(within),
     audit: (session.audit || []).filter(within),
     specAttributed: windows.length > 0,
   };
 }
 
-function recordCount(s) {
-  return s.main.length + s.agents.reduce((n, a) => n + a.records.length, 0);
+/**
+ * Records that carry a `gitBranch`, the ones the scope filter can judge: `cost-state` and the
+ * other records without a branch never make a scope incomplete (definitions section 5).
+ */
+function branchRecords(s) {
+  const n = (records) => records.filter((r) => r.gitBranch != null).length;
+  return n(s.main) + s.agents.reduce((sum, a) => sum + n(a.records), 0);
 }
 
 /** Transcript cost of sessions after D1 (requests deduplicated over all their files). */
@@ -420,11 +427,26 @@ export function processShare(whollyInScope, scopedUSD, wholeUSD) {
 }
 
 /**
- * Pricing self-check per model (definitions section 5): the processes' last records, tokens priced
- * with the table (cache writes split 5m/1h by the transcript's share for that model, all 5m when
- * the transcript has none), against their `costUSD`.
+ * Distance of `cost` outside the interval `[low, high]` (definitions section 5): relative to `low`
+ * below it, relative to `high` above it, 0 inside. A zero price against a non-zero cost, or the
+ * reverse, gives 1; both zero give 0.
  */
-export function pricingCheck(processes, transcriptByModel, pricing) {
+function intervalDivergence(cost, low, high) {
+  if (cost < low) return (low - cost) / low;
+  if (cost > high) return high > 0 ? (cost - high) / high : 1;
+  return 0;
+}
+
+/**
+ * Pricing self-check per model (definitions section 5, interval rule): over the last record of
+ * each process, cost-state's own tokens priced with the table twice, every cache write at the 5m
+ * rate (`lowUSD`) and every cache write at the 1h rate (`highUSD`), against its `costUSD`; the
+ * `divergence` is the distance outside that interval. The transcript's 5m/1h share is not used:
+ * cost-state also holds tokens that are in no transcript (H1). An unpriced model: `null`s.
+ * @returns {Record<string, {costUSD:number|null, lowUSD:number|null, highUSD:number|null,
+ *   divergence:number|null}>}
+ */
+export function pricingCheck(processes, pricing) {
   const acc = {};
   const fields = [
     'inputTokens',
@@ -441,26 +463,21 @@ export function pricingCheck(processes, transcriptByModel, pricing) {
   const out = {};
   for (const [model, m] of Object.entries(acc)) {
     const price = priceOf(model, pricing);
-    const tr = transcriptByModel[model] || transcriptByModel[model.replace(/\[[^\]]*\]$/, '')];
-    const writes = tr ? tr.cacheWrite5m + tr.cacheWrite1h : 0;
-    const share5m = writes ? tr.cacheWrite5m / writes : 1;
     if (!price) {
-      out[model] = { costUSD: usd(m.costUSD), pricedUSD: null, share5m, divergence: null };
+      out[model] = { costUSD: usd(m.costUSD), lowUSD: null, highUSD: null, divergence: null };
       continue;
     }
-    const priced =
-      (m.inputTokens * price.input +
-        m.cacheCreationInputTokens *
-          (share5m * price.cacheWrite5m + (1 - share5m) * price.cacheWrite1h) +
-        m.cacheReadInputTokens * price.cacheRead +
-        m.outputTokens * price.output) /
-      1e6;
-    const divergence = m.costUSD ? Math.abs(priced - m.costUSD) / m.costUSD : priced ? 1 : 0;
+    const rest =
+      m.inputTokens * price.input +
+      m.cacheReadInputTokens * price.cacheRead +
+      m.outputTokens * price.output;
+    const low = (rest + m.cacheCreationInputTokens * price.cacheWrite5m) / 1e6;
+    const high = (rest + m.cacheCreationInputTokens * price.cacheWrite1h) / 1e6;
     out[model] = {
       costUSD: usd(m.costUSD),
-      pricedUSD: usd(priced),
-      share5m: round(share5m, 3),
-      divergence: round(divergence, 4),
+      lowUSD: usd(low),
+      highUSD: usd(high),
+      divergence: round(intervalDivergence(m.costUSD, low, high), 4),
     };
   }
   return out;
@@ -568,18 +585,6 @@ function phaseOrder(a, b) {
 
 function tokenSum(tokens) {
   return TOKEN_KINDS.reduce((s, k) => s + (tokens?.[k] || 0), 0);
-}
-
-/** Transcript tokens per model over threads (the 5m/1h share of the pricing self-check). */
-function byModelTokens(threads) {
-  const out = {};
-  for (const th of threads)
-    for (const [model, u] of Object.entries(th.byModel)) {
-      const m = (out[model] ??= { cacheWrite5m: 0, cacheWrite1h: 0 });
-      m.cacheWrite5m += u.cacheWrite5m;
-      m.cacheWrite1h += u.cacheWrite1h;
-    }
-  return out;
 }
 
 /**
@@ -764,9 +769,9 @@ export function buildReport({
   const attributed = [...covered].reduce((sum, id) => sum + (costBySession.get(id) || 0), 0);
   // D4: nothing priced gives no recovered ratio (as in `reconcile`), never 0%.
   const recovered = costStateUSD && costUSD != null ? attributed / costStateUSD : null;
-  const pricing5 = pricingCheck(inScope, byModelTokens(threads), pricing);
+  const pricing5 = pricingCheck(inScope, pricing);
   for (const [model, c] of Object.entries(pricing5)) {
-    if (c.pricedUSD == null) warnings.add(`unknown-model:${model}`);
+    if (c.divergence == null) warnings.add(`unknown-model:${model}`);
     else if (c.divergence > PRICING_TOLERANCE) warnings.add(`pricing-check:${model}`);
   }
 
@@ -1068,12 +1073,16 @@ export function compareLines(lines) {
     const prev = lines[i - 1];
     const gates = gateTotal(l.gateBlocks);
     const comparable = !!prev && !!l.gateSource && l.gateSource === prev.gateSource;
+    // D4: a partial cost (`record --force`) is a lower bound, so no cost delta next to it.
+    const costComparable = !!prev && !l.costPartial && !prev.costPartial;
     return {
       feature: l.feature,
       issue: l.issue ?? null,
       recordedAt: l.recordedAt,
       costUSD: l.costUSD,
-      dCostUSD: prev ? delta(l.costUSD, prev.costUSD, 2) : null,
+      costPartial: !!l.costPartial,
+      dCostUSD: costComparable ? delta(l.costUSD, prev.costUSD, 2) : null,
+      costComparable: prev ? costComparable : null,
       activeMin: l.activeMin,
       dActiveMin: prev ? delta(l.activeMin, prev.activeMin, 1) : null,
       reworkShare: l.reworkShare,
@@ -1153,7 +1162,7 @@ export function reconcileSession(session, pricing, related = []) {
         ratio: state ? round(transcript / state, 3) : null,
       });
   }
-  const check = pricingCheck(processes, byModel, pricing);
+  const check = pricingCheck(processes, pricing);
   return {
     sessionId: session.sessionId,
     hasCostState: processes.length > 0,
@@ -1297,9 +1306,13 @@ export function renderCard(r, bundle) {
   );
   if (r.scope === 'feature' && !r.specAttributed)
     time += `; ${t(bundle, 'metrics.card.spec.none')}`;
+  // No cost-state record in scope, or records whose share of the scope is unknown (nothing priced).
+  const csNone = r.costStateProcesses
+    ? 'metrics.card.costState.shareUnknown'
+    : 'metrics.card.costState.none';
   const cs =
     r.costStateUSD == null
-      ? t(bundle, 'metrics.card.costState.none')
+      ? t(bundle, csNone)
       : t(
           bundle,
           'metrics.card.costState',
@@ -1365,7 +1378,7 @@ export function renderCompare(rows, bundle) {
     '|---|---|---|---|---|---|---|---|---|---|---|',
     ...rows.map(
       (r) =>
-        `| ${r.feature}${r.issue ? ` (#${r.issue})` : ''} | ${r.recordedAt} | ${fmtUSD(r.costUSD)} | ${signed(r.dCostUSD, fmtUSD)} | ${dur(r.activeMin)} | ${signed(r.dActiveMin, dur)} | ${fmtPct(r.reworkShare)} | ${signed(r.dReworkShare, pp)} | ${r.gateBlocks ?? '-'} | ${r.gatesComparable === false ? na : signed(r.dGateBlocks, String)} | ${inputs(r)} |`
+        `| ${r.feature}${r.issue ? ` (#${r.issue})` : ''} | ${r.recordedAt} | ${fmtCost(r.costUSD, r.costPartial, bundle)} | ${r.costComparable === false ? na : signed(r.dCostUSD, fmtUSD)} | ${dur(r.activeMin)} | ${signed(r.dActiveMin, dur)} | ${fmtPct(r.reworkShare)} | ${signed(r.dReworkShare, pp)} | ${r.gateBlocks ?? '-'} | ${r.gatesComparable === false ? na : signed(r.dGateBlocks, String)} | ${inputs(r)} |`
     ),
   ].join('\n');
 }
@@ -1377,7 +1390,7 @@ export function renderBriefingLine(l, bundle) {
     'metrics.briefing',
     l.feature,
     l.issue ? ` (#${l.issue})` : '',
-    fmtUSD(l.costUSD),
+    fmtCost(l.costUSD, l.costPartial, bundle),
     fmtDuration(l.activeMin, bundle),
     fmtPct(l.reworkShare)
   );

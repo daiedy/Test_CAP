@@ -65,13 +65,16 @@ export function agentTranscriptPath(input) {
 }
 
 /**
- * A Claude Code internal agent at SubagentStop (prompt suggestions, `/btw`): empty `agent_type`
- * and no file at `agent_transcript_path`. Not a pipeline agent, so subagent-stop.mjs writes neither
- * `agent-stop` nor `gate` for it (pipeline-metrics research/data-flow.md section 2).
+ * A Claude Code internal agent at SubagentStop (prompt suggestions, `/btw`): an
+ * `agent_transcript_path` is given and no file exists there (seen with an empty `agent_type` and
+ * with `agent_type: "claude"`), or neither an `agent_type` nor a transcript file exists. A typed
+ * agent without the path field (older Claude Code) is still metered. Not a pipeline agent, so
+ * subagent-stop.mjs writes neither `agent-stop` nor `gate` for it (pipeline-metrics
+ * research/data-flow.md section 2).
  */
 export function internalAgent(input) {
-  const file = agentTranscriptPath(input);
-  return !input?.agent_type && !(file && exists(file));
+  const p = agentTranscriptPath(input);
+  return p ? !exists(p) : !input?.agent_type;
 }
 
 /**

@@ -197,7 +197,8 @@ describe('metrics records of the hooks (ADR-0022)', () => {
     const cases = [
       ['/spec #7', { command: 'spec', arg: '#7' }],
       ['/feature pipeline-metrics', { command: 'feature', arg: 'pipeline-metrics' }],
-      ['/backlog #12 prio P1', { command: 'backlog', arg: '#12' }],
+      // `arg` names a feature only for spec and feature (data-flow section 2): backlog drops it.
+      ['/backlog #12 prio P1', { command: 'backlog' }],
       ['/review', { command: 'review' }],
       ['/feature Add a rating filter', { command: 'feature' }],
       ['please run the tests again', {}],
@@ -379,6 +380,19 @@ describe('metrics records of the hooks (ADR-0022)', () => {
       const internal = appended(() => hook('subagent-stop.mjs', internalStop()));
       expect(internal.res.status).toBe(2);
       expect(internal.records).toEqual([]);
+      // A typed internal agent: a missing transcript file decides, the type does not.
+      const typed = appended(() =>
+        hook(
+          'subagent-stop.mjs',
+          subagentStop({
+            agent_id: 'c3d4',
+            agent_type: 'claude',
+            agent_transcript_path: path.join(fixtureDir, 'missing', 'agent-c3d4.jsonl'),
+          })
+        )
+      );
+      expect(typed.res.status).toBe(2);
+      expect(typed.records).toEqual([]);
       out = appended(() => hook('stop-gate.mjs', STOP));
       expect(out.res.status).toBe(2);
       expect(out.records).toEqual([

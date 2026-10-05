@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-09-29",
+  "recordedAt": "2026-10-05",
   "bytes": {
     ".claude/agents/architect.md": 4281,
     ".claude/agents/cap-backend-dev.md": 2542,
@@ -26,7 +26,7 @@
     ".claude/skills/add-entity/SKILL.md": 1875,
     ".claude/skills/backlog/SKILL.md": 2664,
     ".claude/skills/debug-after-upgrade/SKILL.md": 4940,
-    ".claude/skills/feature/SKILL.md": 7397,
+    ".claude/skills/feature/SKILL.md": 7625,
     ".claude/skills/gen-docs/SKILL.md": 849,
     ".claude/skills/project-protocol/SKILL.md": 9109,
     ".claude/skills/retro/SKILL.md": 4017,

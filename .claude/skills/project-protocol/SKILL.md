@@ -50,7 +50,7 @@ If an MCP server is unavailable (timeout, "Search is currently unavailable", emb
 
 ## 4. Language
 
-Everything the pipeline reads or produces is written in English: code comments, commit messages, docs under `docs/` (STATE, CHANGELOG, LESSONS, feature specs, ADRs), agent reports saved to files, registry, templates. The only non-English text lives in i18n bundles (`*_ru.properties`, `*.texts.csv`), in test data that asserts translated values, and in `docs/features/<name>/VERIFICATION.md` where rendered UI is quoted as the evidence of a scenario. Reply to the user in the user's language; that is separate from the files. The PostToolUse hook flags Cyrillic in code and docs; the reviewer treats it as an important finding.
+Everything the pipeline reads or produces is written in English: code comments, commit messages, docs under `docs/` (STATE, CHANGELOG, LESSONS, feature specs, ADRs), agent reports saved to files, registry, templates. The only non-English text lives in i18n bundles (`*_ru.properties`, `*.texts.csv`), in test data that asserts translated values, and in `docs/features/<name>/VERIFICATION.md` where rendered UI is quoted as the evidence of a scenario. Reply to the user in the user's language; that is separate from the files. The PostToolUse hook flags Cyrillic in code and docs; the reviewer treats it as an important finding. Write and Edit decode a `\uXXXX` escape in their parameters into the real character, so in English files give Russian values as `U+XXXX` code points.
 
 ## 5. Protection against duplication and inconsistency
 

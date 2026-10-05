@@ -17,6 +17,8 @@ paths:
 - Test names describe behavior: `rejects negative stock`.
 - Negative tests assert the annotation, not just the status: the `cds.test` error carries `code` and `target` of the OData error (`ASSERT_MANDATORY`, `ASSERT_TARGET`, `ENTITY_IS_READ_ONLY`): `const err = await expect(POST(...)).to.be.rejectedWith(/400/); expect(err).to.containSubset({ code: 'ASSERT_TARGET', target: 'category_code' })`.
 - Draft-enabled entities (ADR-0012): address active data explicitly. `POST` payloads carry `IsActiveEntity: true`, active keys are `(ID=<id>,IsActiveEntity=true)`, drafts `IsActiveEntity=false`; a `POST` without `IsActiveEntity` creates a draft and skips `@mandatory`. Reference: `describe('CatalogService.Products drafts')` in `test/catalog-service.test.js` and TESTING.md "cds 10 specifics".
+- Rows a test creates are deleted in a per-`it` `afterEach`, not only at the end of the `describe`, so a red assertion leaves no rows that shift the counts of later tests.
+- A hook or script test in a temp sandbox resolves it with `fs.realpathSync` first: on macOS `os.tmpdir()` is a symlink (`/var` to `/private/var`) and hooks see the real path.
 - The metadata snapshot is updated only with `npx vitest -u`, with the reason recorded in `docs/CHANGELOG.md`.
 - Templates: `templates/service.test.js`, `templates/metadata.test.js`.
 

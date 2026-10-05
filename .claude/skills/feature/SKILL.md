@@ -15,7 +15,7 @@ You are the orchestrator. You do not write code yourself, you delegate to subage
    - **semi-autonomous** (default): after each phase show the result and wait for "next";
    - **autonomous**: stop only at plan approval and on red checks;
    - **manual**: wait after each phase, do not run checks automatically.
-2. Check that the tree is clean: `git status --porcelain`. If there are foreign changes, ask whether to continue.
+2. Check that the tree is clean: `git status --porcelain`. If there are foreign changes, ask whether to continue. `git fetch origin`: if `origin/main` has commits that `main` lacks (Dependabot or pull-request merges), say so and merge them into `main` before branching.
 3. Create the branch `feature/<name>` and the directory `docs/features/<name>/`. For an issue: `node scripts/backlog.mjs status N in-progress`; the STATE `Feature` line reads `<name> (#N)`.
 
 ## Phase 1. Research and plan

@@ -55,6 +55,15 @@ export const MCP_RULES = [
   {
     label: 'backend tests',
     files: ['test/**/*.js'],
+    // Pipeline tests call plain functions of scripts/ (no cds.test, no model): repeated justified skips
+    exclude: [
+      'test/hooks-*.test.js',
+      'test/metrics.test.js',
+      'test/backlog.test.js',
+      'test/doc-shapes.test.js',
+      'test/prompt-budget.test.js',
+      'test/fixtures/**',
+    ],
     needs: ['mcp__cds-mcp__search_docs', 'mcp__cds-mcp__search_model'],
   },
 ];

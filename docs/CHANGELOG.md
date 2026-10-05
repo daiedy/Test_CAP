@@ -4,6 +4,33 @@ Format: date, area, what changed. Maintained by `docs-keeper`, all agents add to
 
 ## 2026-10-05
 
+- pipeline: **Retro after `pipeline-metrics` (#14): 29 LESSONS entries triaged, 19 removed, 10 remain (2 `Pending #15`, 8 upstream, rewritten as one-liners).** Transferred:
+  - `docs-keeper.md` step 5: tick the criteria before `metrics.mjs record`, paste the card without its own heading, and never write `## Full record` (#14, plus #7's silent permalink skip).
+  - `tests-backend.md`: per-`it` `afterEach` cleanup (#7), and `realpathSync` of a temp sandbox on macOS (#14).
+  - `tests-ui.md`: custom filter field ids and the `liveMode` Go button (#6), and the `RatingIndicator` clamp on render (#5).
+  - `ui-verifier.md` step 4: a "no warnings" claim needs `sap-ui-log-level=WARNING` plus a positive control.
+  - `project-protocol` section 4: Write and Edit decode `\u` escapes, so Russian values in English files are written as `U+XXXX`.
+  - `/feature` phase 0: `git fetch origin` and merge `origin/main` into `main` before branching. This session found `main` 12 commits behind `origin/main` at the merge.
+  - `MCP_RULES` "backend tests" in `scripts/lib/mcp-audit.mjs` excludes the pipeline tests (`test/hooks-*`, `metrics`, `backlog`, `doc-shapes`, `prompt-budget`, `fixtures`). All 4 gate blocks of #14 were `test-backend` on these files, with justified skips.
+
+  Already in place, so removed from LESSONS:
+  - #14 dedupe, SubagentStop, UserPromptSubmit, plan history and pricing interval: `docs/metrics/definitions.md`, `docs/metrics/data-flow.md` and the code. The forked-session card is STATE debt.
+  - The `Phase:` edit rule: `/feature` skill.
+  - #7 refresh and mandatory parameter: PATTERNS.
+  - #7 decompression guard: ADR-0021 amendment D.
+  - #6 flex connector: STATE debt and issue #11.
+  - #6 `Invalid empty segment` log: history only, no effect measured.
+
+  `test/prompt-budget.json` re-recorded:
+
+  | File | Bytes |
+  |---|---|
+  | `docs-keeper.md` | +207 |
+  | `ui-verifier.md` | +181 |
+  | `tests-backend.md` | +348 |
+  | `tests-ui.md` | +573 |
+  | `feature/SKILL.md` | +156 |
+  | `project-protocol/SKILL.md` | +150 |
 - docs: **`pipeline-metrics` PLAN step 13, phase 6 (#14).** `docs/features/pipeline-metrics/SUMMARY.md` with the `## Cost` card, its line recorded in `docs/metrics/history.jsonl` (5 features); PATTERNS Infrastructure row "Pipeline metric" (ADR-0022); STATE: What works gains the metrics line and the test counts per file (130 in 10), Open debt gains the forked-session card row; seven LESSONS entries; PLAN criteria 28 and 29 ticked. `docs/registry` regenerated, only the generation date changed.
 - docs: **`pipeline-metrics` specification kept after the prune (#14, user decision 2026-10-05).** `docs/metrics/definitions.md` and `docs/metrics/data-flow.md` restored from the pre-prune commit `f50d600` (links to pruned files point at its permalink); the comment and doc references in `scripts/`, `test/`, ADR-0022 and the architect memory repointed to them, no code change; `CLAUDE.md` documentation map row "Pipeline cost per feature" names both files; `test/prompt-budget.json` re-recorded, `CLAUDE.md` 10341 to 10436 bytes (+95).
 - pipeline: **`/feature` skill, STATE `Phase:` edit rule (REVIEW Minor 7, #14).** The orchestrator changes the `Phase:` line with Edit or Write, never Bash, and before launching the phase's agents, because the phase marker hook fires only on Edit and Write. `test/prompt-budget.json` re-recorded (`node scripts/prompt-budget.mjs --record`): `.claude/skills/feature/SKILL.md` 7397 to 7625 bytes (+228).

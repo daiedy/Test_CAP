@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-05
 - Branch: main
 - Feature: none
-- Phase: none (pipeline-metrics merged into local `main`, not pushed)
-- Last commit: 08dca4a Merge remote-tracking branch 'origin/main'
-- Next: `/retro`; push `main` on the user's word (permalink needs it)
+- Phase: none (pipeline-metrics and its retro merged and pushed)
+- Last commit: 515e7cb docs: STATE after the pipeline-metrics merge
+- Next: next issue from the queue (`node scripts/backlog.mjs list`)
 
 ## Open debt
 

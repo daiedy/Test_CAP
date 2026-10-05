@@ -11,6 +11,9 @@ What changed relative to `PLAN.md` and why.
 ## New items for the registry
 Entities, actions, handlers, utilities, fragments added in this feature (the registry is regenerated; this is for the record).
 
+## Cost
+Paste the card printed by `node scripts/metrics.mjs feature <name>`.
+
 ## Lessons
 What went into `docs/LESSONS.md` and which rules or skills should be refined.
 

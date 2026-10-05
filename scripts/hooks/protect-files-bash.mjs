@@ -12,10 +12,14 @@
  * False negatives are expected and accepted (a path built at runtime, a generator, base64): the
  * boundary is the git-based audit in subagent-stop.mjs / stop-gate.mjs, which sees the result of
  * a write however it was produced.
+ *
+ * Metrics (ADR-0022): a deny appends `{ event: 'gate', hook: 'protect-files-bash', reason:
+ * 'protected' }`; an `ask` is the user's decision, not a block, and is not recorded.
  */
 import path from 'node:path';
 import { readStdinJson, repoRoot, rel, insideRepo, emitJson } from '../lib/hook-utils.mjs';
 import { protectedHit, reasonFor } from '../lib/protected-paths.mjs';
+import { recordGate } from '../lib/metrics-log.mjs';
 
 /** Commands that write to every path they are given (in place or by applying a patch). */
 const IN_PLACE = [
@@ -98,6 +102,7 @@ try {
     'A shell write also bypasses the per-file-type checks, so use Edit/Write for ordinary files. ' +
     'If the command only reads the file, rewrite it so the protected path is not an argument of a writing command.';
 
+  if (isSubagent) recordGate(input, 'protect-files-bash', 'protected', root);
   emitJson({
     hookSpecificOutput: {
       hookEventName: 'PreToolUse',

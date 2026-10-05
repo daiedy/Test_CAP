@@ -1,5 +1,7 @@
 // ADR-0019: the backlog lives in GitHub Issues; the queue, the recommendation and the localized
 // briefing are pure functions over `gh issue list` JSON, pinned here without network access.
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import {
   parseIssue,
@@ -10,8 +12,10 @@ import {
   renderQueueList,
   pickLang,
   loadBundle,
+  lastHistoryLine,
   t,
 } from '../scripts/lib/backlog.mjs';
+import { HISTORY_FILE } from '../scripts/lib/pipeline-metrics.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 
@@ -137,5 +141,55 @@ describe('language and briefing', () => {
     expect(renderQueueList(loadBundle('en', root), queue)).toContain(
       '#4 rating-filter [P2] after #3'
     );
+  });
+
+  it('briefing prints the last metrics line', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'briefing-metrics-'));
+    try {
+      expect(lastHistoryLine(tmp)).toBeNull();
+      const file = path.join(tmp, HISTORY_FILE);
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      fs.writeFileSync(file, '');
+      expect(lastHistoryLine(tmp)).toBeNull();
+      const line = (feature, issue, costUSD, activeMin, reworkShare) =>
+        JSON.stringify({ feature, issue, costUSD, activeMin, reworkShare });
+      fs.writeFileSync(
+        file,
+        `${line('products-rating-column', 5, 13.9325, 70.6, 0.029)}\n${line('products-excel-upload', 7, 62.8812, 252.4, 0.117)}\n`
+      );
+      const metrics = lastHistoryLine(tmp);
+      expect(metrics.feature).toBe('products-excel-upload');
+
+      const queue = buildQueue([parseIssue(raw(3, 'rating-column: c'))]);
+      const base = {
+        now: { branch: 'main', dirty: 0, lastCommit: 'abc1234 x', feature: null, phase: 'none' },
+        queue,
+        rec: recommend(queue),
+        debt: 10,
+        source: 'cache',
+        fetchedAt: '2026-09-24T10:00:00Z',
+      };
+      const en = renderBriefing({ ...base, lang: 'en', bundle: loadBundle('en', root), metrics });
+      expect(en).toContain(
+        'Last recorded feature: products-excel-upload (#7), cost $62.88, active 4h 12m, rework 12% of cost'
+      );
+      // `backlog.mjs list` prints line index 3: it stays the GitHub status line.
+      expect(en.split('\n')[3]).toContain('queue from the cache of 2026-09-24');
+      const ru = renderBriefing({ ...base, lang: 'ru', bundle: loadBundle('ru', root), metrics });
+      expect(ru).toContain(
+        'Последняя записанная фича: products-excel-upload (#7), стоимость $62.88, активно 4ч 12м, доработки 12% стоимости'
+      );
+
+      const none = renderBriefing({
+        ...base,
+        lang: 'en',
+        bundle: loadBundle('en', root),
+        metrics: lastHistoryLine(path.join(tmp, 'missing')),
+      });
+      expect(none).not.toContain('Last recorded feature');
+      expect(none.split('\n')).toHaveLength(en.split('\n').length - 1);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
   });
 });

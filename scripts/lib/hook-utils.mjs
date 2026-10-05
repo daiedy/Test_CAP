@@ -210,6 +210,30 @@ export function readSection(file, heading) {
   }
 }
 
+/**
+ * The one JSONL reader of the pipeline: the MCP audit, the metrics event log and the Claude Code
+ * transcripts (ADR-0014, ADR-0022). Missing file: []; unparsable lines are skipped. `map` runs per
+ * parsed line, so a caller that keeps only a few fields never holds the whole raw record set.
+ */
+export function readJsonl(file, map = (x) => x) {
+  let text;
+  try {
+    text = fs.readFileSync(file, 'utf8');
+  } catch {
+    return [];
+  }
+  return text
+    .split('\n')
+    .filter(Boolean)
+    .flatMap((line) => {
+      try {
+        return [map(JSON.parse(line))];
+      } catch {
+        return [];
+      }
+    });
+}
+
 export function exists(p) {
   try {
     fs.accessSync(p);

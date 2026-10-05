@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-10-05
-- Branch: main
-- Feature: none
-- Phase: none (MCP rule for tests by content merged and pushed)
-- Last commit: 7ebc61f Merge branch 'chore/retro-pipeline-metrics'
-- Next: next issue from the queue (`node scripts/backlog.mjs list`)
+- Branch: feature/pipeline-state-hygiene
+- Feature: pipeline-state-hygiene (#15)
+- Phase: 1: research and plan
+- Last commit: fdd2a82 Merge branch 'chore/mcp-rule-by-content'
+- Next: restart with `PIPELINE_ALLOW_PROTECTED=1`, then phase 2 (PLAN steps 2-4)
 
 ## Open debt
 

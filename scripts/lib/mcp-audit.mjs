@@ -8,13 +8,14 @@
  */
 import path from 'node:path';
 import fs from 'node:fs';
-import { isUnder, readJsonl } from './hook-utils.mjs';
+import { isUnder, readJsonl, repoRoot } from './hook-utils.mjs';
 
 export const AUDIT_DIR = '.pipeline';
 
 /**
  * File types that expect an MCP query (or a plugin skill) before the edit, and the attempts that satisfy it.
  * `manifest.json` is not here: it is denied for direct edits by the PreToolUse hook (Fiori MCP only).
+ * `contains` narrows a rule to files whose content at check time matches it.
  */
 export const MCP_RULES = [
   {
@@ -55,15 +56,9 @@ export const MCP_RULES = [
   {
     label: 'backend tests',
     files: ['test/**/*.js'],
-    // Pipeline tests call plain functions of scripts/ (no cds.test, no model): repeated justified skips
-    exclude: [
-      'test/hooks-*.test.js',
-      'test/metrics.test.js',
-      'test/backlog.test.js',
-      'test/doc-shapes.test.js',
-      'test/prompt-budget.test.js',
-      'test/fixtures/**',
-    ],
+    // Only a test that touches CAP or the application; a pipeline test of scripts/ has no CAP
+    // API or model name to ask about (four justified skips in #14, retro 2026-10-05).
+    contains: /@sap\/cds|@cap-js\/|\bcds\.test\b|['"](?:\.\.\/)+(?:srv|db|app)\//,
     needs: ['mcp__cds-mcp__search_docs', 'mcp__cds-mcp__search_model'],
   },
 ];
@@ -120,9 +115,24 @@ function normalizeTool(name) {
   return String(name || '').replace(/^mcp__plugin_[^_]+_/, 'mcp__');
 }
 
+/** Whether the file's current content passes the rule's `contains`; an unreadable file keeps the rule. */
+function contentMatches(rule, file, root) {
+  if (!rule.contains) return true;
+  try {
+    return rule.contains.test(fs.readFileSync(path.join(root, file), 'utf8'));
+  } catch {
+    return true;
+  }
+}
+
 /** The `MCP_RULES` entry a repo-relative path falls under, or undefined. */
-export function ruleFor(file) {
-  return MCP_RULES.find((x) => isUnder(file, x.files) && !(x.exclude && isUnder(file, x.exclude)));
+export function ruleFor(file, root = repoRoot()) {
+  return MCP_RULES.find(
+    (x) =>
+      isUnder(file, x.files) &&
+      !(x.exclude && isUnder(file, x.exclude)) &&
+      contentMatches(x, file, root)
+  );
 }
 
 /** Distinct files of the agent's `edit` records. */

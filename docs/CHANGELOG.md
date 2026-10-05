@@ -4,6 +4,7 @@ Format: date, area, what changed. Maintained by `docs-keeper`, all agents add to
 
 ## 2026-10-05
 
+- pipeline: **`MCP_RULES` "backend tests" decided by content, not by file name (user decision 2026-10-05).** The retro's list of excluded pipeline test names is replaced by `contains` in `scripts/lib/mcp-audit.mjs`. A `test/**/*.js` file needs a `cds-mcp` query only when its content at check time imports `@sap/cds` or `@cap-js/*`, calls `cds.test`, or imports code from `srv/`, `db/` or `app/`. A pipeline test that starts to use CAP is covered again, a new pipeline test needs no entry in a list, and an unreadable file keeps the rule. Checked: `ruleFor` on every current test (`catalog-service`, `metadata` and `products-import` covered; the 7 pipeline tests not) and on sample files.
 - pipeline: **Retro after `pipeline-metrics` (#14): 29 LESSONS entries triaged, 19 removed, 10 remain (2 `Pending #15`, 8 upstream, rewritten as one-liners).** Transferred:
   - `docs-keeper.md` step 5: tick the criteria before `metrics.mjs record`, paste the card without its own heading, and never write `## Full record` (#14, plus #7's silent permalink skip).
   - `tests-backend.md`: per-`it` `afterEach` cleanup (#7), and `realpathSync` of a temp sandbox on macOS (#14).

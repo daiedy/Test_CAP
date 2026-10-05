@@ -7,8 +7,8 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-05
 - Branch: main
 - Feature: none
-- Phase: none (pipeline-metrics and its retro merged and pushed)
-- Last commit: 515e7cb docs: STATE after the pipeline-metrics merge
+- Phase: none (MCP rule for tests by content merged and pushed)
+- Last commit: 7ebc61f Merge branch 'chore/retro-pipeline-metrics'
 - Next: next issue from the queue (`node scripts/backlog.mjs list`)
 
 ## Open debt

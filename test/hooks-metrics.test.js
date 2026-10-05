@@ -1,4 +1,4 @@
-// The metrics records of the hooks (ADR-0022; pipeline-metrics research/data-flow.md section 2):
+// The metrics records of the hooks (ADR-0022; pipeline-metrics docs/metrics/data-flow.md section 2):
 // every hook appends its record kind and nothing else, and no record carries prompt text. Idiom of
 // test/hooks-protect-bash.test.js: the hook runs as a child process with sample JSON on stdin.
 // The hooks run from a sandbox, a temp git repository holding copies of scripts/hooks, scripts/lib

@@ -2,7 +2,7 @@
 // synthetic fixture of test/fixtures/transcript-fixture.mjs. Pure functions, no server, no real
 // transcript: the fixture is written into a temp directory, and the CLI is pointed at it through
 // CLAUDE_CONFIG_DIR. Every expected figure is computed by hand in the fixture file from
-// docs/features/pipeline-metrics/research/definitions.md, never copied from the code's output.
+// docs/metrics/definitions.md, never copied from the code's output.
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -117,7 +117,7 @@ function cli(args) {
   });
 }
 
-/** The keys of a history line (research/data-flow.md section 4, fix round 1 fields included). */
+/** The keys of a history line (docs/metrics/data-flow.md section 4, fix round 1 fields included). */
 const HISTORY_KEYS = [
   'feature',
   'issue',
@@ -161,7 +161,7 @@ const turnInputsOf = ({ prompts, handbacks, notifications }) => ({
   notifications,
 });
 
-/** Allowed key paths of a transcript record (research/data-flow.md section 5, definitions section 1). */
+/** Allowed key paths of a transcript record (docs/metrics/data-flow.md section 5, definitions section 1). */
 const TRANSCRIPT_KEYS = new Set([
   'type',
   'timestamp',
@@ -218,7 +218,7 @@ const TRANSCRIPT_KEYS = new Set([
   'hasUnknownModelCost',
 ]);
 const META_KEYS = new Set(['agentType', 'toolUseId']);
-/** Allowed key paths of an event-log record (research/data-flow.md section 2). */
+/** Allowed key paths of an event-log record (docs/metrics/data-flow.md section 2). */
 const EVENT_KEYS = new Set([
   'ts',
   'event',

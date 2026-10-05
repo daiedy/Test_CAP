@@ -1,7 +1,7 @@
 /**
  * Pipeline metrics (ADR-0022 decision 1): time, tokens, cost, phases and rework of a session or a
  * feature, the committed history line, the comparison and the Markdown card. Definitions D4-D12:
- * docs/features/pipeline-metrics/research/definitions.md. Pure functions over slim transcript
+ * docs/metrics/definitions.md. Pure functions over slim transcript
  * records (transcript-usage.mjs) and event-log records (metrics-log.mjs); scripts/metrics.mjs does
  * the I/O, except `loadPricing`, the one reader of the price table. Aggregates only: no text of a
  * prompt, a tool call or a response reaches a report.
@@ -1015,7 +1015,7 @@ export function criteriaCounts(text) {
 /** The committed history of finished features, one `historyLine` per line (ADR-0022 decision 4). */
 export const HISTORY_FILE = path.join('docs', 'metrics', 'history.jsonl');
 
-/** The committed aggregate of a feature report (research/data-flow.md section 4). */
+/** The committed aggregate of a feature report (docs/metrics/data-flow.md section 4). */
 export function historyLine(r, recordedAt) {
   return {
     feature: r.feature,

@@ -9,7 +9,7 @@
  * Metrics (ADR-0022): before any check, the agent's transcript aggregate is appended as `agent-stop`
  * (so a blocked stop still records); every exit 2 appends `{ event: 'gate', reason }`. A Claude Code
  * internal agent (`internalAgent`: an `agent_transcript_path` is given but no file exists there, or
- * neither an `agent_type` nor a transcript file exists; pipeline-metrics research/data-flow.md
+ * neither an `agent_type` nor a transcript file exists; pipeline-metrics docs/metrics/data-flow.md
  * section 2) records no `agent-stop` and no `gate`; its checks and exit codes are unchanged.
  */
 import path from 'node:path';
@@ -40,7 +40,7 @@ const TIMEOUT = 150_000;
 const HOOK = 'subagent-stop';
 
 /**
- * The `agent-stop` record (research/data-flow.md section 2 of pipeline-metrics): the subagent's own
+ * The `agent-stop` record (docs/metrics/data-flow.md section 2 of pipeline-metrics): the subagent's own
  * transcript through transcript-usage.mjs, priced and timed with pipeline-metrics.mjs (D1-D6, default
  * caps). The transcript is cumulative, so a resumed agent's last record wins. Best effort: the libs
  * load lazily, and any failure only loses the record, never the checks below.

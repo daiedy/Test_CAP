@@ -4,12 +4,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## Now
 
-- Date: 2026-10-02
+- Date: 2026-10-05
 - Branch: feature/pipeline-metrics
-- Feature: pipeline-metrics (#14)
-- Phase: 6: documentation (in progress, plan step 13)
-- Last commit: 3d71ee7 fix(pipeline): pipeline-metrics re-review follow-ups
-- Next: `docs-keeper` step 13, then completion (close #14, prune)
+- Feature: none
+- Phase: none (pipeline-metrics closed, branch not merged)
+- Last commit: f50d600 docs(pipeline): pipeline-metrics summary and registry
+- Next: user merges the branch into `main` and pushes (permalink needs it)
 
 ## Open debt
 

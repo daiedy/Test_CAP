@@ -20,14 +20,13 @@ Completion date: 2026-10-05. Commits: `dd34026` ... `3d71ee7` (phase 6 documenta
 
 ## Deviations from the plan
 - Fix round 1 after verification (criteria 30-33, steps 11a-11e) and a review fix batch (step 12) were added under the Risks clause.
-- The F4 live-stop race case in the fixture sits on agent `c1` of session `c-time`, not on `agent-a1.jsonl` as `research/data-flow.md` section 5 says: `a1` stays fixed because the hooks test pins its whole-file aggregate (REVIEW item d).
+- The F4 live-stop race case in the fixture sits on agent `c1` of session `c-time`, not on `agent-a1.jsonl` as `docs/metrics/data-flow.md` section 5 says: `a1` stays fixed because the hooks test pins its whole-file aggregate (REVIEW item d).
 - `agent-start` records are written (criterion 14) but nothing reads them yet; kept for a later live cross-check of `resumes`.
 
 ## New items for the registry
 None: no CDS, handler or UI artifact changed; `docs/registry` differs only by the generation date.
 
 ## Cost
-## Cost: pipeline-metrics (#14)
 
 Sessions 8 (2026-09-28 .. 2026-10-05), lead 6d 16h, active 9h 50m, waiting 6d 6h, agent-minutes 14h 12m (parallelism 1.4); idle cap 5 min, tool cap 10 min; phases: markers; rework: plan; pricing 2026-09-29; Claude Code 2.1.283, 2.1.284, 2.1.287; spec: not attributed
 
@@ -65,3 +64,7 @@ Seven entries in `docs/LESSONS.md` (forks and resumes copy history, SubagentStop
 ## Open debt
 - A forked session's `session` card includes the parent's copied history (feature scope dedupes it); STATE open debt, architect.
 - `agent-start` records have no consumer (REVIEW Minor 2).
+
+## Full record
+
+Pruned to this file (ADR-0019). CONTEXT.md, PLAN.md, REVIEW.md, VERIFICATION.md, research of this feature stay in git history at https://github.com/daiedy/Test_CAP/tree/f50d60015972bc2fc020ea056195c4d00552dc6c/docs/features/pipeline-metrics (commit `f50d600`). Two files of the research moved out of the prune to `docs/metrics/` (user decision 2026-10-05): `definitions.md` (metric definitions D1-D13) and `data-flow.md` (record shapes), which the code and ADR-0022 reference.

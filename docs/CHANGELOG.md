@@ -5,6 +5,7 @@ Format: date, area, what changed. Maintained by `docs-keeper`, all agents add to
 ## 2026-10-05
 
 - docs: **`pipeline-metrics` PLAN step 13, phase 6 (#14).** `docs/features/pipeline-metrics/SUMMARY.md` with the `## Cost` card, its line recorded in `docs/metrics/history.jsonl` (5 features); PATTERNS Infrastructure row "Pipeline metric" (ADR-0022); STATE: What works gains the metrics line and the test counts per file (130 in 10), Open debt gains the forked-session card row; seven LESSONS entries; PLAN criteria 28 and 29 ticked. `docs/registry` regenerated, only the generation date changed.
+- docs: **`pipeline-metrics` specification kept after the prune (#14, user decision 2026-10-05).** `docs/metrics/definitions.md` and `docs/metrics/data-flow.md` restored from the pre-prune commit `f50d600` (links to pruned files point at its permalink); the comment and doc references in `scripts/`, `test/`, ADR-0022 and the architect memory repointed to them, no code change; `CLAUDE.md` documentation map row "Pipeline cost per feature" names both files; `test/prompt-budget.json` re-recorded, `CLAUDE.md` 10341 to 10436 bytes (+95).
 - pipeline: **`/feature` skill, STATE `Phase:` edit rule (REVIEW Minor 7, #14).** The orchestrator changes the `Phase:` line with Edit or Write, never Bash, and before launching the phase's agents, because the phase marker hook fires only on Edit and Write. `test/prompt-budget.json` re-recorded (`node scripts/prompt-budget.mjs --record`): `.claude/skills/feature/SKILL.md` 7397 to 7625 bytes (+228).
 
 ## 2026-10-02

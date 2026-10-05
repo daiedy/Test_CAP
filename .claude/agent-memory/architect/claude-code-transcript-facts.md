@@ -5,7 +5,7 @@ metadata:
   type: project
 ---
 
-Facts measured on 2026-09-29 (Claude Code 2.1.282, session `6ecbd7a4` = feature #7) with narrow `jq` filters; the basis of `docs/features/pipeline-metrics/research/definitions.md` and ADR-0022 (accepted 2026-09-29; the user took all eight gate recommendations as-is: two time caps, both committed artifacts, briefing line without regression warning, explained gap instead of a 95% gate, OTel later, branch + prompt-marker join, 30-day retention, baseline #5-#7 + catalog-authorization).
+Facts measured on 2026-09-29 (Claude Code 2.1.282, session `6ecbd7a4` = feature #7) with narrow `jq` filters; the basis of `docs/metrics/definitions.md` and ADR-0022 (accepted 2026-09-29; the user took all eight gate recommendations as-is: two time caps, both committed artifacts, briefing line without regression warning, explained gap instead of a 95% gate, OTel later, branch + prompt-marker join, 30-day retention, baseline #5-#7 + catalog-authorization).
 
 - One API response = several `assistant` records sharing `requestId` (main: 287 records, 162 requests). In the main file every record of a request carries identical usage; in subagent files the usage grows with the stream (opus output: first-record sum 126K, last-record sum 227K). Rule: per request take the per-field maximum. Summing every record overcounts 1.75x.
 - `message.usage` has `cache_creation.ephemeral_5m_input_tokens` / `ephemeral_1h_input_tokens` (opus in #7: 3.52M / 0.65M; sonnet all 5m), `output_tokens_details.thinking_tokens`, `iterations[]` (always one entry so far). Every record also carries `gitBranch`, `version`, `advisorModel`, `serverClassifierRequest`.
@@ -21,4 +21,4 @@ Facts measured on 2026-09-29 (Claude Code 2.1.282, session `6ecbd7a4` = feature 
 
 **Why:** these facts took a session to establish and are not in the repo; the plan's definitions (D1-D12) and the reconciliation step depend on them.
 
-**How to apply:** when the `/feature` run for #14 starts, re-verify the dedupe rule and the cost-state field names on a fresh session before pinning the fixture; if the transcript output vs `thinkingTokens` question is answered, update `research/definitions.md` section 5 and this note. See [[test-suite-shape]] for the test-count rule and [[feedback-fix-review-gaps-in-feature]] for how the user treats review gaps.
+**How to apply:** when the `/feature` run for #14 starts, re-verify the dedupe rule and the cost-state field names on a fresh session before pinning the fixture; if the transcript output vs `thinkingTokens` question is answered, update `docs/metrics/definitions.md` section 5 and this note. See [[test-suite-shape]] for the test-count rule and [[feedback-fix-review-gaps-in-feature]] for how the user treats review gaps.

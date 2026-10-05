@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Pipeline metrics CLI (ADR-0022; research/data-flow.md section 4 of pipeline-metrics). Prints
+ * Pipeline metrics CLI (ADR-0022; docs/metrics/data-flow.md section 4 of pipeline-metrics). Prints
  * aggregates only, never prompt text, thinking or tool output.
  *   session [id]              card of one session (default: .pipeline/current-session, else the
  *                             newest transcript of this project)

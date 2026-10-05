@@ -1,6 +1,6 @@
 /**
  * The only reader of Claude Code transcripts (ADR-0022 decision 2; definitions D1, D2, D5 in
- * docs/features/pipeline-metrics/research/definitions.md). The transcript format is internal to
+ * docs/metrics/definitions.md). The transcript format is internal to
  * Claude Code: every field read here is listed in `slim()`, and nothing else survives the parse of
  * a line, so no text, thinking, prompt or tool output is held in memory or passed on. No pricing,
  * no phases, no writes: aggregation lives in pipeline-metrics.mjs. Node built-ins only.

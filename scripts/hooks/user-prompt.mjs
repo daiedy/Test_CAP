@@ -1,7 +1,7 @@
 /**
  * UserPromptSubmit hook: marks `/spec` and `/feature` commands in the metrics event log (D10, the
  * feature join); counts nothing (D13: prompts, hand-backs and notifications come from the
- * transcript). ADR-0022, docs/features/pipeline-metrics/research/data-flow.md section 2. Record:
+ * transcript). ADR-0022, docs/metrics/data-flow.md section 2. Record:
  *   { event: 'prompt', command?, arg? }
  * `command` is the leading `/<skill>` token without the slash; `arg` is the token after it, kept
  * only for `spec` and `feature` and only when it is an issue id (`#14`) or a lowercase kebab name

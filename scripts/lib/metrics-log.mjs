@@ -2,7 +2,7 @@
  * Metrics event log of the hooks (ADR-0022 decision 3): `.pipeline/metrics-<session>.jsonl`,
  * gitignored, pruned after 30 days by SessionStart. Same layout, `ts` stamp and helpers as the MCP
  * audit (scripts/lib/mcp-audit.mjs); record shapes in
- * docs/features/pipeline-metrics/research/data-flow.md section 2. A record never carries prompt
+ * docs/metrics/data-flow.md section 2. A record never carries prompt
  * text, tool output, file content or a transcript excerpt.
  */
 import fs from 'node:fs';
@@ -70,7 +70,7 @@ export function agentTranscriptPath(input) {
  * with `agent_type: "claude"`), or neither an `agent_type` nor a transcript file exists. A typed
  * agent without the path field (older Claude Code) is still metered. Not a pipeline agent, so
  * subagent-stop.mjs writes neither `agent-stop` nor `gate` for it (pipeline-metrics
- * research/data-flow.md section 2).
+ * docs/metrics/data-flow.md section 2).
  */
 export function internalAgent(input) {
   const p = agentTranscriptPath(input);

@@ -1,6 +1,6 @@
 /**
  * SubagentStart hook: marks a subagent launch or resume in the metrics event log (ADR-0022,
- * docs/features/pipeline-metrics/research/data-flow.md section 2). Record:
+ * docs/metrics/data-flow.md section 2). Record:
  *   { event: 'agent-start', agent, agentType }
  * Claude Code fires it on a launch and again on every resume of the same agent. `agent` is the bare
  * id (`metricsAgent`), so it joins the `agent-stop` record and the transcript file. Never blocks and

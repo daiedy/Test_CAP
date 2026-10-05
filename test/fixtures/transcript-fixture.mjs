@@ -1,8 +1,8 @@
 // Synthetic Claude Code transcripts for test/metrics.test.js (ADR-0022; pipeline-metrics
-// research/data-flow.md section 5). Built in code and written into a temp directory at test time:
+// docs/metrics/data-flow.md section 5). Built in code and written into a temp directory at test time:
 // no real transcript is read or copied, and every record holds only the allowed keys (no text,
 // thinking or prompt content), which the test "the fixture holds only the allowed record keys"
-// enforces. The expected figures below are computed by hand from research/definitions.md D1-D13
+// enforces. The expected figures below are computed by hand from docs/metrics/definitions.md D1-D13
 // and section 5, with the prices of scripts/lib/model-pricing.json in USD per million tokens:
 //   claude-opus-5-5    input 4, cacheWrite5m 5,   cacheWrite1h 8, cacheRead 0.2, output 20
 //   claude-sonnet-5    input 2, cacheWrite5m 2.5, cacheWrite1h 4, cacheRead 0.2, output 10
@@ -24,7 +24,7 @@ export const SONNET_55 = 'claude-sonnet-5-5';
 export const UNKNOWN_MODEL = 'claude-mystery-1';
 export const SYNTHETIC = '<synthetic>';
 export const VERSION = '2.1.282';
-/** Event-log fixture of session `h-live` (records of research/data-flow.md section 2). */
+/** Event-log fixture of session `h-live` (records of docs/metrics/data-flow.md section 2). */
 export const EVENT_LOG = path.join(import.meta.dirname, 'metrics-log.jsonl');
 
 const BASE = Date.parse('2026-09-01T10:00:00.000Z');
@@ -471,7 +471,7 @@ export const SESSIONS = [
   kUnpriced,
 ];
 
-// ---------- event logs built in code (records of research/data-flow.md section 2) ----------
+// ---------- event logs built in code (records of docs/metrics/data-flow.md section 2) ----------
 
 const event = (day, min, record) => ({ ts: iso(day, min), ...record });
 const TOKENS = (output, [input, write5m, write1h, read] = [0, 0, 0, 0]) => ({

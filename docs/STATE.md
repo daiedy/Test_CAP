@@ -8,7 +8,7 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Branch: main
 - Feature: none
 - Phase: none (upstream digest 2026-10-07 worked through; optional pin bumps deferred to the next `/upstream-check`)
-- Last commit: baf42d0 Merge remote-tracking branch 'origin/main'
+- Last commit: 3eba7d2 docs: STATE after merging the Dependabot updates
 - Next: debt first: `/backlog` a `catalog-hygiene` issue (price, currency, short `$edmJson` path), then #11, then `/spec #8`
 
 ## Open debt
@@ -16,13 +16,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 | Item | Resolution | Who |
 |---|---|---|
 | FLP sandbox still uses the legacy bootstrap (`sandbox.js`, `Container.createRenderer`, deprecated since 1.120, no successor); calls carry `ui5lint-disable` directives | Migrate to the New Sandbox with the `modernize-flp-sandbox` skill from the `ui5-modernization` plugin (needs UI5 >= 1.147; CDN is 1.152) | user decides |
-| Keyboard hack for the Explore button in `Component.js` (setTimeout, internal ushell id) | Deliberate decision of the author. Do not touch without a request; the alternative via `CommandExecution` is described in LESSONS | user |
 | `Products.price` Decimal(10, 2) instead of the convention Decimal(15, 2) | Kept, ADR-0003. Change at the first model migration | architect |
 | `mta.yaml`, `xs-security.json` are drafts without productive dependencies | Separate ADR before any deployment work; `cds add xsuaa --for production` will generate the `CatalogViewer`/`CatalogEditor` role templates and scopes from the CDS role names already in place (ADR-0013) | user |
 | `$edmJson` `$Path` through the entity container (ADR-0013, the three `UI.*Hidden` annotations) trips an unguarded UI5 `$select` TypeError once when the Object Page opens (`_Helper.aggregateExpandSelect`); unchanged on CDN 1.153.0 (2026-10-07), both roles, no functional impact; record in `docs/features/catalog-authorization/SUMMARY.md` | Try the documented short path `/Permissions/isEditor`, regenerate the contract, re-verify in a browser | architect |
-| The OPA5 suite for `catalog-authorization` authenticates as one user (`alice`) per run, so the hidden state for a `CatalogViewer` has no automated regression guard; only the backend tests (`@restrict`) and `ui-verifier`'s blocking viewer criterion cover it | Add a second runner config `ui5-test-runner-viewer.json` and a `test:ui:viewer` script only if the hidden state ever regresses (user decision 2026-09-10, PLAN "Open questions") | user |
-| CI and Dependabot (2026-09-07; history in CHANGELOG): `ci.yml` backend, UI lint, OPA5 journeys, green since `8ec176b`; `dependabot.yml` weekly, grouped, CAP majors excluded | Watch Dependabot PRs on Mondays | user |
-| UI tests run only against the live stack (`npm run watch`); the mock (`npm run start-mock`) does not serve `ru` | Known limitation of `sap-fe-mockserver`, no alternative found | |
 | `fiori-mcp` 1.12.2 `list_functionality` has no id for `filterFields` or `liveMode`; both set by hand under the ADR-0020 exception to ADR-0007 | `upstream-watcher` re-checks on each bump; drop the exception once covered | upstream-watcher |
 | FLP sandbox has no `data-sap-ui-flexibility-services`; variant `Save As` 404s and `eraseDirtyChangesOnVariant` erases the change on switch | Add a Session/LocalStorageConnector to `flpSandbox.html` (also needed for the New Sandbox migration); regress via an OPA5 `VariantManagement` select | user |
 | `Products.currency` has no `@assert.target`: an unknown code (`XXX`) passes create and the Excel import (#7) | Decide on `@assert.target` for `currency` | architect |

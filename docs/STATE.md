@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-10-07
-- Branch: chore/retro-pipeline-state-hygiene
+- Branch: main
 - Feature: none
-- Phase: none (retro after pipeline-state-hygiene #15, uncommitted)
-- Last commit: 7896d87 docs: STATE after the pipeline-state-hygiene merge
-- Next: commit the retro, merge `--no-ff` into `main`, push; then `/spec #8`
+- Phase: none (retro after pipeline-state-hygiene #15 merged)
+- Last commit: 6a8682f Merge branch 'chore/retro-pipeline-state-hygiene'
+- Next: `/spec #8` products-subcategories (`node scripts/backlog.mjs list`)
 
 ## Open debt
 

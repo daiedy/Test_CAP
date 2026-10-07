@@ -8,7 +8,7 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Branch: main
 - Feature: none
 - Phase: none (upstream digest 2026-10-07 worked through; optional pin bumps deferred to the next `/upstream-check`)
-- Last commit: 2ad7dc1 Merge branch 'chore/upstream-actions-2026-10-07'
+- Last commit: baf42d0 Merge remote-tracking branch 'origin/main'
 - Next: debt first: `/backlog` a `catalog-hygiene` issue (price, currency, short `$edmJson` path), then #11, then `/spec #8`
 
 ## Open debt

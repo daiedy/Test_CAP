@@ -58,6 +58,25 @@ describe('protected-path audit of generated files (ADR-0017)', () => {
     expect(protectedWriteHit(root, '.claude/agent-memory/architect/MEMORY.md')).toBeNull();
     expect(protectedWriteHit(root, 'srv/catalog-service.cds')).toBeNull();
   });
+
+  it('exempts worktrees from the git audit only', () => {
+    // ADR-0023: a parallel session's checkout is not a write of this session. `git status` shows
+    // an untracked worktree as one entry with a trailing slash; inside it, any path.
+    for (const p of [
+      '.claude/worktrees/demo/',
+      '.claude/worktrees/demo/notes.md',
+      '.claude/worktrees/demo/.claude/settings.json',
+      '.claude/worktrees/demo/scripts/hooks/stop-gate.mjs',
+    ])
+      expect(protectedWriteHit(root, p), p).toBeNull();
+    // The PreToolUse guards still deny a write into it (not a PROTECTED_EXCEPTIONS entry).
+    expect(protectedHit('.claude/worktrees/demo/notes.md')).toBe('.claude/**');
+    expect(protectedHit('.claude/worktrees/demo/scripts/hooks/stop-gate.mjs')).toBe('.claude/**');
+    // Only that folder: its neighbours stay audited.
+    expect(protectedWriteHit(root, '.claude/worktrees-old/demo/notes.md')).toBe('.claude/**');
+    expect(protectedWriteHit(root, '.claude/agents/worktrees/notes.md')).toBe('.claude/**');
+    expect(protectedWriteHit(root, '.claude/settings.json')).toBe('.claude/**');
+  });
 });
 
 describe('mock data shape check (rule ui5-webapp.md)', () => {

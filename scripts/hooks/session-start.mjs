@@ -1,7 +1,7 @@
 /**
  * SessionStart hook: the briefing (ADR-0019: language, now, backlog queue from GitHub Issues,
- * recommendation; ADR-0022: the last docs/metrics/history.jsonl line), the project state and the
- * toolchain check.
+ * recommendation; ADR-0022: the last docs/metrics/history.jsonl line; ADR-0023: the STATE drift
+ * line), the project state and the toolchain check.
  * Output is JSON. Plain stdout of a SessionStart hook is never displayed: Claude Code only adds
  * it to the model's context. So `systemMessage` shows the briefing (and the environment line when
  * it warns) to the user in the terminal, and `hookSpecificOutput.additionalContext` carries the
@@ -29,6 +29,7 @@ import {
 } from '../lib/metrics-log.mjs';
 import { stateShapeErrors, capped, STATE_PRINT_BUDGET } from '../lib/doc-shapes.mjs';
 import { collectBriefing, renderBriefing } from '../lib/backlog.mjs';
+import { driftKey, writeDriftKey } from '../lib/state-now.mjs';
 
 /** `cds --version` colors its output even when piped; the codes break the version regex. */
 // eslint-disable-next-line no-control-regex -- ESC (\x1b) is intended: strips ANSI color codes
@@ -79,13 +80,20 @@ try {
   out.push(`# Test_CAP project context (SessionStart, source=${input.source || 'unknown'})`);
   // ADR-0019: the briefing comes first, in PIPELINE_LANG; the queue comes from GitHub Issues with a cache.
   // ADR-0022: collectBriefing passes the last history line, renderBriefing prints it (none: no line).
+  // ADR-0023: it also passes the STATE drift, printed as the last line; the key of a printed drift is
+  // recorded, so the Stop gate reports only a drift that appears during the session.
   let briefing;
+  let now = null;
   try {
-    briefing = renderBriefing(collectBriefing(root));
+    const collected = collectBriefing(root);
+    now = collected.now;
+    briefing = renderBriefing(collected);
   } catch (e) {
     briefing = `## Briefing\nunavailable (${e.message}); run node scripts/backlog.mjs briefing.`;
   }
   out.push('', briefing);
+  const drift = now && driftKey(now);
+  if (drift) writeDriftKey(root, drift);
 
   const state = path.join(root, 'docs', 'STATE.md');
   if (exists(state)) {

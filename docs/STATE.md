@@ -4,12 +4,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## Now
 
-- Date: 2026-10-05
+- Date: 2026-10-07
 - Branch: feature/pipeline-state-hygiene
 - Feature: pipeline-state-hygiene (#15)
-- Phase: 1: research and plan
-- Last commit: fdd2a82 Merge branch 'chore/mcp-rule-by-content'
-- Next: restart with `PIPELINE_ALLOW_PROTECTED=1`, then phase 2 (PLAN steps 2-4)
+- Phase: 2: scripts and tests
+- Last commit: bb8bf9e docs(spec): pipeline-state-hygiene plan and ADR-0023
+- Next: cap-backend-dev PLAN steps 2-3, then test-backend step 4
 
 ## Open debt
 

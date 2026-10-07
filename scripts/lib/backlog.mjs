@@ -5,15 +5,19 @@
  * PIPELINE_LANG (loaded by i18n.mjs, re-exported here for the existing importers); everything
  * stored (issue bodies, docs) stays English. The briefing also prints the last line of
  * docs/metrics/history.jsonl (ADR-0022), rendered by pipeline-metrics.mjs, which takes its texts
- * from i18n.mjs and does not import this module.
+ * from i18n.mjs and does not import this module. ADR-0023: a feature folder holding a plan draft
+ * marks its issue "plan drafted", and the STATE drift found by state-now.mjs (which owns
+ * `projectNow()`, re-exported here) is the last line of the briefing.
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { run, repoRoot, readSection, readJsonl } from './hook-utils.mjs';
+import { run, repoRoot, readSection, readJsonl, exists } from './hook-utils.mjs';
 import { HISTORY_FILE, renderBriefingLine } from './pipeline-metrics.mjs';
 import { pickLang, readLocalSettings, loadBundle, t } from './i18n.mjs';
+import { projectNow, stateDrift } from './state-now.mjs';
 
 export { DEFAULT_LANG, pickLang, readLocalSettings, loadBundle, t } from './i18n.mjs';
+export { projectNow } from './state-now.mjs';
 
 export const FEATURE_LABEL = 'feature';
 export const PRIOS = ['P1', 'P2', 'P3'];
@@ -32,6 +36,9 @@ export const LABELS = [
   { name: 'in-progress', color: '5319E7', description: 'Feature branch in work' },
 ];
 export const CACHE_FILE = '.pipeline/issues.json';
+export const FEATURES_DIR = 'docs/features';
+/** A feature folder holding one of these has a drafted spec; `SUMMARY.md` alone is a finished one. */
+export const DRAFT_FILES = ['PLAN.md', 'CONTEXT.md'];
 
 // ---------- issues ----------
 
@@ -68,14 +75,20 @@ export function parseIssue(raw) {
   };
 }
 
-/** Open feature issues by priority then age, each with `blocked`: an open blocker exists. */
-export function buildQueue(issues) {
+/**
+ * Open feature issues by priority then age, each with `blocked`: an open blocker exists, and
+ * `specDraft`: its folder name is in `drafts` while neither status label is set (ADR-0023).
+ * @param {object[]} issues from parseIssue()
+ * @param {Set<string>} drafts folder names from specDrafts()
+ */
+export function buildQueue(issues, drafts = new Set()) {
   const byNumber = new Map(issues.map((i) => [i.number, i]));
   return issues
     .filter((i) => i.state === 'OPEN' && i.labels.includes(FEATURE_LABEL))
     .map((i) => ({
       ...i,
       openBlockers: i.blockedBy.filter((n) => byNumber.get(n)?.state === 'OPEN'),
+      specDraft: !i.specReady && !i.inProgress && drafts.has(i.name),
     }))
     .map((i) => ({ ...i, blocked: i.openBlockers.length > 0 }))
     .sort(
@@ -86,10 +99,15 @@ export function buildQueue(issues) {
     );
 }
 
-/** What to do now: continue the item in work, else the first unblocked item. */
+/**
+ * What to do now: continue the item in work, else review the first drafted spec (a repeated
+ * `/spec` would start over the drafts, ADR-0023), else the first unblocked item.
+ */
 export function recommend(queue) {
   const inWork = queue.find((i) => i.inProgress);
   if (inWork) return { kind: 'continue', issue: inWork };
+  const draft = queue.find((i) => i.specDraft);
+  if (draft) return { kind: 'review', issue: draft };
   const next = queue.find((i) => !i.blocked);
   if (!next) return { kind: 'none', issue: null };
   return { kind: next.specReady ? 'feature' : 'spec', issue: next };
@@ -142,19 +160,26 @@ export function readIssuesCache(root = repoRoot()) {
 
 // ---------- project state ----------
 
-/** Branch, dirty count, last commit and the Feature/Phase lines of docs/STATE.md. */
-export function projectNow(root = repoRoot()) {
-  const git = (args) => run('git', args, { cwd: root, timeoutMs: 5_000 }).stdout.trim();
-  const now = readSection(path.join(root, 'docs', 'STATE.md'), '## Now');
-  const line = (label) => (now.match(new RegExp(`^- ${label}:\\s*(.*)$`, 'm')) || [])[1]?.trim();
-  const feature = line('Feature');
-  return {
-    branch: git(['rev-parse', '--abbrev-ref', 'HEAD']) || '?',
-    dirty: git(['status', '--porcelain']).split('\n').filter(Boolean).length,
-    lastCommit: git(['log', '-1', '--format=%h %s']) || '?',
-    feature: feature && feature !== 'none' ? feature : null,
-    phase: line('Phase') || 'none',
-  };
+/**
+ * Names of the feature folders with a drafted spec: `docs/features/<name>/` holding PLAN.md or
+ * CONTEXT.md (ADR-0023). The local folder is the evidence; no label, no STATE value.
+ * @param {string} root repo root
+ * @returns {Set<string>} folder names; empty when the directory is missing
+ */
+export function specDrafts(root = repoRoot()) {
+  const dir = path.join(root, FEATURES_DIR);
+  let entries;
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return new Set();
+  }
+  return new Set(
+    entries
+      .filter((d) => d.isDirectory())
+      .map((d) => d.name)
+      .filter((name) => DRAFT_FILES.some((f) => exists(path.join(dir, name, f))))
+  );
 }
 
 /** Rows of the Open debt table in docs/STATE.md. */
@@ -172,11 +197,18 @@ export function lastHistoryLine(root = repoRoot()) {
 
 // ---------- rendering ----------
 
-function queueEntry(bundle, i) {
+/** Status and blocker tags of a queue item, shared by the briefing and `backlog.mjs list`. */
+function statusTags(bundle, i) {
   const tags = [];
   if (i.inProgress) tags.push(t(bundle, 'briefing.inprogress'));
   else if (i.specReady) tags.push(t(bundle, 'briefing.specready'));
+  else if (i.specDraft) tags.push(t(bundle, 'briefing.specdraft'));
   if (i.blocked) tags.push(t(bundle, 'briefing.blocked', i.openBlockers.join(', #')));
+  return tags;
+}
+
+function queueEntry(bundle, i) {
+  const tags = statusTags(bundle, i);
   return `#${i.number} ${i.name}${tags.length ? ` (${tags.join(', ')})` : ''}`;
 }
 
@@ -194,12 +226,28 @@ export function renderRecommendation(bundle, rec) {
   if (rec.kind === 'none') return t(bundle, 'briefing.recommend.none');
   const { number, name, prio } = rec.issue;
   if (rec.kind === 'continue') return t(bundle, 'briefing.recommend.continue', number, name);
+  if (rec.kind === 'review') return t(bundle, 'briefing.recommend.review', number, name, prio);
   return t(bundle, `briefing.recommend.${rec.kind}`, number, prio);
 }
 
 /**
+ * One line naming every STATE drift finding; the briefing prints it in PIPELINE_LANG, the Stop
+ * gate in English (ADR-0023).
+ * @param {Record<string, string>} bundle from loadBundle()
+ * @param {ReturnType<typeof stateDrift>} drift non-empty findings of stateDrift()
+ * @returns {string} the line
+ */
+export function renderDriftLine(bundle, drift) {
+  const parts = drift.map((d) =>
+    t(bundle, `briefing.drift.${d.kind}`, d.state, d.kind === 'branch' ? d.git : d.count)
+  );
+  return t(bundle, 'briefing.drift', parts.join('; '));
+}
+
+/**
  * The briefing block printed by the SessionStart hook and by `backlog.mjs briefing`. The metrics
- * line goes after the GitHub status line: `backlog.mjs list` prints line index 3.
+ * line goes after the GitHub status line: `backlog.mjs list` prints line index 3. The STATE drift
+ * line, when there is one, is the last line.
  */
 export function renderBriefing({
   lang,
@@ -211,6 +259,7 @@ export function renderBriefing({
   source,
   fetchedAt,
   metrics,
+  drift,
 }) {
   const tree = now.dirty
     ? t(bundle, 'briefing.tree.dirty', now.dirty)
@@ -227,19 +276,16 @@ export function renderBriefing({
   else lines.push(renderQueueLine(bundle, queue), renderRecommendation(bundle, rec));
   if (metrics) lines.push(renderBriefingLine(metrics, bundle));
   lines.push(t(bundle, 'briefing.debt', debt));
+  if (drift?.length) lines.push(renderDriftLine(bundle, drift));
   return lines.join('\n');
 }
 
 /** Multi-line queue for `backlog.mjs list`. */
 export function renderQueueList(bundle, queue) {
   if (!queue.length) return t(bundle, 'queue.empty');
-  const rows = queue.map((i) => {
-    const tags = [];
-    if (i.inProgress) tags.push(t(bundle, 'briefing.inprogress'));
-    else if (i.specReady) tags.push(t(bundle, 'briefing.specready'));
-    if (i.blocked) tags.push(t(bundle, 'briefing.blocked', i.openBlockers.join(', #')));
-    return t(bundle, 'queue.row', i.number, i.name, i.prio, tags.join(', ')).trimEnd();
-  });
+  const rows = queue.map((i) =>
+    t(bundle, 'queue.row', i.number, i.name, i.prio, statusTags(bundle, i).join(', ')).trimEnd()
+  );
   return [t(bundle, 'queue.title', queue.length), ...rows].join('\n');
 }
 
@@ -248,16 +294,18 @@ export function collectBriefing(root = repoRoot(), env = process.env) {
   const lang = pickLang(env, readLocalSettings(root));
   const bundle = loadBundle(lang, root);
   const { issues, source, fetchedAt } = fetchIssues(root);
-  const queue = buildQueue(issues);
+  const queue = buildQueue(issues, specDrafts(root));
+  const now = projectNow(root);
   return {
     lang,
     bundle,
-    now: projectNow(root),
+    now,
     queue,
     rec: recommend(queue),
     debt: debtCount(root),
     source,
     fetchedAt,
     metrics: lastHistoryLine(root),
+    drift: stateDrift(now),
   };
 }

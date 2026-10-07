@@ -1,113 +1,30 @@
 // The metrics records of the hooks (ADR-0022; pipeline-metrics docs/metrics/data-flow.md section 2):
-// every hook appends its record kind and nothing else, and no record carries prompt text. Idiom of
-// test/hooks-protect-bash.test.js: the hook runs as a child process with sample JSON on stdin.
-// The hooks run from a sandbox, a temp git repository holding copies of scripts/hooks, scripts/lib
-// and scripts/i18n: `repoRoot()` follows the script's own location, so every write (.pipeline/,
-// current-session, sessions.log, the MCP audit) lands in the sandbox, and the tree the git-based
-// gates inspect is known. `gh` (the SessionStart briefing) gets an empty config dir and no token,
-// so it fails at once without a network call.
+// every hook appends its record kind and nothing else, and no record carries prompt text. The
+// hooks run from the sandbox of test/fixtures/hook-sandbox.mjs (a temp git repository holding
+// copies of scripts/hooks, scripts/lib and scripts/i18n), so every write lands in the sandbox and
+// the tree the git-based gates inspect is known.
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
-import { readJsonl } from '../scripts/lib/transcript-usage.mjs';
 import { metricsFile } from '../scripts/lib/metrics-log.mjs';
 import { writeFixture, iso } from './fixtures/transcript-fixture.mjs';
+import { createSandbox, stateDoc, PHASE_2 } from './fixtures/hook-sandbox.mjs';
 
-const root = path.resolve(import.meta.dirname, '..');
 const SESSION = `test-metrics-${process.pid}`;
-const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
-const PHASE_2 = '2: backend';
 const SENTINEL = 'SENTINEL-7f3a';
 const SUBAGENT = { agent_id: 'agent-x9', agent_type: 'reviewer' };
 const STOP = { hook_event_name: 'Stop', stop_hook_active: false };
 /** npm must not look for its own update while the Stop gate runs `npm test` in the sandbox. */
 const NO_NPM_NOTIFIER = { npm_config_update_notifier: 'false' };
 
+let box;
 let sandbox;
-let ghDir;
 let fixtureDir;
 
-/** docs/STATE.md of the sandbox in the shape of templates/STATE.md. */
-function stateDoc({ feature = 'fixture-live (#7)', phase = PHASE_2, extra = '' } = {}) {
-  return [
-    '# Project state',
-    '',
-    '## Now',
-    '',
-    '- Date: 2026-09-29',
-    '- Branch: feature/fixture-live',
-    `- Feature: ${feature}`,
-    `- Phase: ${phase}`,
-    '- Last commit: 0000000 init',
-    '- Next: run the hook tests',
-    '',
-    '## Open debt',
-    '',
-    '| Item | Resolution | Who |',
-    '|---|---|---|',
-    '',
-    '## What works',
-    '',
-    '- the sandbox',
-    '',
-    '## Decisions',
-    '',
-    'See `docs/decisions/`.',
-    extra,
-  ].join('\n');
-}
-
-const git = (...args) =>
-  spawnSync(
-    'git',
-    [
-      '-c',
-      'user.name=test',
-      '-c',
-      'user.email=test@example.invalid',
-      '-c',
-      'commit.gpgsign=false',
-      '-c',
-      'core.hooksPath=/dev/null',
-      ...args,
-    ],
-    { cwd: sandbox, encoding: 'utf8' }
-  );
-
-/** Writes files into the sandbox (relative path to content). */
-function put(files) {
-  for (const [rel, text] of Object.entries(files)) {
-    const file = path.join(sandbox, rel);
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.writeFileSync(file, text);
-  }
-}
-
-/** Back to the committed tree; ignored files (.pipeline/) stay. */
-function resetTree() {
-  git('checkout', '-q', '--', '.');
-  git('clean', '-fdq');
-}
-
-/** Runs a hook of the sandbox with `payload` on stdin; `env` adds or keeps variables. */
-function hook(name, payload, env = {}) {
-  const childEnv = { ...process.env, GH_CONFIG_DIR: ghDir, ...env };
-  for (const k of [
-    'PIPELINE_ALLOW_PROTECTED',
-    'PIPELINE_SKIP_GATE',
-    'GH_TOKEN',
-    'GITHUB_TOKEN',
-    'GH_ENTERPRISE_TOKEN',
-    'GITHUB_ENTERPRISE_TOKEN',
-  ])
-    if (!(k in env)) delete childEnv[k];
-  return spawnSync('node', [path.join(sandbox, 'scripts', 'hooks', name)], {
-    input: JSON.stringify({ session_id: SESSION, cwd: sandbox, ...payload }),
-    encoding: 'utf8',
-    env: childEnv,
-  });
-}
+const put = (files) => box.put(files);
+const resetTree = () => box.resetTree();
+const hook = (name, payload, env) => box.hook(name, payload, env);
+const appended = (run) => box.appended(run);
 
 /** SubagentStop of the fixture agent a1 (cap-backend-dev); `agent-stop` precedes the checks. */
 const subagentStop = (extra = {}) => ({
@@ -127,40 +44,15 @@ const internalStop = () =>
     agent_transcript_path: path.join(fixtureDir, 'missing', 'agent-b7c9.jsonl'),
   });
 
-/** The event log of the test session. */
-const log = () => readJsonl(metricsFile(sandbox, SESSION));
-/** The records appended by `run`, without their `ts` (checked to be an ISO stamp). */
-function appended(run) {
-  const before = log().length;
-  const res = run();
-  const added = log().slice(before);
-  for (const r of added) expect(r.ts).toMatch(ISO);
-  return {
-    res,
-    records: added.map((r) => Object.fromEntries(Object.entries(r).filter(([k]) => k !== 'ts'))),
-  };
-}
-
 beforeAll(() => {
-  // The real path: macOS tmpdir is a symlink (/var -> /private/var) and the hooks resolve their
-  // root from their own real location, so a file path must use the same prefix.
-  sandbox = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'hooks-metrics-')));
-  ghDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hooks-metrics-gh-'));
+  box = createSandbox({ prefix: 'hooks-metrics', session: SESSION });
+  sandbox = box.root;
   fixtureDir = writeFixture(fs.mkdtempSync(path.join(os.tmpdir(), 'hooks-metrics-fx-')));
-  for (const dir of ['scripts/hooks', 'scripts/lib', 'scripts/i18n'])
-    fs.cpSync(path.join(root, dir), path.join(sandbox, dir), { recursive: true });
-  put({
-    '.gitignore': '.pipeline/\n.claude/.gate-state.json\n',
-    'docs/STATE.md': stateDoc(),
-    'docs/CHANGELOG.md': '# Changelog\n',
-  });
-  git('init', '-q', '-b', 'feature/fixture-live');
-  git('add', '-A');
-  git('commit', '-qm', 'init');
 });
 
 afterAll(() => {
-  for (const dir of [sandbox, ghDir, fixtureDir]) fs.rmSync(dir, { recursive: true, force: true });
+  box.remove();
+  fs.rmSync(fixtureDir, { recursive: true, force: true });
 });
 
 describe('metrics records of the hooks (ADR-0022)', () => {

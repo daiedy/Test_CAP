@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-07
 - Branch: main
 - Feature: none
-- Phase: none (upstream digest 2026-10-07: actions 1 to 3 done, 4 to 6 open)
-- Last commit: 35982b1 Merge branch 'chore/upstream-digest-2026-10-07'
-- Next: digest action 5, UI5 1.153.0 check in the running app (`/run-app`, OPA5); then `/spec #8`
+- Phase: none (upstream digest 2026-10-07 worked through; optional pin bumps deferred to the next `/upstream-check`)
+- Last commit: 2ad7dc1 Merge branch 'chore/upstream-actions-2026-10-07'
+- Next: debt first: `/backlog` a `catalog-hygiene` issue (price, currency, short `$edmJson` path), then #11, then `/spec #8`
 
 ## Open debt
 
@@ -19,7 +19,7 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 | Keyboard hack for the Explore button in `Component.js` (setTimeout, internal ushell id) | Deliberate decision of the author. Do not touch without a request; the alternative via `CommandExecution` is described in LESSONS | user |
 | `Products.price` Decimal(10, 2) instead of the convention Decimal(15, 2) | Kept, ADR-0003. Change at the first model migration | architect |
 | `mta.yaml`, `xs-security.json` are drafts without productive dependencies | Separate ADR before any deployment work; `cds add xsuaa --for production` will generate the `CatalogViewer`/`CatalogEditor` role templates and scopes from the CDS role names already in place (ADR-0013) | user |
-| `$edmJson` `$Path` through the entity container (ADR-0013, the three `UI.*Hidden` annotations) trips an unguarded UI5 1.152.0 `$select` TypeError once per page load (`_Helper.aggregateExpandSelect`); deterministic, no functional impact measured; record in `docs/features/catalog-authorization/SUMMARY.md` | Try the documented short path `/Permissions/isEditor`, regenerate the contract, re-verify in a browser | architect |
+| `$edmJson` `$Path` through the entity container (ADR-0013, the three `UI.*Hidden` annotations) trips an unguarded UI5 `$select` TypeError once when the Object Page opens (`_Helper.aggregateExpandSelect`); unchanged on CDN 1.153.0 (2026-10-07), both roles, no functional impact; record in `docs/features/catalog-authorization/SUMMARY.md` | Try the documented short path `/Permissions/isEditor`, regenerate the contract, re-verify in a browser | architect |
 | The OPA5 suite for `catalog-authorization` authenticates as one user (`alice`) per run, so the hidden state for a `CatalogViewer` has no automated regression guard; only the backend tests (`@restrict`) and `ui-verifier`'s blocking viewer criterion cover it | Add a second runner config `ui5-test-runner-viewer.json` and a `test:ui:viewer` script only if the hidden state ever regresses (user decision 2026-09-10, PLAN "Open questions") | user |
 | CI and Dependabot (2026-09-07; history in CHANGELOG): `ci.yml` backend, UI lint, OPA5 journeys, green since `8ec176b`; `dependabot.yml` weekly, grouped, CAP majors excluded | Watch Dependabot PRs on Mondays | user |
 | UI tests run only against the live stack (`npm run watch`); the mock (`npm run start-mock`) does not serve `ru` | Known limitation of `sap-fe-mockserver`, no alternative found | |
@@ -28,6 +28,7 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 | `Products.currency` has no `@assert.target`: an unknown code (`XXX`) passes create and the Excel import (#7) | Decide on `@assert.target` for `currency` | architect |
 | Root `.prettierrc` (single quotes, es5 commas) contradicts `app/products` ESLint (double quotes, no dangling comma) | ESLint wins today (orchestrator decision); align the configs | user |
 | A forked session's `session` card counts the parent's copied history | Cut the scope at the fork point | architect |
+| `initialLoad: true` in `manifest.json` is a boolean; UI5 1.153.0 logs `DEPRECATED: boolean value not allowed for 'initialLoad'`, supported `Disabled\|Enabled\|Auto` (found 2026-10-07) | Set `Enabled` through Fiori MCP, confirm the List Report still loads on open, OPA5 green | fiori-app-dev |
 ## What works
 
 - Backend on cds 10.1.1, Node 22: `npm run watch` (`cds watch`, port 4004), `npm run lint`, `npm test` (139 tests in 11 files: 45 in `test/catalog-service.test.js`, 20 in `test/products-import.test.js`, 9 in `test/metadata.test.js` incl. the `$metadata` snapshot, 11 in `test/backlog.test.js`, 7 in `test/hooks-protect-bash.test.js`, 8 in `test/hooks-registry-gate.test.js`, 4 in `test/hooks-state-hygiene.test.js`, 9 in `test/doc-shapes.test.js`, 3 in `test/prompt-budget.test.js`, 15 in `test/metrics.test.js`, 8 in `test/hooks-metrics.test.js`), `npm run docs:registry`

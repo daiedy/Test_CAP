@@ -1,0 +1,1 @@
+- [Recommendations log](recommendations-log.md) — recommendations given per digest and whether done; check before repeating (last: 2026-10-07)

@@ -28,7 +28,7 @@ paths:
 
 ## After editing
 - `mcp__ui5-mcp-server__run_ui5_linter` or `npx ui5lint <file>` in `app/<app>`: zero errors in the changed files.
-- After editing `manifest.json`: `mcp__ui5-mcp-server__run_manifest_validation`. If the tool responds with a schema error (a defect of UI5 MCP 0.2.18, see LESSONS), `npx ui5lint` in the application directory is enough: it checks the manifest with its own rules.
+- After editing `manifest.json`: `mcp__ui5-mcp-server__run_manifest_validation`; `npx ui5lint` in the application directory checks the manifest with its own rules as well and is the fallback when the server is down.
 - Test: QUnit for the formatter or extension (`tests-ui.md`).
 - `npm run docs:registry`.
 

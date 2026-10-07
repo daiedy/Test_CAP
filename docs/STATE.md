@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-07
 - Branch: main
 - Feature: none
-- Phase: none (retro after pipeline-state-hygiene #15 merged)
-- Last commit: 6a8682f Merge branch 'chore/retro-pipeline-state-hygiene'
-- Next: `/spec #8` products-subcategories (`node scripts/backlog.mjs list`)
+- Phase: none (upstream digest 2026-10-07: actions 1 to 3 done, 4 to 6 open)
+- Last commit: 35982b1 Merge branch 'chore/upstream-digest-2026-10-07'
+- Next: digest action 5, UI5 1.153.0 check in the running app (`/run-app`, OPA5); then `/spec #8`
 
 ## Open debt
 

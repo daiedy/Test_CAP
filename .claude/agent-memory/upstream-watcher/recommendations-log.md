@@ -8,8 +8,8 @@ metadata:
 Digest 2026-10-07 (heading `## 2026-10-07` in docs/upstream/UPDATES.md). All status: not yet carried out as of that date.
 
 - Bump `.mcp.json` `@ui5/mcp-server` 0.2.18 to 0.3.2 (fixes draft-06 defect, issue UI5/mcp-server#447): given; done 2026-10-07 by the user, `run_manifest_validation` returns `isValid: true`, STATE debt row and LESSONS entry removed.
-- Re-test cds 10.1.1 LESSONS entries (positional `req.error` code, `sap-messages` Accept-Language): given, pending. Changelog shows no fix.
-- `npm test` plus `npm run lint` against installed cds 10.1.1 / sqlite 3.1.1; global cds-dk still 10.0.7: given, pending.
+- Re-test cds 10.1.1 LESSONS entries (positional `req.error` code, `sap-messages` Accept-Language): given; done 2026-10-07, both still present on 10.1.1, LESSONS entries say "re-check on the next minor".
+- `npm test` plus `npm run lint` against installed cds 10.1.1 / sqlite 3.1.1; global cds-dk still 10.0.7: given; done 2026-10-07, 139 tests green, lint 0 errors; global cds-dk alignment left to the user.
 - fiori-mcp 1.15.6: do not bump for filterFields/liveMode (not covered through 1.15.6); optional bump: given, pending.
 - UI5 CDN now 1.153.0; TypeError (`_Helper.aggregateExpandSelect`) not mentioned in 1.153.0 notes; check in running app: given, pending.
 - Optional bumps `@cap-js/mcp-server` 0.0.6, `chrome-devtools-mcp` 1.10.1: given, pending.

@@ -10,7 +10,8 @@
  *      output never trips check 4 (ADR-0017).
  *   5. docs/STATE.md keeps the shape of templates/STATE.md whenever it changed (ADR-0018).
  * Advice, never a block (ADR-0023): `## Now` of docs/STATE.md drifting from git (branch, last
- * commit) is reported once per drift key through `additionalContext` on exit 0.
+ * commit) is reported once per drift key through `additionalContext` on exit 0; so is the
+ * docs/LESSONS.md inbox holding more than LESSONS_MAX pending entries, at every full pass.
  * Bypass: PIPELINE_SKIP_GATE=1. Loop guard: stop_hook_active.
  * Metrics (ADR-0022): every block appends `{ event: 'gate', hook: 'stop-gate', reason }`, and every
  * run ends with one `{ event: 'turn-end', blocked }`; the drift advice is not a block.
@@ -43,6 +44,8 @@ import { loadBundle, renderDriftLine } from '../lib/backlog.mjs';
 const CODE_PATHS = ['db', 'srv', 'app', 'test', '_i18n'];
 const TEST_TIMEOUT = 10 * 60 * 1000;
 const HOOK = 'stop-gate';
+/** docs/LESSONS.md is an inbox: more pending one-line entries than this asks for /retro. */
+const LESSONS_MAX = 10;
 
 let input = {};
 
@@ -92,14 +95,36 @@ function driftAdvice(root) {
 }
 
 /**
- * Ends the run unblocked. Plain stdout of a Stop hook reaches only the debug log, so the drift
- * advice goes to Claude as `additionalContext` (exit 0, under the stop_hook_active loop guard) and
- * its key is recorded; without advice `text` goes to stdout as before.
+ * The LESSONS inbox note when docs/LESSONS.md holds more than LESSONS_MAX pending entries (one
+ * list item per entry, `- <date>. <title>. Status: Pending ...`; headings and the transferred
+ * section do not count), else null. Never throws.
  */
-function pass(root, advice, text = '') {
-  if (advice) {
-    writeDriftKey(root, advice.key);
-    emitJson({ hookSpecificOutput: { hookEventName: 'Stop', additionalContext: advice.text } });
+function lessonsNote(root) {
+  try {
+    const lessons = path.join(root, 'docs', 'LESSONS.md');
+    if (!exists(lessons)) return null;
+    const pending = (fs.readFileSync(lessons, 'utf8').match(/^- .*\bPending\b/gm) || []).length;
+    if (pending <= LESSONS_MAX) return null;
+    return (
+      `docs/LESSONS.md holds ${pending} pending entries (limit ${LESSONS_MAX}); ` +
+      'run /retro to move them into rules, hooks, tests or agent prompts.'
+    );
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Ends the run unblocked. Plain stdout of a Stop hook reaches only the debug log, so the drift
+ * advice and the LESSONS note go to Claude as `additionalContext` (exit 0, under the
+ * stop_hook_active loop guard), one per line, and the drift key is recorded; without any advice
+ * `text` goes to stdout as before.
+ */
+function pass(root, advice, note = null, text = '') {
+  const context = [advice?.text, note].filter(Boolean).join('\n');
+  if (context) {
+    if (advice) writeDriftKey(root, advice.key);
+    emitJson({ hookSpecificOutput: { hookEventName: 'Stop', additionalContext: context } });
   } else if (text) {
     process.stdout.write(text);
   }
@@ -249,22 +274,14 @@ try {
     );
   }
 
-  // Lessons inbox size (advisory): docs/LESSONS.md should hold only untransferred lessons.
-  const lessons = path.join(root, 'docs', 'LESSONS.md');
-  if (exists(lessons)) {
-    const pending = (fs.readFileSync(lessons, 'utf8').match(/^## /gm) || []).length;
-    if (pending > 10)
-      notes.push(
-        `docs/LESSONS.md holds ${pending} entries; run /retro to move them into rules, hooks, tests or agent prompts.`
-      );
-  }
-
   fs.mkdirSync(path.dirname(stateFile), { recursive: true });
   fs.writeFileSync(
     stateFile,
     JSON.stringify({ hash, at: new Date().toISOString() }, null, 2) + '\n'
   );
-  pass(root, advice, `Stop gate passed. ${notes.join(' ')}\n`);
+  // Lessons inbox size (advisory, PATTERNS "Advisory from a Stop hook"): checked on the full pass
+  // only, so a turn without a code change stays silent.
+  pass(root, advice, lessonsNote(root), `Stop gate passed. ${notes.join(' ')}\n`);
 } catch (e) {
   process.stderr.write(`stop-gate hook: internal error (${e.message}); gate skipped.\n`);
   process.exit(0);

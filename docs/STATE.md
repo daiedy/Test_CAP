@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-10-07
-- Branch: main
+- Branch: chore/retro-pipeline-state-hygiene
 - Feature: none
-- Phase: none (pipeline-state-hygiene #15 merged)
-- Last commit: 6d5f7e7 Merge branch 'feature/pipeline-state-hygiene'
-- Next: push main; then next issue from the queue (`node scripts/backlog.mjs list`)
+- Phase: none (retro after pipeline-state-hygiene #15, uncommitted)
+- Last commit: 7896d87 docs: STATE after the pipeline-state-hygiene merge
+- Next: commit the retro, merge `--no-ff` into `main`, push; then `/spec #8`
 
 ## Open debt
 
@@ -19,7 +19,7 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 | Keyboard hack for the Explore button in `Component.js` (setTimeout, internal ushell id) | Deliberate decision of the author. Do not touch without a request; the alternative via `CommandExecution` is described in LESSONS | user |
 | `Products.price` Decimal(10, 2) instead of the convention Decimal(15, 2) | Kept, ADR-0003. Change at the first model migration | architect |
 | `mta.yaml`, `xs-security.json` are drafts without productive dependencies | Separate ADR before any deployment work; `cds add xsuaa --for production` will generate the `CatalogViewer`/`CatalogEditor` role templates and scopes from the CDS role names already in place (ADR-0013) | user |
-| `$edmJson` `$Path` through the entity container (`/CatalogService.EntityContainer/Permissions/isEditor`, used by the three `UI.*Hidden` annotations, ADR-0013) trips an unguarded UI5 1.152.0 defect once per page load on :4004: `Failed to read path ... - TypeError: Cannot read properties of undefined (reading '$select')` (`_Helper.aggregateExpandSelect`, `_Helper-dbg.js:238`). Deterministic, identical for both roles, no functional impact measured (full record linked from `docs/features/catalog-authorization/SUMMARY.md`) | Try the documented fallback short path `/Permissions/isEditor`, regenerate the contract, re-verify in a browser | architect |
+| `$edmJson` `$Path` through the entity container (ADR-0013, the three `UI.*Hidden` annotations) trips an unguarded UI5 1.152.0 `$select` TypeError once per page load (`_Helper.aggregateExpandSelect`); deterministic, no functional impact measured; record in `docs/features/catalog-authorization/SUMMARY.md` | Try the documented short path `/Permissions/isEditor`, regenerate the contract, re-verify in a browser | architect |
 | The OPA5 suite for `catalog-authorization` authenticates as one user (`alice`) per run, so the hidden state for a `CatalogViewer` has no automated regression guard; only the backend tests (`@restrict`) and `ui-verifier`'s blocking viewer criterion cover it | Add a second runner config `ui5-test-runner-viewer.json` and a `test:ui:viewer` script only if the hidden state ever regresses (user decision 2026-09-10, PLAN "Open questions") | user |
 | CI and Dependabot (2026-09-07; history in CHANGELOG): `ci.yml` backend, UI lint, OPA5 journeys, green since `8ec176b`; `dependabot.yml` weekly, grouped, CAP majors excluded | Watch Dependabot PRs on Mondays | user |
 | `run_manifest_validation` of UI5 MCP 0.2.18 fails with a draft-06 schema error | Workaround via `ui5lint`; wait for a new `@ui5/mcp-server` version via `upstream-check`, then bump the pin in `.mcp.json` | upstream-watcher |
@@ -29,10 +29,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 | `Products.currency` has no `@assert.target`: an unknown code (`XXX`) passes create and the Excel import (#7) | Decide on `@assert.target` for `currency` | architect |
 | Root `.prettierrc` (single quotes, es5 commas) contradicts `app/products` ESLint (double quotes, no dangling comma) | ESLint wins today (orchestrator decision); align the configs | user |
 | A forked session's `session` card counts the parent's copied history | Cut the scope at the fork point | architect |
-
 ## What works
 
-- Backend on cds 10.1.1, Node 22: `npm run watch` (`cds watch`, port 4004), `npm run lint`, `npm test` (137 tests in 11 files: 45 in `test/catalog-service.test.js`, 20 in `test/products-import.test.js`, 9 in `test/metadata.test.js` incl. the `$metadata` snapshot, 11 in `test/backlog.test.js`, 6 in `test/hooks-protect-bash.test.js`, 8 in `test/hooks-registry-gate.test.js`, 3 in `test/hooks-state-hygiene.test.js`, 9 in `test/doc-shapes.test.js`, 3 in `test/prompt-budget.test.js`, 15 in `test/metrics.test.js`, 8 in `test/hooks-metrics.test.js`), `npm run docs:registry`
+- Backend on cds 10.1.1, Node 22: `npm run watch` (`cds watch`, port 4004), `npm run lint`, `npm test` (139 tests in 11 files: 45 in `test/catalog-service.test.js`, 20 in `test/products-import.test.js`, 9 in `test/metadata.test.js` incl. the `$metadata` snapshot, 11 in `test/backlog.test.js`, 7 in `test/hooks-protect-bash.test.js`, 8 in `test/hooks-registry-gate.test.js`, 4 in `test/hooks-state-hygiene.test.js`, 9 in `test/doc-shapes.test.js`, 3 in `test/prompt-budget.test.js`, 15 in `test/metrics.test.js`, 8 in `test/hooks-metrics.test.js`), `npm run docs:registry`
 - UI: `npm start` (proxy, :8080) and `npm run start-mock` in `app/products` both open the app from the FLP sandbox; `ui5lint` 0 problems; `npm run lint:js` (Fiori tools ESLint) 0 errors
 - Object Page editing of `Products` through drafts (ADR-0012): Edit, Save, Cancel with discard confirmation, Create and Delete on the List Report, Editing Status filter, draft lock across users
 - List Report row shows a draft/lock marker (ADR-0015, feature `products-draft-marker`): `Common.SemanticKey: [ name ]` renders a `sap.m.ObjectMarker` in the `Product Name` cell — text-only `Draft` for an own draft, icon-plus-text `LockedBy`/`UnsavedBy` for another user's draft; verified in `en` and `ru`, keyboard-reachable, with the Editing Status filter narrowing to the marked row

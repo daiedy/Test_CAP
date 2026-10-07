@@ -16,6 +16,7 @@
  * Metrics (ADR-0022): a deny appends `{ event: 'gate', hook: 'protect-files-bash', reason:
  * 'protected' }`; an `ask` is the user's decision, not a block, and is not recorded.
  */
+import os from 'node:os';
 import path from 'node:path';
 import { readStdinJson, repoRoot, rel, insideRepo, emitJson } from '../lib/hook-utils.mjs';
 import { protectedHit, reasonFor } from '../lib/protected-paths.mjs';
@@ -60,6 +61,18 @@ function redirectTargets(cmd) {
   return out;
 }
 
+/**
+ * The directory a leading `cd <dir> &&` or `cd <dir>;` moves to, resolved against `cwd`: a probe
+ * in a temp repository names its files relative to that directory, not to the session's cwd, and
+ * `cd scripts && sed -i ... hooks/x.mjs` writes inside the repo. A later `cd` in the chain or a
+ * directory built from a variable is ignored (false negatives are accepted, ADR-0016).
+ */
+function baseDir(cmd, cwd) {
+  const m = cmd.match(/^\s*cd\s+(['"]?)([^\s'";&|)$]+)\1\s*(?:&&|;)/);
+  if (!m) return cwd;
+  return path.resolve(cwd, m[2].replace(/^~(?=\/|$)/, os.homedir()));
+}
+
 function candidates(cmd) {
   const set = new Set(redirectTargets(cmd));
   const tokens = pathTokens(cmd);
@@ -84,10 +97,10 @@ try {
   if (!cmd) process.exit(0);
 
   const root = repoRoot();
-  const cwd = input.cwd || root;
+  const base = baseDir(cmd, input.cwd || root);
   const hits = [];
   for (const token of candidates(cmd)) {
-    const abs = path.isAbsolute(token) ? token : path.resolve(cwd, token);
+    const abs = path.isAbsolute(token) ? token : path.resolve(base, token);
     const r = rel(abs, root);
     if (!insideRepo(r)) continue;
     const hit = protectedHit(r);

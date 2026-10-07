@@ -4,6 +4,20 @@ Format: date, area, what changed. Maintained by `docs-keeper`, all agents add to
 
 ## 2026-10-07
 
+- pipeline: **Retro after `pipeline-state-hygiene` (#15): 3 `Pending` LESSONS entries triaged, all 3 removed, 8 upstream remain; two Bash-guard false positives and one silent Stop note fixed in the hooks.** Transferred:
+  - The two `Pending #15` entries (STATE `## Now` stale after a `!` git command; a parallel worktree read as a protected change) were implemented by #15 itself (ADR-0023: `stateDrift()`, `WORKTREES`, `test/hooks-state-hygiene.test.js`): history only, removed.
+  - Bash-guard probe trap: `tests-backend.md` (a hook test runs from `createSandbox()` of `test/fixtures/hook-sandbox.mjs`, never the live `scripts/`; a protected path string goes into a file, not into Bash command text) and `pipeline-config.md` (the smoke run of a new or changed hook happens from a copy of `scripts/` with `PIPELINE_ALLOW_PROTECTED` unset; live runs in #15 left five records in `.pipeline/metrics-unknown.jsonl`).
+  - `protect-files-bash.mjs`: relative paths resolve against a leading `cd <dir> &&` or `;`. Both `protected` gate blocks of #15 were the architect's git probes in `/tmp`, denied for `.claude/worktrees/demo/f.txt`; the reverse case `cd scripts && sed -i ... hooks/x.mjs` was a false negative. Pinned in `test/hooks-protect-bash.test.js` (+1 test).
+  - `stop-gate.mjs`: the `docs/LESSONS.md` inbox note counted `## ` headings (never above 10) and went to the debug-only stdout (SUMMARY #15 open debt). It now counts one-line `Pending` entries against `LESSONS_MAX = 10` on the full pass and travels as `additionalContext` next to the drift advice, one advice per line (PATTERNS "Advisory from a Stop hook"). Pinned in `test/hooks-state-hygiene.test.js` (+1 test).
+  - `test/backlog.test.js`: a blocked drafted spec still yields `kind: 'review'` (SUMMARY #15 open debt, assertion added).
+  - Agent memory: the architect index marks ADR-0012 and ADR-0015 accepted; the `fiori-app-dev` topic `project-state-md-precompact-artifact.md` and its index line are deleted (PreCompact writes `.pipeline/sessions.log` since ADR-0018, user decision 2026-10-07). The redundant local `.claude/worktrees/` line left `.git/info/exclude`; `.gitignore` covers it since #15.
+
+  `test/prompt-budget.json` re-recorded:
+
+  | File | Bytes |
+  |---|---|
+  | `pipeline-config.md` | 5026 to 5338 (+312) |
+  | `tests-backend.md` | 2521 to 2841 (+320) |
 - pipeline: **`pipeline-state-hygiene` (#15, ADR-0023): `## Now` drift is checked against git, a drafted spec has its own state, a parallel worktree no longer blocks the Stop gate.**
   - New `scripts/lib/state-now.mjs` holds `projectNow()` (moved from `backlog.mjs`), `stateDrift()` (branch mismatch, unknown or non-ancestor `Last commit:` hash, more than `MAX_BEHIND = 1` first-parent commits behind HEAD; nothing on a detached HEAD), `driftKey()` and the `.pipeline/state-drift.json` record.
   - The briefing prints the drift as its last line (`en`/`ru`); `session-start.mjs` records the key; `stop-gate.mjs` gives the same advice once per key through `hookSpecificOutput.additionalContext`, exits 0 and logs no `gate` event. Claude Code labels it "Stop hook additional context" (observed in `VERIFICATION.md`).

@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-10-07
-- Branch: feature/pipeline-state-hygiene
+- Branch: main
 - Feature: none
-- Phase: none (pipeline-state-hygiene #15 closed, branch not merged)
-- Last commit: 4234941 docs: pipeline-state-hygiene summary and registry
-- Next: merge `feature/pipeline-state-hygiene` into main and push (user)
+- Phase: none (pipeline-state-hygiene #15 merged)
+- Last commit: 6d5f7e7 Merge branch 'feature/pipeline-state-hygiene'
+- Next: push main; then next issue from the queue (`node scripts/backlog.mjs list`)
 
 ## Open debt
 

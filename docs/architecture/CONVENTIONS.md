@@ -82,6 +82,7 @@ A read-only permission singleton (e.g. `CatalogService.Permissions`, ADR-0013) i
 - Formatters in `model/formatter.js`, wired in XML via `core:require`.
 - All texts through `i18n`. Keys: `<page>.<element>.<property>` for the UI, `<Entity>.<element>` for model labels.
 - `ui5lint` without errors for every changed file. Known debt (CSP inline scripts in the test html files) is recorded in `docs/STATE.md`.
+- Recorded exception: the keyboard handler for the Explore button in `app/products/webapp/Component.js` (a `setTimeout` and an internal ushell id) stays by the author's decision. Nobody touches it without an explicit request; the operational rule is in `.claude/rules/ui5-webapp.md`.
 - UI5 version in manifest `minUI5Version` 1.136.0; the CDN uses the current version without pinning (ADR-0006).
 
 ## 6. Tests

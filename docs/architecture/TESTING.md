@@ -45,3 +45,8 @@ cd app/products && npm run lint   # ui5lint
 - `DELETE` of a draft that does not exist answers 404.
 - `DELETE /Entity(<id>)` (addressed as active, no `IsActiveEntity`) of a record that has an open draft answers 403 `DRAFT_ACTIVE_DELETE_FORBIDDEN_DRAFT_EXISTS`; discard the draft with `DELETE /Entity(ID=<id>,IsActiveEntity=false)` instead.
 - OPA5 runs need a fresh `npm run watch` before every run: a leftover draft from a previous run changes the List Report row count and breaks `iCheckRows(15)`.
+
+## Known gaps
+
+- The OPA5 suite for `catalog-authorization` authenticates as one user (`alice`) per run, so the hidden state for a `CatalogViewer` has no automated regression guard. Today it is covered by the backend tests (`@restrict`) and by the blocking viewer criterion of `ui-verifier`. Add a second runner config `ui5-test-runner-viewer.json` and a `test:ui:viewer` script only if the hidden state ever regresses (user decision 2026-09-10, PLAN "Open questions" of `catalog-authorization`).
+- UI tests and UI verification run only against the live stack: OPA5 against `npx cds serve --in-memory --port 4004` (never `cds watch`), verification against `npm run watch`. The mock (`npm run start-mock`) does not serve `ru`; this is a known limitation of `sap-fe-mockserver`, no alternative found.

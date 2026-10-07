@@ -54,6 +54,12 @@ Database in development: SQLite in-memory, CSV deployed on every start (`cds wat
 
 MCP versions are pinned in `.mcp.json` and bumped only through `upstream-check` (ADR-0009).
 
+## CI and dependency updates
+
+- `.github/workflows/ci.yml` runs the backend tests, the UI lint and the OPA5 journeys; green since `8ec176b` (setup history in `docs/CHANGELOG.md`, 2026-09-07).
+- `.github/dependabot.yml` opens weekly, grouped pull requests; CAP majors are excluded (they go through `/upgrade-cds`).
+- Routine: the user reviews the Dependabot pull requests weekly (Mondays). After merging them on GitHub, `git fetch` and merge `origin/main` before the next push, keep the lock files as Dependabot wrote them (local npm 10.9.8 only strips `libc` metadata), then `npm install` in the root and in `app/products` and `npm test` (done on 2026-10-07 with pull requests #18 and #19).
+
 ## Setup on a new machine
 
 Plugins are not installed automatically: `enabledPlugins` in `.claude/settings.json` only enables plugins that are already installed on the machine. Without them the UI agents lose the UI5 MCP tools and the `ui5-best-practices*` skills and silently fall back to model knowledge. Steps for a new participant or a CI agent:

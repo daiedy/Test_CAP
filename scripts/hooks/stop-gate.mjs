@@ -9,9 +9,11 @@
  *      generated files (docs/registry/**) are covered by check 1 instead, so the generator's own
  *      output never trips check 4 (ADR-0017).
  *   5. docs/STATE.md keeps the shape of templates/STATE.md whenever it changed (ADR-0018).
+ * Advice, never a block (ADR-0023): `## Now` of docs/STATE.md drifting from git (branch, last
+ * commit) is reported once per drift key through `additionalContext` on exit 0.
  * Bypass: PIPELINE_SKIP_GATE=1. Loop guard: stop_hook_active.
  * Metrics (ADR-0022): every block appends `{ event: 'gate', hook: 'stop-gate', reason }`, and every
- * run ends with one `{ event: 'turn-end', blocked }`.
+ * run ends with one `{ event: 'turn-end', blocked }`; the drift advice is not a block.
  */
 import path from 'node:path';
 import fs from 'node:fs';
@@ -24,10 +26,19 @@ import {
   exists,
   truncate,
   changedFiles,
+  emitJson,
 } from '../lib/hook-utils.mjs';
 import { protectedWriteHit, reasonFor } from '../lib/protected-paths.mjs';
 import { stateShapeErrors, statePrintedBytes, STATE_PRINT_BUDGET } from '../lib/doc-shapes.mjs';
 import { appendMetric, recordGate } from '../lib/metrics-log.mjs';
+import {
+  projectNow,
+  stateDrift,
+  driftKey,
+  readDriftKey,
+  writeDriftKey,
+} from '../lib/state-now.mjs';
+import { loadBundle, renderDriftLine } from '../lib/backlog.mjs';
 
 const CODE_PATHS = ['db', 'srv', 'app', 'test', '_i18n'];
 const TEST_TIMEOUT = 10 * 60 * 1000;
@@ -59,6 +70,42 @@ function block(reason, msg) {
   process.exit(2);
 }
 
+/**
+ * The STATE drift advice when the drift key is not recorded yet (SessionStart records the drift
+ * it printed), else null. English: the text is for Claude, not the user. Never throws.
+ */
+function driftAdvice(root) {
+  try {
+    const now = projectNow(root);
+    const key = driftKey(now);
+    if (!key || key === readDriftKey(root)) return null;
+    const line = renderDriftLine(loadBundle('en', root), stateDrift(now));
+    return {
+      key,
+      text:
+        `Stop hook advice (ADR-0023, once per drift, nothing is blocked): ${line} ` +
+        `Git now: branch ${now.branch}, HEAD ${now.lastCommit}.`,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Ends the run unblocked. Plain stdout of a Stop hook reaches only the debug log, so the drift
+ * advice goes to Claude as `additionalContext` (exit 0, under the stop_hook_active loop guard) and
+ * its key is recorded; without advice `text` goes to stdout as before.
+ */
+function pass(root, advice, text = '') {
+  if (advice) {
+    writeDriftKey(root, advice.key);
+    emitJson({ hookSpecificOutput: { hookEventName: 'Stop', additionalContext: advice.text } });
+  } else if (text) {
+    process.stdout.write(text);
+  }
+  process.exit(0);
+}
+
 try {
   input = readStdinJson();
   if (input.stop_hook_active === true) process.exit(0);
@@ -73,19 +120,32 @@ try {
   // protect-files.mjs nor post-edit.mjs can see. git shows the result whoever wrote it.
   const protectedChanged = changedFiles(root)
     .filter((c) => !c.status.startsWith('D'))
-    .map((c) => ({ p: c.path, hit: protectedWriteHit(root, c.path) }))
+    .map((c) => ({ p: c.path, untracked: c.status === '??', hit: protectedWriteHit(root, c.path) }))
     .filter((x) => x.hit);
   if (protectedChanged.length) {
     // A branch name is not a boundary (any agent can create `chore/x`); only the user-held
     // environment variable counts as sanction (ADR-0016).
     if (process.env.PIPELINE_ALLOW_PROTECTED !== '1') {
+      // `git checkout --` cannot revert an untracked entry, and the advice invited deleting it,
+      // though it may be another session's or a tool's work (ADR-0023).
+      const changed = protectedChanged.filter((x) => !x.untracked);
+      const untracked = protectedChanged.filter((x) => x.untracked);
+      const steps = [];
+      if (changed.length) steps.push('Revert the changed ones (`git checkout -- <path>`).');
+      if (untracked.length)
+        steps.push(
+          'Do not delete an untracked one before the user says whose it is: it may be the work of ' +
+            'another session or the output of a tool.'
+        );
       block(
         'protected',
         'Protected files are changed in the working tree and this is not the sanctioned route ' +
           '(rule pipeline-config.md, ADR-0016):\n' +
-          protectedChanged.map((x) => `  ${x.p} (${reasonFor(x.hit)})`).join('\n') +
-          '\nRevert them (`git checkout -- <path>`), or, if the user asked for the change, re-run the ' +
-          'session with PIPELINE_ALLOW_PROTECTED=1 (only the user can set it).'
+          changed.map((x) => `  ${x.p} (${reasonFor(x.hit)})\n`).join('') +
+          untracked.map((x) => `  ${x.p} (untracked; ${reasonFor(x.hit)})\n`).join('') +
+          steps.join(' ') +
+          ' If the user asked for the change, re-run the session with PIPELINE_ALLOW_PROTECTED=1 ' +
+          '(only the user can set it).'
       );
     }
   }
@@ -110,6 +170,10 @@ try {
       );
   }
 
+  // ADR-0023: STATE drift is advice. Found here, delivered by pass(); a block below wins and
+  // leaves the key unrecorded, so the advice comes at the next stop that passes.
+  const advice = driftAdvice(root);
+
   const stateFile = path.join(root, '.claude', '.gate-state.json');
   const codeStatus = porcelain(root, CODE_PATHS);
   const hash = sha256(codeStatus);
@@ -121,7 +185,7 @@ try {
   }
 
   if (!codeStatus.trim() || saved?.hash === hash) {
-    process.exit(0);
+    pass(root, advice);
   }
 
   const notes = [];
@@ -200,8 +264,7 @@ try {
     stateFile,
     JSON.stringify({ hash, at: new Date().toISOString() }, null, 2) + '\n'
   );
-  process.stdout.write(`Stop gate passed. ${notes.join(' ')}\n`);
-  process.exit(0);
+  pass(root, advice, `Stop gate passed. ${notes.join(' ')}\n`);
 } catch (e) {
   process.stderr.write(`stop-gate hook: internal error (${e.message}); gate skipped.\n`);
   process.exit(0);

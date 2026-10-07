@@ -2,6 +2,16 @@
 
 Format: date, area, what changed. Maintained by `docs-keeper`, all agents add to it. New entries on top.
 
+## 2026-10-07
+
+- pipeline: **`pipeline-state-hygiene` (#15, ADR-0023): `## Now` drift is checked against git, a drafted spec has its own state, a parallel worktree no longer blocks the Stop gate.**
+  - New `scripts/lib/state-now.mjs` holds `projectNow()` (moved from `backlog.mjs`), `stateDrift()` (branch mismatch, unknown or non-ancestor `Last commit:` hash, more than `MAX_BEHIND = 1` first-parent commits behind HEAD; nothing on a detached HEAD), `driftKey()` and the `.pipeline/state-drift.json` record.
+  - The briefing prints the drift as its last line (`en`/`ru`); `session-start.mjs` records the key; `stop-gate.mjs` gives the same advice once per key through `hookSpecificOutput.additionalContext`, exits 0 and logs no `gate` event. Claude Code labels it "Stop hook additional context" (observed in `VERIFICATION.md`).
+  - `backlog.mjs`: an open issue without `spec-ready` and `in-progress` whose `docs/features/<name>/` holds `PLAN.md` or `CONTEXT.md` is tagged "plan drafted" and recommended for review after `continue`, blocked or not.
+  - `.claude/worktrees/` is gitignored and exempt in `protectedWriteHit()` only, so the Stop and SubagentStop git audits skip it while the write guards still deny edits there; the untracked-entry block no longer advises `git checkout --`.
+  - No prompt, rule or skill grew, `test/prompt-budget.json` unchanged.
+- test: **`pipeline-state-hygiene` (#15) PLAN step 4: 7 new tests, 137 in 11 files.** The git sandbox of the hook tests moved to `test/fixtures/hook-sandbox.mjs`; `test/hooks-metrics.test.js` imports it, its 8 tests are byte-identical. `test/backlog.test.js` pins the drafted-spec state, `stateDrift()` on a real history (a merge is 1 first-parent commit, 2 in all) and the drift line last in `en` and `ru`; `test/hooks-registry-gate.test.js` the worktree exemption of `protectedWriteHit()` only; new `test/hooks-state-hygiene.test.js` runs SessionStart and the Stop gate against a sandbox history and a locked `git worktree` under `.claude/worktrees/demo`. Each rule the tests claim was mutated once in a scratch copy: 27 of 27 went red.
+
 ## 2026-10-05
 
 - pipeline: **`MCP_RULES` "backend tests" decided by content, not by file name (user decision 2026-10-05).** The retro's list of excluded pipeline test names is replaced by `contains` in `scripts/lib/mcp-audit.mjs`. A `test/**/*.js` file needs a `cds-mcp` query only when its content at check time imports `@sap/cds` or `@cap-js/*`, calls `cds.test`, or imports code from `srv/`, `db/` or `app/`. A pipeline test that starts to use CAP is covered again, a new pipeline test needs no entry in a list, and an unreadable file keeps the rule. Checked: `ruleFor` on every current test (`catalog-service`, `metadata` and `products-import` covered; the 7 pipeline tests not) and on sample files.

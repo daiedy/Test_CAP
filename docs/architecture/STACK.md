@@ -47,7 +47,7 @@ Database in development: SQLite in-memory, CSV deployed on every start (`cds wat
 |---|---|---|
 | `@cap-js/mcp-server` (`cds-mcp`) | 0.0.5 | `search_model`, `search_docs` for CAP |
 | `@sap-ux/fiori-mcp-server` (`fiori-mcp`) | 1.12.2 | Generation and modification of Fiori Elements, `search_docs` |
-| `@ui5/mcp-server` (`ui5-mcp-server`, pinned in `.mcp.json`; the unpinned server bundled with the `ui5` plugin registers separately as `plugin:ui5:ui5-mcp-server` and is toggled off in `/mcp`) | 0.2.18 | API, guidelines, `run_ui5_linter`, `run_manifest_validation` (defective in 0.2.18, `ui5lint` instead) |
+| `@ui5/mcp-server` (`ui5-mcp-server`, pinned in `.mcp.json`; the unpinned server bundled with the `ui5` plugin registers separately as `plugin:ui5:ui5-mcp-server` and is toggled off in `/mcp`) | 0.3.2 | API, guidelines, `run_ui5_linter`, `run_manifest_validation` (works since 0.3.2; 0.2.18 failed with a draft-06 schema error) |
 | `chrome-devtools-mcp` | 1.8.0 | UI check in the browser |
 | Plugin `ui5@claude-plugins-official` | 0.1.8 | 8 UI5 best practices skills; its bundled MCP server is toggled off in `/mcp` in favour of the pinned project entry |
 | Plugin `cap-developer@cap` | 1.0.0 | CAP development skill from the CAP team |
@@ -67,7 +67,7 @@ Plugins are not installed automatically: `enabledPlugins` in `.claude/settings.j
    claude plugin install ui5@claude-plugins-official
    ```
 4. Restart the Claude Code session so `.mcp.json` and the plugins load; approve the four project servers when asked. `/mcp` must list `cds-mcp`, `fiori-mcp`, `chrome-devtools` and `ui5-mcp-server`; the SessionStart hook shows the briefing in the terminal and hands the briefing, STATE and the environment check to Claude.
-5. In `/mcp` toggle off `plugin:ui5:ui5-mcp-server`, the unpinned server bundled with the `ui5` plugin, so that only the pinned `ui5-mcp-server` runs. Claude Code stores the toggle per machine and project in `~/.claude.json` (`disabledMcpServers`); it cannot be committed. Check: `pgrep -fl 'ui5/mcp-server'` shows one process, `@ui5/mcp-server@0.2.18`.
+5. In `/mcp` toggle off `plugin:ui5:ui5-mcp-server`, the unpinned server bundled with the `ui5` plugin, so that only the pinned `ui5-mcp-server` runs. Claude Code stores the toggle per machine and project in `~/.claude.json` (`disabledMcpServers`); it cannot be committed. Check: `pgrep -fl 'ui5/mcp-server'` shows one process, `@ui5/mcp-server@0.3.2`.
 6. Google Chrome for `chrome-devtools-mcp` (the `ui-verifier` agent).
 7. GitHub CLI for the backlog (ADR-0019): `brew install gh`, `gh auth login` with the `repo` scope; the briefing shows the cached queue or a one-line notice without it.
 8. Language of the chat and the briefing: `"env": { "PIPELINE_LANG": "ru" }` in `.claude/settings.local.json` (per machine, gitignored); unset means English for the scripts and the user's language for the chat.

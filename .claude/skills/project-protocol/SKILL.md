@@ -66,7 +66,7 @@ Everything the pipeline reads or produces is written in English: code comments, 
 | `*.cds` | `cds compile srv --to json`, `npm run lint`, update `app/products/webapp/localService/metadata.xml` with `cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/localService/metadata.xml` |
 | `srv/**/*.js`, `test/**` | `npm run lint`, `npm test` |
 | `app/**/webapp/**` | `npm run lint` in `app/products` (ui5lint) |
-| `manifest.json` | `mcp__ui5-mcp-server__run_manifest_validation`; on a tool schema error (known defect) `npm run lint` in `app/products` |
+| `manifest.json` | `mcp__ui5-mcp-server__run_manifest_validation`; when the server is down `npm run lint` in `app/products` |
 | Anything in `db/`, `srv/`, `app/` | `npm run docs:registry`, then `node scripts/check-docs-fresh.mjs` |
 
 Attach the commands and their output (last lines) to the report. A red test or a linter error means the task is not finished.

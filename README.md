@@ -190,7 +190,7 @@ Three things in the table are worth knowing in advance. The feature context and 
 
 - The CAP reference, MCP server `cds-mcp` (`@cap-js/mcp-server@0.0.5`): the tools `search_model` (search in the project model) and `search_docs` (CAP documentation).
 - The Fiori reference, MCP server `fiori-mcp` (`@sap-ux/fiori-mcp-server@1.12.2`): `search_docs` over the Fiori Elements documentation; the only allowed way to change `manifest.json`, the main settings file of a Fiori application: `list_functionality` → `get_functionality_details` → `execute_functionality`; a new application through `generate_fiori_app_cap`.
-- The UI5 reference, MCP server `ui5-mcp-server` (`@ui5/mcp-server@0.2.18`): `get_api_reference` and `get_guidelines` for controls, `run_ui5_linter` and `run_manifest_validation`; a linter is a program that looks for style and form errors in code.
+- The UI5 reference, MCP server `ui5-mcp-server` (`@ui5/mcp-server@0.3.2`): `get_api_reference` and `get_guidelines` for controls, `run_ui5_linter` and `run_manifest_validation`; a linter is a program that looks for style and form errors in code.
 - The browser, MCP server `chrome-devtools` (`chrome-devtools-mcp@1.8.0`): a real Chrome that the agent drives through `navigate_page`, `take_screenshot`, `list_console_messages`, `get_network_request`.
 
 The reference versions are pinned exactly in `.mcp.json` and change only through the `/upstream-check` script by the human's decision. Which file type needs which reference is written in the `MCP_RULES` table in `scripts/lib/mcp-audit.mjs`; that is the table the worker exit control checks. The "reference first" rule is explained in the section about the worker agents.

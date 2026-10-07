@@ -133,6 +133,14 @@ describe('queue and recommendation', () => {
       // The draft ranks before the first unblocked item and is never recommended as /spec #3.
       const rec = recommend(q);
       expect(rec).toMatchObject({ kind: 'review', issue: { number: 3 } });
+      // Blocked or not (PATTERNS "Advisory from a Stop hook"): an open blocker keeps the draft
+      // blocked, and its review is still recommended.
+      const blockedDraft = buildQueue(
+        [issues[0], parseIssue(raw(3, 'rating-column: r', { body: '## Blocked by\n#6' }))],
+        drafts
+      );
+      expect(blockedDraft.find((i) => i.number === 3).blocked).toBe(true);
+      expect(recommend(blockedDraft)).toMatchObject({ kind: 'review', issue: { number: 3 } });
       const en = loadBundle('en', root);
       expect(renderRecommendation(en, rec)).toBe(
         'Recommended now: review the drafted plan of #3 in docs/features/rating-column/ (P2): ' +

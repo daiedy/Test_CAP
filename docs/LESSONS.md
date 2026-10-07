@@ -1,12 +1,10 @@
 # Lessons learned
 
-This file is an inbox, not an archive. A lesson lives here only until `/retro` turns it into something that acts on its own: a hook check, a test, a path rule, a PATTERNS row, a template, an ADR or a line in an agent prompt. Transferred lessons are removed; their destination is recorded in `docs/CHANGELOG.md`. The Stop hook warns when more than 10 entries remain. Format: date, title, status, why it is still here.
+This file is an inbox, not an archive. A lesson lives here only until `/retro` turns it into something that acts on its own: a hook check, a test, a path rule, a PATTERNS row, a template, an ADR or a line in an agent prompt. Transferred lessons are removed; their destination is recorded in `docs/CHANGELOG.md`. The Stop hook asks for `/retro` when more than 10 entries remain. Format: date, title, status, why it is still here.
 
 ## Pending
 
-- 2026-09-29. STATE `## Now` goes stale after a `!` git command that changes HEAD or the branch, and the briefing has no "spec in progress" state. Status: `Pending #15` (`pipeline-state-hygiene`); the fix is a SessionStart and Stop check against git HEAD plus `projectNow()`, scoped in that issue.
-- 2026-09-29. The Stop gate reads a parallel session's `.claude/worktrees/<name>/` as a protected change and advises a destructive `git checkout --`. Status: `Pending #15`; the local workaround is `.claude/worktrees/` in `.git/info/exclude`.
-- 2026-10-07. The Bash guard matches protected path strings in the command text, so a probe that only mentions a protected path asks; probing a guard needs `PIPELINE_ALLOW_PROTECTED` unset and a scratch copy of `scripts/`, otherwise the answer is the session's exemption. Status: `Pending /retro`; candidate: a line in `tests-backend.md`.
+No entries.
 
 ## Pending upstream
 
@@ -21,4 +19,4 @@ This file is an inbox, not an archive. A lesson lives here only until `/retro` t
 
 ## Transferred
 
-Transferred lessons are removed from this file; their destinations are recorded in `docs/CHANGELOG.md` under `pipeline` (2026-09-07, 2026-09-10, 2026-09-23, 2026-10-05).
+Transferred lessons are removed from this file; their destinations are recorded in `docs/CHANGELOG.md` under `pipeline` (2026-09-07, 2026-09-10, 2026-09-23, 2026-10-05, 2026-10-07).

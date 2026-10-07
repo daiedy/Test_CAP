@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-10-05",
+  "recordedAt": "2026-10-07",
   "bytes": {
     ".claude/agents/architect.md": 4281,
     ".claude/agents/cap-backend-dev.md": 2542,
@@ -16,10 +16,10 @@
     ".claude/rules/db-model.md": 1866,
     ".claude/rules/deploy.md": 977,
     ".claude/rules/i18n.md": 1783,
-    ".claude/rules/pipeline-config.md": 5026,
+    ".claude/rules/pipeline-config.md": 5338,
     ".claude/rules/srv-handlers.md": 1966,
     ".claude/rules/srv-services.md": 2249,
-    ".claude/rules/tests-backend.md": 2521,
+    ".claude/rules/tests-backend.md": 2841,
     ".claude/rules/tests-ui.md": 4527,
     ".claude/rules/ui-annotations.md": 3593,
     ".claude/rules/ui5-webapp.md": 3581,

@@ -169,6 +169,64 @@ describe('STATE drift and parallel worktrees (ADR-0023)', () => {
     }
   });
 
+  it('the LESSONS inbox note travels as additionalContext, never as stdout', () => {
+    // PATTERNS "Advisory from a Stop hook": one list item per pending entry; headings and the
+    // transferred section do not count.
+    const entries = (n) =>
+      Array.from(
+        { length: n },
+        (_, i) =>
+          `- 2026-09-${String(i + 1).padStart(2, '0')}. Lesson ${i + 1}. Status: \`Pending upstream x\`; waiting.`
+      ).join('\n');
+    const lessons = (n) =>
+      `# Lessons learned\n\n## Pending\n\n${entries(n)}\n\n## Pending upstream\n\n## Transferred\n\nSee docs/CHANGELOG.md.\n`;
+    const box = createSandbox({
+      prefix: 'state-hygiene-lessons',
+      session: SESSION,
+      files: {
+        'package.json': '{ "private": true, "scripts": { "test": "node -e 0" } }\n',
+        'test/a.test.js': '',
+        'docs/LESSONS.md': lessons(11),
+      },
+    });
+    try {
+      const init = box.rev();
+      // STATE names the parent of HEAD: no drift, so the note is the only advice.
+      const state = (o = {}) => stateDoc({ lastCommit: `${init} init`, ...o });
+      box.commit({ 'docs/STATE.md': state() }, 'state');
+      const fullGate = (code) => {
+        box.put({
+          [code]: 'export default 1;\n',
+          'docs/STATE.md': state({ phase: '2: backend, tests' }),
+          'docs/CHANGELOG.md': '# Changelog\n\n- a line\n',
+        });
+        return box.appended(() => box.hook('stop-gate.mjs', STOP, NO_NPM_NOTIFIER));
+      };
+
+      let out = fullGate('srv/service.js');
+      expect(out.res.status, out.res.stderr).toBe(0);
+      expect(JSON.parse(out.res.stdout).hookSpecificOutput).toEqual({
+        hookEventName: 'Stop',
+        additionalContext:
+          'docs/LESSONS.md holds 11 pending entries (limit 10); run /retro to move them into rules, hooks, tests or agent prompts.',
+      });
+      // Advice, not a block: no `gate` record.
+      expect(out.records).toEqual([TURN_END]);
+
+      // At the limit the note is gone and the pass text stays on stdout (another code change, so
+      // the gate runs in full again instead of taking the unchanged-tree shortcut).
+      box.put({ 'docs/LESSONS.md': lessons(10) });
+      out = fullGate('srv/other.js');
+      expect(out.res.status, out.res.stderr).toBe(0);
+      // Plain pass text (the sandbox has no registry checker, so its skip note is in there too).
+      expect(out.res.stdout).toMatch(/^Stop gate passed\. .*npm test: passed\.\n$/);
+      expect(out.res.stdout).not.toContain('LESSONS');
+      expect(out.records).toEqual([TURN_END]);
+    } finally {
+      box.remove();
+    }
+  });
+
   it('a parallel worktree passes the Stop gate', () => {
     const { box } = pipelineSandbox('state-hygiene-worktree');
     try {

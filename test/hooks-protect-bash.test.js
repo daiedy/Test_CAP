@@ -63,6 +63,17 @@ describe('PreToolUse Bash guardrail', () => {
     expect(decide('npm run docs:registry')).toBe('allow');
   });
 
+  it('resolves relative paths against a leading cd', () => {
+    // A probe in a temp repository names its files relative to it, not to the session's cwd.
+    expect(decide('cd /tmp && echo x > .claude/worktrees/demo/f.txt')).toBe('allow');
+    expect(decide('cd /tmp; echo x > .claude/settings.json', { agentId: 'sub-1' })).toBe('allow');
+    // A cd inside the repo still lands on the repo's protected paths.
+    expect(decide("cd scripts && sed -i '' 's/a/b/' hooks/post-edit.mjs")).toBe('ask');
+    expect(decide('cd app/products && echo x > ../../.mcp.json')).toBe('ask');
+    // A directory from a variable is unknown: the session's cwd stays the base.
+    expect(decide('cd "$TMPDIR" && echo x > .claude/settings.json')).toBe('ask');
+  });
+
   it('mv counts as a write to its source too, because it removes it', () => {
     expect(decide('mv docs/registry/ENTITIES.md /tmp/z.md')).toBe('ask');
   });

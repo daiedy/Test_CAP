@@ -6,6 +6,7 @@ This file is an inbox, not an archive. A lesson lives here only until `/retro` t
 
 - 2026-09-29. STATE `## Now` goes stale after a `!` git command that changes HEAD or the branch, and the briefing has no "spec in progress" state. Status: `Pending #15` (`pipeline-state-hygiene`); the fix is a SessionStart and Stop check against git HEAD plus `projectNow()`, scoped in that issue.
 - 2026-09-29. The Stop gate reads a parallel session's `.claude/worktrees/<name>/` as a protected change and advises a destructive `git checkout --`. Status: `Pending #15`; the local workaround is `.claude/worktrees/` in `.git/info/exclude`.
+- 2026-10-07. The Bash guard matches protected path strings in the command text, so a probe that only mentions a protected path asks; probing a guard needs `PIPELINE_ALLOW_PROTECTED` unset and a scratch copy of `scripts/`, otherwise the answer is the session's exemption. Status: `Pending /retro`; candidate: a line in `tests-backend.md`.
 
 ## Pending upstream
 

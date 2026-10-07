@@ -15,11 +15,11 @@ Contract rule: no step changes the OData model (`db/*.cds`, `srv/**/*.cds`, `app
 - [x] `stop-gate.mjs` on a drift that SessionStart did not report exits 0 with `hookSpecificOutput.additionalContext` once, then stays silent for the same key and under `stop_hook_active`, and records no `gate` event, verified by `test/hooks-state-hygiene.test.js` "Stop gives drift feedback once and never blocks"
 - [x] A locked worktree under `.claude/worktrees/<name>/` does not block the Stop gate, with the `.gitignore` line and without it, while `protectedHit()` still denies an Edit into it, verified by `test/hooks-state-hygiene.test.js` "a parallel worktree passes the Stop gate" and `test/hooks-registry-gate.test.js` "exempts worktrees from the git audit only"
 - [x] The Stop gate block for an untracked protected entry no longer advises `git checkout --`, verified by `test/hooks-state-hygiene.test.js` "a parallel worktree passes the Stop gate"
-- [ ] `git check-ignore -q .claude/worktrees/demo/x` exits 0 in the repository, verified by the command output in `VERIFICATION.md`
-- [ ] In the live session a STATE `Last commit:` set two first-parent commits back produces one `Stop hook feedback` entry and no hook error, verified by `VERIFICATION.md` (orchestrator observation, then STATE restored)
-- [ ] `node --check` passes for every changed `.mjs`, `npx eslint scripts test` and `npm run format:check` are clean, verified by `VERIFICATION.md` command output
-- [ ] `test/prompt-budget.test.js` stays green with `test/prompt-budget.json` unchanged (no prompt, rule or skill grows), verified by `npm test`
-- [ ] Documentation updated: registry fresh (expected unchanged), STATE, CHANGELOG (`pipeline`), PATTERNS row "Advisory from a Stop hook", ADR-0023 accepted, verified by `node scripts/check-docs-fresh.mjs`
+- [x] `git check-ignore -q .claude/worktrees/demo/x` exits 0 in the repository, verified by the command output in `VERIFICATION.md`
+- [x] In the live session a STATE `Last commit:` set two first-parent commits back produces one `Stop hook feedback` entry and no hook error, verified by `VERIFICATION.md` (orchestrator observation, then STATE restored)
+- [x] `node --check` passes for every changed `.mjs`, `npx eslint scripts test` and `npm run format:check` are clean, verified by `VERIFICATION.md` command output
+- [x] `test/prompt-budget.test.js` stays green with `test/prompt-budget.json` unchanged (no prompt, rule or skill grows), verified by `npm test`
+- [x] Documentation updated: registry fresh (expected unchanged), STATE, CHANGELOG (`pipeline`), PATTERNS row "Advisory from a Stop hook", ADR-0023 accepted, verified by `node scripts/check-docs-fresh.mjs`
 
 ## Steps
 

@@ -6,10 +6,10 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 - Date: 2026-10-07
 - Branch: feature/pipeline-state-hygiene
-- Feature: pipeline-state-hygiene (#15)
-- Phase: 6: documentation
-- Last commit: 0dfe23d feat(pipeline): pipeline-state-hygiene briefing, drift feedback, worktrees
-- Next: docs-keeper (PLAN step 8), then close #15
+- Feature: none
+- Phase: none (pipeline-state-hygiene #15 closed, branch not merged)
+- Last commit: 4234941 docs: pipeline-state-hygiene summary and registry
+- Next: merge `feature/pipeline-state-hygiene` into main and push (user)
 
 ## Open debt
 

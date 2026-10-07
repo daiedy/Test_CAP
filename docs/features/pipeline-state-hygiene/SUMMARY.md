@@ -57,3 +57,7 @@ Gates: 2 blocks (protected 2); review 0 blocking / 3 findings; criteria 13/13; M
 
 - No assertion pins a blocked drafted spec still giving `kind: 'review'` (reviewer, optional for a later `test-backend` change).
 - The `LESSONS.md holds N entries; run /retro` note travels on the debug-only Stop line.
+
+## Full record
+
+Pruned to this file (ADR-0019). CONTEXT.md, PLAN.md, REVIEW.md, VERIFICATION.md, research of this feature stay in git history at https://github.com/daiedy/Test_CAP/tree/4234941ec46c5777eb16f0b5e3ae296f8f6d3687/docs/features/pipeline-state-hygiene (commit `4234941`).

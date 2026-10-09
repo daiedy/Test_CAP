@@ -61,3 +61,7 @@ Three entries in `docs/LESSONS.md` (pending): measure a pop-in claim before the 
 - A mismatch message written on a draft stays until the same field is PATCHed again (reachable only through the API; activation still succeeds once the pair is fixed).
 - Follow-up candidates, not created as issues (they go through `/backlog` by the user): a dependent Subcategory filter field on the List Report (D3); Subcategory offered unnarrowed in "Adapt Filters" (D9, V9).
 - The table pop-in order inside one `UI.Importance` group is right to left (`sap.m.Table` source, not in the MCP docs); recorded in VERIFICATION V8.
+
+## Full record
+
+Pruned to this file (ADR-0019). CONTEXT.md, PLAN.md, REVIEW.md, SCREENS.md, VERIFICATION.md, research, screenshots of this feature stay in git history at https://github.com/daiedy/Test_CAP/tree/4657c4cad0a90ee9dceaf3c7a524f9f5a44d4474/docs/features/products-subcategories (commit `4657c4c`).

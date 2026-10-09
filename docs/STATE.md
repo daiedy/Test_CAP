@@ -6,10 +6,10 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 - Date: 2026-10-09
 - Branch: feature/products-subcategories
-- Feature: products-subcategories (#8)
-- Phase: 6: documentation
-- Last commit: 2245e97 fix(app): products-subcategories review fixes
-- Next: docs-keeper PLAN step 13 (PATTERNS rows of ADR-0024, template, TESTING fix, registry, CHANGELOG, SUMMARY, LESSONS), gate check-docs-fresh
+- Feature: none
+- Phase: none (products-subcategories #8 closed, branch not merged)
+- Last commit: 4657c4c docs: products-subcategories summary and registry
+- Next: merge `feature/products-subcategories` into main and push (user), then `/spec #9` (products-details-section, unblocked by #8)
 
 ## Open debt
 

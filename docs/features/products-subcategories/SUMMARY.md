@@ -23,9 +23,9 @@ Completion date: 2026-10-09. Commits: `2bd5aee` ... `2245e97` (plan and ADR-0024
 `Subcategories` (`my.catalog.Subcategories`, `CatalogService.Subcategories`, `Subcategories.texts`), `Products.subcategory`, handler `resetStaleSubcategory` (`before('PATCH', Products.drafts)`), message `PRODUCTS_SUBCATEGORY_MISMATCH`, `Common.SideEffects #CategoryChanged`, test page object `ObjectPageForm`, journey `SubcategoryDependsOnCategoryJourney`.
 
 ## Cost
-Sessions 1 (2026-10-09 .. 2026-10-09), lead 2h 56m, active 2h 36m, waiting 20m, agent-minutes 4h 14m (parallelism 1.6); idle cap 5 min, tool cap 10 min; phases: markers; rework: plan; pricing 2026-09-29; Claude Code 2.1.295; spec: not attributed
+Sessions 1 (2026-10-09 .. 2026-10-09), lead 2h 59m, active 2h 39m, waiting 20m, agent-minutes 4h 20m (parallelism 1.6); idle cap 5 min, tool cap 10 min; phases: markers; rework: plan; pricing 2026-09-29; Claude Code 2.1.295; spec: not attributed
 
-Cost $40.16 (no cost-state record); tokens in 1.6K / cache write 3.2M / cache read 102M / out 227K; cache hit 97%; context avg 134K, peak 293K
+Cost $41.25 (no cost-state record); tokens in 1.7K / cache write 3.2M / cache read 106M / out 240K; cache hit 97%; context avg 135K, peak 293K
 
 | Phase | Rounds | Active | Waiting | Calls | Cost | Rework cost |
 |---|---|---|---|---|---|---|
@@ -35,11 +35,13 @@ Cost $40.16 (no cost-state record); tokens in 1.6K / cache write 3.2M / cache re
 | 3 | 1 | 54m | 0m | 211 | $12.28 | $0.00 |
 | 4 | 1 | 10m | 0m | 163 | $5.16 | $0.00 |
 | 5 | 1 | 29m | 0m | 170 | $7.73 | $2.36 |
-| 6 | 1 | 2m | 0m | 24 | $0.73 | $0.00 |
+| 6 | 1 | 4m | 0m | 38 | $1.24 | $0.00 |
+| 7 | 1 | 1m | 0m | 4 | $0.26 | $0.00 |
+| none | 1 | 1m | 0m | 5 | $0.32 | $0.00 |
 
 | Agent | Launches | Resumes | Active | Calls / maxTurns | Cost | Rework |
 |---|---|---|---|---|---|---|
-| main | - | - | 1h 38m | 78 / - | $4.23 | 0 |
+| main | - | - | 1h 43m | 90 / - | $5.04 | 0 |
 | architect | 1 | 2 | 24m | 80 / 60 | $6.36 | 0 |
 | ux-designer | 1 | 0 | 8m | 26 / 30 | $2.65 | 0 |
 | cap-backend-dev | 1 | 0 | 7m | 39 / 60 | $1.51 | 0 |
@@ -48,9 +50,9 @@ Cost $40.16 (no cost-state record); tokens in 1.6K / cache write 3.2M / cache re
 | test-ui | 2 | 1 | 57m | 152 / 80 | $9.96 | 1 ($1.49) |
 | ui-verifier | 2 | 1 | 11m | 172 / 80 | $4.92 | 0 |
 | reviewer | 1 | 2 | 19m | 75 / 50 | $3.92 | 0 |
-| docs-keeper | 1 | 0 | 2m | 22 / 80 | $0.55 | 0 |
+| docs-keeper | 1 | 0 | 4m | 33 / 80 | $0.84 | 0 |
 
-Gates: 1 blocks (protected 1); review 0 blocking / 6 findings; criteria 29/29; MCP 280 queries, 0 unjustified, 3 failed; rule-covered edits with a query 25/25; prompts 1, hand-backs 14, notifications 19; lines +2444 / -259
+Gates: 1 blocks (protected 1); review 0 blocking / 6 findings; criteria 29/29; MCP 280 queries, 0 unjustified, 3 failed; rule-covered edits with a query 25/25; prompts 1, hand-backs 15, notifications 20; lines +2575 / -876
 
 ## Lessons
 Three entries in `docs/LESSONS.md` (pending): measure a pop-in claim before the plan gate; the worktree Bash guard and compound commands; `cds add data` edits `mta.yaml`. The null-guard rule for a cross-field `@assert` and the unqualified hand-written ValueList are now in PATTERNS (ADR-0024 rows), not in LESSONS.

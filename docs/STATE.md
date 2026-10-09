@@ -8,7 +8,7 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Branch: feature/products-subcategories
 - Feature: none
 - Phase: none (products-subcategories #8 closed, branch not merged)
-- Last commit: 4657c4c docs: products-subcategories summary and registry
+- Last commit: c0b9580 docs: products-subcategories close #8 and prune
 - Next: merge `feature/products-subcategories` into main and push (user), then `/spec #9` (products-details-section, unblocked by #8)
 
 ## Open debt

@@ -368,6 +368,80 @@ describe('metrics records of the hooks (ADR-0022)', () => {
     }
   });
 
+  it('defers the Stop gate while a subagent of the session still works', () => {
+    // Raw event-log lines with a chosen `ts`, as SubagentStart and SubagentStop write them.
+    const log = (minutesAgo, event, agent, agentType) =>
+      fs.appendFileSync(
+        metricsFile(sandbox, SESSION),
+        JSON.stringify({
+          ts: new Date(Date.now() - minutesAgo * 60_000).toISOString(),
+          event,
+          agent,
+          agentType,
+        }) + '\n'
+      );
+    const transcripts = fs.mkdtempSync(path.join(os.tmpdir(), 'hooks-metrics-running-'));
+    const mainTranscript = path.join(transcripts, 'main.jsonl');
+    const agentFile = path.join(transcripts, 'main', 'subagents', 'agent-r6.jsonl');
+    const stop = { ...STOP, transcript_path: mainTranscript };
+    const blocked = () => {
+      const { res, records } = appended(() => hook('stop-gate.mjs', stop));
+      expect(res.status).toBe(2);
+      expect(records[0]).toEqual({
+        event: 'gate',
+        hook: 'stop-gate',
+        agent: 'main',
+        agentType: 'main',
+        reason: 'docs',
+      });
+    };
+    const deferred = (types) => {
+      const { res, records } = appended(() => hook('stop-gate.mjs', stop));
+      expect(res.status).toBe(0);
+      expect(res.stdout).toBe(
+        `Stop gate deferred: ${types} still running; the next stop runs the full gate.\n`
+      );
+      expect(records).toEqual([{ event: 'turn-end', blocked: false }]);
+    };
+    try {
+      // Code changed, docs not: the gate blocks while no agent works.
+      put({ 'srv/service.js': 'export default 1;\n' });
+      blocked();
+
+      // A launch (SubagentStart) with no transcript yet: the start time counts.
+      const start = appended(() =>
+        hook('subagent-start.mjs', {
+          hook_event_name: 'SubagentStart',
+          agent_id: 'agent-r5',
+          agent_type: 'test-backend',
+        })
+      );
+      expect(start.records).toEqual([
+        { event: 'agent-start', agent: 'r5', agentType: 'test-backend' },
+      ]);
+      deferred('test-backend');
+      // Its agent-stop ends the deferral, and the docs check runs again.
+      log(0, 'agent-stop', 'r5', 'test-backend');
+      blocked();
+
+      // A start older than TOOL_MS without a transcript: an agent killed without SubagentStop.
+      log(11, 'agent-start', 'r6', 'ui-verifier');
+      blocked();
+      // The same agent writing its transcript is at work.
+      fs.mkdirSync(path.dirname(agentFile), { recursive: true });
+      fs.writeFileSync(agentFile, '{}\n');
+      deferred('ui-verifier');
+      // Its transcript untouched for longer than TOOL_MS: no longer counted.
+      const old = (Date.now() - 11 * 60_000) / 1000;
+      fs.utimesSync(agentFile, old, old);
+      blocked();
+    } finally {
+      log(0, 'agent-stop', 'r6', 'ui-verifier');
+      fs.rmSync(transcripts, { recursive: true, force: true });
+      resetTree();
+    }
+  });
+
   it('records no prompt text', () => {
     const prompts = [
       [`please look at ${SENTINEL} first`, {}],

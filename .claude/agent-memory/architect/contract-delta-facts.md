@@ -1,6 +1,6 @@
 ---
 name: contract-delta-facts
-description: Measured EDMX cost of common CDS edits on this model (2026-10-09, cds 10.1.1): @assert.target emits nothing, @assert.range maps to Validation.Minimum/Maximum, a Decimal precision change is one Property line, a UI.*Hidden $Path renders twice plus once per DataFieldForAction; scratch-copy method; Currencies CSV and import fixture facts; catalog-hygiene (#20) spec status
+description: Measured EDMX cost of common CDS edits on this model (2026-10-09, cds 10.1.1): @assert.target emits nothing, @assert.range maps to Validation.Minimum/Maximum, a Decimal precision change is one Property line, a UI.*Hidden $Path renders twice plus once per DataFieldForAction; scratch-copy method; Currencies CSV and import fixture facts
 metadata:
   type: project
 ---
@@ -14,7 +14,7 @@ Measured on a scratch copy for the `catalog-hygiene` spec (#20, 2026-10-09; `rsy
 
 Data facts: `@sap/cds-common-content` 3.2.0 ships `db/data/sap-common-Currencies.csv` (204 data rows, quoted CSV, `USD`/`EUR`/`GBP` present, no `XXX`/`XTS`); `sap.common.Currencies` is `persistence.skip: if-unused` and is used by `Products.currency`, so the table exists and the test "exposes Currencies as a code list" reads `USD` on every run. The import fixtures (`test/fixtures/products-import-{valid,invalid}.xlsx`) use `USD`/`EUR`/`GBP` only; the invalid one proves `@assert.target` runs on the internal `INSERT` (`Row 5, column "category"`), so a second association check needs no handler change (`columnOf` already maps `currency_code` to `currency`).
 
-Spec status: `docs/features/catalog-hygiene/` approved by the user 2026-10-09 with all four recommended answers (range stays `[0, 99999999.99]`; ADR-0003 amended in place, no new ADR; revert to the long path if the short one keeps the TypeError; two regenerations, one per phase), gate mode autonomous. The ADR-0003 amendment ("price precision", parts A-C) is written in the ADR-0021 shape: section between Decision and Alternatives, plus `Amendment:` rows in Alternatives, Consequences and Sources, a short "Withdrawn ... see the amendment below" pointer on the old exception sentence, `Status:` line untouched. Approved PLAN header form: `Status: approved YYYY-MM-DD. Gate mode: <mode>.` ADR-0024 is still a free number (the #11 spec mentioned it but no file exists on `main`).
+`catalog-hygiene` (#20) is merged (`c29b3f8`, 2026-10-09); the figures above held at implementation. ADR-0003 carries the amendment in the ADR-0021 shape (section between Decision and Alternatives, `Amendment:` rows, `Status:` untouched). ADR-0024 is still a free number (the #11 spec mentioned it, no file exists on `main`).
 
 **Why:** contract figures per phase are a plan requirement (CHANGELOG 2026-09-11) and the issue text got one of three wrong; measuring cost one scratch compile per edit.
 

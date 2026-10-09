@@ -34,6 +34,7 @@ cd app/products && npm run lint   # ui5lint
 ## cds 10 specifics
 
 - Decimal and Int64 from SQLite arrive as strings: `expect(product.price).to.equal('1299.99')`.
+- A value beyond a Decimal's declared precision fails together with `@assert.range`: the 400 reads `Multiple errors occurred` and carries no top-level `code`. A range test proves `ASSERT_RANGE` only with a value the precision holds (`Products.price` is `Decimal(15, 2)`, so `100000000.00` gives one `ASSERT_RANGE`; on the former `Decimal(10, 2)` it gave "Multiple errors occurred").
 - Write operations return `{ affected }`, not the changed rows.
 - `srv.entities` is a getter, not a function.
 - UI tests (`ui5-test-runner`) run only against the live stack on :4004, started as `npx cds serve --in-memory --port 4004` exactly as `.github/workflows/ci.yml` does: `fiori run` (`npm start`, :8080) does not serve `/products/webapp` from the FLP sandbox, and the mock server ignores `Accept-Language`, so the `ru` journey cannot pass there. `cds watch` is for development, not for a test run: measured 2026-09-10, the runner found no test page against one `cds watch` instance and timed out the probe navigation against a second, concurrent one.

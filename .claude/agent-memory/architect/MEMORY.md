@@ -4,7 +4,7 @@
 - [cds 10 draft behavior](cds10-draft-behavior.md) — POST without IsActiveEntity creates a draft; tests need IsActiveEntity:true; basis of ADR-0012 (accepted)
 - [FE V4 semantic key and the row draft marker](fe-v4-semantic-key-marker.md) — why no marker without `@Common.SemanticKey`, `isDraft` OPA matcher, measured EDMX delta; ADR-0015 (accepted)
 - [cds 10 mocked auth and @restrict on drafts](cap-mocked-auth-behavior.md) — anonymous 401 only on demand, users merge, Viewer 403 on draft actions, metadata test needs auth; ADR-0013 accepted 2026-09-10
-- [Role-aware UI needs a singleton](role-aware-ui-singleton.md) — why a per-row element cannot hide Create; measured +50 EDMX lines; ADR-0013 part 8
+- [Role-aware UI needs a singleton](role-aware-ui-singleton.md) — why a per-row element cannot hide Create; measured +50 EDMX lines; short `/Permissions/isEditor` path; ADR-0013 part 8 and its amendment
 - [Test suite shape and auth](test-suite-shape.md) — re-derive test counts per plan; the hook test uses no cds.test, so no defaults.auth
 - [FE V4 rating DataPoint column](fe-v4-rating-datapoint.md) — stars need no fragment; editable in a form; sap.fe.test matchers by header and `{ value }`; +6 / net +15 EDMX
 - [FE V4 custom filter field](fe-v4-custom-filter-field.md) — filterFields, Range min-0 bug, RangeSlider write-back, liveMode; fiori-mcp 1.12.2 gap, ADR-0020 manual exception
@@ -14,4 +14,4 @@
 - [Hook output and STATE drift](pipeline-hook-output-and-state-drift.md) — Stop stdout invisible, additionalContext feedback, Last commit = first parent, worktree status, Bash guard trips on doc text; ADR-0023 accepted
 - [Claude Code transcript facts](claude-code-transcript-facts.md) — requestId+uuid dedupe per scope, cost-state per process, pricing check as 5m-1h interval (2026-10-02), internal agents typed "claude"
 - [FLP sandbox flex connector](flp-sandbox-flex-connector.md) — external:false key, sandbox.js/sandbox2.js overwrite sap-ui-config, OPA runs through flpSandbox.html, vacuous iSeeVariantModified(false); ADR-0024 proposed
-- [EDMX cost per CDS edit](contract-delta-facts.md) — @assert.target 0 lines, @assert.range 1, Decimal precision 1, UI.*Hidden $Path 2 per term; Currencies CSV facts; catalog-hygiene (#20) approved 2026-10-09, ADR-0003 amended in place
+- [EDMX cost per CDS edit](contract-delta-facts.md) — @assert.target 0 lines, @assert.range 1, Decimal precision 1, UI.*Hidden $Path 2 per term; Currencies CSV facts; catalog-hygiene (#20) merged 2026-10-09, ADR-0003 amended in place

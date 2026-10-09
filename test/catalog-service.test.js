@@ -43,6 +43,11 @@ const as = (username) => ({ auth: { username } });
 const anonymous = { auth: null }; // overrides defaults.auth, sends no Authorization header
 
 describe('CatalogService.Products', () => {
+  // Rows of a rejection test that unexpectedly succeeded; keeps the seeded count at 15.
+  afterEach(async () => {
+    await cds.run(cds.ql.DELETE.from('my.catalog.Products').where`name like 'Rejected %'`);
+  });
+
   it('lists the 15 seeded products', async () => {
     const { data } = await GET(`${base}/Products?$count=true&$top=1`);
     expect(data['@odata.count']).to.equal(15);
@@ -112,12 +117,26 @@ describe('CatalogService.Products', () => {
     expect(err).to.containSubset({ code: 'ASSERT_TARGET', target: 'category_code' });
   });
 
+  it('rejects an unknown currency code (@assert.target)', async () => {
+    const payload = { ...newProduct, name: 'Rejected Currency', currency_code: 'XXX' };
+    const err = await expect(POST(`${base}/Products`, active(payload))).to.be.rejectedWith(/400/);
+    expect(err).to.containSubset({ code: 'ASSERT_TARGET', target: 'currency_code' });
+  });
+
   it('rejects negative stock (@assert.range)', async () => {
     const { data } = await GET(`${base}/Products?$filter=name eq 'Yoga Mat'&$select=ID`);
     const err = await expect(PATCH(activeKey(data.value[0].ID), { stock: -1 })).to.be.rejectedWith(
       /400/
     );
     expect(err).to.containSubset({ code: 'ASSERT_RANGE' });
+  });
+
+  it('rejects a price above the range (@assert.range)', async () => {
+    // Decimal(15, 2) stores the value; the business bound 99999999.99 rejects it (ADR-0003).
+    const payload = { ...newProduct, name: 'Rejected Price', price: '100000000.00' };
+    const err = await expect(POST(`${base}/Products`, active(payload))).to.be.rejectedWith(/400/);
+    expect(err).to.containSubset({ code: 'ASSERT_RANGE' });
+    expect(err.target).to.match(/price$/);
   });
 
   it('returns the seeded rating of a product', async () => {
@@ -232,6 +251,22 @@ describe('CatalogService.Products drafts', () => {
       const err = await expect(draftActivate()).to.be.rejectedWith(/400/);
       expect(err).to.containSubset({ code: 'ASSERT_TARGET' });
       expect(err.target).to.match(/category_code$/);
+    } finally {
+      await discard();
+    }
+  });
+
+  it('reports an unknown currency on the draft and rejects activation (@assert.target)', async () => {
+    await draftEdit();
+    try {
+      // On a draft, @assert.* are messages (200), not errors.
+      const { status, data } = await PATCH(draftKey(id), { currency_code: 'XXX' });
+      expect(status).to.equal(200);
+      expect(data.DraftMessages).to.containSubset([{ code: 'ASSERT_TARGET' }]);
+      // Activation enforces them; the target is matched by its suffix (TESTING.md).
+      const err = await expect(draftActivate()).to.be.rejectedWith(/400/);
+      expect(err).to.containSubset({ code: 'ASSERT_TARGET' });
+      expect(err.target).to.match(/currency_code$/);
     } finally {
       await discard();
     }
@@ -587,6 +622,19 @@ describe('CatalogService.Products importProducts', () => {
     // Against an existing active product (case-insensitive) and against an earlier row.
     expect(messages[1]).to.match(/^Row 3, column "name": a product named "BACKPACK" /);
     expect(messages[2]).to.match(/^Row 4, column "name": a product named "import only row" /);
+    expect(await count()).to.equal(15);
+  });
+
+  it('importProducts reports an unknown currency code', async () => {
+    // @assert.target on currency runs on the action's internal INSERT, per row (ADR-0021).
+    const { codes, messages } = await rejected(
+      importSheet([HEADER, generatedRow(1, { currency: 'XXX' })])
+    );
+    expect(codes).to.deep.equal([
+      'PRODUCTS_IMPORT_NOTHING_IMPORTED',
+      'PRODUCTS_IMPORT_ROW_INVALID',
+    ]);
+    expect(messages[1]).to.match(/^Row 2, column "currency": /);
     expect(await count()).to.equal(15);
   });
 

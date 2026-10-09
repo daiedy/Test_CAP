@@ -35,6 +35,16 @@ describe('OData contract of CatalogService', () => {
     expect(data).toContain('Common.Label" String="Product Name"');
   });
 
+  // ADR-0003 amendment (catalog-hygiene): money is Decimal(15, 2); the historical
+  // Decimal(10, 2) exception of Products.price is withdrawn.
+  it('exposes price as Edm.Decimal with precision 15 and scale 2', async () => {
+    const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
+      headers: { 'Accept-Language': 'en' },
+    });
+    expect(status).toBe(200);
+    expect(data).toContain('<Property Name="price" Type="Edm.Decimal" Precision="15" Scale="2"/>');
+  });
+
   it('exposes the semantic key of Products in the contract', async () => {
     // ADR-0015: FE V4 renders the draft/lock marker in the first semantic-key LineItem column.
     const { status, data } = await test.get('/odata/v4/catalog/$metadata', {

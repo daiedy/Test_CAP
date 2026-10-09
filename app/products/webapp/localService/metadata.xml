@@ -58,7 +58,7 @@
         <Property Name="modifiedBy" Type="Edm.String" MaxLength="255"/>
         <Property Name="name" Type="Edm.String" MaxLength="100"/>
         <Property Name="description" Type="Edm.String" MaxLength="500"/>
-        <Property Name="price" Type="Edm.Decimal" Precision="10" Scale="2"/>
+        <Property Name="price" Type="Edm.Decimal" Precision="15" Scale="2"/>
         <NavigationProperty Name="currency" Type="CatalogService.Currencies">
           <ReferentialConstraint Property="currency_code" ReferencedProperty="code"/>
         </NavigationProperty>

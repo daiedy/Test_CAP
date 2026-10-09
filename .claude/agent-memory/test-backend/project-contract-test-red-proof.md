@@ -46,6 +46,13 @@ turn red, and the restored copy must be green again. 15 of 15 went red for crite
 Cleanup: `rm -rf $(cat file)` or `rm -rf "$VAR"` is refused by Claude Code's built-in safety check
 (an unresolvable target). Print the path first, then `rm -rf` the literal path.
 
+Runtime variant (catalog-hygiene, 2026-10-09): the same `git archive HEAD` copy with the edited
+service test and `npx vitest run -t '<regex of new it names>'` proves service tests red too (an
+assertion that only `@assert.*` makes true shows 201/200 on the copy). Give rejection payloads a
+distinct name prefix and clean it in an `afterEach`, or the red run leaves rows. A value above
+the declared Decimal precision fails twice (400 "Multiple errors occurred", no top-level code),
+so a range test needs the precision to hold the value.
+
 **How to apply:** whenever a plan asks for a contract test that "must fail on main", or a new `it`
 could pass vacuously. Count the asserted substring in the pre-feature EDMX; if the count is not 0,
 say so in the report instead of claiming the test proves the change. See

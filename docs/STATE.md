@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-09
 - Branch: feature/catalog-hygiene
 - Feature: catalog-hygiene (#20)
-- Phase: 1: plan approved, ADR-0003 amendment (step 2)
-- Last commit: 7f18788 Merge branch 'chore/state-debt-cleanup'
-- Next: phase 2 backend (steps 3 and 4), autonomous gate mode
+- Phase: 2: backend (steps 3 and 4)
+- Last commit: d1824ff docs(spec): catalog-hygiene plan and ADR-0003 amendment
+- Next: phase 3 UI (steps 5 to 7), autonomous gate mode
 
 ## Open debt
 

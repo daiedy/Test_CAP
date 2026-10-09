@@ -11,6 +11,6 @@ Test counts in plans go stale fast. Re-derive them before writing acceptance cri
 
 **How to apply:** not every test file is a service test. The Bash-guardrail, registry-gate, doc-shapes, prompt-budget and backlog tests drive scripts through `spawnSync` or pure functions — no `cds.test`, no HTTP, no server — so they must **not** set `defaults.auth`. Word TESTING rule 5 and any plan criterion as "every test file that starts a server with `cds.test`". Quote counts per phase gate, never a single total.
 
-State on `main` at `831dd42` (2026-09-25): `test/catalog-service.test.js` 26 `it`s, `test/metadata.test.js` 6, `test/hooks-protect-bash.test.js` 6, `test/hooks-registry-gate.test.js` 7, `test/doc-shapes.test.js` 9, `test/prompt-budget.test.js` 3, `test/backlog.test.js` 7 (total 64); 25 `opaTest`s in six journeys (3, 6, 6, 4, 2, 4).
+State on `main` at `7f18788` (2026-10-08, re-counted for the `sandbox-flex-connector` spec): `npm test` 139 tests in 11 files (STATE "What works" lists them); 40 `opaTest`s in nine journeys (FilterProductsByCategory 4, EditCategoryOnObjectPage 6, CategoryShownAsName 3, DraftMarkerInListReport 6, RoleAwareActions 2, RatingShownAsStars 3, ImportProducts 3, RatingRangeFilter 8, RussianLocale 5) plus 2 QUnit tests = 42 in `npm run test:ui`. Earlier snapshot (`831dd42`, 2026-09-25): 64 backend tests, 25 `opaTest`s in six journeys.
 
 Related: [[pipeline-first-feature]], [[cap-mocked-auth-behavior]], [[role-aware-ui-singleton]], [[fe-v4-rating-datapoint]].

@@ -4,12 +4,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## Now
 
-- Date: 2026-10-07
-- Branch: main
-- Feature: none
-- Phase: none (upstream digest 2026-10-07 worked through; optional pin bumps deferred to the next `/upstream-check`)
-- Last commit: 3eba7d2 docs: STATE after merging the Dependabot updates
-- Next: debt first: `/backlog` a `catalog-hygiene` issue (price, currency, short `$edmJson` path), then #11, then `/spec #8`
+- Date: 2026-10-09
+- Branch: feature/catalog-hygiene
+- Feature: catalog-hygiene (#20)
+- Phase: 1: plan approved, ADR-0003 amendment (step 2)
+- Last commit: 7f18788 Merge branch 'chore/state-debt-cleanup'
+- Next: phase 2 backend (steps 3 and 4), autonomous gate mode
 
 ## Open debt
 

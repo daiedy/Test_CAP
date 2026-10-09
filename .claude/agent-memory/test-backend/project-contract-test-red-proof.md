@@ -63,6 +63,14 @@ and lists failing titles per mutation. Read the cascades too: a red that also tu
 count test red means a rejection test leaks a row (M7 "not @readonly" leaked `OTHER` into the
 viewer count until the describe got an `afterEach`).
 
+Contract variant in a worktree (products-subcategories step 8, 2026-10-09): for a `$metadata` test copy
+`_i18n db srv test package.json` plus `app/products/annotations.cds` and `app/products/annotations/`
+(the HTTP `$metadata` needs nothing else); the "before" file comes from a separate plain
+`git show HEAD:<path> > <scratch>/head-X.cds` (allowed when it is the only command; the guard refuses it
+inside a `&&` chain). Mutate the annotation file, not the test. Measured: a hand-written
+`Common.ValueList #Qualifier` on a CodeList association does NOT replace the compiler-generated
+unqualified one (2 ValueLists on the FK), so "exactly one `Term=\"Common.ValueList\"`" is a real guard.
+
 **How to apply:** whenever a plan asks for a contract test that "must fail on main", or a new `it`
 could pass vacuously. Count the asserted substring in the pre-feature EDMX; if the count is not 0,
 say so in the report instead of claiming the test proves the change. See

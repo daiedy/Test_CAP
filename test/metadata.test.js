@@ -7,6 +7,13 @@ const test = cds.test(import.meta.dirname + '/..');
 // @requires on CatalogService also protects $metadata, so even the contract test needs a user (ADR-0013).
 test.defaults.auth = { username: 'alice' };
 
+// The <Annotations> block of one target in the compact EDMX (whitespace between tags removed).
+const annotationsOf = (compact, target) => {
+  const start = compact.indexOf(`<Annotations Target="${target}">`);
+  expect(start).toBeGreaterThan(-1);
+  return compact.slice(start, compact.indexOf('</Annotations>', start));
+};
+
 describe('OData contract of CatalogService', () => {
   it('matches the EDMX snapshot', async () => {
     const csn = await cds.load('*');
@@ -161,19 +168,58 @@ describe('OData contract of CatalogService', () => {
     // The EDMX is pretty-printed, so compare without the whitespace between the tags.
     const compact = data.replace(/>\s+</g, '><');
     const target = 'CatalogService.importProducts(Collection(CatalogService.Products))';
-    const annotations = (path) => {
-      const start = compact.indexOf(`<Annotations Target="${path}">`);
-      expect(start).toBeGreaterThan(-1);
-      return compact.slice(start, compact.indexOf('</Annotations>', start));
-    };
-    expect(annotations(target)).toContain(
+    expect(annotationsOf(compact, target)).toContain(
       '<Annotation Term="Common.SideEffects"><Record Type="Common.SideEffectsType">' +
         '<PropertyValue Property="TargetEntities"><Collection>' +
         '<NavigationPropertyPath>/CatalogService.EntityContainer/Products</NavigationPropertyPath>' +
         '</Collection></PropertyValue></Record></Annotation>'
     );
-    expect(annotations(`${target}/file`)).toContain(
+    expect(annotationsOf(compact, `${target}/file`)).toContain(
       '<Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>'
+    );
+  });
+
+  // products-subcategories, ADR-0024 decision 1: the subcategory dropdown asks only for the
+  // subcategories of the product's category through the In parameter category_code; the
+  // hand-written ValueList replaces the compiler-generated one, a second one would list all 15.
+  // Decision 3: a category change re-reads the subcategory the draft PATCH handler may have emptied.
+  it('narrows the subcategory value help by category and refreshes it on a category change', async () => {
+    const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
+      headers: { 'Accept-Language': 'en' },
+    });
+    expect(status).toBe(200);
+    // The EDMX is pretty-printed, so compare without the whitespace between the tags.
+    const compact = data.replace(/>\s+</g, '><');
+    const subcategory = annotationsOf(compact, 'CatalogService.Products/subcategory_code');
+    expect(subcategory).toContain(
+      '<Annotation Term="Common.ValueListWithFixedValues" Bool="true"/>'
+    );
+    // Term="Common.ValueList" with the closing quote: a qualified one counts, the FixedValues term does not.
+    expect(subcategory.match(/Term="Common\.ValueList"/g) ?? []).toHaveLength(1);
+    const valueList = subcategory.match(/<Annotation Term="Common.ValueList">.*?<\/Annotation>/)[0];
+    expect(valueList).toContain(
+      '<PropertyValue Property="CollectionPath" String="Subcategories"/>'
+    );
+    expect(valueList).toContain(
+      '<Record Type="Common.ValueListParameterInOut">' +
+        '<PropertyValue Property="LocalDataProperty" PropertyPath="subcategory_code"/>' +
+        '<PropertyValue Property="ValueListProperty" String="code"/></Record>'
+    );
+    expect(valueList).toContain(
+      '<Record Type="Common.ValueListParameterIn">' +
+        '<PropertyValue Property="LocalDataProperty" PropertyPath="category_code"/>' +
+        '<PropertyValue Property="ValueListProperty" String="category_code"/></Record>'
+    );
+    // Asserted on the entity type, where the annotation is written; the compiler also copies it
+    // to the entity set CatalogService.EntityContainer/Products.
+    expect(annotationsOf(compact, 'CatalogService.Products')).toContain(
+      '<Annotation Term="Common.SideEffects" Qualifier="CategoryChanged">' +
+        '<Record Type="Common.SideEffectsType">' +
+        '<PropertyValue Property="SourceProperties"><Collection>' +
+        '<PropertyPath>category_code</PropertyPath></Collection></PropertyValue>' +
+        '<PropertyValue Property="TargetProperties"><Collection>' +
+        '<String>subcategory_code</String><String>subcategory/name</String>' +
+        '</Collection></PropertyValue></Record></Annotation>'
     );
   });
 });

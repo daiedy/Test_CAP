@@ -1,3 +1,4 @@
 - [fiori-mcp lacks filterFields/liveMode](project-fiori-mcp-no-filterfields-livemode.md) — 1.12.2 exposes no custom filter field or liveMode functionality; stop and report
 - [Headless measurement recipe](reference-headless-measurement.md) — global puppeteer, $batch parsing, sap-ui-log-level=WARNING, zsh arg pitfall
+- [Worktree Bash guard](project-worktree-bash-guard.md) — compound Bash is refused in .claude/worktrees; plain commands, scripts in /tmp, background servers
 - [Sandbox has no flex connector](project-sandbox-no-flex-connector.md) — variant Save As 404s on /sap/bc/lrep, saved views lose all conditions; not a field defect

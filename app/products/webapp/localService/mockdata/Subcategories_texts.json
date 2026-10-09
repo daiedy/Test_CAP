@@ -1,0 +1,92 @@
+[
+  {
+    "code": "LAPTOPS",
+    "locale": "ru",
+    "name": "Ноутбуки",
+    "descr": null
+  },
+  {
+    "code": "MICE",
+    "locale": "ru",
+    "name": "Мыши",
+    "descr": null
+  },
+  {
+    "code": "AUDIO",
+    "locale": "ru",
+    "name": "Аудио",
+    "descr": null
+  },
+  {
+    "code": "SEATING",
+    "locale": "ru",
+    "name": "Кресла и стулья",
+    "descr": null
+  },
+  {
+    "code": "LIGHTING",
+    "locale": "ru",
+    "name": "Освещение",
+    "descr": null
+  },
+  {
+    "code": "DESK_ORGANIZATION",
+    "locale": "ru",
+    "name": "Организация рабочего места",
+    "descr": null
+  },
+  {
+    "code": "APPLIANCES",
+    "locale": "ru",
+    "name": "Бытовая техника",
+    "descr": null
+  },
+  {
+    "code": "DRINKWARE",
+    "locale": "ru",
+    "name": "Посуда для напитков",
+    "descr": null
+  },
+  {
+    "code": "CUTLERY",
+    "locale": "ru",
+    "name": "Столовые приборы",
+    "descr": null
+  },
+  {
+    "code": "BAGS",
+    "locale": "ru",
+    "name": "Сумки",
+    "descr": null
+  },
+  {
+    "code": "PHONE_ACCESSORIES",
+    "locale": "ru",
+    "name": "Аксессуары для телефонов",
+    "descr": null
+  },
+  {
+    "code": "FITNESS",
+    "locale": "ru",
+    "name": "Фитнес",
+    "descr": null
+  },
+  {
+    "code": "OUTDOOR",
+    "locale": "ru",
+    "name": "Активный отдых",
+    "descr": null
+  },
+  {
+    "code": "NOTEBOOKS",
+    "locale": "ru",
+    "name": "Блокноты",
+    "descr": null
+  },
+  {
+    "code": "WRITING_INSTRUMENTS",
+    "locale": "ru",
+    "name": "Письменные принадлежности",
+    "descr": null
+  }
+]

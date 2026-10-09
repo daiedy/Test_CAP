@@ -1,6 +1,6 @@
 ---
 name: sap-fe-test-api-verification
-description: Where to verify sap.fe.test OPA API signatures when fiori-mcp is down; measured ids (DataPoint column, custom filter field, action parameter dialog with a file field); absence checks; probing and mutation runs; runner test counting
+description: Where to verify sap.fe.test OPA API signatures when fiori-mcp is down; measured ids (DataPoint column, custom filter field, action parameter dialog with a file field); absence checks; probing and mutation runs; runner test counting; vacuous iCheckField(field, ''), Object Page form ids, display-mode mdc Field without DOM, pop-in behind Show Details in the 60% OPA frame
 metadata:
   type: reference
 ---
@@ -42,3 +42,11 @@ Related: [[test-cap-ui-test-run-baseline]]
 
 - PLAN baselines ("28 opaTests") count non-teardown OPA tests. The runner total adds one `Teardown` per journey and the 2 QUnit unit tests (main before #7: 36 OPA + 2 unit = 38).
 - One journey only: `npx ui5-test-runner --url .../testsuite.qunit.html --page-filter opaTests --page-params "filter=<QUnit module name>" --report-dir <scratch>`. It runs the module, but the page ends as BROWSER TIMEOUT after `--page-timeout` because the runner waits for all tests; read per-test results from `job.js` and never use it as the gate run. Temporary mutation module + `Opa5.extendConfig({ timeout: 8 })` makes each expected failure cost 8 s instead of 60 s.
+- Better single-journey run (measured 2026-10-09): temporarily make the last dependency of `opaTests.qunit.js` the probe journey and call `runner.run([<that arg>])`; the page completes normally (no BROWSER TIMEOUT). The PLAN baseline "40 opaTest + 2 QUnit = 42" of #8 counted teardowns, unlike the #7 baseline: count `grep -c "opaTest("` before trusting either convention.
+
+## Form fields, pop-in and probes (measured 2026-10-09, FE 1.153.0, products-subcategories)
+
+- `onForm().iCheckField(field, '')` passes for ANY value: `MdcFieldBuilder` `_equalish` turns a falsy expected value into `[]`. An empty field needs an own `OpaBuilder` (see `iSeeFormFieldEmpty` in `pages/CategoryDropdown.js`).
+- Object Page field ids: label `...::FormElement::DataField::<prop>-label` (`sap.m.Label`), value `...::FormElement::DataField::<prop>::Field-edit` (`sap.ui.mdc.Field`, `value` = key, `additionalValue` = text; both `null` when empty). In display mode that Field is bound but has no DOM (the wrapper renders `::Field-display` `sap.m.Text`), so an OpaBuilder on it needs `mustBeVisible(false)`. A probe with `Opa5.getPlugin().getAllControls()` ignores rendering and hides this; run mutations in both modes.
+- The OPA frame is 60% of the runner window (`Opa.config.frameWidth`; `sap.fe.test` passes no size). With 6 List Report columns, Price, Stock Quantity and Rating move into the responsive pop-in, collapsed behind Show Details; collapsed cells are not rendered, so `iCheckCells` with an `editor` state times out. Fix in the test: `onTable().iExecuteShowHideDetails(true)` first. Look at the runner screenshots in `<report-dir>/<page>/*.png` before theorizing.
+- Worktree Bash guard refuses heredocs and `cp a b && cat > c`. Files that must keep literal backslash-u escapes cannot go through Write either (it decodes them): generate them with a script under `/tmp` that builds the escape from `String.fromCharCode(92)` and reads the values from the seed CSV.

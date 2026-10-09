@@ -228,6 +228,21 @@
             <PropertyPath>name</PropertyPath>
           </Collection>
         </Annotation>
+        <Annotation Term="Common.SideEffects" Qualifier="CategoryChanged">
+          <Record Type="Common.SideEffectsType">
+            <PropertyValue Property="SourceProperties">
+              <Collection>
+                <PropertyPath>category_code</PropertyPath>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="TargetProperties">
+              <Collection>
+                <String>subcategory_code</String>
+                <String>subcategory/name</String>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
         <Annotation Term="Common.SideEffects" Qualifier="alwaysFetchMessages">
           <Record Type="Common.SideEffectsType">
             <PropertyValue Property="SourceEntities">
@@ -274,6 +289,9 @@
             </Record>
             <Record Type="UI.DataField">
               <PropertyValue Property="Value" Path="category_code"/>
+            </Record>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Value" Path="subcategory_code"/>
             </Record>
             <Record Type="UI.DataField">
               <PropertyValue Property="Value" Path="price"/>
@@ -335,6 +353,9 @@
                 </Record>
                 <Record Type="UI.DataField">
                   <PropertyValue Property="Value" Path="category_code"/>
+                </Record>
+                <Record Type="UI.DataField">
+                  <PropertyValue Property="Value" Path="subcategory_code"/>
                 </Record>
                 <Record Type="UI.DataFieldForAnnotation">
                   <PropertyValue Property="Label" String="Rating"/>
@@ -401,6 +422,21 @@
         </Annotation>
       </Annotations>
       <Annotations Target="CatalogService.EntityContainer/Products">
+        <Annotation Term="Common.SideEffects" Qualifier="CategoryChanged">
+          <Record Type="Common.SideEffectsType">
+            <PropertyValue Property="SourceProperties">
+              <Collection>
+                <PropertyPath>category_code</PropertyPath>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="TargetProperties">
+              <Collection>
+                <String>subcategory_code</String>
+                <String>subcategory/name</String>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
         <Annotation Term="Common.DraftRoot">
           <Record Type="Common.DraftRootType">
             <PropertyValue Property="ActivationAction" String="CatalogService.draftActivate"/>
@@ -552,7 +588,10 @@
         <Annotation Term="Common.Label" String="Subcategory"/>
       </Annotations>
       <Annotations Target="CatalogService.Products/subcategory_code">
-        <Annotation Term="Common.Label" String="Subcategory"/>
+        <Annotation Term="Common.Text" Path="subcategory/name">
+          <Annotation Term="UI.TextArrangement" EnumMember="UI.TextArrangementType/TextOnly"/>
+        </Annotation>
+        <Annotation Term="Common.ValueListWithFixedValues" Bool="true"/>
         <Annotation Term="Common.ValueList">
           <Record Type="Common.ValueListType">
             <PropertyValue Property="Label" String="Subcategory"/>
@@ -563,6 +602,10 @@
                   <PropertyValue Property="LocalDataProperty" PropertyPath="subcategory_code"/>
                   <PropertyValue Property="ValueListProperty" String="code"/>
                 </Record>
+                <Record Type="Common.ValueListParameterIn">
+                  <PropertyValue Property="LocalDataProperty" PropertyPath="category_code"/>
+                  <PropertyValue Property="ValueListProperty" String="category_code"/>
+                </Record>
                 <Record Type="Common.ValueListParameterDisplayOnly">
                   <PropertyValue Property="ValueListProperty" String="name"/>
                 </Record>
@@ -570,6 +613,7 @@
             </PropertyValue>
           </Record>
         </Annotation>
+        <Annotation Term="Common.Label" String="Subcategory"/>
       </Annotations>
       <Annotations Target="CatalogService.Products/imageUrl">
         <Annotation Term="Common.Label" String="Image URL"/>
@@ -697,6 +741,9 @@
         <Annotation Term="Common.Label" String="Subcategory Description"/>
       </Annotations>
       <Annotations Target="CatalogService.Subcategories/code">
+        <Annotation Term="Common.Text" Path="name">
+          <Annotation Term="UI.TextArrangement" EnumMember="UI.TextArrangementType/TextOnly"/>
+        </Annotation>
         <Annotation Term="Common.Label" String="Subcategory"/>
       </Annotations>
       <Annotations Target="CatalogService.Subcategories/category">

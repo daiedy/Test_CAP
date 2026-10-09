@@ -1,0 +1,92 @@
+[
+  {
+    "code": "LAPTOPS",
+    "name": "Laptops",
+    "descr": null,
+    "category_code": "ELECTRONICS"
+  },
+  {
+    "code": "MICE",
+    "name": "Mice",
+    "descr": null,
+    "category_code": "ELECTRONICS"
+  },
+  {
+    "code": "AUDIO",
+    "name": "Audio",
+    "descr": null,
+    "category_code": "ELECTRONICS"
+  },
+  {
+    "code": "SEATING",
+    "name": "Seating",
+    "descr": null,
+    "category_code": "FURNITURE"
+  },
+  {
+    "code": "LIGHTING",
+    "name": "Lighting",
+    "descr": null,
+    "category_code": "FURNITURE"
+  },
+  {
+    "code": "DESK_ORGANIZATION",
+    "name": "Desk Organization",
+    "descr": null,
+    "category_code": "FURNITURE"
+  },
+  {
+    "code": "APPLIANCES",
+    "name": "Appliances",
+    "descr": null,
+    "category_code": "KITCHEN"
+  },
+  {
+    "code": "DRINKWARE",
+    "name": "Drinkware",
+    "descr": null,
+    "category_code": "KITCHEN"
+  },
+  {
+    "code": "CUTLERY",
+    "name": "Cutlery",
+    "descr": null,
+    "category_code": "KITCHEN"
+  },
+  {
+    "code": "BAGS",
+    "name": "Bags",
+    "descr": null,
+    "category_code": "ACCESSORIES"
+  },
+  {
+    "code": "PHONE_ACCESSORIES",
+    "name": "Phone Accessories",
+    "descr": null,
+    "category_code": "ACCESSORIES"
+  },
+  {
+    "code": "FITNESS",
+    "name": "Fitness",
+    "descr": null,
+    "category_code": "SPORTS"
+  },
+  {
+    "code": "OUTDOOR",
+    "name": "Outdoor",
+    "descr": null,
+    "category_code": "SPORTS"
+  },
+  {
+    "code": "NOTEBOOKS",
+    "name": "Notebooks",
+    "descr": null,
+    "category_code": "STATIONERY"
+  },
+  {
+    "code": "WRITING_INSTRUMENTS",
+    "name": "Writing Instruments",
+    "descr": null,
+    "category_code": "STATIONERY"
+  }
+]

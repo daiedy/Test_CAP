@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-10-09
-- Branch: chore/retro-catalog-hygiene
+- Branch: main
 - Feature: none
-- Phase: none (retro after catalog-hygiene, uncommitted)
-- Last commit: d01480a docs: STATE after the catalog-hygiene merge
-- Next: the user commits the retro and merges it into `main` `--no-ff`; then `/spec #8` (products-subcategories, P2)
+- Phase: none (catalog-hygiene #20 and its retro merged and pushed)
+- Last commit: 6eb3871 Merge branch 'chore/retro-catalog-hygiene'
+- Next: `/spec #8` (products-subcategories, P2)
 
 ## Open debt
 

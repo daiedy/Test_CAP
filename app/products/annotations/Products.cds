@@ -24,7 +24,7 @@ annotate CatalogService.Products with @(
       $Type         : 'UI.DataFieldForAction',
       Action        : 'CatalogService.importProducts',
       Label         : '{i18n>Products.action.import}',
-      ![@UI.Hidden] : { $edmJson: { $Not: { $Path: '/CatalogService.EntityContainer/Permissions/isEditor' } } }
+      ![@UI.Hidden] : { $edmJson: { $Not: { $Path: '/Permissions/isEditor' } } }
     }
   ],
   // Read-only stars in the table, interactive stars in the Object Page edit mode; no Title/Description.
@@ -68,12 +68,13 @@ annotate CatalogService.Products with {
   );
 };
 
-// Role-aware standard actions (ADR-0013): hidden for anyone who is not a CatalogEditor.
-// The flag comes from the CatalogService.Permissions singleton, filled in srv/catalog-service.js.
+// Role-aware standard actions (ADR-0013 part 8): hidden for anyone who is not a CatalogEditor.
+// The flag comes from the CatalogService.Permissions singleton, filled in srv/catalog-service.js, and is
+// read through the documented short path /Permissions/isEditor (capire "Role-based Visibility").
 annotate CatalogService.Products with @(
-  UI.CreateHidden: { $edmJson: { $Not: { $Path: '/CatalogService.EntityContainer/Permissions/isEditor' } } },
-  UI.UpdateHidden: { $edmJson: { $Not: { $Path: '/CatalogService.EntityContainer/Permissions/isEditor' } } },
-  UI.DeleteHidden: { $edmJson: { $Not: { $Path: '/CatalogService.EntityContainer/Permissions/isEditor' } } }
+  UI.CreateHidden: { $edmJson: { $Not: { $Path: '/Permissions/isEditor' } } },
+  UI.UpdateHidden: { $edmJson: { $Not: { $Path: '/Permissions/isEditor' } } },
+  UI.DeleteHidden: { $edmJson: { $Not: { $Path: '/Permissions/isEditor' } } }
 );
 
 // Refresh after the Excel import (ADR-0021 amendment A): the action returns a count, so Fiori Elements

@@ -255,7 +255,7 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
               <PropertyValue Property="Label" String="{i18n>Products.action.import}"/>
               <Annotation Term="UI.Hidden">
                 <Not>
-                  <Path>/CatalogService.EntityContainer/Permissions/isEditor</Path>
+                  <Path>/Permissions/isEditor</Path>
                 </Not>
               </Annotation>
             </Record>
@@ -350,17 +350,17 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         </Annotation>
         <Annotation Term="UI.CreateHidden">
           <Not>
-            <Path>/CatalogService.EntityContainer/Permissions/isEditor</Path>
+            <Path>/Permissions/isEditor</Path>
           </Not>
         </Annotation>
         <Annotation Term="UI.UpdateHidden">
           <Not>
-            <Path>/CatalogService.EntityContainer/Permissions/isEditor</Path>
+            <Path>/Permissions/isEditor</Path>
           </Not>
         </Annotation>
         <Annotation Term="UI.DeleteHidden">
           <Not>
-            <Path>/CatalogService.EntityContainer/Permissions/isEditor</Path>
+            <Path>/Permissions/isEditor</Path>
           </Not>
         </Annotation>
       </Annotations>
@@ -388,17 +388,17 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         </Annotation>
         <Annotation Term="UI.CreateHidden">
           <Not>
-            <Path>/CatalogService.EntityContainer/Permissions/isEditor</Path>
+            <Path>/Permissions/isEditor</Path>
           </Not>
         </Annotation>
         <Annotation Term="UI.UpdateHidden">
           <Not>
-            <Path>/CatalogService.EntityContainer/Permissions/isEditor</Path>
+            <Path>/Permissions/isEditor</Path>
           </Not>
         </Annotation>
         <Annotation Term="UI.DeleteHidden">
           <Not>
-            <Path>/CatalogService.EntityContainer/Permissions/isEditor</Path>
+            <Path>/Permissions/isEditor</Path>
           </Not>
         </Annotation>
       </Annotations>

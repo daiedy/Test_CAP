@@ -252,7 +252,7 @@
               <PropertyValue Property="Label" String="Import from Excel"/>
               <Annotation Term="UI.Hidden">
                 <Not>
-                  <Path>/CatalogService.EntityContainer/Permissions/isEditor</Path>
+                  <Path>/Permissions/isEditor</Path>
                 </Not>
               </Annotation>
             </Record>
@@ -347,17 +347,17 @@
         </Annotation>
         <Annotation Term="UI.CreateHidden">
           <Not>
-            <Path>/CatalogService.EntityContainer/Permissions/isEditor</Path>
+            <Path>/Permissions/isEditor</Path>
           </Not>
         </Annotation>
         <Annotation Term="UI.UpdateHidden">
           <Not>
-            <Path>/CatalogService.EntityContainer/Permissions/isEditor</Path>
+            <Path>/Permissions/isEditor</Path>
           </Not>
         </Annotation>
         <Annotation Term="UI.DeleteHidden">
           <Not>
-            <Path>/CatalogService.EntityContainer/Permissions/isEditor</Path>
+            <Path>/Permissions/isEditor</Path>
           </Not>
         </Annotation>
       </Annotations>
@@ -385,17 +385,17 @@
         </Annotation>
         <Annotation Term="UI.CreateHidden">
           <Not>
-            <Path>/CatalogService.EntityContainer/Permissions/isEditor</Path>
+            <Path>/Permissions/isEditor</Path>
           </Not>
         </Annotation>
         <Annotation Term="UI.UpdateHidden">
           <Not>
-            <Path>/CatalogService.EntityContainer/Permissions/isEditor</Path>
+            <Path>/Permissions/isEditor</Path>
           </Not>
         </Annotation>
         <Annotation Term="UI.DeleteHidden">
           <Not>
-            <Path>/CatalogService.EntityContainer/Permissions/isEditor</Path>
+            <Path>/Permissions/isEditor</Path>
           </Not>
         </Annotation>
       </Annotations>

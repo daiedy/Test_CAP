@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-09
 - Branch: feature/catalog-hygiene
 - Feature: catalog-hygiene (#20)
-- Phase: 2: backend (steps 3 and 4)
-- Last commit: d1824ff docs(spec): catalog-hygiene plan and ADR-0003 amendment
-- Next: phase 3 UI (steps 5 to 7), autonomous gate mode
+- Phase: 3: UI, short Permissions path (steps 5 to 7)
+- Last commit: bcffde0 feat(srv): catalog-hygiene price precision and currency target check
+- Next: phase 4 verification (step 8, scenarios V1 to V3), autonomous gate mode
 
 ## Open debt
 

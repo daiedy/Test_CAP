@@ -55,7 +55,7 @@ A read-only permission singleton (e.g. `CatalogService.Permissions`, ADR-0013) i
 - Audit: the `managed` aspect. Time intervals: `temporal`.
 - Associations: `Association to Target` with a singular name (`category`), the foreign key is automatically `category_ID`. Compositions: `Composition of many Items` with a plural name.
 - User-facing code lists: an entity based on `sap.common.CodeList` with key `code`, not `enum`. `enum` only for internal statuses the user does not edit.
-- Money: `Decimal(15, 2)` plus `currency : Currency` and `@Measures.ISOCurrency: currency_code` in the annotations. The existing `price : Decimal(10, 2)` stays until a separate ADR.
+- Money: `Decimal(15, 2)` plus `currency : Currency` and `@Measures.ISOCurrency: currency_code` in the annotations.
 - Strings always with a length: `String(100)`. Localizable texts: `localized String(255)`.
 - Every element has `@title: '{i18n>Entity.element}'` in `srv/annotations/<Entity>.cds`, not in the schema.
 - Service: `service CatalogService @(path: '/catalog')` is not set, the default path is `/odata/v4/<service>`. One projection per entity; expose only the needed fields via `excluding` or an explicit list.

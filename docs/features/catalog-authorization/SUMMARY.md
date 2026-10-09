@@ -32,7 +32,7 @@ Folded into `docs/LESSONS.md` (see there for the full text): the two pending ent
 
 ## Open debt
 
-- The UI5 1.152.0 console defect above: try the documented fallback short path `/Permissions/isEditor`, regenerate the contract, re-verify in a browser. Tracked in `docs/STATE.md`.
+- Closed by feature `catalog-hygiene` (#20, 2026-10-09): the UI5 1.152.0 console defect above is gone with the documented short path `/Permissions/isEditor`. Measured against the commit before the switch (1 `TypeError` when the Object Page opens): 0 for `alice` and `viewer`, the hidden state holds on both pages. Contract `7 7` lines. See the ADR-0013 amendment.
 - The OPA5 suite authenticates as one user (`alice`) per run, so the hidden state for a `CatalogViewer` has no automated regression guard beyond the backend tests and `ui-verifier`'s blocking criterion. A second runner config (`ui5-test-runner-viewer.json`, `test:ui:viewer` script) is deferred until the hidden state actually regresses (user decision 2026-09-10).
 - Deployment: `cds add xsuaa --for production` will generate the `CatalogViewer`/`CatalogEditor` role templates and scopes from these CDS role names; not started, separate ADR (`docs/STATE.md`).
 - Feature branch not yet merged into `main`.

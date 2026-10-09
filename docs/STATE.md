@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-10-09
-- Branch: feature/catalog-hygiene
+- Branch: main
 - Feature: none
-- Phase: none (catalog-hygiene #20 closed, branch not merged)
-- Last commit: 271da05 docs: catalog-hygiene cost card and metrics record
-- Next: merge `feature/catalog-hygiene` into main and push (user), then `/spec #8`
+- Phase: none (catalog-hygiene #20 merged and pushed)
+- Last commit: c29b3f8 Merge branch 'feature/catalog-hygiene'
+- Next: `/spec #8` (products-subcategories, P2); `/retro` is due (10 LESSONS entries)
 
 ## Open debt
 

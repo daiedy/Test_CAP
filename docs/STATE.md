@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-09
 - Branch: feature/products-subcategories
 - Feature: products-subcategories (#8)
-- Phase: 3: UI
-- Last commit: 6d39621 feat(srv): products-subcategories backend
-- Next: test-ui steps 9-10 (steps 6-8 done: 873-line metadata.xml, npm test 163 green), gate ui5lint, npm test 163, npm run test:ui 49
+- Phase: 5: review
+- Last commit: 1f709dc docs: products-subcategories verification
+- Next: reviewer PLAN step 12 writes REVIEW.md (zero blocking findings), then docs-keeper step 13
 
 ## Open debt
 

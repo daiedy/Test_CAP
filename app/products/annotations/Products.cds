@@ -15,7 +15,8 @@ annotate CatalogService.Products with @(
   UI.LineItem: [
     { $Type: 'UI.DataField', Value: name },
     { $Type: 'UI.DataField', Value: category_code },
-    { $Type: 'UI.DataField', Value: subcategory_code },
+    // Low like Rating: auto pop-in moves the Low group first, rightmost column first, so Rating pops in, then Subcategory.
+    { $Type: 'UI.DataField', Value: subcategory_code, ![@UI.Importance]: #Low },
     { $Type: 'UI.DataField', Value: price },
     { $Type: 'UI.DataField', Value: stock },
     // Label is explicit: FE takes a DataFieldForAnnotation header from the record, not from @title.

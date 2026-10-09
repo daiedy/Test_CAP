@@ -4,9 +4,10 @@
 // shows the same stars in display mode. Cells and fields are asserted by control state (value,
 // maxValue): a RatingIndicator has no text, so iCheckRows by value cannot match it.
 // products-subcategories (D3) adds a Subcategory column after Category, so the table has 6 columns.
-// In the OPA frame (60% of the runner window) 6 columns no longer fit: the responsive table moves
-// Price, Stock Quantity and Rating into the pop-in, which stays collapsed until Show Details, and a
-// collapsed cell is not rendered, so the stars cannot be matched before Show Details is pressed.
+// In the OPA frame (60% of the runner window, 1276 px measured) 6 columns no longer fit: the
+// responsive table hides the UI.Importance Low columns, Subcategory and Rating, behind Show Details
+// (no DOM until it is pressed; Price and Stock Quantity stay inline), so the stars cannot be matched
+// before Show Details is pressed.
 sap.ui.define(['sap/ui/test/opaQunit', './data/RatingTexts'], function (opaTest, RatingTexts) {
   'use strict';
 

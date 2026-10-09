@@ -74,7 +74,7 @@ sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts', './data/RatingTex
 
     opaTest('The Object Page shows the subcategory in Russian', function (Given, When, Then) {
       // Still on the object page of Coffee Maker (KITCHEN / APPLIANCES) from the previous case.
-      Then.onTheCategoryDropdown.iSeeFormFieldLabel('subcategory_code', subcategoryLabel);
+      Then.onTheObjectPageForm.iSeeFormFieldLabel('subcategory_code', subcategoryLabel);
       Then.onTheProductsObjectPage
         .onForm({ section: 'GeneralInfo' })
         .iCheckField({ property: 'subcategory_code' }, SubcategoryTexts.names.ru.APPLIANCES);

@@ -295,6 +295,7 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
             </Record>
             <Record Type="UI.DataField">
               <PropertyValue Property="Value" Path="subcategory_code"/>
+              <Annotation Term="UI.Importance" EnumMember="UI.ImportanceType/Low"/>
             </Record>
             <Record Type="UI.DataField">
               <PropertyValue Property="Value" Path="price"/>

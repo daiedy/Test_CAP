@@ -52,11 +52,9 @@ sap.ui.define(
       opaTest('The List Report shows the subcategory by name', function (Given, When, Then) {
         Given.iStartMyApp('products-display');
         Then.onTheProductsList.iSeeThisPage();
-        Then.onTheProductsList
-          .onTable()
-          .iCheckColumns(undefined, {
-            subcategory_code: { header: SubcategoryTexts.labels.subcategory.en },
-          });
+        Then.onTheProductsList.onTable().iCheckColumns(undefined, {
+          subcategory_code: { header: SubcategoryTexts.labels.subcategory.en },
+        });
         Then.onTheProductsList.onTable().iCheckRows(
           {
             name: laptopName,
@@ -95,7 +93,7 @@ sap.ui.define(
         function (Given, When, Then) {
           chooseCategory(When, Then, categories.FURNITURE);
           // Polls until the side-effect read after the category PATCH has emptied the field.
-          Then.onTheCategoryDropdown.iSeeFormFieldEmpty(SUBCATEGORY);
+          Then.onTheObjectPageForm.iSeeFormFieldEmpty(SUBCATEGORY);
           When.onTheProductsObjectPage.onForm(generalInfo).iOpenValueHelp(subcategoryField);
           Then.onTheCategoryDropdown.iSeeItems(namesOf('FURNITURE'), SUBCATEGORY);
           When.onTheCategoryDropdown.iSelectItem(names.DESK_ORGANIZATION, SUBCATEGORY);
@@ -116,7 +114,7 @@ sap.ui.define(
           When.onTheProductsObjectPage.onHeader().iExecuteEdit();
           Then.onTheProductsObjectPage.iSeeObjectPageInEditMode();
           chooseCategory(When, Then, categories.ELECTRONICS);
-          Then.onTheCategoryDropdown.iSeeFormFieldEmpty(SUBCATEGORY);
+          Then.onTheObjectPageForm.iSeeFormFieldEmpty(SUBCATEGORY);
           chooseSubcategory(When, Then, names.LAPTOPS);
           When.onTheProductsObjectPage.onFooter().iExecuteSave();
           seeSavedPair(Then, categories.ELECTRONICS, names.LAPTOPS);

@@ -18,10 +18,27 @@ Home page (`screenshots/00-home.png`): only the "Product Catalog" tile, no SAP d
 | V6 | viewer read-only | passed: List Report has the Subcategory column and no Create / Import from Excel / Delete buttons; Object Page of Laptop Pro 15 shows "Subcategory: Laptops" as plain text, no Edit and no Delete button (only Share), 0 visible inputs | `15-v6-viewer-list-en.jpeg`, `16-v6-viewer-objectpage-en.jpeg` |
 | V7 | Keyboard | Tab from Category lands on Subcategory; F4 opens the list; ArrowDown+Enter selects; typing "Mice" + Enter selects (V3); Escape closes the list (V2). Alt+Down and typing a prefix such as "La" not exercised | `07-v2-kitchen-tab-f4-en.jpeg` |
 | V8 | List Report column order, narrow widths | passed: order Product Name, Category, Subcategory, Price, Stock Quantity, Rating (header row of `01-list-report-en.png`, `18-v9-adapt-filters-en.jpeg`). Pop-in behind "Show Details" by viewport width (observation, viewer tab): 1700 and 1600 all six columns; 1500 Rating hidden; 1400 Rating and Stock Quantity hidden; 1300 Rating, Stock Quantity, Price hidden (Name, Category, Subcategory shown); 800 only Product Name shown. Rating pops in before Subcategory, as designed. No scenario broke | `17-v8-narrow-800-en.jpeg` |
+| V8 re-check (UI.Importance #Low) | List Report column pop-in order after review fix (uncommitted `UI.Importance #Low` on Subcategory), fresh server on :4006, editor `alice`, `en` | passed: pop-in order is Rating, Subcategory, Stock Quantity, Price, Category; Product Name never. Visible columns by viewport width in the table below. Supersedes the earlier V8 row on the order (there Subcategory stayed before Price/Stock Quantity at 1300 because it had no Importance) | `19-v8-recheck-1400-en.png`, `20-v8-recheck-1300-en.png` |
 | V9 | Adapt Filters (observation, D9) | Subcategory IS offered in the "Add Filter" list of "Adapt Filters" (Currency, Description, ID, Image URL, Stock Quantity, Subcategory). Added, it renders as a multi-value combo box that lists all 15 subcategories (no Category filter was set, so no narrowing is expected here); not tested with a Category filter set; no UI.HiddenFilter, as decided in D9 | `18-v9-adapt-filters-en.jpeg`, `19-v9-subcategory-filter-added-en.jpeg` |
 | ru | `sap-language=ru` (editor) | passed: List Report headers "Название, Категория, Подкатегория, Цена, Остаток, Рейтинг" and Russian subcategory names in the cells; Object Page label "Подкатегория:"; Edit on Laptop Pro 15: dropdown lists only "Аудио, Мыши, Ноутбуки"; Category changed to "Мебель": Subcategory field empty (a11y snapshot: no value) and the dropdown lists "Кресла и стулья, Организация рабочего места, Освещение"; draft discarded | `20-ru-list-report.jpeg`, `21-ru-dropdown-electronics.jpeg`, `22-ru-after-category-change.jpeg` |
 
 Observation (not a defect): when a dropdown opens, the framework pre-highlights a row and shows it in the input (for example "Кресла и стулья" / "Desk Organization" in `22-...`, `06-...`); the field is only committed on Enter, Escape restores the empty value.
+
+
+### V8 re-check, visible columns by width (header cells with a rendered box; the rest sit behind Show Details)
+
+| Width px | Visible | Behind Show Details |
+|---|---|---|
+| 1700 | Product Name, Category, Subcategory, Price, Stock Quantity, Rating | none |
+| 1600 | Product Name, Category, Subcategory, Price, Stock Quantity, Rating | none |
+| 1500 | Product Name, Category, Subcategory, Price, Stock Quantity | Rating |
+| 1400 | Product Name, Category, Price, Stock Quantity | Rating, Subcategory |
+| 1300 | Product Name, Category, Price, Stock Quantity | Rating, Subcategory |
+| 1200 | Product Name, Category, Price, Stock Quantity | Rating, Subcategory |
+| 1100 | Product Name, Category, Price | Rating, Subcategory, Stock Quantity |
+| 800 | Product Name | Rating, Subcategory, Stock Quantity, Price, Category |
+
+Order of pop-in matches "Screen: List Report" of SCREENS.md (it names Rating first, Subcategory second, then Stock Quantity, Price, Category). Evidence: DOM read of `th` visibility per width after `resize_page`, screenshots at 1400 and 1300.
 
 ## Cleanup
 The V3/V10 product "VerifierTemp" was created and deleted again through the UI; the drafts of V1, V2, V4 and ru were discarded. After the run: `GET Products?$filter=IsActiveEntity eq false` returns no rows, 15 active products, Laptop Pro 15 is ELECTRONICS / LAPTOPS as seeded. Server stopped.

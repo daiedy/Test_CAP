@@ -14,13 +14,40 @@ Completion date: 2026-10-09. Commits: `d1824ff` ... `c47e8ed` (phase 6 documenta
 - c47e8ed also rewrote the header comment of `RoleAwareActionsJourney.js` to the short path, which the plan listed as unchanged; comment only, named in the CHANGELOG `app` line.
 - The step 10 check "`grep -rn "Decimal(10" docs CLAUDE.md` finds only CHANGELOG and this folder" has three named exceptions: `ADR-0003` lines 14 and 39 (amended in place) and `docs/features/products-excel-upload/SUMMARY.md` line 26 (a verbatim framework message).
 - The architect's list of documents carrying old facts (`research/contract-delta.md` section 4) missed `ADR-0021` decision 6; the reviewer found it, and the ADR-0013 amendment now names all four consumers.
-- Acceptance criterion 28 (needs the cost card) stays unticked until phase 7.
 
 ## New items for the registry
 None: no entity, action, handler or fragment added; `DOMAIN-MODEL.md` shows `Decimal(15, 2)` and `@assert.target` on `currency`.
 
 ## Cost
-Filled in phase 7: `node scripts/metrics.mjs record catalog-hygiene`, then the output of `node scripts/metrics.mjs feature catalog-hygiene` pasted here.
+
+Sessions 2 (2026-10-08 .. 2026-10-09), lead 6h 26m, active 1h 15m, waiting 5h 10m, agent-minutes 2h 16m (parallelism 1.8); idle cap 5 min, tool cap 10 min; phases: markers; rework: plan; pricing 2026-09-29; Claude Code 2.1.295
+
+Cost $20.85 (cost-state $14.31, recovered 61%; pricing check within 5%); tokens in 1.3K / cache write 1.6M / cache read 28.5M / out 97.2K; cache hit 95%; context avg 89.7K, peak 272K
+
+| Phase | Rounds | Active | Waiting | Calls | Cost | Rework cost |
+|---|---|---|---|---|---|---|
+| 0 | - | 9m | 5h 10m | 19 | $3.86 | $0.00 |
+| 1 | 1 | 18m | 0m | 37 | $6.33 | $0.00 |
+| 2 | 1 | 9m | 0m | 52 | $2.01 | $0.52 |
+| 3 | 1 | 11m | 0m | 69 | $2.32 | $0.70 |
+| 4 | 1 | 5m | 0m | 52 | $1.24 | $0.92 |
+| 5 | 1 | 12m | 0m | 56 | $2.36 | $1.99 |
+| 6 | 1 | 11m | 0m | 51 | $2.73 | $1.91 |
+
+| Agent | Launches | Resumes | Active | Calls / maxTurns | Cost | Rework |
+|---|---|---|---|---|---|---|
+| main | - | - | 1h 0m | 74 / - | $6.66 | 0 |
+| architect | 2 | 0 | 17m | 30 / 60 | $6.06 | 0 |
+| cap-backend-dev | 1 | 0 | 2m | 13 / 60 | $0.52 | 1 ($0.52) |
+| test-backend | 2 | 0 | 7m | 45 / 60 | $1.50 | 0 |
+| fiori-app-dev | 1 | 0 | 2m | 19 / 60 | $0.70 | 1 ($0.70) |
+| test-ui | 1 | 1 | 6m | 22 / 80 | $0.59 | 0 |
+| ui-verifier | 1 | 2 | 10m | 49 / 80 | $1.24 | 1 ($1.24) |
+| reviewer | 1 | 2 | 20m | 64 / 50 | $3.08 | 1 ($3.08) |
+| docs-keeper | 1 | 3 | 11m | 20 / 80 | $0.50 | 1 ($0.50) |
+| unattributed | | | | | $5.63 | |
+
+Gates: 4 blocks (protected 2, docs 2); review 0 blocking / 6 findings; criteria 17/17; MCP 92 queries, 0 unjustified, 0 failed; rule-covered edits with a query 3/3; prompts 1, hand-backs 17, notifications 17; lines +614 / -90
 
 ## Lessons
 - Entered in `docs/LESSONS.md` (`Pending /retro`): the Stop hook blocking the orchestrator mid-phase while a background agent works; a cds 10 Decimal above the declared precision fails together with `@assert.range` as "Multiple errors occurred".

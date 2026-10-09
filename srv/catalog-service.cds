@@ -23,6 +23,7 @@ service CatalogService {
   }
 
   @readonly entity Categories as projection on catalog.Categories;
+  @readonly entity Subcategories as projection on catalog.Subcategories;
 
   /** Permission signal for the UI: read-only singleton, no table, filled by srv/catalog-service.js (ADR-0013). */
   @odata.singleton
@@ -36,3 +37,4 @@ service CatalogService {
 
 using from './annotations/Products';
 using from './annotations/Categories';
+using from './annotations/Subcategories';

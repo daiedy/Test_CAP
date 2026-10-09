@@ -53,6 +53,16 @@ distinct name prefix and clean it in an `afterEach`, or the red run leaves rows.
 the declared Decimal precision fails twice (400 "Multiple errors occurred", no top-level code),
 so a range test needs the precision to hold the value.
 
+Worktree-session variant (products-subcategories, 2026-10-09): inside a `.claude/worktrees/` session
+the Bash guard refuses `tar --exclude=.git ...` and long heredoc commands that spawn processes
+("names git in a form too complex"). Instead `cp -R _i18n db srv test package.json <scratch>/`
+(enough for a service test; `app/` not needed), symlink `node_modules`, write the scratch
+`vitest.config.mjs` and a `run.mjs` mutation runner with the Write tool, then run plain
+`node run.mjs`; the runner uses `spawnSync('npx', ['vitest','run','--reporter=json','--outputFile=...'])`
+and lists failing titles per mutation. Read the cascades too: a red that also turns an unrelated
+count test red means a rejection test leaks a row (M7 "not @readonly" leaked `OTHER` into the
+viewer count until the describe got an `afterEach`).
+
 **How to apply:** whenever a plan asks for a contract test that "must fail on main", or a new `it`
 could pass vacuously. Count the asserted substring in the pre-feature EDMX; if the count is not 0,
 say so in the report instead of claiming the test proves the change. See

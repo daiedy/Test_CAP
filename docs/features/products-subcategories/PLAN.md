@@ -58,23 +58,23 @@ D1 seed (`subcategory_code` per row of `db/data/my.catalog-Products.csv`):
 No override was given, so the figures above (phase 2 826 lines, phase 3 873 lines) stand. D7 adds no EDMX line (the constraint has no contract footprint).
 
 ## Acceptance criteria
-- [ ] `Subcategories` is a `@readonly` code list of 15 rows with a category each, verified by test `test/catalog-service.test.js` "lists the 15 seeded subcategories with their category"
-- [ ] The value help request narrows by category, verified by test "narrows subcategories by category code as the value help does" (`ELECTRONICS` gives `AUDIO`, `LAPTOPS`, `MICE`)
-- [ ] Subcategory names are localized, verified by test "returns localized subcategory names with English fallback" (`ru` `LAPTOPS` = U+041D U+043E U+0443 U+0442 U+0431 U+0443 U+043A U+0438)
-- [ ] Subcategories cannot be created, verified by test "does not allow creating subcategories (@readonly)"
-- [ ] A CatalogViewer reads subcategories, verified by test "lets a CatalogViewer read subcategories"
-- [ ] Every seeded product has the subcategory of D1 seed, verified by test "returns the seeded subcategory of every product"
-- [ ] A product with a subcategory of its category is created, verified by test "creates a product with a subcategory of its category"
-- [ ] A product without a subcategory is created (D2), verified by test "creates a product without a subcategory"
-- [ ] A subcategory of another category is rejected with 400 `PRODUCTS_SUBCATEGORY_MISMATCH` on target `subcategory_code`, verified by test "rejects a subcategory of another category (PRODUCTS_SUBCATEGORY_MISMATCH)"
-- [ ] The mismatch message is Russian under `Accept-Language: ru`, verified by test "reports the subcategory mismatch in Russian"
-- [ ] An unknown subcategory code is rejected with `ASSERT_TARGET`, verified by test "rejects an unknown subcategory code (@assert.target)"
-- [ ] An active PATCH of the category alone that leaves a foreign subcategory is rejected, verified by test "rejects a category change that leaves a stale subcategory on an active product"
-- [ ] A draft PATCH of the category empties a subcategory of the old category (D4), verified by test "clears the subcategory when a draft changes the category"
-- [ ] A draft keeps a subcategory that belongs to the category it receives (D4), verified by test "keeps a subcategory that belongs to the category the draft gets"
-- [ ] A mismatched pair on a draft is a draft message and blocks activation with target `in/subcategory_code`, verified by test "reports a mismatched subcategory on the draft and rejects activation"
-- [ ] A draft changing category and subcategory together activates, verified by test "activates a draft whose category and subcategory change together"
-- [ ] A new draft with no category and a chosen subcategory records no `PRODUCTS_SUBCATEGORY_MISMATCH` message; choosing the matching category keeps the subcategory and the draft activates (D7), verified by test "records no mismatch for a subcategory chosen before the category and activates with the matching category"
+- [x] `Subcategories` is a `@readonly` code list of 15 rows with a category each, verified by test `test/catalog-service.test.js` "lists the 15 seeded subcategories with their category"
+- [x] The value help request narrows by category, verified by test "narrows subcategories by category code as the value help does" (`ELECTRONICS` gives `AUDIO`, `LAPTOPS`, `MICE`)
+- [x] Subcategory names are localized, verified by test "returns localized subcategory names with English fallback" (`ru` `LAPTOPS` = U+041D U+043E U+0443 U+0442 U+0431 U+0443 U+043A U+0438)
+- [x] Subcategories cannot be created, verified by test "does not allow creating subcategories (@readonly)"
+- [x] A CatalogViewer reads subcategories, verified by test "lets a CatalogViewer read subcategories"
+- [x] Every seeded product has the subcategory of D1 seed, verified by test "returns the seeded subcategory of every product"
+- [x] A product with a subcategory of its category is created, verified by test "creates a product with a subcategory of its category"
+- [x] A product without a subcategory is created (D2), verified by test "creates a product without a subcategory"
+- [x] A subcategory of another category is rejected with 400 `PRODUCTS_SUBCATEGORY_MISMATCH` on target `subcategory_code`, verified by test "rejects a subcategory of another category (PRODUCTS_SUBCATEGORY_MISMATCH)"
+- [x] The mismatch message is Russian under `Accept-Language: ru`, verified by test "reports the subcategory mismatch in Russian"
+- [x] An unknown subcategory code is rejected with `ASSERT_TARGET`, verified by test "rejects an unknown subcategory code (@assert.target)"
+- [x] An active PATCH of the category alone that leaves a foreign subcategory is rejected, verified by test "rejects a category change that leaves a stale subcategory on an active product"
+- [x] A draft PATCH of the category empties a subcategory of the old category (D4), verified by test "clears the subcategory when a draft changes the category"
+- [x] A draft keeps a subcategory that belongs to the category it receives (D4), verified by test "keeps a subcategory that belongs to the category the draft gets"
+- [x] A mismatched pair on a draft is a draft message and blocks activation with target `in/subcategory_code`, verified by test "reports a mismatched subcategory on the draft and rejects activation"
+- [x] A draft changing category and subcategory together activates, verified by test "activates a draft whose category and subcategory change together"
+- [x] A new draft with no category and a chosen subcategory records no `PRODUCTS_SUBCATEGORY_MISMATCH` message; choosing the matching category keeps the subcategory and the draft activates (D7), verified by test "records no mismatch for a subcategory chosen before the category and activates with the matching category"
 - [ ] The contract carries one subcategory ValueList with the `category_code` In parameter, `ValueListWithFixedValues` and the `CategoryChanged` side effect, verified by test `test/metadata.test.js` "narrows the subcategory value help by category and refreshes it on a category change"
 - [ ] `metadata.xml` is in sync after phase 2 (826 lines) and after phase 3 (873 lines), verified by test `test/metadata.test.js` "keeps app/products/webapp/localService/metadata.xml in sync with the model"
 - [ ] The List Report shows the subcategory name in its own column, verified by OPA5 "The List Report shows the subcategory by name"

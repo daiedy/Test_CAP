@@ -1,7 +1,7 @@
 /* global QUnit */
 // Journey "role-aware actions" (feature catalog-authorization, PLAN step 11, ADR-0013 part 8):
 // UI.CreateHidden, UI.UpdateHidden and UI.DeleteHidden on CatalogService.Products are bound with
-// $edmJson to /CatalogService.EntityContainer/Permissions/isEditor, the singleton served by
+// $edmJson to /Permissions/isEditor, the singleton served by
 // srv/catalog-service.js. This journey is the regression guard for plan risk R6: if that path ever
 // stops resolving, the annotations evaluate to "hidden" and the four standard actions disappear for
 // editors too, silently, with no error anywhere. The whole OPA suite authenticates as exactly one

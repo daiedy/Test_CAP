@@ -6,7 +6,7 @@ annotate CatalogService.Products with {
   description @title: '{i18n>Products.description}';
   price       @title: '{i18n>Products.price}'        @mandatory  @Measures.ISOCurrency: currency_code
               @assert.range: [0, 99999999.99];
-  currency    @title: '{i18n>Products.currency}'     @mandatory;
+  currency    @title: '{i18n>Products.currency}'     @mandatory  @assert.target;
   stock       @title: '{i18n>Products.stock}'        @mandatory  @assert.range: [0, 1000000];
   rating      @title: '{i18n>Products.rating}'       @assert.range: [0, 5];
   category    @title: '{i18n>Products.category}'     @mandatory  @assert.target;

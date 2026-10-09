@@ -103,4 +103,4 @@ Direct delegation without a skill is allowed only for read-only work: `architect
 
 ## Known debt
 
-See `docs/STATE.md`, section "Open debt". Key items today: legacy FLP sandbox bootstrap (`createRenderer`, New Sandbox migration via the `modernize-flp-sandbox` skill), `Products.price` Decimal(10, 2) instead of the convention, deployment not configured.
+See `docs/STATE.md`, section "Open debt". Key items today: legacy FLP sandbox bootstrap (`createRenderer`, New Sandbox migration via the `modernize-flp-sandbox` skill), deployment not configured.

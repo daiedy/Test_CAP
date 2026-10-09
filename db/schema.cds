@@ -7,7 +7,7 @@ namespace my.catalog;
 entity Products : cuid, managed {
   name        : String(100);
   description : String(500);
-  price       : Decimal(10, 2);
+  price       : Decimal(15, 2);
   currency    : Currency;
   stock       : Integer;
   rating      : Integer;

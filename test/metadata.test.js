@@ -35,6 +35,16 @@ describe('OData contract of CatalogService', () => {
     expect(data).toContain('Common.Label" String="Product Name"');
   });
 
+  // ADR-0003 amendment (catalog-hygiene): money is Decimal(15, 2); the historical
+  // Decimal(10, 2) exception of Products.price is withdrawn.
+  it('exposes price as Edm.Decimal with precision 15 and scale 2', async () => {
+    const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
+      headers: { 'Accept-Language': 'en' },
+    });
+    expect(status).toBe(200);
+    expect(data).toContain('<Property Name="price" Type="Edm.Decimal" Precision="15" Scale="2"/>');
+  });
+
   it('exposes the semantic key of Products in the contract', async () => {
     // ADR-0015: FE V4 renders the draft/lock marker in the first semantic-key LineItem column.
     const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
@@ -55,7 +65,9 @@ describe('OData contract of CatalogService', () => {
   });
 
   // ADR-0013: the three UI.*Hidden annotations (app/products/annotations/Products.cds) hide the
-  // editing actions from a CatalogViewer via the Permissions singleton read through $edmJson.
+  // editing actions from a CatalogViewer via the Permissions singleton read through $edmJson,
+  // addressed by the short path /Permissions/isEditor (catalog-hygiene; capire "Role-based
+  // Visibility": Fiori elements also accepts the path without the entity container).
   it('hides the editing actions of Products from anyone who is not a CatalogEditor', async () => {
     const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
       headers: { 'Accept-Language': 'en' },
@@ -65,7 +77,7 @@ describe('OData contract of CatalogService', () => {
     const compact = data.replace(/>\s+</g, '><');
     for (const term of ['UI.CreateHidden', 'UI.UpdateHidden', 'UI.DeleteHidden']) {
       expect(compact).toContain(
-        `<Annotation Term="${term}"><Not><Path>/CatalogService.EntityContainer/Permissions/isEditor</Path></Not></Annotation>`
+        `<Annotation Term="${term}"><Not><Path>/Permissions/isEditor</Path></Not></Annotation>`
       );
     }
   });
@@ -100,7 +112,8 @@ describe('OData contract of CatalogService', () => {
 
   // ADR-0021: the Excel import is an action bound to the Products collection whose `file`
   // parameter carries the workbook as an xlsx stream; the List Report table toolbar shows it
-  // through a UI.DataFieldForAction hidden for non-editors like Create and Delete (ADR-0013).
+  // through a UI.DataFieldForAction hidden for non-editors like Create and Delete (ADR-0013),
+  // read through the same short singleton path /Permissions/isEditor.
   it('importProducts is a collection-bound action shown in the List Report toolbar', async () => {
     const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
       headers: { 'Accept-Language': 'en' },
@@ -133,7 +146,7 @@ describe('OData contract of CatalogService', () => {
         '<PropertyValue Property="Action" String="CatalogService.importProducts"/>' +
         '<PropertyValue Property="Label" String="Import from Excel"/>' +
         '<Annotation Term="UI.Hidden"><Not>' +
-        '<Path>/CatalogService.EntityContainer/Permissions/isEditor</Path>' +
+        '<Path>/Permissions/isEditor</Path>' +
         '</Not></Annotation></Record>'
     );
   });

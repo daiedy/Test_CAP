@@ -41,6 +41,9 @@ D. **Decompression guard.** The 1 MB body limit bounds the upload, not the workb
 
 The guard is imperative because no annotation bounds decompression (CLAUDE.md invariant 6).
 
+## Amendment 3: short singleton path (feature catalog-hygiene, 2026-10-09)
+The `$Path` of decision 6 is now `/Permissions/isEditor`, like the three `UI.*Hidden` terms; the container-qualified form logged a UI5 `TypeError` when the Object Page opened. Measured outcome and the contract figures: ADR-0013 amendment "short singleton path".
+
 ## Alternatives
 | Option | Why rejected |
 |---|---|
@@ -80,7 +83,7 @@ The guard is imperative because no annotation bounds decompression (CLAUDE.md in
 - The OData contract grows by the action, the complex type and the annotations; the snapshot and `metadata.xml` are regenerated in phases 2 and 3.
 - The request body of a 1,000-row file must fit the body-parser limit of 100 KB (CAP default); phase 2 measures the base64 size of the 1,000-row fixture and, only if it does not fit, sets `@cds.server.body_parser.limit` on `CatalogService`.
 - `PATTERNS.md` gains the rows "File upload through an action" and "Bulk create from a file" (examples: this feature), "Action on a set or without context" gets the example `importProducts`, "Role-aware UI visibility" lists `UI.Hidden` on a `DataFieldForAction` record, "Dependency update" gets a sentence on adding a dependency (ADR plus the protected-file session). `CONVENTIONS.md` needs no change.
-- A second instance of the known UI5 1.152 `$select` TypeError for the container-qualified `$Path` (STATE open debt) may appear; `ui-verifier` records it against the known noise.
+- A second instance of the known UI5 1.152 `$select` TypeError for the container-qualified `$Path` (STATE open debt) may appear; `ui-verifier` records it against the known noise. Amendment 3: removed by the short path.
 - Amendment: the phase 3 contract also gains the `Common.SideEffects` record of the action and the `Common.FieldControl` of `file` (look-ahead +19 −0 lines of `metadata.xml` against the phase 2 commit `1a1199f`, research 7.3). `PATTERNS.md` gains the row "Refresh after an action" and the action-parameter case in "Mandatory field" (written with this amendment; the example cells are filled by the steps that apply them). `docs/LESSONS.md` records that a Fiori Elements V4 action parameter is required only through `Common.FieldControl`.
 - Amendment 2: two message keys, `PRODUCTS_IMPORT_DUPLICATE_COLUMN` and `PRODUCTS_IMPORT_TOO_LARGE`, in en and ru; `srv/lib/products-import.js` gains the export `unzippedSize` and the constant `MAX_UNZIPPED_BYTES`. The OData contract, the UI and `package.json` are unchanged.
 - The guard follows the record order of a streaming zip reader. If a `read-excel-file` bump changes its unzip (its own source names `fflate` as the alternative), the bomb tests of the guard re-check it on the Dependabot PR. The guard costs 1-5 ms on a legitimate workbook (measured with the prototype).

@@ -34,6 +34,18 @@ Facts established for the decision (`docs/features/catalog-authorization/CONTEXT
    - Consequence for the contract: the OData model changes (+50 EDMX lines, 0 removed). The snapshot and `app/products/webapp/localService/metadata.xml` are regenerated in the same phase as each model change.
 9. **`xs-security.json` is not touched.** The roles are documented in `docs/architecture/ARCHITECTURE.md` now (rule `deploy.md`); the descriptor is regenerated with `cds add xsuaa --for production` in the deployment ADR, which also defines role collections in `mta.yaml`.
 
+## Amendment: short singleton path (feature catalog-hygiene, 2026-10-09)
+
+Part 8 wrote the container-qualified `$Path` and named the short path `/Permissions/isEditor` as the fallback. The container-qualified form makes UI5 (1.152.0, unchanged on 1.153.0) log one unguarded `TypeError` from `_Helper.aggregateExpandSelect` (`Failed to read path /CatalogService.EntityContainer/Permissions/isEditor`) when an Object Page opens. Feature `catalog-hygiene` (#20) switched all four consumers in `app/products/annotations/Products.cds` to the short path: `UI.CreateHidden`, `UI.UpdateHidden` and `UI.DeleteHidden` (part 8 above) and the `UI.Hidden` of the `importProducts` record (ADR-0021 decision 6). `PATTERNS.md` "Role-aware UI visibility" states the short path as the way to write it.
+
+Measured by `ui-verifier` in the same browser harness: V1 and V2 on `npx cds serve --in-memory --port 4004`, the V0 control on a `git archive` copy of the commit before the switch on port 4005 (`VERIFICATION.md` of the feature, scenarios V0 to V2):
+- Control on the commit before the switch (container-qualified path): exactly 1 `TypeError` when the Object Page opens.
+- Short path, `alice` (`CatalogEditor`) and `viewer` (`CatalogViewer`): 0 occurrences of `aggregateExpandSelect` or `Permissions/isEditor` on the List Report and on the Object Page; 0 new console errors and 0 new warnings.
+- The hidden state holds on both pages, checked separately: `viewer` sees no Create, Delete or Import from Excel on the List Report and no Edit or Delete on the Object Page, `Permissions` answers `isEditor: false`; `alice` sees all of them, `isEditor: true`.
+- Contract: `git diff --numstat` of `metadata.xml` is `7 7` against the commit before the switch, 697 lines; the served `$metadata` holds 7 `<Path>/Permissions/isEditor</Path>` and no container-qualified `<Path>`.
+
+Part 8 stays as the record of the original decision. The container-qualified form still works functionally, so the defect itself stays in UI5; the local workaround is the path form, and the LESSONS entry of 2026-09-16 is closed by this fix.
+
 ## Alternatives
 
 | Option | Why rejected |
@@ -58,6 +70,7 @@ Facts established for the decision (`docs/features/catalog-authorization/CONTEXT
 | Role-aware UI via a **keyless** permission singleton | Compiles, serves identically and costs 11 EDMX lines less (measured), but produces a non-abstract `EntityType` without a `<Key>`, which OData V4 CSDL does not allow; not worth the risk with UI5's model |
 | Role-aware UI via a static `UI.*Hidden: true` in a second app or manifest variant per role | Two UIs to maintain, a manifest change, and the role would have to be known at build time |
 | Role-aware UI by reading the role in `Component.js` and toggling controls | Freestyle code inside a Fiori elements app, invisible to the templates, against ADR-0005/ADR-0007 practice |
+| Amendment: keep the container-qualified `$Path` | Works, but logs the UI5 `TypeError` once per Object Page open; the short path is the documented equivalent and measured clean |
 | Disabling the actions instead of hiding them | Considered by the user and rejected: a permanently disabled toolbar is noise for a reader. The choice is recorded here so the `ux-designer` does not reopen it |
 | Instance-based rules (`where: (createdBy = $user)`) | No requirement; catalog data is shared |
 | `cds add xsuaa` now | Protected file, deployment not configured (STATE debt, separate ADR); the generated content is recorded in CONTEXT |
@@ -82,6 +95,7 @@ Facts established for the decision (`docs/features/catalog-authorization/CONTEXT
 - [x] `docs/registry/SERVICES.md`, `HANDLERS.md` regenerated
 - [ ] Deployment ADR (`cds add xsuaa --for production`, `xs-security.json`, `mta.yaml` role collections): not started, tracked in `docs/STATE.md` open debt
 - [ ] Second OPA5 run as `viewer`: not built, only if the hidden state ever regresses (user decision 2026-09-10)
+- Amendment: the four `$Path` values move to the short path; contract `7 7` lines against the commit before, the singleton and its handler are unchanged, the two path assertions of `test/metadata.test.js` and the snapshot follow the path.
 
 ## Sources
 
@@ -95,4 +109,5 @@ Facts established for the decision (`docs/features/catalog-authorization/CONTEXT
 - `ui5-test-runner` 5.14.0: `src/defaults/puppeteer.js` (`--basic-auth-username`, `page.authenticate`), `src/job.js` (`--config`, `buildArgs`, `browserArgs`)
 - `scripts/gen-registry.mjs` lines 195 and 231 (`@requires`, `@restrict` rendering)
 - Experiment logs and results: `docs/features/catalog-authorization/CONTEXT.md`, "Verified by experiment" (2026-09-07 authorization, 2026-09-10 permission signal)
+- Amendment: capire "Serving SAP Fiori UIs > Role-based Visibility" via `mcp__cds-mcp__search_docs` (`mcp__fiori-mcp__search_docs` 1.12.2 has no page on absolute singleton paths in `$edmJson`); `docs/features/catalog-hygiene/VERIFICATION.md` (V0 to V2)
 - ADR-0002, ADR-0004, ADR-0005, ADR-0007, ADR-0010, ADR-0012, ADR-0015; rules `srv-services.md`, `srv-handlers.md`, `tests-backend.md`, `tests-ui.md`, `deploy.md`

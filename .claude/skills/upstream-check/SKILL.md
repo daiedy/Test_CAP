@@ -38,7 +38,8 @@ Only for "affects" items: WebFetch the specific page, not the whole site.
 - CAP: `https://cap.cloud.sap/docs/releases/<year>/changelog.md`, look for the heading with the version; for majors `https://cap.cloud.sap/docs/releases/<year>/<mon><yy>.md`.
 - `@cap-js/*`, `@ui5/*`, wdi5: the GitHub release link from the diff.
 - UI5: `https://ui5.sap.com/test-resources/sap/fe/core/relnotes/changes-<version>.json` and the same for `sap/m`, `sap/ui/core`.
-- Fiori MCP: `https://github.com/SAP/open-ux-tools/blob/main/packages/fiori-mcp-server/CHANGELOG.md`.
+- Fiori MCP: `https://raw.githubusercontent.com/SAP/open-ux-tools/main/packages/fiori-mcp-server/CHANGELOG.md`.
+- A `CHANGELOG.md` on GitHub is read from `raw.githubusercontent.com`: WebFetch of the rendered `github.com/.../blob/...` page summarises it and stops early.
 
 Version rule: documentation snapshots in the MCP servers may lag behind. Verify any statement about a version against `npm view <pkg> version` or the release page, not against the `search_docs` answer.
 

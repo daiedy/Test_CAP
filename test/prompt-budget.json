@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-10-07",
+  "recordedAt": "2026-10-09",
   "bytes": {
     ".claude/agents/architect.md": 4281,
     ".claude/agents/cap-backend-dev.md": 2542,
@@ -16,26 +16,26 @@
     ".claude/rules/db-model.md": 1866,
     ".claude/rules/deploy.md": 977,
     ".claude/rules/i18n.md": 1783,
-    ".claude/rules/pipeline-config.md": 5338,
+    ".claude/rules/pipeline-config.md": 5337,
     ".claude/rules/srv-handlers.md": 1966,
     ".claude/rules/srv-services.md": 2249,
     ".claude/rules/tests-backend.md": 2841,
     ".claude/rules/tests-ui.md": 4527,
     ".claude/rules/ui-annotations.md": 3593,
-    ".claude/rules/ui5-webapp.md": 3581,
+    ".claude/rules/ui5-webapp.md": 3535,
     ".claude/skills/add-entity/SKILL.md": 1875,
     ".claude/skills/backlog/SKILL.md": 2664,
     ".claude/skills/debug-after-upgrade/SKILL.md": 4940,
     ".claude/skills/feature/SKILL.md": 7781,
     ".claude/skills/gen-docs/SKILL.md": 849,
-    ".claude/skills/project-protocol/SKILL.md": 9259,
+    ".claude/skills/project-protocol/SKILL.md": 9245,
     ".claude/skills/retro/SKILL.md": 4017,
     ".claude/skills/review/SKILL.md": 760,
     ".claude/skills/run-app/SKILL.md": 1275,
     ".claude/skills/spec/SKILL.md": 1830,
     ".claude/skills/test-all/SKILL.md": 1598,
     ".claude/skills/upgrade-cds/SKILL.md": 1480,
-    ".claude/skills/upstream-check/SKILL.md": 4422,
-    "CLAUDE.md": 10436
+    ".claude/skills/upstream-check/SKILL.md": 4590,
+    "CLAUDE.md": 10376
   }
 }

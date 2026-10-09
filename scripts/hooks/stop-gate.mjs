@@ -12,6 +12,8 @@
  * Advice, never a block (ADR-0023): `## Now` of docs/STATE.md drifting from git (branch, last
  * commit) is reported once per drift key through `additionalContext` on exit 0; so is the
  * docs/LESSONS.md inbox holding more than LESSONS_MAX pending entries, at every full pass.
+ * Deferred: while a subagent of the session still works (`runningAgents()`), checks 1-3 wait for
+ * the next stop, because the tree is mid-phase; the hash is not recorded, so that stop runs them.
  * Bypass: PIPELINE_SKIP_GATE=1. Loop guard: stop_hook_active.
  * Metrics (ADR-0022): every block appends `{ event: 'gate', hook: 'stop-gate', reason }`, and every
  * run ends with one `{ event: 'turn-end', blocked }`; the drift advice is not a block.
@@ -31,7 +33,7 @@ import {
 } from '../lib/hook-utils.mjs';
 import { protectedWriteHit, reasonFor } from '../lib/protected-paths.mjs';
 import { stateShapeErrors, statePrintedBytes, STATE_PRINT_BUDGET } from '../lib/doc-shapes.mjs';
-import { appendMetric, recordGate } from '../lib/metrics-log.mjs';
+import { appendMetric, recordGate, runningAgents } from '../lib/metrics-log.mjs';
 import {
   projectNow,
   stateDrift,
@@ -212,6 +214,17 @@ try {
   if (!codeStatus.trim() || saved?.hash === hash) {
     pass(root, advice);
   }
+
+  // A background subagent is mid-phase: its tree is not finished, so the docs and test checks
+  // would block the orchestrator that only waits for it. The next stop after it ends runs them.
+  const running = runningAgents(root, input);
+  if (running.length)
+    pass(
+      root,
+      advice,
+      null,
+      `Stop gate deferred: ${running.join(', ')} still running; the next stop runs the full gate.\n`
+    );
 
   const notes = [];
 

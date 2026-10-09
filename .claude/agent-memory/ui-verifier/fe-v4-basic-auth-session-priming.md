@@ -9,7 +9,7 @@ Since ADR-0013 (`catalog-authorization`), `:4004` requires HTTP Basic Auth on ev
 
 **Do not** embed credentials in the navigated URL (`http://alice:@localhost:4004/...`): the page loads once via the browser's own credentialed fetch of the *document*, but `sap-ui-core`'s relative `fetch('../manifest.json')` calls throw `TypeError: Failed to execute 'fetch': Request cannot be constructed from a URL that includes credentials` because the page's own base URL still contains `alice@` — the component fails to load ("SAP UI5 component of the application could not be loaded").
 
-**Working recipe**, one `evaluate_script` call before navigating to the real sandbox URL:
+**Working recipe**: first navigate the tab to a same-origin page that needs no auth, `http://localhost:4004/favicon.ico` (sent from `about:blank`, the priming XHR answered 401), then one `evaluate_script` call before navigating to the real sandbox URL:
 ```js
 async () => new Promise((resolve) => {
   const x = new XMLHttpRequest();

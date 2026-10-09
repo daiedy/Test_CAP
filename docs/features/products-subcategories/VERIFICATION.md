@@ -18,7 +18,7 @@ Home page (`screenshots/00-home.png`): only the "Product Catalog" tile, no SAP d
 | V6 | viewer read-only | passed: List Report has the Subcategory column and no Create / Import from Excel / Delete buttons; Object Page of Laptop Pro 15 shows "Subcategory: Laptops" as plain text, no Edit and no Delete button (only Share), 0 visible inputs | `15-v6-viewer-list-en.jpeg`, `16-v6-viewer-objectpage-en.jpeg` |
 | V7 | Keyboard | Tab from Category lands on Subcategory; F4 opens the list; ArrowDown+Enter selects; typing "Mice" + Enter selects (V3); Escape closes the list (V2). Alt+Down and typing a prefix such as "La" not exercised | `07-v2-kitchen-tab-f4-en.jpeg` |
 | V8 | List Report column order, narrow widths | passed: order Product Name, Category, Subcategory, Price, Stock Quantity, Rating (header row of `01-list-report-en.png`, `18-v9-adapt-filters-en.jpeg`). Pop-in behind "Show Details" by viewport width (observation, viewer tab): 1700 and 1600 all six columns; 1500 Rating hidden; 1400 Rating and Stock Quantity hidden; 1300 Rating, Stock Quantity, Price hidden (Name, Category, Subcategory shown); 800 only Product Name shown. Rating pops in before Subcategory, as designed. No scenario broke | `17-v8-narrow-800-en.jpeg` |
-| V8 re-check (UI.Importance #Low) | List Report column pop-in order after review fix (uncommitted `UI.Importance #Low` on Subcategory), fresh server on :4006, editor `alice`, `en` | passed: pop-in order is Rating, Subcategory, Stock Quantity, Price, Category; Product Name never. Visible columns by viewport width in the table below. Supersedes the earlier V8 row on the order (there Subcategory stayed before Price/Stock Quantity at 1300 because it had no Importance) | `19-v8-recheck-1400-en.png`, `20-v8-recheck-1300-en.png` |
+| V8 re-check (UI.Importance #Low) | List Report column pop-in order after review fix (uncommitted `UI.Importance #Low` on Subcategory), fresh server on :4006, editor `alice`, `en` | passed: pop-in order is Rating, Subcategory, Stock Quantity, Price, Category; Product Name never. Visible columns by viewport width in the table below. Supersedes the earlier V8 row on the order (there Subcategory stayed before Price/Stock Quantity at 1300 because it had no Importance) | `23-v8-recheck-1400-en.png`, `24-v8-recheck-1300-en.png` |
 | V9 | Adapt Filters (observation, D9) | Subcategory IS offered in the "Add Filter" list of "Adapt Filters" (Currency, Description, ID, Image URL, Stock Quantity, Subcategory). Added, it renders as a multi-value combo box that lists all 15 subcategories (no Category filter was set, so no narrowing is expected here); not tested with a Category filter set; no UI.HiddenFilter, as decided in D9 | `18-v9-adapt-filters-en.jpeg`, `19-v9-subcategory-filter-added-en.jpeg` |
 | ru | `sap-language=ru` (editor) | passed: List Report headers "Название, Категория, Подкатегория, Цена, Остаток, Рейтинг" and Russian subcategory names in the cells; Object Page label "Подкатегория:"; Edit on Laptop Pro 15: dropdown lists only "Аудио, Мыши, Ноутбуки"; Category changed to "Мебель": Subcategory field empty (a11y snapshot: no value) and the dropdown lists "Кресла и стулья, Организация рабочего места, Освещение"; draft discarded | `20-ru-list-report.jpeg`, `21-ru-dropdown-electronics.jpeg`, `22-ru-after-category-change.jpeg` |
 
@@ -63,7 +63,14 @@ New: 0 errors. Warnings: `Unknown qualified name Edm.String at /CatalogService.S
 A visibility mechanism (`UI.UpdateHidden` for viewer) was checked on the List Report (no Create / Delete / Import) and on the Object Page (no Edit / Delete) separately, V6.
 
 ## Automated tests
-Not run by the verifier (`npm test` / `npm run test:ui` belong to the test roles); this file covers the browser check only.
+The verifier covers the browser check only; the automated runs of the test roles and the reviewer, last lines of the output (2026-10-09, worktree, after the review fixes):
+```
+npm test (root)              -> Test Files 11 passed (11), Tests 163 passed (163)   (run by docs-keeper)
+npm run lint (root)          -> cds lint, no findings                              (run by docs-keeper)
+npm run lint (app/products)  -> UI5 linter report: Success! No findings detected.   (run by docs-keeper)
+npm run test:ui (app/products), fresh `npx cds serve --in-memory`
+                             -> 49 passed, 0 failed, 0 skipped (47 opaTest + 2 QUnit)   (run by test-ui and reviewer; quoted from their reports, not re-run here)
+```
 
 ## Verdict
 Ready for review. Defects: none. Not covered: V5 (S7 rendering is not reachable through the UI by design), V7 Alt+Down and prefix typing, V9 with a Category filter set, the en console of earlier page loads.

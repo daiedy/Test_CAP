@@ -4,7 +4,9 @@ This file is an inbox, not an archive. A lesson lives here only until `/retro` t
 
 ## Pending
 
-No entries.
+- 2026-10-09. A prediction about layout behavior in a plan (SCREENS said Rating, then Subcategory pop in first on narrow screens) was approved without a measurement; `ui-verifier` measured the opposite (a column with no `UI.Importance` stays visible while Stock Quantity and Price pop in) and a review fix (`UI.Importance: #Low`) followed. Status: Pending #8; transfer to the `ux-designer` prompt as "measure a column pop-in claim in a scratch copy before the plan gate" (pop-in order inside one importance group is right to left, `sap.m.Table` source, not in MCP docs).
+- 2026-10-09. In a worktree-isolated session the Bash guard refuses compound commands (`&&` chains, `git ... | ...`, heredocs mixed with `git`/`npx`) with "too complex to verify"; plain single commands or a scratch `.mjs` script run as `node <file>` pass. Status: Pending #8; transfer to `project-protocol` section 2 as a hint for agents running in a worktree.
+- 2026-10-09. `cds add data --filter <Entity> --records N` (cds-dk 10.1.0) silently adds a facet to the protected `mta.yaml`; the diff showed it only because the agent looked. Status: Pending #8; transfer to the "New entity" PATTERNS row as "restore `mta.yaml` after `cds add data`", or generate the CSV by hand.
 
 ## Pending upstream
 

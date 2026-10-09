@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-09
 - Branch: feature/products-subcategories
 - Feature: products-subcategories (#8)
-- Phase: 5: review
-- Last commit: 1f709dc docs: products-subcategories verification
-- Next: reviewer PLAN step 12 writes REVIEW.md (zero blocking findings), then docs-keeper step 13
+- Phase: 6: documentation
+- Last commit: 2245e97 fix(app): products-subcategories review fixes
+- Next: docs-keeper PLAN step 13 (PATTERNS rows of ADR-0024, template, TESTING fix, registry, CHANGELOG, SUMMARY, LESSONS), gate check-docs-fresh
 
 ## Open debt
 
@@ -21,6 +21,7 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 | FLP sandbox has no `data-sap-ui-flexibility-services`; variant `Save As` 404s and `eraseDirtyChangesOnVariant` erases the change on switch | Add a Session/LocalStorageConnector to `flpSandbox.html` (also needed for the New Sandbox migration); regress via an OPA5 `VariantManagement` select | user |
 | Root `.prettierrc` (single quotes, es5 commas) contradicts `app/products` ESLint (double quotes, no dangling comma) | ESLint wins today (orchestrator decision); align the configs | user |
 | A forked session's `session` card counts the parent's copied history | Cut the scope at the fork point | architect |
+| `.claude/rules/ui-annotations.md:19` ("never written by hand") and `.claude/rules/srv-services.md:24` (no `@assert: (case ...)`) contradict accepted ADR-0024 (found 2026-10-09) | One sentence each naming the ADR-0024 exception, in a session started with `PIPELINE_ALLOW_PROTECTED=1` | user |
 | `initialLoad: true` in `manifest.json` is a boolean; UI5 1.153.0 logs `DEPRECATED: boolean value not allowed for 'initialLoad'`, supported `Disabled\|Enabled\|Auto` (found 2026-10-07) | Set `Enabled` through Fiori MCP, confirm the List Report still loads on open, OPA5 green | fiori-app-dev |
 ## What works
 
@@ -32,11 +33,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - List Report table toolbar button "Import from Excel" creates products in bulk from an uploaded `.xlsx` workbook (feature `products-excel-upload`, #7): collection-bound action `CatalogService.importProducts`, all-or-nothing with one message per bad row, at most 1,000 rows, workbook unzipped size guarded to 10 MB (`srv/lib/products-import.js` `unzippedSize`), `Common.SideEffects` refreshes the table, `@mandatory` on the `file` parameter marks the dialog field required; hidden for `viewer`; `en`/`ru` verified; see `README.md` for the workbook columns
 - Pipeline metrics (#14, ADR-0022): `node scripts/metrics.mjs feature <name>` prints the cost, time and rework card from transcripts and `.pipeline/` records (parser `scripts/lib/transcript-usage.mjs`), `compare` lists `docs/metrics/history.jsonl` (5 features), the SessionStart briefing shows the last line; proved by `test/metrics.test.js` and `test/hooks-metrics.test.js`
 - STATE hygiene (#15, ADR-0023): the SessionStart briefing ends with a drift warning when `## Now` disagrees with git (`stateDrift()` in `scripts/lib/state-now.mjs`: other branch, unknown or non-ancestor `Last commit:`, more than 1 first-parent commit behind); the Stop gate repeats it once per drift key as `additionalContext` and never blocks; an open issue with a `PLAN.md` or `CONTEXT.md` folder is tagged "plan drafted" and recommended for review; a worktree under `.claude/worktrees/` no longer blocks the Stop gate
-- UI tests: `npm run test:ui` in `app/products` (`ui5-test-runner` against `npx cds serve --in-memory --port 4004`, credentials from `app/products/ui5-test-runner.json`): 42 passed (40 `opaTest`s + 2 QUnit), 0 skipped
+- Product subcategories (feature `products-subcategories`, #8, ADR-0024): `Products.subcategory` from the read-only code list `Subcategories` (15 rows, each in one category); the Object Page dropdown and its value help list only the subcategories of the product's category (hand-written `Common.ValueList` with the `category_code` In parameter), a draft category change empties a foreign subcategory (`resetStaleSubcategory` plus `Common.SideEffects #CategoryChanged`), `@assert: (case ...)` rejects a mismatched pair with `PRODUCTS_SUBCATEGORY_MISMATCH`; List Report column `UI.Importance: #Low`; optional field; `en`/`ru` verified
+- UI tests: `npm run test:ui` in `app/products` (`ui5-test-runner` against `npx cds serve --in-memory --port 4004`, credentials from `app/products/ui5-test-runner.json`): 49 passed (47 `opaTest`s + 2 QUnit), 0 skipped
 - Project-level Claude Code plugins: `ui5`, `cap-developer`; MCP in `.mcp.json`: `cds-mcp`, `fiori-mcp`, `chrome-devtools`, `ui5-mcp-server` (pinned 0.3.2 since 2026-10-07; the plugin's unpinned server `plugin:ui5:ui5-mcp-server` is toggled off in `/mcp` on each machine). Setup on a new machine: `docs/architecture/STACK.md`
 - Pipeline: 11 subagents in `.claude/agents`, 12 skills, 11 path-based rules, 7 hook events in `.claude/settings.json` (incl. the MCP audit on PostToolUse and PostToolUseFailure), the `docs/registry` registry, the release watcher `scripts/watch-releases.mjs` and the `upstream-check.yml` and `ci.yml` workflows, `.github/dependabot.yml`
 - `CatalogService` requires authentication (ADR-0013): logging in as `alice` or `bob` (`CatalogEditor`, browser Basic prompt, empty password) shows Create, Delete and Edit as before; logging in as `viewer` (`CatalogViewer`) shows the same 15-row List Report and Object Page but without those four actions - the read-only singleton `CatalogService.Permissions` drives `UI.CreateHidden`/`UpdateHidden`/`DeleteHidden` in `app/products/annotations/Products.cds` through the short singleton path `/Permissions/isEditor`, which opens the Object Page without the UI5 `$select` TypeError (ADR-0013 amendment).
 
 ## Decisions
 
-See `docs/decisions/` (ADR-0001 to ADR-0021); the accepted ways are rows in `docs/architecture/PATTERNS.md`.
+See `docs/decisions/` (ADR-0001 to ADR-0024); the accepted ways are rows in `docs/architecture/PATTERNS.md`.

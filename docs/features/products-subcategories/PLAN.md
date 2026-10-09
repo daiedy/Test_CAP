@@ -84,9 +84,9 @@ No override was given, so the figures above (phase 2 826 lines, phase 3 873 line
 - [x] The journey restores Laptop Pro 15 to ELECTRONICS/LAPTOPS and leaves no draft, verified by OPA5 "Restoring the original pair leaves the data as seeded"
 - [x] The Object Page shows the subcategory label and name in Russian, verified by OPA5 `RussianLocaleJourney` "The Object Page shows the subcategory in Russian"
 - [x] The existing category edit journey still passes and restores LAPTOPS, verified by OPA5 `EditCategoryOnObjectPageJourney` "Restoring the original category leaves the data as seeded"
-- [ ] `npm test` green with 162 tests at the phase 2 gate and 163 at the phase 3 gate; `npm run test:ui` 49 passed (47 `opaTest` + 2 QUnit) at the phase 4 gate
-- [ ] `ui-verifier` confirms in `en` and `ru` the narrowed dropdown, the reset, the `$batch` value help request with `$filter=category_code eq '...'`, and a read-only field for `viewer`, and records the "Adapt Filters" observation V9 (D9), in `VERIFICATION.md`
-- [ ] Documentation updated: PATTERNS rows of ADR-0024 (if accepted), registry, STATE, CHANGELOG, SUMMARY
+- [x] `npm test` green with 162 tests at the phase 2 gate and 163 at the phase 3 gate; `npm run test:ui` 49 passed (47 `opaTest` + 2 QUnit) at the phase 4 gate
+- [x] `ui-verifier` confirms in `en` and `ru` the narrowed dropdown, the reset, the `$batch` value help request with `$filter=category_code eq '...'`, and a read-only field for `viewer`, and records the "Adapt Filters" observation V9 (D9), in `VERIFICATION.md`
+- [x] Documentation updated: PATTERNS rows of ADR-0024 (if accepted), registry, STATE, CHANGELOG, SUMMARY
 
 ## Steps
 

@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-10-09
-- Branch: main
-- Feature: none
-- Phase: none (catalog-hygiene #20 and its retro merged and pushed)
-- Last commit: 6eb3871 Merge branch 'chore/retro-catalog-hygiene'
-- Next: `/spec #8` (products-subcategories, P2)
+- Branch: feature/products-subcategories
+- Feature: products-subcategories (#8)
+- Phase: 1: research and plan
+- Last commit: c7708c2 docs: STATE after the catalog-hygiene retro merge
+- Next: user approves PLAN.md (D1-D6, SCREENS plan-gate items 1-3) and ADR-0024, then phase 2 backend
 
 ## Open debt
 

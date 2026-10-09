@@ -14,4 +14,5 @@
 - [Hook output and STATE drift](pipeline-hook-output-and-state-drift.md) — Stop stdout invisible, additionalContext feedback, Last commit = first parent, worktree status, Bash guard trips on doc text; ADR-0023 accepted
 - [Claude Code transcript facts](claude-code-transcript-facts.md) — requestId+uuid dedupe per scope, cost-state per process, pricing check as 5m-1h interval (2026-10-02), internal agents typed "claude"
 - [FLP sandbox flex connector](flp-sandbox-flex-connector.md) — external:false key, sandbox.js/sandbox2.js overwrite sap-ui-config, OPA runs through flpSandbox.html, vacuous iSeeVariantModified(false); ADR-0024 proposed
+- [@assert constraints and dependent value help](assert-constraint-and-dependent-vh.md) — declarative cross-field rule, null trap with `!=` (guard both sides), draft touched-only messages, In-param dropdown; ADR-0024 accepted
 - [EDMX cost per CDS edit](contract-delta-facts.md) — @assert.target 0 lines, @assert.range 1, Decimal precision 1, UI.*Hidden $Path 2 per term; Currencies CSV facts; catalog-hygiene (#20) merged 2026-10-09, ADR-0003 amended in place

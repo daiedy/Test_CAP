@@ -6,10 +6,10 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 - Date: 2026-10-09
 - Branch: feature/catalog-hygiene
-- Feature: catalog-hygiene (#20)
-- Phase: 6: documentation (step 10); review 0 blocking, 3 minor doc items open
-- Last commit: c47e8ed feat(app): catalog-hygiene short Permissions path
-- Next: phase 7 completion (close #20, prune, metrics card)
+- Feature: none
+- Phase: none (catalog-hygiene #20 closed, branch not merged)
+- Last commit: 271da05 docs: catalog-hygiene cost card and metrics record
+- Next: merge `feature/catalog-hygiene` into main and push (user), then `/spec #8`
 
 ## Open debt
 

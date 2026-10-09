@@ -57,3 +57,7 @@ Gates: 4 blocks (protected 2, docs 2); review 0 blocking / 6 findings; criteria 
 ## Open debt
 - Mock mode (`npm run start-mock`) was not checked for the short path; not part of any gate.
 - The UI5 `TypeError` for the container-qualified form remains a UI5 defect; no local debt.
+
+## Full record
+
+Pruned to this file (ADR-0019). CONTEXT.md, PLAN.md, REVIEW.md, VERIFICATION.md, research, screenshots of this feature stay in git history at https://github.com/daiedy/Test_CAP/tree/271da057b4cb51ddabd1f1401f8f7b5d5484d7ad/docs/features/catalog-hygiene (commit `271da05`).

@@ -16,12 +16,20 @@ export const IMPORT_COLUMNS = Object.freeze({
   currency: 'currency_code',
   stock: 'stock',
   category: 'category_code',
+  subcategory: 'subcategory_code',
   rating: 'rating',
   imageUrl: 'imageUrl',
 });
 
 /** Columns a workbook must have; each missing one is its own structural error. */
-export const MANDATORY_COLUMNS = Object.freeze(['name', 'price', 'currency', 'stock', 'category']);
+export const MANDATORY_COLUMNS = Object.freeze([
+  'name',
+  'price',
+  'currency',
+  'stock',
+  'category',
+  'subcategory',
+]);
 
 // Columns whose cell text is converted to a number when it reads as one.
 const NUMERIC_COLUMNS = new Set(['price', 'stock', 'rating']);

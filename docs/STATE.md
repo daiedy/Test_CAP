@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-10
 - Branch: feature/products-subcategory-cascade
 - Feature: products-subcategory-cascade
-- Phase: 1: research and plan (autonomous gates)
-- Last commit: 68410eb docs: STATE after the products-subcategories merge
-- Next: architect writes CONTEXT.md and PLAN.md, then ux-designer SCREENS.md; user approves the plan
+- Phase: 2: backend (autonomous gates; plan approved, ADR-0025 accepted)
+- Last commit: 4c69908 docs(spec): products-subcategory-cascade plan and ADR-0025
+- Next: test-backend step 3 (server, import and D8 tests); gate `npm run lint`, `npm test` 170
 
 ## Open debt
 

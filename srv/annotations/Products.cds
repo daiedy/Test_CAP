@@ -11,7 +11,7 @@ annotate CatalogService.Products with {
   rating      @title: '{i18n>Products.rating}'       @assert.range: [0, 5];
   category    @title: '{i18n>Products.category}'     @mandatory  @assert.target;
   // Cross-field consistency (ADR-0024 decision 2): both null guards are required, CQL != treats null as a value.
-  subcategory @title: '{i18n>Products.subcategory}'  @assert.target
+  subcategory @title: '{i18n>Products.subcategory}'  @mandatory  @assert.target
               @assert: (case
                 when subcategory.code is not null and category.code is not null
                   and subcategory.category.code != category.code

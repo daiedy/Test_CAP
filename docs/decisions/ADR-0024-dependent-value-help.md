@@ -21,6 +21,9 @@ Decision 3, reset (applies when the user chooses "clear automatically", PLAN D4)
 
 First application: `Products.subcategory` → `Subcategories` (feature `products-subcategories`).
 
+## Amendment: import of the dependent field (feature products-subcategory-cascade, 2026-10-10)
+The consequence below that "an import column for a dependent field needs that mapping extended first" does not hold. The decision 2 constraint is checked once at commit (`@sap/cds` 10.1.1 `libx/_runtime/common/generic/assert.js`, `req.before('commit')`), so a row `INSERT` never reports it and there is nothing for `validationErrors` to map. An import column for a dependent field is checked per row before the inserts instead: ADR-0021 amendment 4 E (`subcategoryMismatches`). Decision 2 itself is unchanged and stays the guard.
+
 ## Alternatives
 | Option | Why rejected |
 |---|---|

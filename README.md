@@ -34,8 +34,8 @@ Mock mode uses `@sap-ux/ui5-middleware-fe-mockserver` with `webapp/localService/
 
 A `CatalogEditor` can create many products at once from the List Report table toolbar button "Import from Excel" (`CatalogService.importProducts`, ADR-0021). The workbook format (the only place besides the file field label "Excel File (.xlsx)" that documents it, by design):
 
-- First sheet, first row is a header naming the columns `name`, `description`, `price`, `currency`, `stock`, `category`, `rating`, `imageUrl` (case-insensitive, any order); each column may appear at most once. Mandatory columns: `name`, `price`, `currency`, `stock`, `category`.
-- `category` and `currency` hold codes (`ELECTRONICS`, `USD`), never localized names.
+- First sheet, first row is a header naming the columns `name`, `description`, `price`, `currency`, `stock`, `category`, `subcategory`, `rating`, `imageUrl` (case-insensitive, any order); each column may appear at most once. Mandatory columns: `name`, `price`, `currency`, `stock`, `category`, `subcategory`.
+- `category`, `subcategory` and `currency` hold codes (`ELECTRONICS`, `LAPTOPS`, `USD`), never localized names; the subcategory must belong to the row's category.
 - At most 1,000 data rows per file; the workbook must not unzip to more than 10 MB.
 - All-or-nothing: a file with any bad row writes nothing, and the response lists every bad row with its row number and column.
 - Sample file: `test/fixtures/products-import-valid.xlsx` (3 rows, one per category and currency).

@@ -615,6 +615,7 @@
           </Record>
         </Annotation>
         <Annotation Term="Common.Label" String="Subcategory"/>
+        <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
       </Annotations>
       <Annotations Target="CatalogService.Products/imageUrl">
         <Annotation Term="Common.Label" String="Image URL"/>

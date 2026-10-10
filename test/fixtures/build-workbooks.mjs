@@ -12,6 +12,7 @@ export const HEADER = [
   'currency',
   'stock',
   'category',
+  'subcategory',
   'rating',
   'imageUrl',
 ];
@@ -25,6 +26,7 @@ export const VALID_ROWS = [
     'USD',
     40,
     'STATIONERY',
+    'WRITING_INSTRUMENTS',
     4,
     'https://example.com/img/desk-organizer.png',
   ],
@@ -35,6 +37,7 @@ export const VALID_ROWS = [
     'EUR',
     120,
     'SPORTS',
+    'FITNESS',
     5,
     'https://example.com/img/resistance-bands.png',
   ],
@@ -45,6 +48,7 @@ export const VALID_ROWS = [
     'GBP',
     15,
     'ELECTRONICS',
+    'LAPTOPS',
     3,
     'https://example.com/img/usb-c-hub.png',
   ],
@@ -53,15 +57,29 @@ export const VALID_ROWS = [
 /**
  * The invalid fixture: one good row, then one row per failure (sheet rows, header = 1):
  * 3 missing name, 4 stock -1, 5 unknown category, 6 non-numeric price, 7 duplicate of the
- * seeded product "Yoga Mat" (different case, surrounding spaces).
+ * seeded product "Yoga Mat" (different case, surrounding spaces), 8 missing subcategory,
+ * 9 subcategory of another category (ADR-0021 amendment 4). Row 5 keeps a KITCHEN subcategory, so
+ * it is also reported as a subcategory of another category than "NOPE" (measured).
  */
 export const INVALID_ROWS = [
-  ['Import Good Row', 'A valid row of the invalid file', 10, 'USD', 1, 'KITCHEN', 3, null],
-  [null, 'Row without a name', 10, 'USD', 1, 'KITCHEN', null, null],
-  ['Import Negative Stock', null, 10, 'USD', -1, 'KITCHEN', null, null],
-  ['Import Unknown Category', null, 10, 'USD', 1, 'NOPE', null, null],
-  ['Import Bad Price', null, 'abc', 'USD', 1, 'KITCHEN', null, null],
-  ['  yoga MAT ', null, 10, 'USD', 1, 'SPORTS', null, null],
+  [
+    'Import Good Row',
+    'A valid row of the invalid file',
+    10,
+    'USD',
+    1,
+    'KITCHEN',
+    'APPLIANCES',
+    3,
+    null,
+  ],
+  [null, 'Row without a name', 10, 'USD', 1, 'KITCHEN', 'APPLIANCES', null, null],
+  ['Import Negative Stock', null, 10, 'USD', -1, 'KITCHEN', 'APPLIANCES', null, null],
+  ['Import Unknown Category', null, 10, 'USD', 1, 'NOPE', 'APPLIANCES', null, null],
+  ['Import Bad Price', null, 'abc', 'USD', 1, 'KITCHEN', 'APPLIANCES', null, null],
+  ['  yoga MAT ', null, 10, 'USD', 1, 'SPORTS', 'FITNESS', null, null],
+  ['Import No Subcategory', null, 10, 'USD', 1, 'KITCHEN', null, null, null],
+  ['Import Lamp In Kitchen', null, 10, 'USD', 1, 'KITCHEN', 'LIGHTING', null, null],
 ];
 
 /**
@@ -78,6 +96,7 @@ export function generatedRow(i, overrides = {}) {
     currency: 'USD',
     stock: 1,
     category: 'KITCHEN',
+    subcategory: 'APPLIANCES',
     rating: null,
     imageUrl: null,
     ...overrides,

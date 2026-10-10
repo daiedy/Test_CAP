@@ -6,10 +6,10 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 - Date: 2026-10-10
 - Branch: feature/products-subcategory-cascade
-- Feature: products-subcategory-cascade
-- Phase: 6: documentation (autonomous gates; review zero blocking, `npm test` 173)
-- Last commit: f6ce433 fix(test): products-subcategory-cascade review fixes
-- Next: docs-keeper step 9 (PATTERNS, templates, registry, STATE, CHANGELOG, SUMMARY); gate `node scripts/check-docs-fresh.mjs`
+- Feature: none
+- Phase: none (products-subcategory-cascade done and pruned on its branch, not merged)
+- Last commit: 5ab8b02 docs: products-subcategory-cascade summary and registry
+- Next: user merges `feature/products-subcategory-cascade` into `main` (push on the user's instruction); then `/spec #9`
 
 ## Open debt
 

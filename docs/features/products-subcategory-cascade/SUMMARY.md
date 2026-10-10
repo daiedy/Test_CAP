@@ -59,3 +59,7 @@ Entries in `docs/LESSONS.md` (pending): an `@assert` constraint is checked at co
 - `.claude/rules/ui-annotations.md` needs one word for `Common.FieldControl` (ADR-0025), in the STATE `Open debt` row of the protected rule files (user, `PIPELINE_ALLOW_PROTECTED=1`).
 - Closed from #8: the per-row mismatch in the import (`subcategoryMismatches`); the `validationErrors` mapping is not needed.
 - Follow-up candidates, not created as issues (through `/backlog` by the user): a single Category message when both fields are empty (F1); skipping the second import message for an unknown category (needs an ADR-0021 amendment wording and a second `SELECT`).
+
+## Full record
+
+Pruned to this file (ADR-0019). CONTEXT.md, PLAN.md, REVIEW.md, SCREENS.md, VERIFICATION.md, research, screenshots of this feature stay in git history at https://github.com/daiedy/Test_CAP/tree/5ab8b026f46aa418b6fb150f2def4c539c6b21fb/docs/features/products-subcategory-cascade (commit `5ab8b02`).

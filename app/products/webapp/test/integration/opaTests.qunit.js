@@ -13,6 +13,7 @@ sap.ui.define(
     './RatingShownAsStarsJourney',
     './RatingRangeFilterJourney',
     './ImportProductsJourney',
+    './SubcategoryDependsOnCategoryJourney',
     './DraftMarkerInListReportJourney',
     './RoleAwareActionsJourney',
   ],
@@ -25,6 +26,7 @@ sap.ui.define(
     RatingShownAsStars,
     RatingRangeFilter,
     ImportProducts,
+    SubcategoryDependsOnCategory,
     DraftMarkerInListReport,
     RoleAwareActions
   ) {
@@ -39,6 +41,9 @@ sap.ui.define(
     // ImportProductsJourney asserts the seeded row count and never sends the action (OPA5 cannot
     // choose a file), so it changes no data; it runs before DraftMarkerInListReportJourney for the
     // same reason as the other row-count journeys.
+    // SubcategoryDependsOnCategoryJourney (products-subcategories, PLAN step 9) saves Laptop Pro 15
+    // with another category and subcategory and restores the seeded pair; it runs before
+    // DraftMarkerInListReportJourney, whose draft of the same product must start from seeded data.
     // RoleAwareActionsJourney runs last (PLAN step 11): it only reads and selects, so it depends on
     // no other journey and changes nothing for them.
     runner.run([
@@ -49,6 +54,7 @@ sap.ui.define(
       RatingShownAsStars,
       RatingRangeFilter,
       ImportProducts,
+      SubcategoryDependsOnCategory,
       DraftMarkerInListReport,
       RoleAwareActions,
     ]);

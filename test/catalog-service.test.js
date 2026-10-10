@@ -171,6 +171,133 @@ describe('CatalogService.Products', () => {
   });
 });
 
+// Subcategory of a product (ADR-0024): optional (D2) and checked against the product's category
+// by an @assert constraint (decision 2). Rows created here are named 'Subcategory %'.
+describe('CatalogService.Products subcategory', () => {
+  // Rows of a create test and of a rejection test that unexpectedly succeeded.
+  afterEach(async () => {
+    await cds.run(cds.ql.DELETE.from('my.catalog.Products').where`name like 'Subcategory %'`);
+  });
+
+  const named = async (name) => {
+    const { data } = await GET(`${base}/Products?$filter=name eq '${name}'&$select=ID`);
+    return data.value;
+  };
+
+  it('returns the seeded subcategory of every product', async () => {
+    // [name, category_code, subcategory_code] of db/data/my.catalog-Products.csv (PLAN D1 seed).
+    const seeded = [
+      ['Laptop Pro 15', 'ELECTRONICS', 'LAPTOPS'],
+      ['Wireless Mouse', 'ELECTRONICS', 'MICE'],
+      ['Bluetooth Speaker', 'ELECTRONICS', 'AUDIO'],
+      ['Wireless Earbuds', 'ELECTRONICS', 'AUDIO'],
+      ['Office Chair', 'FURNITURE', 'SEATING'],
+      ['Desk Lamp', 'FURNITURE', 'LIGHTING'],
+      ['Reading Lamp', 'FURNITURE', 'LIGHTING'],
+      ['Monitor Stand', 'FURNITURE', 'DESK_ORGANIZATION'],
+      ['Coffee Maker', 'KITCHEN', 'APPLIANCES'],
+      ['Water Bottle', 'KITCHEN', 'DRINKWARE'],
+      ['Kitchen Knife Set', 'KITCHEN', 'CUTLERY'],
+      ['Backpack', 'ACCESSORIES', 'BAGS'],
+      ['Smartphone Stand', 'ACCESSORIES', 'PHONE_ACCESSORIES'],
+      ['Yoga Mat', 'SPORTS', 'FITNESS'],
+      ['Notebook Set', 'STATIONERY', 'NOTEBOOKS'],
+    ];
+    const { data } = await GET(`${base}/Products?$select=name,category_code,subcategory_code`);
+    expect(data.value).to.have.length(15);
+    expect(data.value).to.containSubset(
+      seeded.map(([name, category_code, subcategory_code]) => ({
+        name,
+        category_code,
+        subcategory_code,
+      }))
+    );
+  });
+
+  it('creates a product with a subcategory of its category', async () => {
+    const payload = { ...newProduct, name: 'Subcategory Lamp', subcategory_code: 'LIGHTING' };
+    const { status, data } = await POST(`${base}/Products`, active(payload));
+    expect(status).to.equal(201);
+    expect(data).to.containSubset({
+      IsActiveEntity: true,
+      category_code: 'FURNITURE',
+      subcategory_code: 'LIGHTING',
+    });
+    const { data: stored } = await GET(
+      `${activeKey(data.ID)}?$select=ID&$expand=subcategory($select=name,category_code)`
+    );
+    expect(stored).to.containSubset({
+      subcategory: { name: 'Lighting', category_code: 'FURNITURE' },
+    });
+  });
+
+  it('creates a product without a subcategory', async () => {
+    const payload = { ...newProduct, name: 'Subcategory None Lamp' };
+    const { status, data } = await POST(`${base}/Products`, active(payload));
+    expect(status).to.equal(201);
+    expect(data).to.containSubset({
+      IsActiveEntity: true,
+      category_code: 'FURNITURE',
+      subcategory_code: null,
+    });
+  });
+
+  it('rejects a subcategory of another category (PRODUCTS_SUBCATEGORY_MISMATCH)', async () => {
+    const payload = {
+      ...newProduct,
+      name: 'Subcategory Mismatch Lamp',
+      subcategory_code: 'LAPTOPS',
+    };
+    const err = await expect(POST(`${base}/Products`, active(payload))).to.be.rejectedWith(/400/);
+    expect(err).to.containSubset({
+      code: 'PRODUCTS_SUBCATEGORY_MISMATCH',
+      target: 'subcategory_code',
+    });
+    expect(err.message).to.contain(
+      'The subcategory does not belong to the category of the product.'
+    );
+    expect(await named(payload.name)).to.have.length(0);
+  });
+
+  it('reports the subcategory mismatch in Russian', async () => {
+    const payload = {
+      ...newProduct,
+      name: 'Subcategory Mismatch Lamp',
+      subcategory_code: 'LAPTOPS',
+    };
+    const ru = { headers: { 'Accept-Language': 'ru' } };
+    const err = await expect(POST(`${base}/Products`, active(payload), ru)).to.be.rejectedWith(
+      /400/
+    );
+    expect(err).to.containSubset({ code: 'PRODUCTS_SUBCATEGORY_MISMATCH' });
+    expect(err.message).to.contain('Подкатегория не относится к категории товара.');
+  });
+
+  it('rejects an unknown subcategory code (@assert.target)', async () => {
+    const payload = {
+      ...newProduct,
+      name: 'Subcategory Unknown Lamp',
+      subcategory_code: 'UNKNOWN',
+    };
+    const err = await expect(POST(`${base}/Products`, active(payload))).to.be.rejectedWith(/400/);
+    expect(err).to.containSubset({ code: 'ASSERT_TARGET', target: 'subcategory_code' });
+    expect(await named(payload.name)).to.have.length(0);
+  });
+
+  it('rejects a category change that leaves a stale subcategory on an active product', async () => {
+    const { data } = await GET(`${base}/Products?$filter=name eq 'Laptop Pro 15'&$select=ID`);
+    const key = activeKey(data.value[0].ID);
+    const err = await expect(PATCH(key, { category_code: 'FURNITURE' })).to.be.rejectedWith(/400/);
+    expect(err).to.containSubset({
+      code: 'PRODUCTS_SUBCATEGORY_MISMATCH',
+      target: 'subcategory_code',
+    });
+    // The reset is a draft handler only; an active write keeps the seeded pair.
+    const { data: stored } = await GET(`${key}?$select=category_code,subcategory_code`);
+    expect(stored).to.containSubset({ category_code: 'ELECTRONICS', subcategory_code: 'LAPTOPS' });
+  });
+});
+
 // Draft lifecycle of the Fiori Elements edit flow (ADR-0012). Every test discards its draft;
 // the active record created in beforeAll is deleted in afterAll, so the seeded rows stay unchanged.
 describe('CatalogService.Products drafts', () => {
@@ -181,6 +308,23 @@ describe('CatalogService.Products drafts', () => {
   const discard = () => DELETE(draftKey(id));
   // Cleanup where the draft may already be gone (after activation, after a failed test).
   const discardIfAny = () => discard().catch(() => {});
+  // The draft's subcategory pair and DraftMessages. An @assert constraint writes its message at
+  // commit, so it shows on a GET after the PATCH, not in the PATCH response (ADR-0024).
+  const readDraft = async (key = draftKey(id)) => {
+    const { data } = await GET(`${key}?$select=category_code,subcategory_code,DraftMessages`);
+    expect(data.DraftMessages).to.be.an('array');
+    return data;
+  };
+  const messageCodes = (draft) => draft.DraftMessages.map((m) => m.code);
+
+  // A new product an `it` starts as a draft (POST without IsActiveEntity), draft or activated.
+  let newId;
+  afterEach(async () => {
+    if (!newId) return;
+    await DELETE(draftKey(newId)).catch(() => {});
+    await DELETE(activeKey(newId)).catch(() => {});
+    newId = undefined;
+  });
 
   beforeAll(async () => {
     const { data } = await POST(`${base}/Products`, active({ ...newProduct, name: 'Draft Lamp' }));
@@ -333,6 +477,118 @@ describe('CatalogService.Products drafts', () => {
     const { data } = await GET(`${activeKey(id)}?$select=stock,HasDraftEntity`);
     expect(data).to.containSubset({ stock: newProduct.stock, HasDraftEntity: false });
   });
+
+  it('clears the subcategory when a draft changes the category', async () => {
+    await draftEdit();
+    try {
+      await PATCH(draftKey(id), { category_code: 'FURNITURE', subcategory_code: 'LIGHTING' });
+      // The category alone changes: LIGHTING does not belong to KITCHEN and is emptied (D4).
+      const { status } = await PATCH(draftKey(id), { category_code: 'KITCHEN' });
+      expect(status).to.equal(200);
+      const draft = await readDraft();
+      expect(draft).to.containSubset({ category_code: 'KITCHEN', subcategory_code: null });
+      // Silent reset (D8): no message on the draft.
+      expect(draft.DraftMessages).to.deep.equal([]);
+    } finally {
+      await discard();
+    }
+  });
+
+  it('keeps a subcategory that belongs to the category the draft gets', async () => {
+    await draftEdit();
+    try {
+      // A pair sent together is not reset; the next category PATCH is compared with LIGHTING.
+      await PATCH(draftKey(id), { category_code: 'KITCHEN', subcategory_code: 'LIGHTING' });
+      const { status } = await PATCH(draftKey(id), { category_code: 'FURNITURE' });
+      expect(status).to.equal(200);
+      const draft = await readDraft();
+      expect(draft).to.containSubset({ category_code: 'FURNITURE', subcategory_code: 'LIGHTING' });
+    } finally {
+      await discard();
+    }
+  });
+
+  it('reports a mismatched subcategory on the draft and rejects activation', async () => {
+    await draftEdit();
+    try {
+      // On a draft the constraint is a message (200), not an error.
+      const { status } = await PATCH(draftKey(id), {
+        category_code: 'KITCHEN',
+        subcategory_code: 'LIGHTING',
+      });
+      expect(status).to.equal(200);
+      const { DraftMessages } = await readDraft();
+      expect(DraftMessages).to.containSubset([
+        {
+          code: 'PRODUCTS_SUBCATEGORY_MISMATCH',
+          message: 'The subcategory does not belong to the category of the product.',
+        },
+      ]);
+      const mismatch = DraftMessages.find((m) => m.code === 'PRODUCTS_SUBCATEGORY_MISMATCH');
+      expect(mismatch.target).to.match(/\/subcategory_code$/);
+      // Activation enforces it; the target is prefixed with the action parameter `in/`.
+      const err = await expect(draftActivate()).to.be.rejectedWith(/400/);
+      expect(err).to.containSubset({
+        code: 'PRODUCTS_SUBCATEGORY_MISMATCH',
+        target: 'in/subcategory_code',
+      });
+    } finally {
+      await discard();
+    }
+  });
+
+  it('activates a draft whose category and subcategory change together', async () => {
+    await draftEdit();
+    try {
+      await PATCH(draftKey(id), { category_code: 'ELECTRONICS', subcategory_code: 'AUDIO' });
+      const activated = await draftActivate();
+      expect(activated.status).to.equal(200);
+      expect(activated.data).to.containSubset({
+        IsActiveEntity: true,
+        category_code: 'ELECTRONICS',
+        subcategory_code: 'AUDIO',
+      });
+    } finally {
+      await discardIfAny();
+    }
+    const { data } = await GET(
+      `${activeKey(id)}?$select=category_code,subcategory_code,HasDraftEntity`
+    );
+    expect(data).to.containSubset({
+      category_code: 'ELECTRONICS',
+      subcategory_code: 'AUDIO',
+      HasDraftEntity: false,
+    });
+  });
+
+  it('records no mismatch for a subcategory chosen before the category and activates with the matching category', async () => {
+    // A new draft as Create on the List Report starts it: no category yet (D7).
+    const { data: created } = await POST(`${base}/Products`, {});
+    newId = created.ID;
+    const key = draftKey(newId);
+
+    await PATCH(key, { subcategory_code: 'MICE' });
+    let draft = await readDraft(key);
+    expect(draft).to.containSubset({ category_code: null, subcategory_code: 'MICE' });
+    expect(messageCodes(draft)).to.not.include('PRODUCTS_SUBCATEGORY_MISMATCH');
+
+    // The category MICE belongs to keeps it; the reset clears only a subcategory of another one.
+    await PATCH(key, { category_code: 'ELECTRONICS' });
+    draft = await readDraft(key);
+    expect(draft).to.containSubset({ category_code: 'ELECTRONICS', subcategory_code: 'MICE' });
+    expect(messageCodes(draft)).to.not.include('PRODUCTS_SUBCATEGORY_MISMATCH');
+
+    await PATCH(key, { name: 'Draft Mouse', price: '19.99', currency_code: 'USD', stock: 3 });
+    // A new draft activates with 201 Created; a draftEdit draft answers 200.
+    const activated = await POST(`${key}/CatalogService.draftActivate`, {});
+    expect(activated.status).to.equal(201);
+    expect(activated.data).to.containSubset({
+      IsActiveEntity: true,
+      name: 'Draft Mouse',
+      category_code: 'ELECTRONICS',
+      subcategory_code: 'MICE',
+    });
+  });
 });
 
 describe('CatalogService.Categories', () => {
@@ -367,6 +623,80 @@ describe('CatalogService.Categories', () => {
     await expect(POST(`${base}/Categories`, { code: 'OTHER', name: 'Other' })).to.be.rejectedWith(
       /405/
     );
+  });
+});
+
+// Subcategories code list (ADR-0024, PLAN D1): read-only, every row belongs to one category.
+describe('CatalogService.Subcategories', () => {
+  // The row of the @readonly test if the POST unexpectedly succeeded; keeps the count at 15.
+  afterEach(async () => {
+    await cds.run(cds.ql.DELETE.from('my.catalog.Subcategories').where({ code: 'OTHER' }));
+  });
+
+  it('lists the 15 seeded subcategories with their category', async () => {
+    const { data } = await GET(`${base}/Subcategories?$select=code,category_code`);
+    expect(data.value).to.have.length(15);
+    const categoryOf = Object.fromEntries(data.value.map((s) => [s.code, s.category_code]));
+    expect(categoryOf).to.deep.equal({
+      LAPTOPS: 'ELECTRONICS',
+      MICE: 'ELECTRONICS',
+      AUDIO: 'ELECTRONICS',
+      SEATING: 'FURNITURE',
+      LIGHTING: 'FURNITURE',
+      DESK_ORGANIZATION: 'FURNITURE',
+      APPLIANCES: 'KITCHEN',
+      DRINKWARE: 'KITCHEN',
+      CUTLERY: 'KITCHEN',
+      BAGS: 'ACCESSORIES',
+      PHONE_ACCESSORIES: 'ACCESSORIES',
+      FITNESS: 'SPORTS',
+      OUTDOOR: 'SPORTS',
+      NOTEBOOKS: 'STATIONERY',
+      WRITING_INSTRUMENTS: 'STATIONERY',
+    });
+  });
+
+  it('narrows subcategories by category code as the value help does', async () => {
+    // The dependent value help passes the product's category as a $filter (ValueListParameterIn).
+    const { data } = await GET(
+      `${base}/Subcategories?$select=code,name&$filter=category_code eq 'ELECTRONICS'&$orderby=code`
+    );
+    expect(data.value.map((s) => s.code)).to.deep.equal(['AUDIO', 'LAPTOPS', 'MICE']);
+    expect(data.value).to.containSubset([{ code: 'LAPTOPS', name: 'Laptops' }]);
+  });
+
+  it('returns localized subcategory names with English fallback', async () => {
+    const url = `${base}/Subcategories?$filter=code eq 'LAPTOPS'&$select=code,name`;
+    const inLocale = (locale) => GET(url, { headers: { 'Accept-Language': locale } });
+
+    const ru = await inLocale('ru');
+    expect(ru.data.value).to.containSubset([{ code: 'LAPTOPS', name: 'Ноутбуки' }]);
+
+    const en = await inLocale('en');
+    expect(en.data.value).to.containSubset([{ code: 'LAPTOPS', name: 'Laptops' }]);
+
+    // No German texts in Subcategories.texts.csv: the default (English) name is served.
+    const de = await inLocale('de');
+    expect(de.data.value).to.containSubset([{ code: 'LAPTOPS', name: 'Laptops' }]);
+  });
+
+  it('does not allow creating subcategories (@readonly)', async () => {
+    const err = await expect(
+      POST(`${base}/Subcategories`, { code: 'OTHER', name: 'Other', category_code: 'SPORTS' })
+    ).to.be.rejectedWith(/405/);
+    expect(err).to.containSubset({ code: 'ENTITY_IS_READ_ONLY' });
+    const { data } = await GET(`${base}/Subcategories?$count=true&$top=0`);
+    expect(data['@odata.count']).to.equal(15);
+  });
+
+  it('lets a CatalogViewer read subcategories', async () => {
+    const { status, data } = await GET(
+      `${base}/Subcategories?$select=code&$count=true`,
+      as('viewer')
+    );
+    expect(status).to.equal(200);
+    expect(data['@odata.count']).to.equal(15);
+    expect(data.value).to.have.length(15);
   });
 });
 

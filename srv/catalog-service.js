@@ -12,10 +12,14 @@ const MAX_IMPORT_ROWS = 1000;
  *   (@requires / @restrict in catalog-service.cds); this is the signal behind UI.CreateHidden /
  *   UI.UpdateHidden / UI.DeleteHidden (ADR-0013).
  * - importProducts: creates active products from an xlsx workbook, all-or-nothing (ADR-0021).
+ * - PATCH Products.drafts: clears a subcategory that does not belong to the new category
+ *   (ADR-0024 decision 3); the pair itself is checked by the @assert constraint (decision 2).
  */
 export default class CatalogService extends cds.ApplicationService {
   async init() {
-    const { Products } = this.entities;
+    const { Products, Subcategories } = this.entities;
+
+    this.before('PATCH', Products.drafts, (req) => resetStaleSubcategory(Subcategories, req));
 
     this.on('READ', 'Permissions', (req) =>
       req.reply({ ID: 'me', isEditor: req.user.is('CatalogEditor') })
@@ -25,6 +29,27 @@ export default class CatalogService extends cds.ApplicationService {
 
     return super.init();
   }
+}
+
+/**
+ * Dependent field reset on a draft (ADR-0024 decision 3): when a draft PATCH changes the category
+ * without carrying the subcategory, a stored subcategory that does not belong to the new category
+ * is cleared, so the stale value neither stays visible nor fails at Save. A subcategory of the new
+ * category is kept (for example one chosen before the category on a new draft). Silent: no message,
+ * no rejection; active writes are not reset, there the @assert constraint rejects (decision 2).
+ * @param {object} Subcategories the service entity of the code list
+ * @param {cds.Request} req PATCH request on Products.drafts
+ */
+async function resetStaleSubcategory(Subcategories, req) {
+  if (!('category_code' in req.data) || 'subcategory_code' in req.data) return;
+  const draft = await SELECT.one.from(req.subject).columns('subcategory_code');
+  const code = draft?.subcategory_code;
+  if (!code) return;
+  const match = await SELECT.one
+    .from(Subcategories)
+    .columns('code')
+    .where({ code, category_code: req.data.category_code });
+  if (!match) req.data.subcategory_code = null;
 }
 
 /**

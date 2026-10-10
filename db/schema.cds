@@ -12,10 +12,17 @@ entity Products : cuid, managed {
   stock       : Integer;
   rating      : Integer;
   category    : Association to Categories;
+  subcategory : Association to Subcategories;
   imageUrl    : String(500);
 }
 
 /** Product category, user-facing code list. Labels: srv/annotations/Categories.cds */
 entity Categories : CodeList {
   key code : String(20);
+}
+
+/** Product subcategory, belongs to one category (ADR-0024). Labels: srv/annotations/Subcategories.cds */
+entity Subcategories : CodeList {
+  key code     : String(20);
+      category : Association to Categories;
 }

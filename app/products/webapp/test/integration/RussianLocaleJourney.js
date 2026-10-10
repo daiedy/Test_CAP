@@ -5,11 +5,14 @@
 // products-excel-upload (PLAN step 9): the Import from Excel toolbar button and its action parameter
 // dialog (title, file label, OK button) show the ru texts of _i18n; Cancel is a framework text and
 // is not asserted.
-sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts', './data/RatingTexts', './data/ImportTexts'], function (
+// products-subcategories (PLAN step 10): the Subcategory column header and, on the object page, the
+// Subcategory label and the localized name of Coffee Maker's subcategory (APPLIANCES) are Russian.
+sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts', './data/RatingTexts', './data/ImportTexts', './data/SubcategoryTexts'], function (
   opaTest,
   CategoryTexts,
   RatingTexts,
-  ImportTexts
+  ImportTexts,
+  SubcategoryTexts
 ) {
   'use strict';
 
@@ -20,6 +23,7 @@ sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts', './data/RatingTex
   const label = CategoryTexts.labels.category.ru;
   const ratingColumn = {};
   ratingColumn[RatingTexts.columnKey] = { header: RatingTexts.labels.ru };
+  const subcategoryLabel = SubcategoryTexts.labels.subcategory.ru;
 
   return function () {
     QUnit.module('Russian locale shows translated categories');
@@ -31,6 +35,9 @@ sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts', './data/RatingTex
       Then.onTheRatingRangeSlider.iSeeFilterLabel(RatingTexts.labels.ru);
       Then.onTheProductsList.onTable().iCheckColumns(undefined, { category_code: { header: label } });
       Then.onTheProductsList.onTable().iCheckColumns(undefined, ratingColumn);
+      Then.onTheProductsList
+        .onTable()
+        .iCheckColumns(undefined, { subcategory_code: { header: subcategoryLabel } });
       Then.onTheProductsList.onTable().iCheckRows({ category_code: names.ELECTRONICS }, 4);
     });
 
@@ -63,6 +70,14 @@ sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts', './data/RatingTex
       Then.onTheProductsObjectPage
         .onForm({ section: 'GeneralInfo' })
         .iCheckField({ property: 'category_code' }, names.KITCHEN);
+    });
+
+    opaTest('The Object Page shows the subcategory in Russian', function (Given, When, Then) {
+      // Still on the object page of Coffee Maker (KITCHEN / APPLIANCES) from the previous case.
+      Then.onTheObjectPageForm.iSeeFormFieldLabel('subcategory_code', subcategoryLabel);
+      Then.onTheProductsObjectPage
+        .onForm({ section: 'GeneralInfo' })
+        .iCheckField({ property: 'subcategory_code' }, SubcategoryTexts.names.ru.APPLIANCES);
     });
 
     opaTest('Teardown', function (Given) {

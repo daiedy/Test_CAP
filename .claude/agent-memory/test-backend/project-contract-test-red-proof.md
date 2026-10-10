@@ -53,6 +53,24 @@ distinct name prefix and clean it in an `afterEach`, or the red run leaves rows.
 the declared Decimal precision fails twice (400 "Multiple errors occurred", no top-level code),
 so a range test needs the precision to hold the value.
 
+Worktree-session variant (products-subcategories, 2026-10-09): inside a `.claude/worktrees/` session
+the Bash guard refuses `tar --exclude=.git ...` and long heredoc commands that spawn processes
+("names git in a form too complex"). Instead `cp -R _i18n db srv test package.json <scratch>/`
+(enough for a service test; `app/` not needed), symlink `node_modules`, write the scratch
+`vitest.config.mjs` and a `run.mjs` mutation runner with the Write tool, then run plain
+`node run.mjs`; the runner uses `spawnSync('npx', ['vitest','run','--reporter=json','--outputFile=...'])`
+and lists failing titles per mutation. Read the cascades too: a red that also turns an unrelated
+count test red means a rejection test leaks a row (M7 "not @readonly" leaked `OTHER` into the
+viewer count until the describe got an `afterEach`).
+
+Contract variant in a worktree (products-subcategories step 8, 2026-10-09): for a `$metadata` test copy
+`_i18n db srv test package.json` plus `app/products/annotations.cds` and `app/products/annotations/`
+(the HTTP `$metadata` needs nothing else); the "before" file comes from a separate plain
+`git show HEAD:<path> > <scratch>/head-X.cds` (allowed when it is the only command; the guard refuses it
+inside a `&&` chain). Mutate the annotation file, not the test. Measured: a hand-written
+`Common.ValueList #Qualifier` on a CodeList association does NOT replace the compiler-generated
+unqualified one (2 ValueLists on the FK), so "exactly one `Term=\"Common.ValueList\"`" is a real guard.
+
 **How to apply:** whenever a plan asks for a contract test that "must fail on main", or a new `it`
 could pass vacuously. Count the asserted substring in the pre-feature EDMX; if the count is not 0,
 say so in the report instead of claiming the test proves the change. See

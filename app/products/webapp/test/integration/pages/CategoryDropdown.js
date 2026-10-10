@@ -1,15 +1,25 @@
 /*
- * Page object for the category value help rendered as a dropdown (Common.ValueListWithFixedValues,
- * ADR-0011). In SAP Fiori elements for OData V4 the dropdown is the typeahead popover of the field:
- * a sap.m.Table (id ...::category_code::Popover::...::SuggestTable) whose rows are
- * sap.m.ColumnListItem with one sap.fe.macros.Field cell showing the category name. The standard
- * sap.fe.test API has no assertions for these items nor for the filter tokens, so they are added
- * here with OpaBuilder, matching by control id and control properties only.
+ * Page object for the code-list value helps rendered as a dropdown (Common.ValueListWithFixedValues,
+ * ADR-0011): category, and subcategory with its In parameter (ADR-0024). In SAP Fiori elements for
+ * OData V4 the dropdown is the typeahead popover of the field: a sap.m.Table
+ * (id ...::<property>::Popover::...::SuggestTable) whose rows are sap.m.ColumnListItem with one
+ * sap.fe.macros.Field cell showing the name. The standard sap.fe.test API has no assertions for these
+ * items nor for the filter tokens, so they are added here with OpaBuilder, matching by control id and
+ * control properties only. The property defaults to category_code, so the category journeys pass none.
+ * Object Page form assertions (field empty, field label) live in pages/ObjectPageForm.js.
  */
 sap.ui.define(['sap/ui/test/OpaBuilder', 'sap/ui/test/actions/Press'], function (OpaBuilder, Press) {
   'use strict';
 
-  const DROPDOWN_TABLE_ID = /category_code::Popover::.*SuggestTable$/;
+  const DEFAULT_PROPERTY = 'category_code';
+
+  function propertyName(sProperty) {
+    return sProperty || DEFAULT_PROPERTY;
+  }
+
+  function dropdownTableId(sProperty) {
+    return new RegExp(propertyName(sProperty) + '::Popover::.*SuggestTable$');
+  }
 
   function filterFieldId(sProperty) {
     return new RegExp('::FilterField::' + sProperty + '$');
@@ -43,15 +53,18 @@ sap.ui.define(['sap/ui/test/OpaBuilder', 'sap/ui/test/actions/Press'], function 
     );
   }
 
-  function openDropdown(oOpa) {
-    return OpaBuilder.create(oOpa).hasType('sap.m.Table').hasId(DROPDOWN_TABLE_ID).isDialogElement(true);
+  function openDropdown(oOpa, sProperty) {
+    return OpaBuilder.create(oOpa)
+      .hasType('sap.m.Table')
+      .hasId(dropdownTableId(sProperty))
+      .isDialogElement(true);
   }
 
   return {
     actions: {
       // Selects a row by its name: the checkbox in a multi-select list (filter bar), the row itself otherwise.
-      iSelectItem: function (sLabel) {
-        return openDropdown(this)
+      iSelectItem: function (sLabel, sProperty) {
+        return openDropdown(this, sProperty)
           .has(function (oTable) {
             return dropdownRows(oTable).find(function (oRow) {
               return rowTexts(oRow).indexOf(sLabel) >= 0;
@@ -61,14 +74,14 @@ sap.ui.define(['sap/ui/test/OpaBuilder', 'sap/ui/test/actions/Press'], function 
             const bMultiSelect = oRow.getMode() === 'MultiSelect';
             new Press(bMultiSelect ? { idSuffix: 'selectMulti' } : {}).executeOn(oRow);
           })
-          .description("Selecting '" + sLabel + "' in the category dropdown")
+          .description("Selecting '" + sLabel + "' in the " + propertyName(sProperty) + ' dropdown')
           .execute();
       },
     },
     assertions: {
       // The open dropdown shows exactly the given names, one text per row and no code next to it.
-      iSeeItems: function (aLabels) {
-        return openDropdown(this)
+      iSeeItems: function (aLabels, sProperty) {
+        return openDropdown(this, sProperty)
           .has(function (oTable) {
             const aRows = dropdownRows(oTable);
             return aRows.length > 0 ? aRows : false;
@@ -83,7 +96,9 @@ sap.ui.define(['sap/ui/test/OpaBuilder', 'sap/ui/test/actions/Press'], function 
             });
             return bOneTextPerRow && sameTexts(aShown, aLabels);
           })
-          .description('Category dropdown shows only the names ' + aLabels.join(', '))
+          .description(
+            'The ' + propertyName(sProperty) + ' dropdown shows only the names ' + aLabels.join(', ')
+          )
           .execute();
       },
       iSeeFilterTokens: function (sProperty, aTexts) {

@@ -4,6 +4,7 @@ sap.ui.define(
     './ProductsList.gen',
     './ProductsObjectPage.gen',
     './CategoryDropdown',
+    './ObjectPageForm',
     './RatingRangeSlider',
     './ImportProductsDialog',
   ],
@@ -12,6 +13,7 @@ sap.ui.define(
     ProductsList,
     ProductsObjectPage,
     CategoryDropdown,
+    ObjectPageForm,
     RatingRangeSlider,
     ImportProductsDialog
   ) {
@@ -27,6 +29,7 @@ sap.ui.define(
         onTheProductsList: ProductsList,
         onTheProductsObjectPage: ProductsObjectPage,
         onTheCategoryDropdown: CategoryDropdown,
+        onTheObjectPageForm: ObjectPageForm,
         onTheRatingRangeSlider: RatingRangeSlider,
         onTheImportDialog: ImportProductsDialog,
       },

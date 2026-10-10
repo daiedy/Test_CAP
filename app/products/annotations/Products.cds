@@ -15,6 +15,8 @@ annotate CatalogService.Products with @(
   UI.LineItem: [
     { $Type: 'UI.DataField', Value: name },
     { $Type: 'UI.DataField', Value: category_code },
+    // Low like Rating: auto pop-in moves the Low group first, rightmost column first, so Rating pops in, then Subcategory.
+    { $Type: 'UI.DataField', Value: subcategory_code, ![@UI.Importance]: #Low },
     { $Type: 'UI.DataField', Value: price },
     { $Type: 'UI.DataField', Value: stock },
     // Label is explicit: FE takes a DataFieldForAnnotation header from the record, not from @title.
@@ -42,6 +44,7 @@ annotate CatalogService.Products with @(
     { $Type: 'UI.DataField', Value: name },
     { $Type: 'UI.DataField', Value: description },
     { $Type: 'UI.DataField', Value: category_code },
+    { $Type: 'UI.DataField', Value: subcategory_code },
     { $Type: 'UI.DataFieldForAnnotation', Label: '{i18n>Products.rating}', Target: '@UI.DataPoint#Rating' },
     { $Type: 'UI.DataField', Value: imageUrl }
   ]},
@@ -66,7 +69,32 @@ annotate CatalogService.Products with {
     Common.TextArrangement          : #TextOnly,
     Common.ValueListWithFixedValues : true
   );
+  // Subcategory depends on the category (ADR-0024 decision 1): the one ValueList is written by hand to add the
+  // In parameter category_code, it replaces the compiler-generated one; dropdown and name-only text as for category.
+  subcategory @(
+    Common.Text                     : subcategory.name,
+    Common.TextArrangement          : #TextOnly,
+    Common.ValueListWithFixedValues : true,
+    Common.ValueList                : {
+      Label          : '{i18n>Products.subcategory}',
+      CollectionPath : 'Subcategories',
+      Parameters     : [
+        { $Type: 'Common.ValueListParameterInOut', LocalDataProperty: subcategory_code, ValueListProperty: 'code' },
+        { $Type: 'Common.ValueListParameterIn', LocalDataProperty: category_code, ValueListProperty: 'category_code' },
+        { $Type: 'Common.ValueListParameterDisplayOnly', ValueListProperty: 'name' }
+      ]
+    }
+  );
 };
+
+// Category change on a draft (ADR-0024 decision 3): the server empties a subcategory of the old category in
+// before('PATCH', Products.drafts); this side effect makes Fiori Elements re-read the field and its text.
+annotate CatalogService.Products with @(
+  Common.SideEffects #CategoryChanged: {
+    SourceProperties: [ category_code ],
+    TargetProperties: [ 'subcategory_code', 'subcategory/name' ]
+  }
+);
 
 // Role-aware standard actions (ADR-0013 part 8): hidden for anyone who is not a CatalogEditor.
 // The flag comes from the CatalogService.Permissions singleton, filled in srv/catalog-service.js, and is

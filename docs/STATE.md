@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-10
 - Branch: feature/products-subcategory-cascade
 - Feature: products-subcategory-cascade
-- Phase: 3: UI (autonomous gates; backend green, `npm test` 170)
-- Last commit: 60ed706 feat(srv): products-subcategory-cascade backend
-- Next: fiori-app-dev step 4 (FieldControl expression), test-backend step 5 (contract), test-ui step 6 (OPA5); gate `npm test` 171, `npm run test:ui` 52
+- Phase: 4: verification (autonomous gates; `npm test` 171, `npm run test:ui` 52)
+- Last commit: 28bf995 feat(app): products-subcategory-cascade ui
+- Next: ui-verifier step 7 writes VERIFICATION.md (en and ru, alice and viewer, import dialog); verdict "ready for review"
 
 ## Open debt
 

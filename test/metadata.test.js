@@ -222,4 +222,30 @@ describe('OData contract of CatalogService', () => {
         '</Collection></PropertyValue></Record></Annotation>'
     );
   });
+
+  // products-subcategory-cascade, ADR-0025: Common.FieldControl (category.code is null ? 0 : 7)
+  // disables the subcategory while the product has no category (0, ReadOnly as a disabled input)
+  // and requires it once one is set (7, Mandatory). The dynamic value replaces the static
+  // Mandatory the compiler derives from @mandatory; the server keeps enforcing @mandatory.
+  it('disables the subcategory while the product has no category and requires it once a category is set', async () => {
+    const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
+      headers: { 'Accept-Language': 'en' },
+    });
+    expect(status).toBe(200);
+    // The EDMX is pretty-printed, so compare without the whitespace between the tags.
+    const compact = data.replace(/>\s+</g, '><');
+    const subcategory = annotationsOf(compact, 'CatalogService.Products/subcategory_code');
+    expect(subcategory).toContain(
+      '<Annotation Term="Common.FieldControl">' +
+        '<If><Eq><Path>category_code</Path><Null/></Eq><Int>0</Int><Int>7</Int></If>' +
+        '</Annotation>'
+    );
+    // Exactly one FieldControl on the subcategory, and it is not the static Mandatory.
+    expect(subcategory.match(/Term="Common\.FieldControl"/g) ?? []).toHaveLength(1);
+    expect(subcategory).not.toContain('Common.FieldControlType/Mandatory');
+    // The category keeps the static Mandatory of its @mandatory.
+    expect(annotationsOf(compact, 'CatalogService.Products/category_code')).toContain(
+      '<Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>'
+    );
+  });
 });

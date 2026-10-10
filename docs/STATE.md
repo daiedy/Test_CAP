@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-10
 - Branch: feature/products-subcategory-cascade
 - Feature: products-subcategory-cascade
-- Phase: 2: backend (autonomous gates; plan approved, ADR-0025 accepted)
-- Last commit: 4c69908 docs(spec): products-subcategory-cascade plan and ADR-0025
-- Next: test-backend step 3 (server, import and D8 tests); gate `npm run lint`, `npm test` 170
+- Phase: 3: UI (autonomous gates; backend green, `npm test` 170)
+- Last commit: 60ed706 feat(srv): products-subcategory-cascade backend
+- Next: fiori-app-dev step 4 (FieldControl expression), test-backend step 5 (contract), test-ui step 6 (OPA5); gate `npm test` 171, `npm run test:ui` 52
 
 ## Open debt
 

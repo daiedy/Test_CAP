@@ -596,6 +596,16 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
           <Annotation Term="UI.TextArrangement" EnumMember="UI.TextArrangementType/TextOnly"/>
         </Annotation>
         <Annotation Term="Common.ValueListWithFixedValues" Bool="true"/>
+        <Annotation Term="Common.FieldControl">
+          <If>
+            <Eq>
+              <Path>category_code</Path>
+              <Null/>
+            </Eq>
+            <Int>0</Int>
+            <Int>7</Int>
+          </If>
+        </Annotation>
         <Annotation Term="Common.ValueList">
           <Record Type="Common.ValueListType">
             <PropertyValue Property="Label" String="{i18n>Products.subcategory}"/>
@@ -618,7 +628,6 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
           </Record>
         </Annotation>
         <Annotation Term="Common.Label" String="{i18n>Products.subcategory}"/>
-        <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
       </Annotations>
       <Annotations Target="CatalogService.Products/imageUrl">
         <Annotation Term="Common.Label" String="{i18n>Products.imageUrl}"/>

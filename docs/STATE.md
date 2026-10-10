@@ -4,12 +4,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## Now
 
-- Date: 2026-10-09
-- Branch: feature/products-subcategories
+- Date: 2026-10-10
+- Branch: main
 - Feature: none
-- Phase: none (products-subcategories #8 closed, branch not merged)
-- Last commit: c0b9580 docs: products-subcategories close #8 and prune
-- Next: merge `feature/products-subcategories` into main and push (user), then `/spec #9` (products-details-section, unblocked by #8)
+- Phase: none (products-subcategories #8 merged and pushed)
+- Last commit: 06f5fb7 Merge branch 'feature/products-subcategories'
+- Next: `/spec #9` (products-details-section, P2, unblocked by #8)
 
 ## Open debt
 

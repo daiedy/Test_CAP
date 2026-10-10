@@ -15,4 +15,5 @@
 - [Claude Code transcript facts](claude-code-transcript-facts.md) — requestId+uuid dedupe per scope, cost-state per process, pricing check as 5m-1h interval (2026-10-02), internal agents typed "claude"
 - [FLP sandbox flex connector](flp-sandbox-flex-connector.md) — external:false key, sandbox.js/sandbox2.js overwrite sap-ui-config, OPA runs through flpSandbox.html, vacuous iSeeVariantModified(false); ADR-0024 proposed
 - [@assert constraints and dependent value help](assert-constraint-and-dependent-vh.md) — declarative cross-field rule, null trap with `!=` (guard both sides), draft touched-only messages, In-param dropdown; ADR-0024 accepted
+- [Dynamic field control](fe-v4-dynamic-field-control.md) — FieldControl expression via assoc path, integers, 0 = Disabled, server ignores it, +10 EDMX, 7 with @mandatory; ADR-0025 accepted 2026-10-10
 - [EDMX cost per CDS edit](contract-delta-facts.md) — @assert.target 0 lines, @assert.range 1, Decimal precision 1, UI.*Hidden $Path 2 per term; Currencies CSV facts; catalog-hygiene (#20) merged 2026-10-09, ADR-0003 amended in place

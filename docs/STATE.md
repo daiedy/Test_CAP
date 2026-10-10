@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-10-10
-- Branch: main
-- Feature: none
-- Phase: none (products-subcategories #8 merged and pushed)
-- Last commit: 06f5fb7 Merge branch 'feature/products-subcategories'
-- Next: `/spec #9` (products-details-section, P2, unblocked by #8)
+- Branch: feature/products-subcategory-cascade
+- Feature: products-subcategory-cascade
+- Phase: 1: research and plan (autonomous gates)
+- Last commit: 68410eb docs: STATE after the products-subcategories merge
+- Next: architect writes CONTEXT.md and PLAN.md, then ux-designer SCREENS.md; user approves the plan
 
 ## Open debt
 

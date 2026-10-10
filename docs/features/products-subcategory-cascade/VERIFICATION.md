@@ -4,7 +4,22 @@ Date: 2026-10-10. Agent: `ui-verifier`. Server: `npx cds serve --in-memory --por
 
 Screenshot note: the Chrome DevTools MCP `filePath` argument was rejected for this worktree ("not within any of the configured workspace roots"), so screenshots were taken inline and copied from the MCP result path into `screenshots/` with `cp`; contents are identical.
 
-## Scenario status
+## Automated tests
+Run by `docs-keeper` in phase 6 and by `reviewer` (REVIEW.md "Checked and in order" and "Re-review"):
+```
+npm test
+ Test Files  11 passed (11)
+      Tests  173 passed (173)
+   (test/catalog-service.test.js 75, test/products-import.test.js 20, test/metadata.test.js 12)
+```
+```
+npm run test:ui (reviewer, ui5-test-runner against npx cds serve --in-memory --port 4013)
+ 52 passed (50 opaTest + 2 QUnit), runner exit 0
+npm run lint (app/products, ui5lint): Success! No findings detected.
+npm run lint:js (app/products): 0 errors, 1 pre-existing warning (Component.js:14, keyboard hack)
+```
+
+## Manual scenario check
 | # | Scenario | Result | Evidence |
 |---|---|---|---|
 | Home | `#Shell-home` | not re-checked this run (unchanged shell); entry through `#products-display` worked, list shows 15 products | `screenshots/01-list-en.png` |
@@ -40,7 +55,7 @@ Method note: the MCP `upload_file` rejected the worktree path (workspace roots),
 | `products-import-invalid.xlsx` | passed: nothing imported (active count stays 15). Error dialog lists: "No products were imported. Correct the rows listed below and import the file again."; Row 3 name "Provide the missing value."; Row 4 stock "Enter a value between 0 and 1000000."; Row 5 category "Target with this key doesn't exist."; Row 5 subcategory "The subcategory does not belong to the category of the product."; Row 6 price "Value abc is not a valid Decimal(15,2)"; Row 7 name duplicate "yoga MAT"; **Row 8, column "subcategory": Provide the missing value.**; **Row 9, column "subcategory": The subcategory does not belong to the category of the product.** Observation: row 5 has an unknown category and also gets a subcategory mismatch message (two messages for one cause); harmless, noted for the backend owner | `screenshots/18-import-invalid-en.jpg` (rows 3 to 7 visible; rows 8 and 9 read from the message list DOM text) |
 | `products-import-valid.xlsx` | passed: Information dialog "Products imported: 3."; List Report count 15 to 18; imported rows carry subcategories (Import USB-C Hub Electronics/Laptops, Import Resistance Bands Sports/Fitness, Import Desk Organizer Stationery/Writing instruments); the three rows remain in the in-memory DB of the stopped server (no cleanup needed) | `screenshots/19-import-valid-en.jpg` |
 
-## Findings so far
+## Findings
 - F1 (to be assessed in the verdict): with an empty Category the activation reports `ASSERT_MANDATORY` for both Category and Subcategory. The Subcategory entry points at a field that is disabled and shows no required marker, and the field shows no error state, so the message cannot be acted on until a category is chosen. Also, a `Provide the missing value / Subcategory` draft message from an earlier failed Create stays in the popover after the category is cleared (`DraftMessages` of reqid 155 still contains `ASSERT_MANDATORY` on `subcategory_code`), and after a category is chosen again the error remains (footer "1 error") until the subcategory is picked and the draft revalidates.
 
 ## Network evidence (`$batch` request lines)

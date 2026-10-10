@@ -29,13 +29,13 @@ Baseline at `68410eb` (re-counted 2026-10-10): `npm test` 163 in 11 files (`test
 - [x] Emptying the category in edit mode empties and disables Subcategory, and Cancel leaves Laptop Pro 15 as seeded, verified by OPA5 "Emptying the category empties and disables the subcategory"
 - [x] The category journey saves Furniture together with a Furniture subcategory, verified by OPA5 "Saving shows the new name in the field and in the header" in `EditCategoryOnObjectPageJourney.js`
 - [x] Phase 3 UI gate: `npm run test:ui` 52 passed (50 `opaTest` + 2 QUnit), 0 skipped, against `npx cds serve --in-memory --port 4004`; `npm run lint` (ui5lint) and `npm run lint:js` in `app/products` clean
-- [ ] Browser in `en` and `ru`: Subcategory disabled in create mode and after emptying the category, enabled and marked required after choosing one, the category change and its side-effect read in one `$batch`, Save with an empty Subcategory shows the mandatory message on the field, verified by `ui-verifier` in `VERIFICATION.md` with screenshots
-- [ ] Browser: Tab from Category skips Subcategory while it is disabled and reaches it once a category is chosen; the label stays visible, verified by `ui-verifier` in `VERIFICATION.md`
-- [ ] Browser: `viewer` sees Subcategory in display mode as before, and the "Adapt Filters" Subcategory filter field still accepts a value, verified by `ui-verifier` in `VERIFICATION.md`
-- [ ] Browser (D7 = A, D8): the import dialog accepts a workbook with a `subcategory` column and reports, by row, a row without one and a row with a subcategory of another category, verified by `ui-verifier` in `VERIFICATION.md`
-- [ ] Console: no message new against the console section of `docs/features/products-subcategories/VERIFICATION.md` at commit `4657c4c` (name the known noise listed there), verified by `ui-verifier`
-- [ ] Zero blocking findings in `REVIEW.md`; no second handler on `PATCH Products.drafts`, no second `Common.SideEffects` or `Common.ValueList` on `subcategory_code`, verified by `reviewer`
-- [ ] Documentation updated: PATTERNS row "Field editable only when another field is filled" and the "Dependent value help" pairing, `templates/annotations-ui.cds` comment line, registry, STATE, CHANGELOG, SUMMARY; `node scripts/check-docs-fresh.mjs` green
+- [x] Browser in `en` and `ru`: Subcategory disabled in create mode and after emptying the category, enabled and marked required after choosing one, the category change and its side-effect read in one `$batch`, Save with an empty Subcategory shows the mandatory message on the field, verified by `ui-verifier` in `VERIFICATION.md` with screenshots
+- [x] Browser: Tab from Category skips Subcategory while it is disabled and reaches it once a category is chosen; the label stays visible, verified by `ui-verifier` in `VERIFICATION.md`
+- [x] Browser: `viewer` sees Subcategory in display mode as before, and the "Adapt Filters" Subcategory filter field still accepts a value, verified by `ui-verifier` in `VERIFICATION.md`
+- [x] Browser (D7 = A, D8): the import dialog accepts a workbook with a `subcategory` column and reports, by row, a row without one and a row with a subcategory of another category, verified by `ui-verifier` in `VERIFICATION.md`
+- [x] Console: no message new against the console section of `docs/features/products-subcategories/VERIFICATION.md` at commit `4657c4c` (name the known noise listed there), verified by `ui-verifier`
+- [x] Zero blocking findings in `REVIEW.md`; no second handler on `PATCH Products.drafts`, no second `Common.SideEffects` or `Common.ValueList` on `subcategory_code`, verified by `reviewer`
+- [x] Documentation updated: PATTERNS row "Field editable only when another field is filled" and the "Dependent value help" pairing, `templates/annotations-ui.cds` comment line, registry, STATE, CHANGELOG, SUMMARY; `node scripts/check-docs-fresh.mjs` green
 
 ## Steps
 

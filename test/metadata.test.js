@@ -224,7 +224,8 @@ describe('OData contract of CatalogService', () => {
   });
 
   // products-subcategory-cascade, ADR-0025: Common.FieldControl (category.code is null ? 0 : 7)
-  // disables the subcategory while the product has no category (0, ReadOnly as a disabled input)
+  // disables the subcategory while the product has no category (0, Inapplicable, rendered by
+  // FE V4 as a disabled input in edit mode; 1 would be ReadOnly, ADR-0025 point 1)
   // and requires it once one is set (7, Mandatory). The dynamic value replaces the static
   // Mandatory the compiler derives from @mandatory; the server keeps enforcing @mandatory.
   it('disables the subcategory while the product has no category and requires it once a category is set', async () => {

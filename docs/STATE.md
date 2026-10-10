@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-10
 - Branch: feature/products-subcategory-cascade
 - Feature: products-subcategory-cascade
-- Phase: 4: verification (autonomous gates; `npm test` 171, `npm run test:ui` 52)
-- Last commit: 28bf995 feat(app): products-subcategory-cascade ui
-- Next: ui-verifier step 7 writes VERIFICATION.md (en and ru, alice and viewer, import dialog); verdict "ready for review"
+- Phase: 5: review (autonomous gates; VERIFICATION.md "ready for review", F1 low)
+- Last commit: 085fc56 docs: products-subcategory-cascade verification
+- Next: reviewer step 8 writes REVIEW.md; gate zero blocking findings
 
 ## Open debt
 

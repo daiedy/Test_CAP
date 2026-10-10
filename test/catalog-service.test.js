@@ -1236,6 +1236,34 @@ describe('CatalogService.Products importProducts', () => {
     expect(await count()).to.equal(15);
   });
 
+  it('importProducts leaves an unknown subcategory code to @assert.target', async () => {
+    // The per-row pair check skips a code it cannot find; the row's INSERT reports it, once.
+    const { codes, messages } = await rejected(
+      importSheet([HEADER, generatedRow(1, { subcategory: 'NOPE' })])
+    );
+    expect(codes).to.deep.equal([
+      'PRODUCTS_IMPORT_NOTHING_IMPORTED',
+      'PRODUCTS_IMPORT_ROW_INVALID',
+    ]);
+    expect(messages[1]).to.equal(
+      'Row 2, column "subcategory": Target with this key doesn\'t exist.'
+    );
+    expect(await count()).to.equal(15);
+  });
+
+  it('importProducts leaves a row without a category to @mandatory', async () => {
+    // APPLIANCES belongs to KITCHEN, but an empty category is no mismatch: one message, category.
+    const { codes, messages } = await rejected(
+      importSheet([HEADER, generatedRow(1, { category: null, subcategory: 'APPLIANCES' })])
+    );
+    expect(codes).to.deep.equal([
+      'PRODUCTS_IMPORT_NOTHING_IMPORTED',
+      'PRODUCTS_IMPORT_ROW_INVALID',
+    ]);
+    expect(messages[1]).to.equal('Row 2, column "category": Provide the missing value.');
+    expect(await count()).to.equal(15);
+  });
+
   it('importProducts is forbidden for a viewer', async () => {
     const err = await expect(importFile(fixture('valid'), as('viewer'))).to.be.rejectedWith(/403/);
     expect(err).to.containSubset({ code: '403' });

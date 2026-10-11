@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-11
 - Branch: main
 - Feature: none
-- Phase: none (products-subcategory-cascade merged, not pushed)
-- Last commit: 3054fa0 Merge branch 'feature/products-subcategory-cascade'
-- Next: `/spec #9` (products-details-section, P2)
+- Phase: none (products-details-section #9 spec-ready: PLAN, SCREENS and ADR-0026 approved 2026-10-11, implementation not started; main not pushed since 3054fa0)
+- Last commit: 18d56ab docs: STATE after the products-subcategory-cascade merge
+- Next: `/feature #9` (products-details-section, P2)
 
 ## Open debt
 

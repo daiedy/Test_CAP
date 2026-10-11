@@ -1,0 +1,21 @@
+code;name;unit
+MATERIAL;Material;
+WEIGHT;Weight;kg
+COLOUR;Colour;
+DIMENSIONS;Dimensions;cm
+CAPACITY;Capacity;l
+BATTERY_LIFE;Battery Life;h
+CONNECTIVITY;Connectivity;
+POWER;Power;W
+SCREEN_SIZE;Screen Size;in
+RAM;Memory (RAM);GB
+STORAGE;Storage;GB
+MAX_LOAD;Maximum Load;kg
+BRIGHTNESS;Brightness;lm
+PAGE_COUNT;Pages;
+PAPER_SIZE;Paper Size;
+TIP_SIZE;Tip Size;mm
+PIECES;Pieces;
+THICKNESS;Thickness;mm
+WATER_RESISTANCE;Water Resistance;
+DPI;Sensor Resolution;dpi

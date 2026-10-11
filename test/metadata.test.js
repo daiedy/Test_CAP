@@ -249,4 +249,58 @@ describe('OData contract of CatalogService', () => {
       '<Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>'
     );
   });
+
+  // products-details-section, ADR-0026: the first composition. Products.details makes ProductDetails
+  // part of the product's draft (D9: no @odata.draft.enabled of its own), so the rows carry the
+  // draft key and elements; the attributes and their assignments are plain read-only entity sets.
+  it('exposes ProductDetails as the draft-enabled composition target of Products', async () => {
+    const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
+      headers: { 'Accept-Language': 'en' },
+    });
+    expect(status).toBe(200);
+    // The EDMX is pretty-printed, so compare without the whitespace between the tags.
+    const compact = data.replace(/>\s+</g, '><');
+    const entityType = (name) =>
+      compact.match(new RegExp(`<EntityType Name="${name}">.*?</EntityType>`))[0];
+
+    expect(entityType('Products')).toContain(
+      '<NavigationProperty Name="details" Type="Collection(CatalogService.ProductDetails)" ' +
+        'Partner="product"><OnDelete Action="Cascade"/></NavigationProperty>'
+    );
+    const details = entityType('ProductDetails');
+    expect(details).toContain(
+      '<Key><PropertyRef Name="ID"/><PropertyRef Name="IsActiveEntity"/></Key>'
+    );
+    expect(details).toContain(
+      '<NavigationProperty Name="product" Type="CatalogService.Products" Partner="details">' +
+        '<ReferentialConstraint Property="product_ID" ReferencedProperty="ID"/></NavigationProperty>'
+    );
+    expect(details).toContain(
+      '<Property Name="IsActiveEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="true"/>' +
+        '<Property Name="HasActiveEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="false"/>' +
+        '<Property Name="HasDraftEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="false"/>' +
+        '<NavigationProperty Name="DraftAdministrativeData" ' +
+        'Type="CatalogService.DraftAdministrativeData" ContainsTarget="true"/>' +
+        '<NavigationProperty Name="SiblingEntity" Type="CatalogService.ProductDetails"/>' +
+        '<Property Name="DraftMessages" ' +
+        'Type="Collection(CatalogService.DRAFT_DraftAdministrativeData_DraftMessage)" Nullable="true"/>'
+    );
+    // The rows are a draft node of the product's draft; Products stays the only draft root.
+    expect(annotationsOf(compact, 'CatalogService.EntityContainer/ProductDetails')).toContain(
+      '<Annotation Term="Common.DraftNode"><Record Type="Common.DraftNodeType">' +
+        '<PropertyValue Property="PreparationAction" String="CatalogService.draftPrepare"/>' +
+        '</Record></Annotation>'
+    );
+    expect(compact.match(/Term="Common\.DraftRoot"/g)).toHaveLength(1);
+    expect(entityType('DetailAttributes')).not.toContain('IsActiveEntity');
+    expect(entityType('SubcategoryAttributes')).not.toContain('IsActiveEntity');
+
+    expect(compact).toContain('<EntitySet Name="Products" EntityType="CatalogService.Products">');
+    expect(compact).toContain(
+      '<NavigationPropertyBinding Path="details" Target="ProductDetails"/>'
+    );
+    for (const set of ['ProductDetails', 'DetailAttributes', 'SubcategoryAttributes']) {
+      expect(compact).toContain(`<EntitySet Name="${set}" EntityType="CatalogService.${set}">`);
+    }
+  });
 });

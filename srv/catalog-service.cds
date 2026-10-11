@@ -22,8 +22,26 @@ service CatalogService {
     fileName  : String(255);
   }
 
+  /**
+   * Detail rows of a product (ADR-0026): draft-enabled through the composition Products.details.
+   * The root's grants are repeated because a directly read child is authorized on itself only;
+   * writes outside the product are refused by lean draft (422 DRAFT_MODIFICATION_ONLY_VIA_ROOT).
+   */
+  @restrict: [
+    { grant: 'READ', to: 'CatalogViewer' },
+    { grant: '*',    to: 'CatalogEditor' }
+  ]
+  entity ProductDetails as projection on catalog.ProductDetails;
+
   @readonly entity Categories as projection on catalog.Categories;
   @readonly entity Subcategories as projection on catalog.Subcategories;
+  @readonly entity DetailAttributes as projection on catalog.DetailAttributes;
+
+  /** Value-help collection of the detail row's attribute: the localized name is flattened (ADR-0026 decision 2). */
+  @readonly entity SubcategoryAttributes as projection on catalog.SubcategoryAttributes {
+    *,
+    attribute.name as attributeName
+  };
 
   /** Permission signal for the UI: read-only singleton, no table, filled by srv/catalog-service.js (ADR-0013). */
   @odata.singleton
@@ -38,3 +56,6 @@ service CatalogService {
 using from './annotations/Products';
 using from './annotations/Categories';
 using from './annotations/Subcategories';
+using from './annotations/ProductDetails';
+using from './annotations/DetailAttributes';
+using from './annotations/SubcategoryAttributes';

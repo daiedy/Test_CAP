@@ -1,0 +1,21 @@
+code;locale;name
+MATERIAL;ru;Материал
+WEIGHT;ru;Вес
+COLOUR;ru;Цвет
+DIMENSIONS;ru;Размеры
+CAPACITY;ru;Объем
+BATTERY_LIFE;ru;Время автономной работы
+CONNECTIVITY;ru;Подключение
+POWER;ru;Мощность
+SCREEN_SIZE;ru;Диагональ экрана
+RAM;ru;Оперативная память
+STORAGE;ru;Накопитель
+MAX_LOAD;ru;Максимальная нагрузка
+BRIGHTNESS;ru;Яркость
+PAGE_COUNT;ru;Количество страниц
+PAPER_SIZE;ru;Формат бумаги
+TIP_SIZE;ru;Толщина линии
+PIECES;ru;Количество предметов
+THICKNESS;ru;Толщина
+WATER_RESISTANCE;ru;Водостойкость
+DPI;ru;Разрешение сенсора

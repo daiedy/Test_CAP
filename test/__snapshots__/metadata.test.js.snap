@@ -36,7 +36,13 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
           <NavigationPropertyBinding Path="currency" Target="Currencies"/>
           <NavigationPropertyBinding Path="category" Target="Categories"/>
           <NavigationPropertyBinding Path="subcategory" Target="Subcategories"/>
+          <NavigationPropertyBinding Path="details" Target="ProductDetails"/>
           <NavigationPropertyBinding Path="SiblingEntity" Target="Products"/>
+        </EntitySet>
+        <EntitySet Name="ProductDetails" EntityType="CatalogService.ProductDetails">
+          <NavigationPropertyBinding Path="product" Target="Products"/>
+          <NavigationPropertyBinding Path="attribute" Target="DetailAttributes"/>
+          <NavigationPropertyBinding Path="SiblingEntity" Target="ProductDetails"/>
         </EntitySet>
         <EntitySet Name="Categories" EntityType="CatalogService.Categories">
           <NavigationPropertyBinding Path="texts" Target="Categories_texts"/>
@@ -47,6 +53,15 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
           <NavigationPropertyBinding Path="texts" Target="Subcategories_texts"/>
           <NavigationPropertyBinding Path="localized" Target="Subcategories_texts"/>
         </EntitySet>
+        <EntitySet Name="DetailAttributes" EntityType="CatalogService.DetailAttributes">
+          <NavigationPropertyBinding Path="subcategories" Target="SubcategoryAttributes"/>
+          <NavigationPropertyBinding Path="texts" Target="DetailAttributes_texts"/>
+          <NavigationPropertyBinding Path="localized" Target="DetailAttributes_texts"/>
+        </EntitySet>
+        <EntitySet Name="SubcategoryAttributes" EntityType="CatalogService.SubcategoryAttributes">
+          <NavigationPropertyBinding Path="subcategory" Target="Subcategories"/>
+          <NavigationPropertyBinding Path="attribute" Target="DetailAttributes"/>
+        </EntitySet>
         <Singleton Name="Permissions" Type="CatalogService.Permissions"/>
         <EntitySet Name="Currencies" EntityType="CatalogService.Currencies">
           <NavigationPropertyBinding Path="texts" Target="Currencies_texts"/>
@@ -54,6 +69,7 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         </EntitySet>
         <EntitySet Name="Categories_texts" EntityType="CatalogService.Categories_texts"/>
         <EntitySet Name="Subcategories_texts" EntityType="CatalogService.Subcategories_texts"/>
+        <EntitySet Name="DetailAttributes_texts" EntityType="CatalogService.DetailAttributes_texts"/>
         <EntitySet Name="Currencies_texts" EntityType="CatalogService.Currencies_texts"/>
       </EntityContainer>
       <EntityType Name="Products">
@@ -84,11 +100,36 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         </NavigationProperty>
         <Property Name="subcategory_code" Type="Edm.String" MaxLength="20"/>
         <Property Name="imageUrl" Type="Edm.String" MaxLength="500"/>
+        <NavigationProperty Name="details" Type="Collection(CatalogService.ProductDetails)" Partner="product">
+          <OnDelete Action="Cascade"/>
+        </NavigationProperty>
         <Property Name="IsActiveEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="true"/>
         <Property Name="HasActiveEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="false"/>
         <Property Name="HasDraftEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="false"/>
         <NavigationProperty Name="DraftAdministrativeData" Type="CatalogService.DraftAdministrativeData" ContainsTarget="true"/>
         <NavigationProperty Name="SiblingEntity" Type="CatalogService.Products"/>
+        <Property Name="DraftMessages" Type="Collection(CatalogService.DRAFT_DraftAdministrativeData_DraftMessage)" Nullable="true"/>
+      </EntityType>
+      <EntityType Name="ProductDetails">
+        <Key>
+          <PropertyRef Name="ID"/>
+          <PropertyRef Name="IsActiveEntity"/>
+        </Key>
+        <Property Name="ID" Type="Edm.Guid" Nullable="false"/>
+        <NavigationProperty Name="product" Type="CatalogService.Products" Partner="details">
+          <ReferentialConstraint Property="product_ID" ReferencedProperty="ID"/>
+        </NavigationProperty>
+        <Property Name="product_ID" Type="Edm.Guid"/>
+        <NavigationProperty Name="attribute" Type="CatalogService.DetailAttributes">
+          <ReferentialConstraint Property="attribute_code" ReferencedProperty="code"/>
+        </NavigationProperty>
+        <Property Name="attribute_code" Type="Edm.String" MaxLength="30"/>
+        <Property Name="value" Type="Edm.String" MaxLength="100"/>
+        <Property Name="IsActiveEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="true"/>
+        <Property Name="HasActiveEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="false"/>
+        <Property Name="HasDraftEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="false"/>
+        <NavigationProperty Name="DraftAdministrativeData" Type="CatalogService.DraftAdministrativeData" ContainsTarget="true"/>
+        <NavigationProperty Name="SiblingEntity" Type="CatalogService.ProductDetails"/>
         <Property Name="DraftMessages" Type="Collection(CatalogService.DRAFT_DraftAdministrativeData_DraftMessage)" Nullable="true"/>
       </EntityType>
       <EntityType Name="Categories">
@@ -122,6 +163,37 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         <NavigationProperty Name="localized" Type="CatalogService.Subcategories_texts">
           <ReferentialConstraint Property="code" ReferencedProperty="code"/>
         </NavigationProperty>
+      </EntityType>
+      <EntityType Name="DetailAttributes">
+        <Key>
+          <PropertyRef Name="code"/>
+        </Key>
+        <Property Name="name" Type="Edm.String" MaxLength="255"/>
+        <Property Name="descr" Type="Edm.String" MaxLength="1000"/>
+        <Property Name="code" Type="Edm.String" MaxLength="30" Nullable="false"/>
+        <Property Name="unit" Type="Edm.String" MaxLength="10"/>
+        <NavigationProperty Name="subcategories" Type="Collection(CatalogService.SubcategoryAttributes)" Partner="attribute"/>
+        <NavigationProperty Name="texts" Type="Collection(CatalogService.DetailAttributes_texts)">
+          <OnDelete Action="Cascade"/>
+        </NavigationProperty>
+        <NavigationProperty Name="localized" Type="CatalogService.DetailAttributes_texts">
+          <ReferentialConstraint Property="code" ReferencedProperty="code"/>
+        </NavigationProperty>
+      </EntityType>
+      <EntityType Name="SubcategoryAttributes">
+        <Key>
+          <PropertyRef Name="ID"/>
+        </Key>
+        <Property Name="ID" Type="Edm.Guid" Nullable="false"/>
+        <NavigationProperty Name="subcategory" Type="CatalogService.Subcategories">
+          <ReferentialConstraint Property="subcategory_code" ReferencedProperty="code"/>
+        </NavigationProperty>
+        <Property Name="subcategory_code" Type="Edm.String" MaxLength="20"/>
+        <NavigationProperty Name="attribute" Type="CatalogService.DetailAttributes" Partner="subcategories">
+          <ReferentialConstraint Property="attribute_code" ReferencedProperty="code"/>
+        </NavigationProperty>
+        <Property Name="attribute_code" Type="Edm.String" MaxLength="30"/>
+        <Property Name="attributeName" Type="Edm.String" MaxLength="255"/>
       </EntityType>
       <EntityType Name="Permissions">
         <Key>
@@ -179,6 +251,16 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         <Property Name="descr" Type="Edm.String" MaxLength="1000"/>
         <Property Name="code" Type="Edm.String" MaxLength="20" Nullable="false"/>
       </EntityType>
+      <EntityType Name="DetailAttributes_texts">
+        <Key>
+          <PropertyRef Name="locale"/>
+          <PropertyRef Name="code"/>
+        </Key>
+        <Property Name="locale" Type="Edm.String" MaxLength="14" Nullable="false"/>
+        <Property Name="name" Type="Edm.String" MaxLength="255"/>
+        <Property Name="descr" Type="Edm.String" MaxLength="1000"/>
+        <Property Name="code" Type="Edm.String" MaxLength="30" Nullable="false"/>
+      </EntityType>
       <EntityType Name="Currencies_texts">
         <Key>
           <PropertyRef Name="locale"/>
@@ -212,6 +294,11 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         <Parameter Name="in" Type="CatalogService.Products"/>
         <Parameter Name="SideEffectsQualifier" Type="Edm.String"/>
         <ReturnType Type="CatalogService.Products"/>
+      </Action>
+      <Action Name="draftPrepare" IsBound="true" EntitySetPath="in">
+        <Parameter Name="in" Type="CatalogService.ProductDetails"/>
+        <Parameter Name="SideEffectsQualifier" Type="Edm.String"/>
+        <ReturnType Type="CatalogService.ProductDetails"/>
       </Action>
       <Action Name="draftActivate" IsBound="true" EntitySetPath="in">
         <Parameter Name="in" Type="CatalogService.Products"/>
@@ -632,6 +719,9 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
       <Annotations Target="CatalogService.Products/imageUrl">
         <Annotation Term="Common.Label" String="{i18n>Products.imageUrl}"/>
       </Annotations>
+      <Annotations Target="CatalogService.Products/details">
+        <Annotation Term="Common.Label" String="{i18n>Products.details}"/>
+      </Annotations>
       <Annotations Target="CatalogService.Products/IsActiveEntity">
         <Annotation Term="UI.Hidden" Bool="true"/>
       </Annotations>
@@ -683,6 +773,96 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
       </Annotations>
       <Annotations Target="CatalogService.ProductsImportFile/fileName">
         <Annotation Term="Common.Label" String="{i18n>ProductsImportFile.fileName}"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetails">
+        <Annotation Term="Common.SideEffects" Qualifier="alwaysFetchMessages">
+          <Record Type="Common.SideEffectsType">
+            <PropertyValue Property="SourceEntities">
+              <Collection>
+                <NavigationPropertyPath></NavigationPropertyPath>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="TargetProperties">
+              <Collection>
+                <String>DraftMessages</String>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+        <Annotation Term="Common.Messages" Path="DraftMessages"/>
+      </Annotations>
+      <Annotations Target="CatalogService.EntityContainer/ProductDetails">
+        <Annotation Term="Common.DraftNode">
+          <Record Type="Common.DraftNodeType">
+            <PropertyValue Property="PreparationAction" String="CatalogService.draftPrepare"/>
+          </Record>
+        </Annotation>
+        <Annotation Term="Common.SideEffects" Qualifier="alwaysFetchMessages">
+          <Record Type="Common.SideEffectsType">
+            <PropertyValue Property="SourceEntities">
+              <Collection>
+                <NavigationPropertyPath></NavigationPropertyPath>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="TargetProperties">
+              <Collection>
+                <String>DraftMessages</String>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetails/ID">
+        <Annotation Term="Core.ComputedDefaultValue" Bool="true"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetails/product">
+        <Annotation Term="Common.Label" String="{i18n>ProductDetails.product}"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetails/product_ID">
+        <Annotation Term="Common.Label" String="{i18n>ProductDetails.product}"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetails/attribute">
+        <Annotation Term="Common.Label" String="{i18n>ProductDetails.attribute}"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetails/attribute_code">
+        <Annotation Term="Common.Label" String="{i18n>ProductDetails.attribute}"/>
+        <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
+        <Annotation Term="Common.ValueList">
+          <Record Type="Common.ValueListType">
+            <PropertyValue Property="Label" String="{i18n>ProductDetails.attribute}"/>
+            <PropertyValue Property="CollectionPath" String="DetailAttributes"/>
+            <PropertyValue Property="Parameters">
+              <Collection>
+                <Record Type="Common.ValueListParameterInOut">
+                  <PropertyValue Property="LocalDataProperty" PropertyPath="attribute_code"/>
+                  <PropertyValue Property="ValueListProperty" String="code"/>
+                </Record>
+                <Record Type="Common.ValueListParameterDisplayOnly">
+                  <PropertyValue Property="ValueListProperty" String="name"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetails/value">
+        <Annotation Term="Common.Label" String="{i18n>ProductDetails.value}"/>
+        <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetails/IsActiveEntity">
+        <Annotation Term="UI.Hidden" Bool="true"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetails/HasActiveEntity">
+        <Annotation Term="UI.Hidden" Bool="true"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetails/HasDraftEntity">
+        <Annotation Term="UI.Hidden" Bool="true"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetails/DraftAdministrativeData">
+        <Annotation Term="UI.Hidden" Bool="true"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetails/DraftMessages">
+        <Annotation Term="Core.Computed" Bool="true"/>
       </Annotations>
       <Annotations Target="CatalogService.Categories">
         <Annotation Term="UI.Identification">
@@ -783,6 +963,113 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
           </Record>
         </Annotation>
       </Annotations>
+      <Annotations Target="CatalogService.DetailAttributes">
+        <Annotation Term="UI.Identification">
+          <Collection>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Value" Path="name"/>
+            </Record>
+          </Collection>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="CatalogService.EntityContainer/DetailAttributes">
+        <Annotation Term="Capabilities.DeleteRestrictions">
+          <Record Type="Capabilities.DeleteRestrictionsType">
+            <PropertyValue Property="Deletable" Bool="false"/>
+          </Record>
+        </Annotation>
+        <Annotation Term="Capabilities.InsertRestrictions">
+          <Record Type="Capabilities.InsertRestrictionsType">
+            <PropertyValue Property="Insertable" Bool="false"/>
+          </Record>
+        </Annotation>
+        <Annotation Term="Capabilities.UpdateRestrictions">
+          <Record Type="Capabilities.UpdateRestrictionsType">
+            <PropertyValue Property="Updatable" Bool="false"/>
+          </Record>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailAttributes/name">
+        <Annotation Term="Common.Label" String="{i18n>DetailAttributes.name}"/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailAttributes/descr">
+        <Annotation Term="Common.Label" String="{i18n>DetailAttributes.descr}"/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailAttributes/code">
+        <Annotation Term="Common.Label" String="{i18n>DetailAttributes.code}"/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailAttributes/unit">
+        <Annotation Term="Common.Label" String="{i18n>DetailAttributes.unit}"/>
+      </Annotations>
+      <Annotations Target="CatalogService.EntityContainer/SubcategoryAttributes">
+        <Annotation Term="Capabilities.DeleteRestrictions">
+          <Record Type="Capabilities.DeleteRestrictionsType">
+            <PropertyValue Property="Deletable" Bool="false"/>
+          </Record>
+        </Annotation>
+        <Annotation Term="Capabilities.InsertRestrictions">
+          <Record Type="Capabilities.InsertRestrictionsType">
+            <PropertyValue Property="Insertable" Bool="false"/>
+          </Record>
+        </Annotation>
+        <Annotation Term="Capabilities.UpdateRestrictions">
+          <Record Type="Capabilities.UpdateRestrictionsType">
+            <PropertyValue Property="Updatable" Bool="false"/>
+          </Record>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="CatalogService.SubcategoryAttributes/ID">
+        <Annotation Term="Core.ComputedDefaultValue" Bool="true"/>
+      </Annotations>
+      <Annotations Target="CatalogService.SubcategoryAttributes/subcategory">
+        <Annotation Term="Common.Label" String="{i18n>SubcategoryAttributes.subcategory}"/>
+      </Annotations>
+      <Annotations Target="CatalogService.SubcategoryAttributes/subcategory_code">
+        <Annotation Term="Common.Label" String="{i18n>SubcategoryAttributes.subcategory}"/>
+        <Annotation Term="Common.ValueList">
+          <Record Type="Common.ValueListType">
+            <PropertyValue Property="Label" String="{i18n>SubcategoryAttributes.subcategory}"/>
+            <PropertyValue Property="CollectionPath" String="Subcategories"/>
+            <PropertyValue Property="Parameters">
+              <Collection>
+                <Record Type="Common.ValueListParameterInOut">
+                  <PropertyValue Property="LocalDataProperty" PropertyPath="subcategory_code"/>
+                  <PropertyValue Property="ValueListProperty" String="code"/>
+                </Record>
+                <Record Type="Common.ValueListParameterDisplayOnly">
+                  <PropertyValue Property="ValueListProperty" String="name"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="CatalogService.SubcategoryAttributes/attribute">
+        <Annotation Term="Common.Label" String="{i18n>SubcategoryAttributes.attribute}"/>
+      </Annotations>
+      <Annotations Target="CatalogService.SubcategoryAttributes/attribute_code">
+        <Annotation Term="Common.Label" String="{i18n>SubcategoryAttributes.attribute}"/>
+        <Annotation Term="Common.ValueList">
+          <Record Type="Common.ValueListType">
+            <PropertyValue Property="Label" String="{i18n>SubcategoryAttributes.attribute}"/>
+            <PropertyValue Property="CollectionPath" String="DetailAttributes"/>
+            <PropertyValue Property="Parameters">
+              <Collection>
+                <Record Type="Common.ValueListParameterInOut">
+                  <PropertyValue Property="LocalDataProperty" PropertyPath="attribute_code"/>
+                  <PropertyValue Property="ValueListProperty" String="code"/>
+                </Record>
+                <Record Type="Common.ValueListParameterDisplayOnly">
+                  <PropertyValue Property="ValueListProperty" String="name"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="CatalogService.SubcategoryAttributes/attributeName">
+        <Annotation Term="Common.Label" String="{i18n>SubcategoryAttributes.attributeName}"/>
+      </Annotations>
       <Annotations Target="CatalogService.EntityContainer/Permissions">
         <Annotation Term="Capabilities.DeleteRestrictions">
           <Record Type="Capabilities.DeleteRestrictionsType">
@@ -867,6 +1154,15 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         <Annotation Term="Common.Label" String="{i18n>Name}"/>
       </Annotations>
       <Annotations Target="CatalogService.Subcategories_texts/descr">
+        <Annotation Term="Common.Label" String="{i18n>Description}"/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailAttributes_texts/locale">
+        <Annotation Term="Common.Label" String="{i18n>LanguageCode}"/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailAttributes_texts/name">
+        <Annotation Term="Common.Label" String="{i18n>Name}"/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailAttributes_texts/descr">
         <Annotation Term="Common.Label" String="{i18n>Description}"/>
       </Annotations>
       <Annotations Target="CatalogService.Currencies_texts/locale">

@@ -14,6 +14,7 @@ entity Products : cuid, managed {
   category    : Association to Categories;
   subcategory : Association to Subcategories;
   imageUrl    : String(500);
+  details     : Composition of many ProductDetails on details.product = $self;
 }
 
 /** Product category, user-facing code list. Labels: srv/annotations/Categories.cds */
@@ -25,4 +26,26 @@ entity Categories : CodeList {
 entity Subcategories : CodeList {
   key code     : String(20);
       category : Association to Categories;
+}
+
+/** Detail attribute with its unit, reusable across subcategories (ADR-0026). Labels: srv/annotations/DetailAttributes.cds */
+entity DetailAttributes : CodeList {
+  key code          : String(30);
+      unit          : String(10);
+      subcategories : Association to many SubcategoryAttributes on subcategories.attribute = $self;
+}
+
+/** Assignment of a detail attribute to a subcategory (ADR-0026). Labels: srv/annotations/SubcategoryAttributes.cds */
+// Persistence constraint (SQL UNIQUE), not semantics: one assignment per pair, a duplicate CSV row fails at deploy.
+@assert.unique.pair: [ subcategory, attribute ]
+entity SubcategoryAttributes : cuid {
+  subcategory : Association to Subcategories;
+  attribute   : Association to DetailAttributes;
+}
+
+/** Detail row of a product: an attribute and its free-text value (ADR-0026). Labels and rules: srv/annotations/ProductDetails.cds */
+entity ProductDetails : cuid {
+  product   : Association to Products;
+  attribute : Association to DetailAttributes;
+  value     : String(100);
 }

@@ -54,8 +54,10 @@ async function resetStaleSubcategory(Subcategories, req) {
 
 /**
  * One INSERT per row through the service, so @mandatory / @assert.* / data types are checked by
- * the framework (research 5.3, 5.3a) and attributed to the sheet row. Any error rejects the whole
- * request, which rolls back the rows already inserted (ADR-0021 decision 4).
+ * the framework (research 5.3, 5.3a) and attributed to the sheet row. Duplicate names and the
+ * subcategory-category pair are checked before the inserts, because no annotation reports them per
+ * row (ADR-0021 decision 5, amendment 4 E). Any error rejects the whole request, which rolls back
+ * the rows already inserted (ADR-0021 decision 4).
  * @param {cds.ApplicationService} srv this CatalogService
  * @param {object} Products the service entity
  * @param {cds.Request} req action request
@@ -72,6 +74,7 @@ async function importProducts(srv, Products, req) {
 
   const order = (column) => columns.indexOf(column);
   const rowErrors = await duplicateNames(rows, order);
+  rowErrors.push(...(await subcategoryMismatches(rows, order, req.locale)));
   for (const { row, entry } of rows) {
     try {
       await srv.run(INSERT.into(Products).entries(entry));
@@ -139,6 +142,45 @@ async function duplicateNames(rows, order) {
     seen.add(k);
   }
   return errors;
+}
+
+/**
+ * Rows whose subcategory belongs to a category other than the row's own (ADR-0021 amendment 4 E).
+ * The ADR-0024 `@assert` constraint PRODUCTS_SUBCATEGORY_MISMATCH is checked once at commit and its
+ * error names no row, so the same pair rule is checked here per row, before the inserts; the
+ * constraint stays the guard of every write. Rows with an empty category, an empty subcategory or
+ * an unknown subcategory code are skipped: `@mandatory` and `@assert.target` report them on the
+ * row's INSERT.
+ * @param {Array<{ row: number, entry: Record<string, unknown> }>} rows import rows
+ * @param {(column: string) => number} order header position of a column
+ * @param {string} locale request locale for the reason text
+ * @returns {Promise<Array<{ row: number, order: number, code: string, args: Array<unknown> }>>}
+ *   one PRODUCTS_IMPORT_ROW_INVALID per mismatched row, column `subcategory`
+ */
+async function subcategoryMismatches(rows, order, locale) {
+  const paired = rows.filter(
+    ({ entry }) => entry.category_code !== undefined && entry.subcategory_code !== undefined
+  );
+  const codes = [...new Set(paired.map(({ entry }) => entry.subcategory_code))];
+  if (!codes.length) return [];
+  const { Subcategories } = cds.entities('my.catalog');
+  const known = await SELECT.from(Subcategories).columns('code', 'category_code')
+    .where`code in ${codes}`;
+  const categoryOf = new Map(known.map(({ code, category_code }) => [code, category_code]));
+  const reason =
+    cds.i18n.messages.at('PRODUCTS_SUBCATEGORY_MISMATCH', locale) ??
+    'PRODUCTS_SUBCATEGORY_MISMATCH';
+  return paired
+    .filter(({ entry }) => {
+      const category = categoryOf.get(entry.subcategory_code);
+      return category !== undefined && category !== entry.category_code;
+    })
+    .map(({ row }) => ({
+      row,
+      order: order('subcategory'),
+      code: 'PRODUCTS_IMPORT_ROW_INVALID',
+      args: [row, 'subcategory', reason],
+    }));
 }
 
 /**

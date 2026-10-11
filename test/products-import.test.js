@@ -24,13 +24,22 @@ describe('products-import mapHeader', () => {
       'Name',
       'PRICE',
       'currency',
+      'SubCategory',
     ]);
     expect(errors).toEqual([]);
-    expect(columns).toEqual(['stock', 'category', 'imageUrl', 'name', 'price', 'currency']);
+    expect(columns).toEqual([
+      'stock',
+      'category',
+      'imageUrl',
+      'name',
+      'price',
+      'currency',
+      'subcategory',
+    ]);
   });
 
   it('accepts a header without the optional columns', () => {
-    const { errors } = mapHeader(['name', 'price', 'currency', 'stock', 'category']);
+    const { errors } = mapHeader(['name', 'price', 'currency', 'stock', 'category', 'subcategory']);
     expect(errors).toEqual([]);
   });
 
@@ -43,9 +52,19 @@ describe('products-import mapHeader', () => {
       'currency',
       'stock',
       'category',
+      'subcategory',
     ]);
     expect(errors).toEqual([]);
-    expect(columns).toEqual(['name', null, 'price', null, 'currency', 'stock', 'category']);
+    expect(columns).toEqual([
+      'name',
+      null,
+      'price',
+      null,
+      'currency',
+      'stock',
+      'category',
+      'subcategory',
+    ]);
   });
 
   it('reports an unknown column and each missing mandatory column', () => {
@@ -55,11 +74,20 @@ describe('products-import mapHeader', () => {
       { code: 'PRODUCTS_IMPORT_MISSING_COLUMN', args: ['price'] },
       { code: 'PRODUCTS_IMPORT_MISSING_COLUMN', args: ['stock'] },
       { code: 'PRODUCTS_IMPORT_MISSING_COLUMN', args: ['category'] },
+      { code: 'PRODUCTS_IMPORT_MISSING_COLUMN', args: ['subcategory'] },
     ]);
   });
 
   it('reports a column that appears twice in the header', () => {
-    const twice = mapHeader(['name', 'price', 'currency', 'stock', 'category', 'Name']);
+    const twice = mapHeader([
+      'name',
+      'price',
+      'currency',
+      'stock',
+      'category',
+      'subcategory',
+      'Name',
+    ]);
     expect(twice.errors).toEqual([{ code: 'PRODUCTS_IMPORT_DUPLICATE_COLUMN', args: ['name'] }]);
 
     const threeTimes = mapHeader([
@@ -69,6 +97,7 @@ describe('products-import mapHeader', () => {
       'currency',
       'stock',
       'category',
+      'subcategory',
       'Name',
     ]);
     expect(threeTimes.errors).toEqual([
@@ -81,6 +110,7 @@ describe('products-import mapHeader', () => {
       { code: 'PRODUCTS_IMPORT_UNKNOWN_COLUMN', args: ['Color'] },
       { code: 'PRODUCTS_IMPORT_DUPLICATE_COLUMN', args: ['stock'] },
       { code: 'PRODUCTS_IMPORT_MISSING_COLUMN', args: ['category'] },
+      { code: 'PRODUCTS_IMPORT_MISSING_COLUMN', args: ['subcategory'] },
     ]);
   });
 });
@@ -113,11 +143,11 @@ describe('products-import coerceCell', () => {
 describe('products-import toImportRows', () => {
   it('numbers rows as in the sheet (header = 1) and skips empty rows', () => {
     const { rows, errors } = toImportRows([
-      ['Name', 'Price', 'Currency', 'Stock', 'Category'],
-      ['Lamp', '10', 'USD', 5, 'FURNITURE'],
-      [null, null, null, null, null],
+      ['Name', 'Price', 'Currency', 'Stock', 'Category', 'Subcategory'],
+      ['Lamp', '10', 'USD', 5, 'FURNITURE', 'LIGHTING'],
+      [null, null, null, null, null, null],
       [],
-      ['Pen', 1.5, 'EUR', '3', 'STATIONERY'],
+      ['Pen', 1.5, 'EUR', '3', 'STATIONERY', 'WRITING_INSTRUMENTS'],
     ]);
     expect(errors).toEqual([]);
     expect(rows).toEqual([
@@ -129,6 +159,7 @@ describe('products-import toImportRows', () => {
           currency_code: 'USD',
           stock: 5,
           category_code: 'FURNITURE',
+          subcategory_code: 'LIGHTING',
         },
       },
       {
@@ -139,6 +170,7 @@ describe('products-import toImportRows', () => {
           currency_code: 'EUR',
           stock: 3,
           category_code: 'STATIONERY',
+          subcategory_code: 'WRITING_INSTRUMENTS',
         },
       },
     ]);
@@ -147,7 +179,7 @@ describe('products-import toImportRows', () => {
   it('leaves empty cells out of the entry, so @mandatory reports them', () => {
     const { rows } = toImportRows([
       HEADER,
-      [null, 'Nameless', 10, 'USD', 1, 'KITCHEN', null, null],
+      [null, 'Nameless', 10, 'USD', 1, 'KITCHEN', 'APPLIANCES', null, null],
     ]);
     expect(rows).toEqual([
       {
@@ -158,6 +190,7 @@ describe('products-import toImportRows', () => {
           currency_code: 'USD',
           stock: 1,
           category_code: 'KITCHEN',
+          subcategory_code: 'APPLIANCES',
         },
       },
     ]);
@@ -173,7 +206,7 @@ describe('products-import toImportRows', () => {
   it('returns no rows when the header is invalid', () => {
     const { rows, errors } = toImportRows([['name'], ['Lamp']]);
     expect(rows).toEqual([]);
-    expect(errors).toHaveLength(4);
+    expect(errors).toHaveLength(5);
   });
 });
 
@@ -191,6 +224,7 @@ describe('products-import readImportRows', () => {
         currency_code: 'USD',
         stock: 40,
         category_code: 'STATIONERY',
+        subcategory_code: 'WRITING_INSTRUMENTS',
         rating: 4,
         imageUrl: 'https://example.com/img/desk-organizer.png',
       },

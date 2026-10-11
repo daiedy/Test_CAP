@@ -23,6 +23,7 @@ const newProduct = {
   currency_code: 'USD',
   stock: 5,
   category_code: 'FURNITURE',
+  subcategory_code: 'LIGHTING', // a Furniture subcategory; mandatory since products-subcategory-cascade
 };
 // Copy of the valid payload without one field, for the @mandatory tests.
 const without = (field) => {
@@ -90,6 +91,7 @@ describe('CatalogService.Products', () => {
       name: 'Test Lamp',
       stock: 5,
       category_code: 'FURNITURE',
+      subcategory_code: 'LIGHTING',
       createdBy: 'alice',
     });
     expect(data.ID).to.be.a('string');
@@ -171,8 +173,9 @@ describe('CatalogService.Products', () => {
   });
 });
 
-// Subcategory of a product (ADR-0024): optional (D2) and checked against the product's category
-// by an @assert constraint (decision 2). Rows created here are named 'Subcategory %'.
+// Subcategory of a product (ADR-0024): mandatory (@mandatory, products-subcategory-cascade) and
+// checked against the product's category by an @assert constraint (ADR-0024 decision 2).
+// Rows created here are named 'Subcategory %'.
 describe('CatalogService.Products subcategory', () => {
   // Rows of a create test and of a rejection test that unexpectedly succeeded.
   afterEach(async () => {
@@ -231,15 +234,11 @@ describe('CatalogService.Products subcategory', () => {
     });
   });
 
-  it('creates a product without a subcategory', async () => {
-    const payload = { ...newProduct, name: 'Subcategory None Lamp' };
-    const { status, data } = await POST(`${base}/Products`, active(payload));
-    expect(status).to.equal(201);
-    expect(data).to.containSubset({
-      IsActiveEntity: true,
-      category_code: 'FURNITURE',
-      subcategory_code: null,
-    });
+  it('rejects a product without a subcategory (@mandatory)', async () => {
+    const payload = { ...without('subcategory_code'), name: 'Subcategory None Lamp' };
+    const err = await expect(POST(`${base}/Products`, active(payload))).to.be.rejectedWith(/400/);
+    expect(err).to.containSubset({ code: 'ASSERT_MANDATORY', target: 'subcategory_code' });
+    expect(await named(payload.name)).to.have.length(0);
   });
 
   it('rejects a subcategory of another category (PRODUCTS_SUBCATEGORY_MISMATCH)', async () => {
@@ -295,6 +294,43 @@ describe('CatalogService.Products subcategory', () => {
     // The reset is a draft handler only; an active write keeps the seeded pair.
     const { data: stored } = await GET(`${key}?$select=category_code,subcategory_code`);
     expect(stored).to.containSubset({ category_code: 'ELECTRONICS', subcategory_code: 'LAPTOPS' });
+  });
+
+  it('rejects emptying the category of an active product', async () => {
+    const [{ ID }] = await named('Desk Lamp');
+    const key = activeKey(ID);
+    const err = await expect(PATCH(key, { category_code: null })).to.be.rejectedWith(/400/);
+    expect(err).to.containSubset({ code: 'ASSERT_MANDATORY', target: 'category_code' });
+    const { data: stored } = await GET(`${key}?$select=category_code,subcategory_code`);
+    expect(stored).to.containSubset({ category_code: 'FURNITURE', subcategory_code: 'LIGHTING' });
+  });
+
+  it('rejects a category change of an active product that empties the subcategory (@mandatory)', async () => {
+    const [{ ID }] = await named('Desk Lamp');
+    const key = activeKey(ID);
+    const err = await expect(
+      PATCH(key, { category_code: 'KITCHEN', subcategory_code: null })
+    ).to.be.rejectedWith(/400/);
+    expect(err).to.containSubset({ code: 'ASSERT_MANDATORY', target: 'subcategory_code' });
+    const { data: stored } = await GET(`${key}?$select=category_code,subcategory_code`);
+    expect(stored).to.containSubset({ category_code: 'FURNITURE', subcategory_code: 'LIGHTING' });
+  });
+
+  it('changes the category of an active product together with a subcategory of the new category', async () => {
+    // A product of its own, so the seeded rows keep their pair; afterEach deletes it.
+    const { data: created } = await POST(
+      `${base}/Products`,
+      active({ ...newProduct, name: 'Subcategory Move Lamp' })
+    );
+    const key = activeKey(created.ID);
+    const { status, data } = await PATCH(key, {
+      category_code: 'KITCHEN',
+      subcategory_code: 'APPLIANCES',
+    });
+    expect(status).to.equal(200);
+    expect(data).to.containSubset({ category_code: 'KITCHEN', subcategory_code: 'APPLIANCES' });
+    const { data: stored } = await GET(`${key}?$select=category_code,subcategory_code`);
+    expect(stored).to.containSubset({ category_code: 'KITCHEN', subcategory_code: 'APPLIANCES' });
   });
 });
 
@@ -367,7 +403,11 @@ describe('CatalogService.Products drafts', () => {
         DraftAdministrativeData: { InProcessByUser: 'alice' },
       });
 
-      const patched = await PATCH(draftKey(id), { category_code: 'KITCHEN' });
+      // The pair together: the category alone would empty the mandatory subcategory (reset).
+      const patched = await PATCH(draftKey(id), {
+        category_code: 'KITCHEN',
+        subcategory_code: 'APPLIANCES',
+      });
       expect(patched.status).to.equal(200);
 
       const activated = await draftActivate();
@@ -375,6 +415,7 @@ describe('CatalogService.Products drafts', () => {
       expect(activated.data).to.containSubset({
         IsActiveEntity: true,
         category_code: 'KITCHEN',
+        subcategory_code: 'APPLIANCES',
         modifiedBy: 'alice',
       });
     } finally {
@@ -387,11 +428,16 @@ describe('CatalogService.Products drafts', () => {
   it('reports an unknown category on the draft and rejects activation (@assert.target)', async () => {
     await draftEdit();
     try {
-      // On a draft, @assert.* are messages (200), not errors.
-      const { status, data } = await PATCH(draftKey(id), { category_code: 'UNKNOWN' });
+      // On a draft, @assert.* are messages (200), not errors. The subcategory is sent along: the
+      // category alone would let the reset empty it, and activation would then report only
+      // ASSERT_MANDATORY on in/subcategory_code, without the ASSERT_TARGET under test (measured).
+      const { status, data } = await PATCH(draftKey(id), {
+        category_code: 'UNKNOWN',
+        subcategory_code: 'LIGHTING',
+      });
       expect(status).to.equal(200);
       expect(data.DraftMessages).to.containSubset([{ code: 'ASSERT_TARGET' }]);
-      // Activation enforces them; the target is prefixed with the action parameter `in/`.
+      // Activation enforces them; the target is matched by its suffix (TESTING.md).
       const err = await expect(draftActivate()).to.be.rejectedWith(/400/);
       expect(err).to.containSubset({ code: 'ASSERT_TARGET' });
       expect(err.target).to.match(/category_code$/);
@@ -429,6 +475,29 @@ describe('CatalogService.Products drafts', () => {
     } finally {
       await discard();
     }
+  });
+
+  it('rejects activation of a draft without a subcategory (@mandatory)', async () => {
+    await draftEdit();
+    try {
+      await PATCH(draftKey(id), { category_code: 'FURNITURE', subcategory_code: 'LIGHTING' });
+      // The category alone changes: the reset empties LIGHTING, which does not belong to KITCHEN.
+      await PATCH(draftKey(id), { category_code: 'KITCHEN' });
+      expect(await readDraft()).to.containSubset({
+        category_code: 'KITCHEN',
+        subcategory_code: null,
+      });
+      const err = await expect(draftActivate()).to.be.rejectedWith(/400/);
+      expect(err).to.containSubset({
+        code: 'ASSERT_MANDATORY',
+        target: 'in/subcategory_code',
+      });
+    } finally {
+      await discard();
+    }
+    const { data } = await GET(`${activeKey(id)}?$select=subcategory_code,HasDraftEntity`);
+    expect(data.HasDraftEntity).to.equal(false);
+    expect(data.subcategory_code).to.be.a('string');
   });
 
   it('rejects activation of a draft with a rating above 5 (@assert.range)', async () => {
@@ -488,6 +557,22 @@ describe('CatalogService.Products drafts', () => {
       const draft = await readDraft();
       expect(draft).to.containSubset({ category_code: 'KITCHEN', subcategory_code: null });
       // Silent reset (D8): no message on the draft.
+      expect(draft.DraftMessages).to.deep.equal([]);
+    } finally {
+      await discard();
+    }
+  });
+
+  it('clears the subcategory when a draft clears the category', async () => {
+    await draftEdit();
+    try {
+      await PATCH(draftKey(id), { category_code: 'FURNITURE', subcategory_code: 'LIGHTING' });
+      const { status } = await PATCH(draftKey(id), { category_code: null });
+      expect(status).to.equal(200);
+      const draft = await readDraft();
+      expect(draft).to.containSubset({ category_code: null, subcategory_code: null });
+      // No subcategory message, no message at all: @mandatory writes none on a draft (TESTING.md),
+      // the empty pair is reported at activation.
       expect(draft.DraftMessages).to.deep.equal([]);
     } finally {
       await discard();
@@ -859,6 +944,7 @@ describe('CatalogService.Products importProducts', () => {
         currency_code: 'USD',
         stock: 40,
         category_code: 'STATIONERY',
+        subcategory_code: 'WRITING_INSTRUMENTS',
         rating: 4,
         imageUrl: 'https://example.com/img/desk-organizer.png',
         IsActiveEntity: true,
@@ -869,6 +955,7 @@ describe('CatalogService.Products importProducts', () => {
         currency_code: 'EUR',
         stock: 120,
         category_code: 'SPORTS',
+        subcategory_code: 'FITNESS',
         rating: 5,
         IsActiveEntity: true,
       },
@@ -878,6 +965,7 @@ describe('CatalogService.Products importProducts', () => {
         currency_code: 'GBP',
         stock: 15,
         category_code: 'ELECTRONICS',
+        subcategory_code: 'LAPTOPS',
         rating: 3,
         IsActiveEntity: true,
       },
@@ -905,7 +993,10 @@ describe('CatalogService.Products importProducts', () => {
       'PRODUCTS_IMPORT_ROW_INVALID',
       'PRODUCTS_IMPORT_ROW_INVALID',
       'PRODUCTS_IMPORT_ROW_INVALID',
+      'PRODUCTS_IMPORT_ROW_INVALID',
       'PRODUCTS_IMPORT_DUPLICATE_NAME',
+      'PRODUCTS_IMPORT_ROW_INVALID',
+      'PRODUCTS_IMPORT_ROW_INVALID',
     ]);
     expect(messages[0]).to.equal(
       'No products were imported. Correct the rows listed below and import the file again.'
@@ -913,9 +1004,17 @@ describe('CatalogService.Products importProducts', () => {
     expect(messages[1]).to.match(/^Row 3, column "name": /);
     expect(messages[2]).to.match(/^Row 4, column "stock": /);
     expect(messages[3]).to.match(/^Row 5, column "category": /);
-    expect(messages[4]).to.match(/^Row 6, column "price": /);
-    expect(messages[5]).to.equal(
+    // Row 5 keeps a KITCHEN subcategory, which does not belong to "NOPE" either (fixture JSDoc).
+    expect(messages[4]).to.equal(
+      'Row 5, column "subcategory": The subcategory does not belong to the category of the product.'
+    );
+    expect(messages[5]).to.match(/^Row 6, column "price": /);
+    expect(messages[6]).to.equal(
       'Row 7, column "name": a product named "yoga MAT" already exists in the catalog or earlier in the file.'
+    );
+    expect(messages[7]).to.equal('Row 8, column "subcategory": Provide the missing value.');
+    expect(messages[8]).to.equal(
+      'Row 9, column "subcategory": The subcategory does not belong to the category of the product.'
     );
     // Row messages are not bound to a field of the form (no `target`).
     for (const detail of err.details) expect(detail.target).to.equal(undefined);
@@ -1074,11 +1173,95 @@ describe('CatalogService.Products importProducts', () => {
       'PRODUCTS_IMPORT_NOTHING_IMPORTED',
       'PRODUCTS_IMPORT_MISSING_COLUMN',
       'PRODUCTS_IMPORT_MISSING_COLUMN',
+      'PRODUCTS_IMPORT_MISSING_COLUMN',
     ]);
     expect(messages.slice(1)).to.deep.equal([
       'The header row has no column "price".',
       'The header row has no column "category".',
+      'The header row has no column "subcategory".',
     ]);
+
+    // Six mandatory columns (D7 = A): a header with none of them reports all six, in this order.
+    const none = await rejected(importSheet([['description'], ['Import Only Row']]));
+    expect(none.codes.slice(1)).to.deep.equal(Array(6).fill('PRODUCTS_IMPORT_MISSING_COLUMN'));
+    expect(none.messages.slice(1).map((m) => m.match(/"(.+)"/)[1])).to.deep.equal([
+      'name',
+      'price',
+      'currency',
+      'stock',
+      'category',
+      'subcategory',
+    ]);
+    expect(await count()).to.equal(15);
+  });
+
+  it('importProducts reports a row without a subcategory', async () => {
+    const { err, codes, messages } = await rejected(
+      importSheet([HEADER, generatedRow(1, { subcategory: null })])
+    );
+    expect(codes).to.deep.equal([
+      'PRODUCTS_IMPORT_NOTHING_IMPORTED',
+      'PRODUCTS_IMPORT_ROW_INVALID',
+    ]);
+    expect(messages[1]).to.equal('Row 2, column "subcategory": Provide the missing value.');
+    expect(err.details[1].target).to.equal(undefined);
+    expect(await count()).to.equal(15);
+  });
+
+  it('importProducts reports a subcategory of another category in a row', async () => {
+    // Row 2 is valid, row 3 pairs KITCHEN with the Furniture subcategory LIGHTING, row 4 has its
+    // own error: both rows are reported and nothing is imported (ADR-0021 amendment 4 E).
+    const mismatched = generatedRow(2, { subcategory: 'LIGHTING' });
+    const { err, codes, messages } = await rejected(
+      importSheet([HEADER, generatedRow(1), mismatched, generatedRow(3, { stock: -1 })])
+    );
+    expect(codes).to.deep.equal([
+      'PRODUCTS_IMPORT_NOTHING_IMPORTED',
+      'PRODUCTS_IMPORT_ROW_INVALID',
+      'PRODUCTS_IMPORT_ROW_INVALID',
+    ]);
+    expect(messages[1]).to.equal(
+      'Row 3, column "subcategory": The subcategory does not belong to the category of the product.'
+    );
+    expect(messages[2]).to.match(/^Row 4, column "stock": /);
+    for (const detail of err.details) expect(detail.target).to.equal(undefined);
+    expect(await count()).to.equal(15);
+
+    // The reason is the localized PRODUCTS_SUBCATEGORY_MISMATCH text.
+    const ru = { headers: { 'Accept-Language': 'ru' } };
+    const inRussian = await rejected(importSheet([HEADER, mismatched], ru));
+    expect(inRussian.messages[1]).to.equal(
+      'Строка 2, столбец "subcategory": Подкатегория не относится к категории товара.'
+    );
+    expect(await count()).to.equal(15);
+  });
+
+  it('importProducts leaves an unknown subcategory code to @assert.target', async () => {
+    // The per-row pair check skips a code it cannot find; the row's INSERT reports it, once.
+    const { codes, messages } = await rejected(
+      importSheet([HEADER, generatedRow(1, { subcategory: 'NOPE' })])
+    );
+    expect(codes).to.deep.equal([
+      'PRODUCTS_IMPORT_NOTHING_IMPORTED',
+      'PRODUCTS_IMPORT_ROW_INVALID',
+    ]);
+    expect(messages[1]).to.equal(
+      'Row 2, column "subcategory": Target with this key doesn\'t exist.'
+    );
+    expect(await count()).to.equal(15);
+  });
+
+  it('importProducts leaves a row without a category to @mandatory', async () => {
+    // APPLIANCES belongs to KITCHEN, but an empty category is no mismatch: one message, category.
+    const { codes, messages } = await rejected(
+      importSheet([HEADER, generatedRow(1, { category: null, subcategory: 'APPLIANCES' })])
+    );
+    expect(codes).to.deep.equal([
+      'PRODUCTS_IMPORT_NOTHING_IMPORTED',
+      'PRODUCTS_IMPORT_ROW_INVALID',
+    ]);
+    expect(messages[1]).to.equal('Row 2, column "category": Provide the missing value.');
+    expect(await count()).to.equal(15);
   });
 
   it('importProducts is forbidden for a viewer', async () => {

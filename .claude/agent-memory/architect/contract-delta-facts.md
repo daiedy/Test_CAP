@@ -12,6 +12,8 @@ Measured on a scratch copy for the `catalog-hygiene` spec (#20, 2026-10-09; `rsy
 - `@assert.target` on an association: **0 lines**. It lives only in CSN (`@assert.target: true` on the association and its foreign key). Issue #20 assumed it changes the contract; it does not.
 - A `$Path` change inside `UI.CreateHidden`/`UpdateHidden`/`DeleteHidden`: **2 lines per term** (entity type and entity set) plus **1 per `DataFieldForAction` record** carrying the same `UI.Hidden`: 7 for the four consumers of `Permissions/isEditor`.
 
+- A dynamic `@Common.FieldControl: (<assoc>.<key> is null ? 0 : 3)` on an association: **+10 lines** on the foreign key's `<Annotations>` target, nothing removed (measured 2026-10-10, `products-subcategory-cascade`, see [[fe-v4-dynamic-field-control]]).
+
 Data facts: `@sap/cds-common-content` 3.2.0 ships `db/data/sap-common-Currencies.csv` (204 data rows, quoted CSV, `USD`/`EUR`/`GBP` present, no `XXX`/`XTS`); `sap.common.Currencies` is `persistence.skip: if-unused` and is used by `Products.currency`, so the table exists and the test "exposes Currencies as a code list" reads `USD` on every run. The import fixtures (`test/fixtures/products-import-{valid,invalid}.xlsx`) use `USD`/`EUR`/`GBP` only; the invalid one proves `@assert.target` runs on the internal `INSERT` (`Row 5, column "category"`), so a second association check needs no handler change (`columnOf` already maps `currency_code` to `currency`).
 
 `catalog-hygiene` (#20) is merged (`c29b3f8`, 2026-10-09); the figures above held at implementation. ADR-0003 carries the amendment in the ADR-0021 shape (section between Decision and Alternatives, `Amendment:` rows, `Status:` untouched). ADR-0024 is still a free number (the #11 spec mentioned it, no file exists on `main`).

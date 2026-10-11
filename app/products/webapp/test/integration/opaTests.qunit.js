@@ -44,6 +44,8 @@ sap.ui.define(
     // SubcategoryDependsOnCategoryJourney (products-subcategories, PLAN step 9) saves Laptop Pro 15
     // with another category and subcategory and restores the seeded pair; it runs before
     // DraftMarkerInListReportJourney, whose draft of the same product must start from seeded data.
+    // Its create and emptying cases (products-subcategory-cascade) discard their drafts inside the
+    // case and assert the 15 rows without a draft marker afterwards.
     // RoleAwareActionsJourney runs last (PLAN step 11): it only reads and selects, so it depends on
     // no other journey and changes nothing for them.
     runner.run([

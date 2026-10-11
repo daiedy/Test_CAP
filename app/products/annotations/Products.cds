@@ -75,6 +75,8 @@ annotate CatalogService.Products with {
     Common.Text                     : subcategory.name,
     Common.TextArrangement          : #TextOnly,
     Common.ValueListWithFixedValues : true,
+    // Disabled while the category is empty, mandatory once it is set (ADR-0025; the server enforces @mandatory).
+    Common.FieldControl             : (category.code is null ? 0 : 7),
     Common.ValueList                : {
       Label          : '{i18n>Products.subcategory}',
       CollectionPath : 'Subcategories',

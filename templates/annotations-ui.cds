@@ -73,6 +73,7 @@ annotate OrdersService.Categories with {
 //     Common.Text                     : subcategory.name,
 //     Common.TextArrangement          : #TextOnly,
 //     Common.ValueListWithFixedValues : true,
+//     Common.FieldControl             : (category.code is null ? 0 : 3), // ADR-0025: disabled until the parent is set; 7 instead of 3 on a @mandatory element
 //     Common.ValueList                : {
 //       Label          : '{i18n>Orders.subcategory}',
 //       CollectionPath : 'Subcategories',

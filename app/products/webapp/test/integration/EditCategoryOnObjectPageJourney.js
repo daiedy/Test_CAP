@@ -7,8 +7,10 @@
 // is left behind (a stray draft would show up in the List Report and break iCheckRows(15)).
 // The display mode of the category field is covered by CategoryShownAsNameJourney.
 // products-subcategories (PLAN step 10, ADR-0024): the change to Furniture empties the subcategory
-// of Laptop Pro 15 and the empty value is saved (D2, optional); the restore step therefore picks
-// Laptops again after Electronics, so the seeded pair Electronics / Laptops is back at the end.
+// of Laptop Pro 15; the restore step therefore picks Laptops again after Electronics, so the seeded
+// pair Electronics / Laptops is back at the end.
+// products-subcategory-cascade (PLAN step 6): Subcategory is @mandatory, so the Furniture save
+// picks the Furniture subcategory Lighting first; the journey ends on the List Report with no draft.
 sap.ui.define(
   ['sap/ui/test/opaQunit', './data/CategoryTexts', './data/SubcategoryTexts'],
   function (opaTest, CategoryTexts, SubcategoryTexts) {
@@ -76,11 +78,15 @@ sap.ui.define(
       opaTest(
         'Saving shows the new name in the field and in the header',
         function (Given, When, Then) {
+          // Laptops is not a Furniture subcategory: the category change emptied it, and a
+          // mandatory subcategory of the new category is chosen before Save.
+          Then.onTheObjectPageForm.iSeeFormFieldEmpty(SUBCATEGORY);
+          chooseSubcategory(When, Then, subcategoryNames.LIGHTING);
           When.onTheProductsObjectPage.onFooter().iExecuteSave();
           seeSavedCategory(Then, names.FURNITURE);
-          // Laptops is not a Furniture subcategory: the category change emptied it and the empty
-          // value was saved.
-          Then.onTheObjectPageForm.iSeeFormFieldEmpty(SUBCATEGORY);
+          Then.onTheProductsObjectPage
+            .onForm(generalInfo)
+            .iCheckField(subcategoryField, subcategoryNames.LIGHTING);
         }
       );
 
@@ -105,6 +111,12 @@ sap.ui.define(
           Then.onTheProductsObjectPage
             .onForm(generalInfo)
             .iCheckField(subcategoryField, subcategoryNames.LAPTOPS);
+          // Back to the List Report by a restart (fallback of tests-ui.md; display mode, nothing
+          // pending): all 15 rows, none with a draft marker.
+          Given.iTearDownMyApp();
+          Given.iStartMyApp('products-display');
+          Then.onTheProductsList.iSeeThisPage();
+          Then.onTheProductsList.onTable().iCheckRows({}, 15, { isDraft: false });
         }
       );
 

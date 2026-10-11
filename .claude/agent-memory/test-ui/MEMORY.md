@@ -1,1 +1,1 @@
-- [sap.fe.test API verification](reference-sap-fe-test-api-verification.md) — CDN `-dbg.js` fallback; DataPoint ids; custom filter field; action dialog; runner counts; empty-field trap, form ids, pop-in Show Details
+- [sap.fe.test API verification](reference-sap-fe-test-api-verification.md) — CDN `-dbg.js` fallback; DataPoint ids; custom filter; action dialog; runner counts; empty-field trap; form ids; pop-in; FieldControl editMode; Create/discard

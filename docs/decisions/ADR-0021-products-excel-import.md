@@ -44,6 +44,20 @@ The guard is imperative because no annotation bounds decompression (CLAUDE.md in
 ## Amendment 3: short singleton path (feature catalog-hygiene, 2026-10-09)
 The `$Path` of decision 6 is now `/Permissions/isEditor`, like the three `UI.*Hidden` terms; the container-qualified form logged a UI5 `TypeError` when the Object Page opened. Measured outcome and the contract figures: ADR-0013 amendment "short singleton path".
 
+## Amendment 4: subcategory column and per-row category check (user decisions 2026-10-10, feature products-subcategory-cascade)
+The user made `Products.subcategory` mandatory (`@mandatory`) and chose a mandatory `subcategory` column in the workbook (feature `products-subcategory-cascade`, D7 = A). Decision 7 gains the column: `subcategory` holds a subcategory code (`LAPTOPS`) and joins the mandatory columns (`name`, `price`, `currency`, `stock`, `category`, `subcategory`). An empty cell is reported by `@mandatory` and an unknown code by `@assert.target`, each through the decision 3 row mapping (`ASSERT_*` codes).
+
+E. **Per-row check of the subcategory's category (revises decision 3 for constraints checked at commit).** The pair rule is the ADR-0024 decision 2 constraint `PRODUCTS_SUBCATEGORY_MISMATCH`. `cap-backend-dev` measured in phase 2 (`@sap/cds` 10.1.1 `libx/_runtime/common/generic/assert.js` lines 49-71 and 180-185, scratch in `/tmp/cascade-measure/`) that an `@assert` constraint is not checked on each row `INSERT`. It is collected and checked once in `req.before('commit')`, and its error carries no row. Inside the all-or-nothing transaction of decision 4 this gives two wrong outcomes:
+- a file whose only fault is a mismatched row fails as a whole with a bare 400 that names no row;
+- a file with another row error is rejected before commit, so the mismatch is not reported at all.
+
+Decision 3 says a declarative check is "never re-implemented in the handler" and that its failure on the internal `INSERT` revises this ADR; this amendment is that revision, limited to the constraint that cannot report per row. The handler adds one check before the inserts, shaped like decision 5's duplicate names:
+- `subcategoryMismatches` in `srv/catalog-service.js`, a module-level function next to `duplicateNames`, makes one `SELECT` on `my.catalog.Subcategories` for the subcategory codes in the file;
+- a row whose subcategory belongs to a category other than the row's `category` gets `PRODUCTS_IMPORT_ROW_INVALID` with column `subcategory` and, as the reason, the `PRODUCTS_SUBCATEGORY_MISMATCH` text localized with `cds.i18n.messages.at(key, req.locale)`;
+- rows with an empty category, an empty subcategory or an unknown subcategory code are skipped and left to `@mandatory` and `@assert.target`.
+
+The `@assert` constraint stays unchanged as the guard of every write path, including the import's own `INSERT`s: if the pre-check and the constraint ever disagree, the commit still fails. The pre-check only turns the same rule into a row-attributed message, which no annotation can do inside one transaction (CLAUDE.md invariant 6). No new message key, no change to the OData contract or the UI.
+
 ## Alternatives
 | Option | Why rejected |
 |---|---|
@@ -88,6 +102,7 @@ The `$Path` of decision 6 is now `/Permissions/isEditor`, like the three `UI.*Hi
 - Amendment 2: two message keys, `PRODUCTS_IMPORT_DUPLICATE_COLUMN` and `PRODUCTS_IMPORT_TOO_LARGE`, in en and ru; `srv/lib/products-import.js` gains the export `unzippedSize` and the constant `MAX_UNZIPPED_BYTES`. The OData contract, the UI and `package.json` are unchanged.
 - The guard follows the record order of a streaming zip reader. If a `read-excel-file` bump changes its unzip (its own source names `fflate` as the alternative), the bomb tests of the guard re-check it on the Dependabot PR. The guard costs 1-5 ms on a legitimate workbook (measured with the prototype).
 - `PATTERNS.md` "File upload through an action" (written in phase 6) states that an uploaded archive is size-guarded by counting inflated bytes before it is parsed; `README.md` names the 10 MB unpacked limit and that each column appears once.
+- Amendment 4: `srv/lib/products-import.js` gains `subcategory` in `IMPORT_COLUMNS` and `MANDATORY_COLUMNS`; `srv/catalog-service.js` gains `subcategoryMismatches`, while `validationErrors` stays as it is; the workbook fixtures and `README.md` gain the column. `PATTERNS.md` "Bulk create from a file" (phase 6 of `products-subcategory-cascade`) states that an `@assert` constraint is checked at commit, so the import checks a cross-field rule per row before the inserts and keeps the constraint as the guard.
 
 ## Sources
 - capire, "Input Validation" (`@mandatory`, `@assert.range`, `@assert.target`: "performed on the application service layer before the custom application handlers are called"), "Draft Input Validation", `req.error` / `req.reject`, "Maximum Request Body Size", "Mapping of CDS Types" (`LargeBinary` → `Edm.Binary`), "Calling Actions / Functions" (bound to collection), via `mcp__cds-mcp__search_docs` 2026-09-25.

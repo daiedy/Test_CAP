@@ -47,6 +47,7 @@ cd app/products && npm run lint   # ui5lint
 - `DELETE` of a draft that does not exist answers 404.
 - `DELETE /Entity(<id>)` (addressed as active, no `IsActiveEntity`) of a record that has an open draft answers 403 `DRAFT_ACTIVE_DELETE_FORBIDDEN_DRAFT_EXISTS`; discard the draft with `DELETE /Entity(ID=<id>,IsActiveEntity=false)` instead.
 - OPA5 on `sap.fe.test`: `onForm().iCheckField(field, '')` passes for any value (`MdcFieldBuilder` turns `''` into an empty list), so an "is empty" check uses `pages/ObjectPageForm.js` `iSeeFormFieldEmpty`; `iCheckRows` matches the values of a column that is hidden behind Show Details (pop-in), so a green row check does not prove the column is visible.
+- OPA5 on `sap.fe.test`: a dynamic `Common.FieldControl` (ADR-0025) is asserted with `onForm().iCheckField(field, undefined, { editMode, required })`; the state keys are `sap.ui.mdc.Field` properties (`editMode` `Disabled` or `Editable`, `required`), so no page-object method is needed. Proved by mutation: a wrong `editMode` or `required` in each state turns the case red.
 - OPA5 runs need a fresh `npm run watch` before every run: a leftover draft from a previous run changes the List Report row count and breaks `iCheckRows(15)`.
 
 ## Known gaps

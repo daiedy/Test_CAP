@@ -4,12 +4,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## Now
 
-- Date: 2026-10-10
-- Branch: feature/products-subcategory-cascade
+- Date: 2026-10-11
+- Branch: main
 - Feature: none
-- Phase: none (products-subcategory-cascade done and pruned on its branch, not merged)
-- Last commit: 5ab8b02 docs: products-subcategory-cascade summary and registry
-- Next: user merges `feature/products-subcategory-cascade` into `main` (push on the user's instruction); then `/spec #9`
+- Phase: none (products-subcategory-cascade merged, not pushed)
+- Last commit: 3054fa0 Merge branch 'feature/products-subcategory-cascade'
+- Next: `/spec #9` (products-details-section, P2)
 
 ## Open debt
 

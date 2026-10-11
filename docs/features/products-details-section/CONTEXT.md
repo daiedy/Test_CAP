@@ -1,6 +1,6 @@
 # products-details-section: context
 
-Date: 2026-10-11. Author: `architect`. Branch: `feature/products-details-section` (not created yet: `/spec` only). Issue: #9.
+Date: 2026-10-11. Author: `architect`. Branch: `feature/products-details-section` (worktree from `b466249`, `/feature` started 2026-10-12). Issue: #9.
 
 This file is the brief for the implementers: every agent of the feature reads it whole (protocol step 1), so it holds only the sections below (ADR-0018). Screens are in `SCREENS.md` (`ux-designer`). Experiments, measurements, rejected mechanisms and framework facts are in `research/framework-facts.md`.
 
@@ -61,7 +61,7 @@ Not affected: `importProducts` (no details column; a deep write of details is no
 - The `@assert: (case ...)` constraint shape of ADR-0024 (null guards on both operands, key in `_i18n/messages*`): reused three times, extended with capire's `exists <to-many>[<filter>]` and `$self` for the set-membership checks (ADR-0026 decision 5). No handler is added; `srv/catalog-service.js` is untouched.
 - `Common.SideEffects` shape of `#CategoryChanged` (ADR-0024 decision 3) for `#SubcategoryChanged` and `#AttributeChanged`.
 - `@readonly` code-list projections and `@Common.Text: name #TextOnly` on the key (ADR-0011) for `DetailAttributes`; the `Subcategories` CSV and mock-data shapes.
-- Test helpers in `test/catalog-service.test.js`: `active()`, `activeKey()`, `draftKey()`, `draftEdit()`, `readDraft()`, `messageCodes()`, `as()`, per-`it` `afterEach` cleanup; `annotationsOf()` in `test/metadata.test.js`.
+- Test helpers in `test/catalog-service.test.js`: `active()`, `activeKey()`, `draftKey()`, `as()` at module scope; `draftEdit()`, `readDraft()` (with a root-only `$select`), `messageCodes()` are block-scoped inside `describe('CatalogService.Products drafts')` (lines 341-354 at `b466249`), so step 4 hoists them to module scope with a `$select` parameter instead of copying them; per-`it` `afterEach` cleanup; `annotationsOf()` in `test/metadata.test.js`.
 - OPA5: `pages/CategoryDropdown.js` (`iSelectItem(name, 'attribute_code')`, `iSeeItems(names, 'attribute_code')`: the typeahead table id regex is property-based, so it matches a table-cell dropdown too, to be probed), `pages/ObjectPageForm.js`, `data/SubcategoryTexts.js` as the template of `data/DetailAttributeTexts.js`, `sap.fe.test.ObjectPage#onTable({ property: 'details' })` with `iExecuteCreate`, `iChangeRow`, `iSelectRows`, `iExecuteDelete`, `iCheckRows`, `iCheckColumns`, `iCheckCells` (research section 2).
 - `ui-verifier` console baseline: `docs/features/products-subcategory-cascade/VERIFICATION.md` at `5ab8b02` (pruned folder, git history).
 - Nothing in `srv/lib/` applies (`products-import.js` is the Excel import).

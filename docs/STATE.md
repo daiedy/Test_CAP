@@ -4,12 +4,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## Now
 
-- Date: 2026-10-11
-- Branch: main
-- Feature: none
-- Phase: none (products-details-section #9 spec-ready: PLAN, SCREENS and ADR-0026 approved 2026-10-11, implementation not started; main not pushed since 3054fa0)
-- Last commit: 18d56ab docs: STATE after the products-subcategory-cascade merge
-- Next: `/feature #9` (products-details-section, P2)
+- Date: 2026-10-12
+- Branch: feature/products-details-section
+- Feature: products-details-section (#9)
+- Phase: 1: plan review (PLAN, SCREENS and ADR-0026 approved at `/spec` on 2026-10-11; architect re-checks the baseline before phase 2)
+- Last commit: b466249 docs(spec): products-details-section plan, screens and ADR-0026
+- Next: phase 2 backend (steps 2-4) after the plan review and the shape check are green
 
 ## Open debt
 

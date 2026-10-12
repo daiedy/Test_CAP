@@ -8,8 +8,8 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Branch: feature/products-details-section
 - Feature: products-details-section (#9)
 - Phase: 4: verification round 2 (the typed form in the browser, en and ru, alice and viewer; PLAN step 10)
-- Last commit: 19d7f2d feat(app): products-details-section ui
-- Next: VERIFICATION.md round 2 with the verdict "ready for review", then phase 5 review
+- Last commit: 694ae14 docs: products-details-section verification round 2
+- Next: R2-D1..D3 fixed in DetailsForm (uncommitted), test:ui re-run, ui-verifier re-check and scenarios 12, 14, 16, 17, then phase 5 review
 
 ## Open debt
 

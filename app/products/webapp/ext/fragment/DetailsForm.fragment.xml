@@ -1,7 +1,7 @@
 <!--
     Custom section "Details" of the product Object Page (ADR-0027 decision 5), added through Fiori MCP after PricingStock.
-    One FormContainer whose form elements are built per detail row by the factory of DetailsForm.js; rows come in the
-    server's position order only (no client sorter). Edit state from the Fiori elements model ui>/isEditable; the
+    One FormContainer whose form elements DetailsForm.js builds per detail row (its createFormElement factory) and keeps
+    across changes of the details binding; rows come in the server's position order only (no client sorter). Edit state from the Fiori elements model ui>/isEditable; the
     side effect #SubcategoryChanged (TargetEntities details) re-reads this binding after the server reconciles the rows.
     The selections of a MULTI_LIST row are not expanded here: each multi combo box reads them with its own request
     (ADR-0027 amendment, ruling B7). subcategory_code is a string code, so the visible expressions use targetType any.
@@ -44,21 +44,27 @@
             visible="{= !!${path: 'subcategory_code', targetType: 'any'} }"
         >
             <form:layout>
-                <form:ColumnLayout columnsXL="4" columnsL="3" columnsM="2" labelCellsLarge="12" />
+                <!-- the layout of the Fiori elements form sections (sap.fe.macros.Form default), so the fields share their column grid -->
+                <form:ColumnLayout columnsXL="6" columnsL="4" columnsM="3" labelCellsLarge="12" />
             </form:layout>
             <form:formContainers>
+                <!-- the rows are bound in the non-rendered dependents; DetailsForm.js keeps one form element per row
+                     context, so a details change keeps the controls (and the focus) of the rows that stay -->
                 <form:FormContainer
                     id="detailsFormContainer"
-                    formElements="{
+                    dependents="{
                         path: 'details',
                         parameters: {
                             $select: 'ID,IsActiveEntity,position,textValue,numberValue,listValue_code',
                             $expand: 'attribute($select=code,name,unit,valueType_code,minValue,maxValue,scale;$expand=values($select=code,name,position;$orderby=position))',
                             $orderby: 'position'
-                        },
-                        factory: 'DetailsForm.createFormElement'
+                        }
                     }"
-                />
+                >
+                    <form:dependents>
+                        <core:Item key="{ID}" />
+                    </form:dependents>
+                </form:FormContainer>
             </form:formContainers>
         </form:Form>
     </VBox>

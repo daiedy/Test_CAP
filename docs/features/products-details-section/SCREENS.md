@@ -24,7 +24,8 @@ Language rule: `ru` values are given as Latin transliteration plus `U+XXXX` code
 
 | Topic | Source | Status |
 |---|---|---|
-| Form = `sap.ui.layout.form.Form` with `ColumnLayout`, never `SimpleForm`; 2 columns at M, 3 at L, 4 at XL | `mcp__ui5-mcp-server__get_guidelines` section 4 "Rules to create a Form" | verified this session |
+| Form = `sap.ui.layout.form.Form` with `ColumnLayout`, never `SimpleForm`; 2 columns at M, 3 at L, 4 at XL | `mcp__ui5-mcp-server__get_guidelines` section 4 "Rules to create a Form" | verified this session; the column counts are superseded by the FE grid in the next row |
+| Column counts XL 6, L 4, M 3, S 1 with `labelCellsLarge` 12, aligned with the FE form sections (`sap.fe.macros.Form` default `ColumnLayout`) | fix of VERIFICATION round 2 R2-D1 (the fragment as built) | not verified by MCP (fiori-mcp `search_docs` down, two queries) |
 | `ColumnLayout`: S is always 1 column; FormElements flow "newspaper-like" over the columns; labels go beside the fields when the column is large (`labelCellsLarge` default 4) | `get_api_reference sap.ui.layout.form.ColumnLayout` | verified this session |
 | The FormElement assigns its `Label` to its fields when no `labelFor` is set | `get_api_reference sap.ui.layout.form.FormElement#label` | verified this session |
 | Unit right of the input: `sap.m.Input#description` ("a text after the input field, e.g. units of measurement"); `fieldWidth` splits the space, default 50% | `get_api_reference sap.m.Input#description`, `#fieldWidth` | verified this session |
@@ -53,13 +54,13 @@ Language rule: `ru` values are given as Latin transliteration plus `U+XXXX` code
 
   | Setting | Value | Why |
   |---|---|---|
-  | `columnsXL` / `columnsL` / `columnsM` | 4 / 3 / 2 | `get_guidelines` form rule; the existing FE forms show 4 columns at the verifier's desktop window, so the Details fields line up with General Information |
+  | `columnsXL` / `columnsL` / `columnsM` | 6 / 4 / 3 | aligned with the FE form sections: the same grid as the `sap.fe.macros.Form` default (fix of VERIFICATION round 2 R2-D1), so the three fields sit in the first three columns of General Information; the `get_guidelines` form rule 4 / 3 / 2 would put them off the FE grid |
   | S (phone) | 1 column | fixed by `ColumnLayout` |
   | `labelCellsLarge` | 12 | label above the value in every column width, like the FE forms (the default 4 puts the label beside the field in wide columns) |
   | `emptyCellsLarge` | 0 (default) | |
   | Form `editable` | bound to the FE edit state | the Form renders the display/edit label styles (colons) itself |
 
-  With three fields per subcategory the desktop shows one row: the three fields in the first three of four columns (as Administrative Data shows its four fields), at L one row of three, at M two fields in the first column and one in the second (newspaper order), on a phone one field under the other.
+  With three fields per subcategory every width from M up shows one row, in the same columns as General Information: at XL the first three of six columns, at L (the verifier's desktop window) the first three of four (as Administrative Data shows its four fields), at M the three of three; on a phone (S, 1 column) one field under the other.
 - Field order: fixed per subcategory (U2), the `position` of the assignment (PLAN D14), seeded in the revision 1 assignment order (PLAN D17) (LAPTOPS: Screen Size, Memory (RAM), Storage; MICE: Connectivity, Sensor Resolution, Battery Life; AUDIO: Connectivity, Battery Life, Colour; SEATING: Material, Maximum Load, Colour; DESK_ORGANIZATION: Material, Dimensions, Colour; APPLIANCES: Power, Capacity, Colour; DRINKWARE: Capacity, Material, Colour; FITNESS: Material, Thickness, Colour; the others as in the seed).
 - Labels: the localized attribute name (`DetailAttributes.name`, `ru` from the revision 1 texts kept by PLAN D17), never the code. The Form adds the colon. No required marker: every value is optional (U4).
 
@@ -81,7 +82,7 @@ Language rule: `ru` values are given as Latin transliteration plus `U+XXXX` code
 
 ### Layouts of the seeded products
 
-Desktop width (4 columns, three used). "(empty)" is the empty indicator U+2013 EN DASH in display mode and an empty input in edit mode; `[ ... ]` is an input, `[ ... v]` a combo box, `[(a x) (b x) v]` a multi combo box with tokens.
+Desktop width (L, 4 columns, three used; at XL 6 columns, three used). "(empty)" is the empty indicator U+2013 EN DASH in display mode and an empty input in edit mode; `[ ... ]` is an input, `[ ... v]` a combo box, `[(a x) (b x) v]` a multi combo box with tokens.
 
 Laptop Pro 15 (Laptops), display:
 ```
@@ -402,7 +403,7 @@ Checklist of `ui5-best-practices-accessibility` applied to the custom section; w
 - Empty value: the empty indicator renders a dash for the eye and a hidden framework text for screen readers (expected "Empty"; verifier quotes it), so an empty field is never announced as silence.
 - Heading levels (topic 3): the section title is an `H2` rendered by FE, the same level as the other sections (measured in revision 1). The fragment adds **no `Title`**, no FormContainer title and no toolbar title, so the section has exactly one heading and no level is skipped. The counter is plain text, not a heading.
 - Focus and keyboard (topic 4):
-  - Edit mode Tab order = visual order = DOM order: ... Stock Quantity (last field of Pricing & Stock), then the Details fields in their order (Laptop Pro 15: Screen Size, Memory (RAM), Storage), then the next tab stop after the section (Administrative Data has none in edit mode), then the footer. The unit text, the counter and the hint texts are not tab stops. At M width the newspaper order (column 1 top to bottom, then column 2) is still the DOM order.
+  - Edit mode Tab order = visual order = DOM order: ... Stock Quantity (last field of Pricing & Stock), then the Details fields in their order (Laptop Pro 15: Screen Size, Memory (RAM), Storage), then the next tab stop after the section (Administrative Data has none in edit mode), then the footer. The unit text, the counter and the hint texts are not tab stops. At every width the newspaper order (column by column) is the DOM order; with three fields each column holds one field from M (3 columns) up.
   - Display mode: no tab stops in the section. F6 / Shift+F6 moves between sections (each `ObjectPageSection` is an F6 group); no `sap-ui-fastnavgroup` to add.
   - TEXT, INTEGER, DECIMAL: type, Enter or Tab commits; Escape reverts the uncommitted text.
   - LIST (`sap.m.ComboBox`): typing filters the list and completes the first match in the field; F4 or Alt+Down opens and closes the list; Arrow Up/Down move through items; Enter chooses; Escape closes the list or reverts; Tab commits the completed match and leaves; the clear icon is reachable by mouse, Backspace empties the field from the keyboard.
@@ -437,7 +438,7 @@ Users `alice` (CatalogEditor) and `viewer` (CatalogViewer) from `package.json`; 
 14. New product, `alice`, `en`: List Report, Create. Details shows "Select a subcategory to fill in the details.". Fill name, price, currency, stock, Category Furniture, Subcategory Seating: Material, Maximum Load, Colour appear empty, "Filled 0 of 3"; Maximum Load 100: "Filled 1 of 3". Save: display mode with "Maximum Load: 100 kg". Delete the product from its header; the List Report shows 15 rows.
 15. Viewer, `viewer`, `en`: Laptop Pro 15: the display layout of scenario 1 with the counter, no input anywhere in the section, no Edit in the header. `ru` once for the title and the counter.
 16. Keyboard and screen reader, `alice`, `en`: Wireless Mouse, Edit, mouse untouched: Tab from Stock Quantity into Connectivity, Tab to Sensor Resolution, Tab to Battery Life, Tab out of the section (record the next stop). In Connectivity: F4 opens, Arrow Down, Space toggles, Escape closes; Arrow Left reaches a token. Office Chair Colour: Alt+Down opens, Enter chooses. F6 moves from General Information to Pricing & Stock to Details. DOM reads: the label of each field points to its control; `aria-describedby` of an input with a unit contains the unit; the multi combo box exposes the token count text (quote `en` and `ru`); the Form has the accessible name "Details"; the section has one heading, `H2`, and the counter is not a heading.
-17. Responsive, `alice`, `en`: Laptop Pro 15 in display and edit mode at the desktop window (three fields in one row, aligned with General Information) and at a phone width (device emulation, about 375 px): one column, label above each value, the unit still right of the input and not cut. Record the M width (two columns) if the emulation offers it.
+17. Responsive, `alice`, `en`: Laptop Pro 15 in display and edit mode at the desktop window (three fields in one row, aligned with General Information) and at a phone width (device emulation, about 375 px): one column, label above each value, the unit still right of the input and not cut. Record the M width (three columns, the three fields in one row, aligned with General Information) if the emulation offers it.
 18. Console: compare the browser console of scenarios 1-17 with the console section of revision 1 (`docs/features/products-details-section/VERIFICATION.md` at `cc23ef0`, which already lists the baseline of `products-subcategory-cascade` at `5ab8b02`). The revision 1 table noise (`PropertyInfo validation is disabled` for `fe::table::details::LineItem`, `Unknown qualified name Edm.String` for `SubcategoryAttributes`) should be gone; no new error; record the count of the DevTools issue "Incorrect use of <label for=FORM_ELEMENT>" (labels pointing to display texts may raise it) against the baseline count of 1; name the known noise, do not forbid substrings.
 
 ## UX risks

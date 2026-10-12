@@ -62,6 +62,10 @@ sap.ui.define(
         const refreshedDrafts = new WeakSet();
         /** Client validation message of each list field with a text that matches no item (ruling B6). */
         const listMessages = new Map();
+        /** Fragment roots whose labels already follow the edit state. */
+        const editModeWatched = new WeakSet();
+        /** Serial of the form element ids: an id is never reused for another row. */
+        let rowSerial = 0;
 
         /**
          * Visibility of the edit control of a field.
@@ -304,14 +308,75 @@ sap.ui.define(
         }
 
         /**
-         * The list binding of the form elements.
+         * The list binding of the rows (in the container's non-rendered `dependents`).
          *
          * @param {sap.m.VBox} root the fragment root
          * @returns {sap.ui.model.odata.v4.ODataListBinding|undefined} the `details` binding
          */
         function getRowsBinding(root) {
             const container = getContainer(root);
-            return container ? container.getBinding("formElements") : undefined;
+            return container ? container.getBinding("dependents") : undefined;
+        }
+
+        /**
+         * Whether the Object Page is in edit mode.
+         *
+         * @param {sap.m.VBox} root the fragment root
+         * @returns {boolean} the value of `ui>/isEditable`
+         */
+        function isEditableRoot(root) {
+            const ui = root.getModel("ui");
+            return Boolean(ui) && ui.getProperty("/isEditable") === true;
+        }
+
+        /**
+         * Points the label of a row at its edit control in edit mode only (PLAN criterion 70): in display mode the
+         * edit control is not rendered, so the label falls back to the form element's first field, the display
+         * text, which writes no `for` attribute (`sap.m.Text` has no labelable HTML element).
+         *
+         * @param {sap.ui.layout.form.FormElement} formElement the form element of a row
+         * @param {boolean} editable whether the page is in edit mode
+         */
+        function applyLabelTarget(formElement, editable) {
+            const label = formElement.getLabel();
+            const edit = formElement.getFields().find(function (field) {
+                return !field.isA("sap.m.Text");
+            });
+            if (label && typeof label.setLabelFor === "function") {
+                label.setLabelFor(editable && edit ? edit : null);
+            }
+        }
+
+        /**
+         * Applies the label targets of all rows for the current edit state.
+         *
+         * @param {sap.m.VBox} root the fragment root
+         */
+        function applyLabelTargets(root) {
+            const container = getContainer(root);
+            if (!container) {
+                return;
+            }
+            const editable = isEditableRoot(root);
+            container.getFormElements().forEach(function (formElement) {
+                applyLabelTarget(formElement, editable);
+            });
+        }
+
+        /**
+         * Lets the labels follow the edit state of the page (`ui>/isEditable`), once per fragment root.
+         *
+         * @param {sap.m.VBox} root the fragment root
+         */
+        function watchEditMode(root) {
+            const ui = root.getModel("ui");
+            if (!ui || editModeWatched.has(root)) {
+                return;
+            }
+            editModeWatched.add(root);
+            ui.bindProperty("/isEditable").attachChange(function () {
+                applyLabelTargets(root);
+            });
         }
 
         /**
@@ -522,8 +587,8 @@ sap.ui.define(
         }
 
         /**
-         * Removes the messages of list fields that are gone: every change of the `details` binding destroys the
-         * form elements and builds new ones with the same ids, so a message must not outlive its control object.
+         * Removes the messages of list fields that are gone: a row that leaves the `details` binding (subcategory
+         * change, Discard, Save) loses its form element, and a message must not outlive its control object.
          */
         function removeOrphanedListMessages() {
             listMessages.forEach(function (entry, comboBox) {
@@ -880,32 +945,85 @@ sap.ui.define(
         }
 
         /**
-         * Factory of the `formElements` aggregation (browser proof B1): one form element per detail row, label =
-         * the localized attribute name, fields by `attribute/valueType_code`. The display control comes first, so
-         * in display mode the hidden edit control's empty cell lies below the value, not between label and value
-         * (PLAN D-5); the label therefore names the edit control explicitly. The factory creates that control
-         * itself, so its id is exact (no template clone suffix).
+         * Factory of one form element per detail row (browser proof B1): label = the localized attribute name,
+         * fields by `attribute/valueType_code`. The display control comes first, so in display mode the hidden
+         * edit control's empty cell lies below the value, not between label and value (PLAN D-5); the label
+         * names the edit control only in edit mode (`applyLabelTarget`).
          *
-         * @param {string} id id proposed by the aggregation binding
+         * @param {string} id id of the form element
          * @param {sap.ui.model.odata.v4.Context} context the row context
          * @returns {sap.ui.layout.form.FormElement} the form element of the row
          */
         function createFormElement(id, context) {
             const row = context.getObject() || {};
             const fields = createFields(id, row.attribute || {});
-            const label = { text: { path: "attribute/name" } };
-            if (fields.edit) {
-                label.labelFor = fields.edit;
-            }
             return new FormElement(id, {
-                label: new Label(id + "-label", label),
+                label: new Label(id + "-label", { text: { path: "attribute/name" } }),
                 fields: fields.edit ? [fields.display, fields.edit] : [fields.display]
             });
         }
 
         /**
-         * Attaches the module to the `details` binding once: after each change the form elements are new, so
-         * the messages of destroyed list fields go and the counter is recomputed.
+         * Aligns the form elements with the row contexts of the `details` binding (PLAN R2-D2): the element of a
+         * row that stays is kept with its controls, its focus, its own `selections` binding and its list message;
+         * a new row gets a new element, a row that is gone loses its element, and the order follows the server's
+         * `position` order. A list binding with a factory would destroy and rebuild every element on each change
+         * of the binding (`ManagedObject#updateAggregation` without extended change detection).
+         *
+         * @param {sap.m.VBox} root the fragment root
+         */
+        function syncFormElements(root) {
+            const container = getContainer(root);
+            const binding = getRowsBinding(root);
+            if (!container || !binding) {
+                return;
+            }
+            const contexts = binding.getCurrentContexts().filter(Boolean);
+            container.getFormElements().forEach(function (formElement) {
+                if (!contexts.includes(formElement.getBindingContext())) {
+                    container.removeFormElement(formElement);
+                    formElement.destroy();
+                }
+            });
+            const editable = isEditableRoot(root);
+            contexts.forEach(function (context, index) {
+                let formElement = container.getFormElements().find(function (element) {
+                    return element.getBindingContext() === context;
+                });
+                if (!formElement) {
+                    rowSerial += 1;
+                    formElement = createFormElement(container.getId() + "-row" + rowSerial, context);
+                    formElement.setBindingContext(context);
+                    applyLabelTarget(formElement, editable);
+                    container.insertFormElement(formElement, index);
+                } else if (container.indexOfFormElement(formElement) !== index) {
+                    container.removeFormElement(formElement);
+                    container.insertFormElement(formElement, index);
+                }
+            });
+        }
+
+        /**
+         * Destroys every form element when the `details` collection is refreshed (its `refresh` event: the
+         * `#SubcategoryChanged` side effect, the Edit re-read of ruling B2, a new product context). The event
+         * fires inside the binding's reset, before the model refreshes the dependent bindings of the old rows;
+         * destroyed bindings are skipped there, so a row the server has just deleted sends no `GET` of its
+         * `selections` or values (a 404 would open an error dialog). The following `change` builds the rows again.
+         *
+         * @param {sap.m.VBox} root the fragment root
+         */
+        function clearFormElements(root) {
+            const container = getContainer(root);
+            if (container) {
+                container.destroyFormElements();
+            }
+            removeOrphanedListMessages();
+        }
+
+        /**
+         * Attaches the module to the `details` binding once: after a refresh the rows are built again; after
+         * each change the form elements follow the rows, the messages of destroyed list fields go and the
+         * counter is recomputed.
          *
          * @param {sap.m.VBox} root the fragment root
          */
@@ -913,7 +1031,11 @@ sap.ui.define(
             const binding = getRowsBinding(root);
             if (binding && !wiredBindings.has(binding)) {
                 wiredBindings.add(binding);
+                binding.attachEvent("refresh", function () {
+                    clearFormElements(root);
+                });
                 binding.attachChange(function () {
+                    syncFormElements(root);
                     removeOrphanedListMessages();
                     updateCounter(root);
                 });
@@ -921,14 +1043,17 @@ sap.ui.define(
         }
 
         /**
-         * `modelContextChange` of the fragment root: wires the `details` binding, re-reads the rows of a draft
-         * just entered by Edit (ruling B2) and updates the counter.
+         * `modelContextChange` of the fragment root: wires the `details` binding and the edit state, aligns the
+         * rows, re-reads the rows of a draft just entered by Edit (ruling B2) and updates the counter.
          *
          * @param {sap.ui.base.Event} event the event of the root VBox
          */
         function onModelContextChange(event) {
             const root = event.getSource();
             wireRowsBinding(root);
+            watchEditMode(root);
+            syncFormElements(root);
+            removeOrphanedListMessages();
             refreshRowsOfNewDraft(root);
             updateCounter(root);
         }

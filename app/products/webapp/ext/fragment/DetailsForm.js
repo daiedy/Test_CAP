@@ -445,8 +445,10 @@ sap.ui.define(
 
         /**
          * Re-reads the rows once per draft context after Edit (ruling B2): the `draftEdit` response of a product
-         * without rows carries `details: []`, the server's `after('EDIT')` fill comes later. A dependent binding
-         * cannot refresh itself, so the request goes through the product context.
+         * without rows carries `details: []`, the server's `after('EDIT')` fill comes later. Since the rows binding
+         * has its own request (`$$ownRequest`), it reads the draft rows itself when Fiori elements sets the draft
+         * context, which is after the `draftEdit` response; this side effect of `details` on the product context
+         * is kept as a safety net until a browser proof of a product created through the API shows it redundant.
          *
          * @param {sap.m.VBox} root the fragment root
          */
@@ -686,7 +688,7 @@ sap.ui.define(
 
         /**
          * Aligns a multi combo box, its display text and the counter with the row's selections (ruling B7).
-         * Runs on every change of the selections binding and of the items binding.
+         * Runs on every change of the selections binding; the keys are set only when they differ.
          *
          * @param {sap.m.MultiComboBox} multiComboBox the edit control of a MULTI_LIST row
          */
@@ -695,7 +697,12 @@ sap.ui.define(
                 return;
             }
             const codes = selectedCodes(multiComboBox);
-            multiComboBox.setSelectedKeys(codes);
+            // setSelectedKeys removes and recreates every token; only when the keys differ, so a token removed by
+            // the keyboard (Backspace twice) does not take the focus with it (REVIEW R2-D6)
+            const delta = diffSelections(multiComboBox.getSelectedKeys(), codes);
+            if (delta.added.length > 0 || delta.removed.length > 0) {
+                multiComboBox.setSelectedKeys(codes);
+            }
             const display = displayOf(multiComboBox);
             const row = multiComboBox.getBindingContext();
             if (display) {
@@ -774,19 +781,19 @@ sap.ui.define(
         }
 
         /**
-         * Item template of the attribute's allowed values, in the list order of SCREENS "Texts". In edit mode the
-         * binding can send its own request (`.../attribute/values`), so it carries the same server order as the
-         * section's `$expand` (`$orderby=position`); no client sorter (PLAN step 8).
+         * Items of a list field: the attribute's allowed values as the row's `$expand` delivers them, already in
+         * the server's `position` order (SCREENS "Texts"; no client sorter, PLAN step 8). Not a binding: the values
+         * are a read-only code list, and a binding below the row would be reset by every side-effect request of
+         * the product (`refreshDependentListBindingsWithoutCache`), which recreates the selected tokens and drops
+         * the focus of a token (REVIEW R2-D6). Set through setters, so a name is never parsed as binding syntax.
          *
-         * @returns {object} aggregation binding info for `items`
+         * @param {object[]} [values] `code` and `name` of the allowed values
+         * @returns {sap.ui.core.Item[]} one item per value
          */
-        function valuesBindingInfo() {
-            return {
-                path: "attribute/values",
-                parameters: { $orderby: "position" },
-                template: new Item({ key: { path: "code" }, text: { path: "name" } }),
-                templateShareable: false
-            };
+        function createValueItems(values) {
+            return (Array.isArray(values) ? values : []).map(function (value) {
+                return new Item().setKey(value.code).setText(value.name);
+            });
         }
 
         /**
@@ -851,12 +858,13 @@ sap.ui.define(
          * Edit control of a LIST row (ruling B6): the key is bound one-way, `change` writes it.
          *
          * @param {string} id id of the form element
+         * @param {object[]} values allowed values of the attribute
          * @returns {sap.m.ComboBox} the combo box
          */
-        function createListBox(id) {
+        function createListBox(id, values) {
             return new ComboBox(id + "-edit", {
                 selectedKey: { path: LIST_VALUE, mode: "OneWay" },
-                items: valuesBindingInfo(),
+                items: createValueItems(values),
                 showClearIcon: true,
                 visible: editModeBinding(),
                 change: onListChange,
@@ -871,9 +879,10 @@ sap.ui.define(
          * (PLAN D-6), so the flash of an invalid character shows the framework text.
          *
          * @param {string} id id of the form element
+         * @param {object[]} values allowed values of the attribute
          * @returns {sap.m.MultiComboBox} the multi combo box
          */
-        function createMultiListBox(id) {
+        function createMultiListBox(id, values) {
             // the binding events below fire after construction, when holder.control is set
             const holder = {};
             const sync = function () {
@@ -882,7 +891,7 @@ sap.ui.define(
                 }
             };
             holder.control = new MultiComboBox(id + "-edit", {
-                items: Object.assign(valuesBindingInfo(), { events: { change: sync } }),
+                items: createValueItems(values),
                 [SELECTIONS]: {
                     path: "selections",
                     parameters: { $$ownRequest: true, $select: "ID,IsActiveEntity," + VALUE_CODE },
@@ -934,18 +943,18 @@ sap.ui.define(
                 }
                 case "LIST":
                     return {
-                        edit: createListBox(id),
+                        edit: createListBox(id, attribute.values),
                         display: createDisplay(id, { path: LIST_VALUE, formatter: formatListValue })
                     };
                 case "MULTI_LIST":
-                    return { edit: createMultiListBox(id), display: createDisplay(id) };
+                    return { edit: createMultiListBox(id, attribute.values), display: createDisplay(id) };
                 default:
                     return { edit: undefined, display: createDisplay(id, { path: "textValue" }) };
             }
         }
 
         /**
-         * Factory of one form element per detail row (browser proof B1): label = the localized attribute name,
+         * Builds the form element of one row (called by `syncFormElements`): label = the localized attribute name,
          * fields by `attribute/valueType_code`. The display control comes first, so in display mode the hidden
          * edit control's empty cell lies below the value, not between label and value (PLAN D-5); the label
          * names the edit control only in edit mode (`applyLabelTarget`).
@@ -1059,7 +1068,6 @@ sap.ui.define(
         }
 
         return {
-            createFormElement: createFormElement,
             onModelContextChange: onModelContextChange,
             isFilled: isFilled,
             countFilled: countFilled,

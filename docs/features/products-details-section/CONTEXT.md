@@ -62,7 +62,7 @@ Result of `mcp__cds-mcp__search_model` (returns the pre-feature model in this wo
 | `app/products/webapp/i18n/i18n*.properties` | app texts | section title, counter, combo box error text (`en`, `ru`) |
 | `metadata.xml`, snapshot | 1287 lines | 1591 measured on the scratch (phase 2); phase 3 unchanged |
 | `test/catalog-service.test.js` (96, 21 in the details `describe`), `test/metadata.test.js` (14) | | details `describe` 34 (13 kept, 5 rewritten, 16 new including the top-level `DELETE` test of step 6b, 3 removed); two contract tests rewritten |
-| OPA5 (56 `opaTest` + 2 QUnit) | `ProductDetailsSectionJourney.js` (5), `RussianLocaleJourney` details test | journey deleted; new `ProductDetailsFormJourney.js` (7 with teardown), `pages/ProductDetailsForm.js`; the `ru` test rewritten |
+| OPA5 (56 `opaTest` + 2 QUnit) | `ProductDetailsSectionJourney.js` (5), `RussianLocaleJourney` details test | journey deleted; new `ProductDetailsFormJourney.js` (7 with teardown), `pages/ProductDetailsForm.js`; the `ru` test rewritten; new unit test `test/unit/DetailsForm.qunit.js` (19 QUnit, review finding); 79 = 58 `opaTest` + 21 QUnit |
 | `localService/mockdata` | revision 1 JSON | JSON for the new and changed entities (not a gate) |
 
 Not affected: `importProducts` (D13), the List Report, `Permissions`, authentication (new sets under `@requires: 'authenticated-user'`; no external caller changes).

@@ -53,7 +53,8 @@
                      $$ownRequest: a dependent list binding without its own cache is refreshed by the OData model after
                      every side-effect request of the product (ODataContextBinding#requestSideEffects ends with
                      refreshDependentListBindingsWithoutCache), also after each DraftMessages read; with its own cache
-                     only a real re-read of details (#SubcategoryChanged, Edit) refreshes the rows -->
+                     the rows are refreshed only by a side effect that names details (#SubcategoryChanged, the module's
+                     Edit re-read of ruling B2) or read again for a new product context (Edit, Save, Discard) -->
                 <form:FormContainer
                     id="detailsFormContainer"
                     dependents="{

@@ -1,6 +1,6 @@
 ---
 name: sap-fe-test-api-verification
-description: Where to verify sap.fe.test OPA API signatures when fiori-mcp is down; measured ids (DataPoint column, custom filter field, action parameter dialog with a file field); absence checks; probing and mutation runs; runner test counting; vacuous iCheckField(field, ''), Object Page form ids, display-mode mdc Field without DOM, pop-in behind Show Details in the 60% OPA frame; dynamic FieldControl editMode/required, Create and discard of a new draft, emptying a dropdown; Object Page table section of a composition (column keys, F4 on a new row's cell, delete confirmation)
+description: Where to verify sap.fe.test OPA API signatures when fiori-mcp is down; measured ids (DataPoint column, custom filter field, action parameter dialog with a file field); absence checks; probing and mutation runs; runner test counting; vacuous iCheckField(field, ''), Object Page form ids, display-mode mdc Field without DOM, pop-in behind Show Details in the 60% OPA frame; dynamic FieldControl editMode/required, Create and discard of a new draft, emptying a dropdown; Object Page table section of a composition (column keys, F4 on a new row's cell, delete confirmation); QUnit unit pages (no assert.true/false in the bundled QUnit, unit-only runner command, Decimal type checks)
 metadata:
   type: reference
 ---
@@ -75,3 +75,8 @@ Related: [[test-cap-ui-test-run-baseline]]
 - `--report-dir` + `timeout`/`> file 2>&1; echo $?` in one Bash command is refused by the worktree git guard; run the runner plain with `run_in_background`.
 
 - A new Save-time constraint plus new seed rows can break OLDER journeys: `EditCategoryOnObjectPageJourney` and `SubcategoryDependsOnCategoryJourney` saved Laptop Pro 15 with another subcategory, D1 rejected it, the leftover draft failed every later 15-row/no-draft check (22 cascade failures). Before the gate, `grep iExecuteSave` across journeys and check each saved product against the new seed data; fixed by switching to a product without detail rows (Wireless Earbuds).
+
+QUnit unit tests (measured 2026-10-12, UI5 1.153 served by `cds serve`, Test Starter `qunit: { version: 2 }`):
+- The bundled QUnit 2 has no `assert.true` / `assert.false` ("assert.false is not a function", the test dies at its first call); use `assert.strictEqual(value, true, msg)` for boolean returns.
+- Fast check of a unit module without the OPA part: `npx ui5-test-runner --url http://localhost:4004/products/webapp/test/testsuite.qunit.html --page-filter unitTests --parallel 1 --report-dir /tmp/<dir>` (about 7 s, prints `<passed>/<total>` of the unit page).
+- A `sap.ui.model.odata.type.Decimal` built from a module's settings can be exercised directly (`formatValue(v, 'string')`, `validateValue`, `parseValue`) to prove scale, bounds and no padding without a control; the Test Starter `ui5.language: 'EN'` keeps the grouping deterministic ("1,600").

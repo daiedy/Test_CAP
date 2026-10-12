@@ -8,8 +8,8 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Branch: feature/products-details-section
 - Feature: products-details-section (#9)
 - Phase: 3: UI change after the user's review (counter as sap.m.ObjectStatus: green with a check when complete, orange with an alert icon when incomplete; user decision 2026-10-12)
-- Last commit: 8cd98c7 docs: products-details-section final screenshots
-- Next: SCREENS and OPA for the counter (fragment done: ObjectStatus + counterStatus), QUnit for counterStatus, test:ui green, review and fresh screenshots, docs; then phase 7 on the user's word
+- Last commit: c7e67a2 docs: products-details-section counter badge review and screenshots
+- Next: docs-keeper records the D20 amendment and SUMMARY; then phase 7 (close #9, prune, metrics) on the user's word
 
 ## Open debt
 

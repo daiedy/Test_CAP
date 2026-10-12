@@ -32,7 +32,7 @@ Approved at the plan gate on 2026-10-12 (revision 2, user: "approved"), every de
 - D17: seed of `research/typed-form-facts.md` section 8 with the SCREENS ranges and lists (42 list values, 45 rows, 7 selections), numbers and bounds `Decimal(15, 3)`.
 - D18: ADR-0027 accepted; it supersedes ADR-0026 decisions 3, 4, 6 and 7; ADR-0026 gets an amendment section in phase 6.
 - D19: format, decimals and bounds checked on the client by the per-row UI5 Decimal type; the server keeps range, whole-number, column-type and list-membership checks with texts without placeholders.
-- D20: the counter on its own line under the section title, neutral text.
+- D20: the counter on its own line under the section title, neutral text. Amended by the user 2026-10-12: inverted sap.m.ObjectStatus badge, Success + check when complete, Warning + alert otherwise (options page v2, variant A).
 - D21: UI5 default number grouping.
 - D22: Latin designations stay Latin in `ru` list names.
 - D23: no undo hint in the warning.

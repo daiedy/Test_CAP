@@ -71,6 +71,11 @@ inside a `&&` chain). Mutate the annotation file, not the test. Measured: a hand
 `Common.ValueList #Qualifier` on a CodeList association does NOT replace the compiler-generated
 unqualified one (2 ValueLists on the FK), so "exactly one `Term=\"Common.ValueList\"`" is a real guard.
 
+Phase 3 repeat (products-details-section step 6, 2026-10-12): the same copy plus a `run.mjs` with
+`-t '<it A>|<it B>'` and the JSON reporter gave 9/9 single-annotation mutations red in ~1 min. The
+worktree guard also refused a plain `for p in ...; do ... $(grep -c ...) ...; done` (no git in
+it): put substring counts in a node script too.
+
 **How to apply:** whenever a plan asks for a contract test that "must fail on main", or a new `it`
 could pass vacuously. Count the asserted substring in the pre-feature EDMX; if the count is not 0,
 say so in the report instead of claiming the test proves the change. See

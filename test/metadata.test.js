@@ -183,6 +183,8 @@ describe('OData contract of CatalogService', () => {
   // subcategories of the product's category through the In parameter category_code; the
   // hand-written ValueList replaces the compiler-generated one, a second one would list all 15.
   // Decision 3: a category change re-reads the subcategory the draft PATCH handler may have emptied.
+  // products-details-section, ADR-0026: it also re-reads the detail rows (TargetEntities details),
+  // which cache product/subcategory_code for the In parameter of their attribute value help.
   it('narrows the subcategory value help by category and refreshes it on a category change', async () => {
     const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
       headers: { 'Accept-Language': 'en' },
@@ -219,7 +221,10 @@ describe('OData contract of CatalogService', () => {
         '<PropertyPath>category_code</PropertyPath></Collection></PropertyValue>' +
         '<PropertyValue Property="TargetProperties"><Collection>' +
         '<String>subcategory_code</String><String>subcategory/name</String>' +
-        '</Collection></PropertyValue></Record></Annotation>'
+        '</Collection></PropertyValue>' +
+        '<PropertyValue Property="TargetEntities"><Collection>' +
+        '<NavigationPropertyPath>details</NavigationPropertyPath></Collection></PropertyValue>' +
+        '</Record></Annotation>'
     );
   });
 
@@ -302,5 +307,84 @@ describe('OData contract of CatalogService', () => {
     for (const set of ['ProductDetails', 'DetailAttributes', 'SubcategoryAttributes']) {
       expect(compact).toContain(`<EntitySet Name="${set}" EntityType="CatalogService.${set}">`);
     }
+  });
+
+  // products-details-section, ADR-0026 decision 7: the rows are the table section "Details" of the
+  // Object Page (app/products/annotations/ProductDetails.cds). Decision 4: the attribute dropdown of a
+  // row lists only the attributes assigned to the product's subcategory through the navigation-path
+  // In parameter product/subcategory_code; the hand-written ValueList replaces the compiler-generated
+  // one of the DetailAttributes code list, a second one would list all 20. A subcategory or category
+  // change re-reads the rows (they cache product/subcategory_code), an attribute choice its name and unit.
+  it("shows the Details table section with its attribute value help narrowed by the product's subcategory", async () => {
+    const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
+      headers: { 'Accept-Language': 'en' },
+    });
+    expect(status).toBe(200);
+    // The EDMX is pretty-printed, so compare without the whitespace between the tags.
+    const compact = data.replace(/>\s+</g, '><');
+    // Asserted on the entity types, where the annotations are written; the compiler also copies the
+    // side effects to the entity sets.
+    const products = annotationsOf(compact, 'CatalogService.Products');
+    expect(products).toContain(
+      '<Record Type="UI.ReferenceFacet"><PropertyValue Property="ID" String="Details"/>' +
+        '<PropertyValue Property="Label" String="Details"/>' +
+        '<PropertyValue Property="Target" AnnotationPath="details/@UI.LineItem"/></Record>'
+    );
+
+    const attribute = annotationsOf(compact, 'CatalogService.ProductDetails/attribute_code');
+    // Term="Common.ValueList" with the closing quote: a qualified one counts, the FixedValues term does not.
+    expect(attribute.match(/Term="Common\.ValueList"/g) ?? []).toHaveLength(1);
+    const valueList = attribute.match(/<Annotation Term="Common.ValueList">.*?<\/Annotation>/)[0];
+    expect(valueList).toContain(
+      '<PropertyValue Property="CollectionPath" String="SubcategoryAttributes"/>'
+    );
+    expect(valueList).toContain(
+      '<Record Type="Common.ValueListParameterInOut">' +
+        '<PropertyValue Property="LocalDataProperty" PropertyPath="attribute_code"/>' +
+        '<PropertyValue Property="ValueListProperty" String="attribute_code"/></Record>'
+    );
+    expect(valueList).toContain(
+      '<Record Type="Common.ValueListParameterIn">' +
+        '<PropertyValue Property="LocalDataProperty" PropertyPath="product/subcategory_code"/>' +
+        '<PropertyValue Property="ValueListProperty" String="subcategory_code"/></Record>'
+    );
+
+    expect(products).toContain(
+      '<Annotation Term="Common.SideEffects" Qualifier="SubcategoryChanged">' +
+        '<Record Type="Common.SideEffectsType">' +
+        '<PropertyValue Property="SourceProperties"><Collection>' +
+        '<PropertyPath>subcategory_code</PropertyPath></Collection></PropertyValue>' +
+        '<PropertyValue Property="TargetEntities"><Collection>' +
+        '<NavigationPropertyPath>details</NavigationPropertyPath></Collection></PropertyValue>' +
+        '</Record></Annotation>'
+    );
+    const categoryChanged = products.match(
+      /<Annotation Term="Common.SideEffects" Qualifier="CategoryChanged">.*?<\/Annotation>/
+    )[0];
+    expect(categoryChanged).toContain(
+      '<PropertyValue Property="TargetEntities"><Collection>' +
+        '<NavigationPropertyPath>details</NavigationPropertyPath></Collection></PropertyValue>'
+    );
+
+    const details = annotationsOf(compact, 'CatalogService.ProductDetails');
+    expect(details).toContain(
+      '<Annotation Term="Common.SideEffects" Qualifier="AttributeChanged">' +
+        '<Record Type="Common.SideEffectsType">' +
+        '<PropertyValue Property="SourceProperties"><Collection>' +
+        '<PropertyPath>attribute_code</PropertyPath></Collection></PropertyValue>' +
+        '<PropertyValue Property="TargetProperties"><Collection>' +
+        '<String>attribute/name</String><String>attribute/unit</String>' +
+        '</Collection></PropertyValue></Record></Annotation>'
+    );
+    // The columns Attribute, Value, Unit with their headers from @title (no Label in the records);
+    // High keeps the attribute in the table on narrow screens.
+    expect(details).toContain(
+      '<Annotation Term="UI.LineItem"><Collection>' +
+        '<Record Type="UI.DataField"><PropertyValue Property="Value" Path="attribute_code"/>' +
+        '<Annotation Term="UI.Importance" EnumMember="UI.ImportanceType/High"/></Record>' +
+        '<Record Type="UI.DataField"><PropertyValue Property="Value" Path="value"/></Record>' +
+        '<Record Type="UI.DataField"><PropertyValue Property="Value" Path="attribute/unit"/></Record>' +
+        '</Collection></Annotation>'
+    );
   });
 });

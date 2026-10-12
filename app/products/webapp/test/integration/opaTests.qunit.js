@@ -14,6 +14,7 @@ sap.ui.define(
     './RatingRangeFilterJourney',
     './ImportProductsJourney',
     './SubcategoryDependsOnCategoryJourney',
+    './ProductDetailsSectionJourney',
     './DraftMarkerInListReportJourney',
     './RoleAwareActionsJourney',
   ],
@@ -27,6 +28,7 @@ sap.ui.define(
     RatingRangeFilter,
     ImportProducts,
     SubcategoryDependsOnCategory,
+    ProductDetailsSection,
     DraftMarkerInListReport,
     RoleAwareActions
   ) {
@@ -46,6 +48,10 @@ sap.ui.define(
     // DraftMarkerInListReportJourney, whose draft of the same product must start from seeded data.
     // Its create and emptying cases (products-subcategory-cascade) discard their drafts inside the
     // case and assert the 15 rows without a draft marker afterwards.
+    // ProductDetailsSectionJourney (products-details-section, PLAN step 7) saves a detail row on
+    // Wireless Mouse and deletes it again, ending with the two seeded rows and the 15 rows without a
+    // draft marker; it runs before DraftMarkerInListReportJourney for the same reason as the
+    // subcategory journey.
     // RoleAwareActionsJourney runs last (PLAN step 11): it only reads and selects, so it depends on
     // no other journey and changes nothing for them.
     runner.run([
@@ -57,6 +63,7 @@ sap.ui.define(
       RatingRangeFilter,
       ImportProducts,
       SubcategoryDependsOnCategory,
+      ProductDetailsSection,
       DraftMarkerInListReport,
       RoleAwareActions,
     ]);

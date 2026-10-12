@@ -328,6 +328,25 @@
                 <String>subcategory/name</String>
               </Collection>
             </PropertyValue>
+            <PropertyValue Property="TargetEntities">
+              <Collection>
+                <NavigationPropertyPath>details</NavigationPropertyPath>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+        <Annotation Term="Common.SideEffects" Qualifier="SubcategoryChanged">
+          <Record Type="Common.SideEffectsType">
+            <PropertyValue Property="SourceProperties">
+              <Collection>
+                <PropertyPath>subcategory_code</PropertyPath>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="TargetEntities">
+              <Collection>
+                <NavigationPropertyPath>details</NavigationPropertyPath>
+              </Collection>
+            </PropertyValue>
           </Record>
         </Annotation>
         <Annotation Term="Common.SideEffects" Qualifier="alwaysFetchMessages">
@@ -421,6 +440,11 @@
               <PropertyValue Property="ID" String="PricingStock"/>
               <PropertyValue Property="Label" String="Pricing &amp; Stock"/>
               <PropertyValue Property="Target" AnnotationPath="@UI.FieldGroup#PricingStock"/>
+            </Record>
+            <Record Type="UI.ReferenceFacet">
+              <PropertyValue Property="ID" String="Details"/>
+              <PropertyValue Property="Label" String="Details"/>
+              <PropertyValue Property="Target" AnnotationPath="details/@UI.LineItem"/>
             </Record>
             <Record Type="UI.ReferenceFacet">
               <PropertyValue Property="ID" String="AdminData"/>
@@ -521,6 +545,25 @@
               <Collection>
                 <String>subcategory_code</String>
                 <String>subcategory/name</String>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="TargetEntities">
+              <Collection>
+                <NavigationPropertyPath>details</NavigationPropertyPath>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+        <Annotation Term="Common.SideEffects" Qualifier="SubcategoryChanged">
+          <Record Type="Common.SideEffectsType">
+            <PropertyValue Property="SourceProperties">
+              <Collection>
+                <PropertyPath>subcategory_code</PropertyPath>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="TargetEntities">
+              <Collection>
+                <NavigationPropertyPath>details</NavigationPropertyPath>
               </Collection>
             </PropertyValue>
           </Record>
@@ -772,6 +815,41 @@
         <Annotation Term="Common.Label" String="File Name"/>
       </Annotations>
       <Annotations Target="CatalogService.ProductDetails">
+        <Annotation Term="UI.HeaderInfo">
+          <Record Type="UI.HeaderInfoType">
+            <PropertyValue Property="TypeName" String="Detail"/>
+            <PropertyValue Property="TypeNamePlural" String="Details"/>
+          </Record>
+        </Annotation>
+        <Annotation Term="UI.LineItem">
+          <Collection>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Value" Path="attribute_code"/>
+              <Annotation Term="UI.Importance" EnumMember="UI.ImportanceType/High"/>
+            </Record>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Value" Path="value"/>
+            </Record>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Value" Path="attribute/unit"/>
+            </Record>
+          </Collection>
+        </Annotation>
+        <Annotation Term="Common.SideEffects" Qualifier="AttributeChanged">
+          <Record Type="Common.SideEffectsType">
+            <PropertyValue Property="SourceProperties">
+              <Collection>
+                <PropertyPath>attribute_code</PropertyPath>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="TargetProperties">
+              <Collection>
+                <String>attribute/name</String>
+                <String>attribute/unit</String>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
         <Annotation Term="Common.SideEffects" Qualifier="alwaysFetchMessages">
           <Record Type="Common.SideEffectsType">
             <PropertyValue Property="SourceEntities">
@@ -789,6 +867,21 @@
         <Annotation Term="Common.Messages" Path="DraftMessages"/>
       </Annotations>
       <Annotations Target="CatalogService.EntityContainer/ProductDetails">
+        <Annotation Term="Common.SideEffects" Qualifier="AttributeChanged">
+          <Record Type="Common.SideEffectsType">
+            <PropertyValue Property="SourceProperties">
+              <Collection>
+                <PropertyPath>attribute_code</PropertyPath>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="TargetProperties">
+              <Collection>
+                <String>attribute/name</String>
+                <String>attribute/unit</String>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
         <Annotation Term="Common.DraftNode">
           <Record Type="Common.DraftNodeType">
             <PropertyValue Property="PreparationAction" String="CatalogService.draftPrepare"/>
@@ -822,25 +915,33 @@
         <Annotation Term="Common.Label" String="Attribute"/>
       </Annotations>
       <Annotations Target="CatalogService.ProductDetails/attribute_code">
-        <Annotation Term="Common.Label" String="Attribute"/>
-        <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
+        <Annotation Term="Common.Text" Path="attribute/name">
+          <Annotation Term="UI.TextArrangement" EnumMember="UI.TextArrangementType/TextOnly"/>
+        </Annotation>
+        <Annotation Term="Common.ValueListWithFixedValues" Bool="true"/>
         <Annotation Term="Common.ValueList">
           <Record Type="Common.ValueListType">
             <PropertyValue Property="Label" String="Attribute"/>
-            <PropertyValue Property="CollectionPath" String="DetailAttributes"/>
+            <PropertyValue Property="CollectionPath" String="SubcategoryAttributes"/>
             <PropertyValue Property="Parameters">
               <Collection>
                 <Record Type="Common.ValueListParameterInOut">
                   <PropertyValue Property="LocalDataProperty" PropertyPath="attribute_code"/>
-                  <PropertyValue Property="ValueListProperty" String="code"/>
+                  <PropertyValue Property="ValueListProperty" String="attribute_code"/>
+                </Record>
+                <Record Type="Common.ValueListParameterIn">
+                  <PropertyValue Property="LocalDataProperty" PropertyPath="product/subcategory_code"/>
+                  <PropertyValue Property="ValueListProperty" String="subcategory_code"/>
                 </Record>
                 <Record Type="Common.ValueListParameterDisplayOnly">
-                  <PropertyValue Property="ValueListProperty" String="name"/>
+                  <PropertyValue Property="ValueListProperty" String="attributeName"/>
                 </Record>
               </Collection>
             </PropertyValue>
           </Record>
         </Annotation>
+        <Annotation Term="Common.Label" String="Attribute"/>
+        <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
       </Annotations>
       <Annotations Target="CatalogService.ProductDetails/value">
         <Annotation Term="Common.Label" String="Value"/>
@@ -993,6 +1094,9 @@
         <Annotation Term="Common.Label" String="Attribute Description"/>
       </Annotations>
       <Annotations Target="CatalogService.DetailAttributes/code">
+        <Annotation Term="Common.Text" Path="name">
+          <Annotation Term="UI.TextArrangement" EnumMember="UI.TextArrangementType/TextOnly"/>
+        </Annotation>
         <Annotation Term="Common.Label" String="Attribute"/>
       </Annotations>
       <Annotations Target="CatalogService.DetailAttributes/unit">
@@ -1045,6 +1149,9 @@
         <Annotation Term="Common.Label" String="Attribute"/>
       </Annotations>
       <Annotations Target="CatalogService.SubcategoryAttributes/attribute_code">
+        <Annotation Term="Common.Text" Path="attributeName">
+          <Annotation Term="UI.TextArrangement" EnumMember="UI.TextArrangementType/TextOnly"/>
+        </Annotation>
         <Annotation Term="Common.Label" String="Attribute"/>
         <Annotation Term="Common.ValueList">
           <Record Type="Common.ValueListType">

@@ -1,11 +1,13 @@
 ---
 name: project-fiori-mcp-no-filterfields-livemode
-description: fiori-mcp 1.12.2 list_functionality exposes no custom filter field (controlConfiguration filterFields) and no liveMode for app/products; only hideFilterBar under filterBar
+description: fiori-mcp 1.12.2 list_functionality exposes no custom filter field, no liveMode and no Object Page table settings for app/products; defaultCreationMode enum is only InlineCreationRows
 metadata:
   type: project
 ---
 
 `fiori-mcp` 1.12.2 `list_functionality` for `app/products` offers, under the List Report filter bar, only `["ProductsList","filterBar","hideFilterBar"]`. There is no id for `controlConfiguration` → `@UI.SelectionFields` → `filterFields.<key>` (custom filter field) and none for `liveMode` (measured 2026-09-25, feature products-rating-filter #6; full list in `docs/features/products-rating-filter/research/fiori-mcp-custom-filter.md`). The bundle contains a CustomFilterField writer and a liveMode spec property internally, but they are not exposed.
+
+Object Page tables: even after the `details` table section was annotated (2026-10-12, products-details-section #9), the list had no `["ProductsObjectPage","table",...]` id (creationMode, enableExport, selectionMode, personalization); only the app-wide `["settings","defaultCreationMode"]`, whose `get_functionality_details` enum is just `InlineCreationRows` (manifest path `sap.fe.macros.table.defaultCreationMode`). So the unset default is plain `Inline`, and any per-table Object Page setting is not reachable through MCP.
 
 **Why:** ADR-0007 allows manifest edits only through `execute_functionality`, so these manifest changes are blocked until the user decides on an exception or an upstream version exposes them.
 

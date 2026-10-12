@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-12
 - Branch: feature/products-details-section
 - Feature: products-details-section (#9)
-- Phase: 2: backend (steps 2-4: model and seed data, service and semantics, backend tests)
-- Last commit: 54bb1a9 docs: products-details-section plan review
-- Next: phase 2 gate (`npm run lint`, `npm test` 195, `metadata.xml` 1180 lines), commit `feat(srv)`, then phase 3 UI
+- Phase: 3: UI (steps 5-7: UI annotations and mock data, contract test, OPA5 journeys)
+- Last commit: 59b51fc feat(srv): products-details-section backend
+- Next: phase 3 gate (`npm test` 196, `metadata.xml` 1277 expected, `npm run test:ui` 58, ui5lint and lint:js clean), commit `feat(app)`, then phase 4 verification
 
 ## Open debt
 

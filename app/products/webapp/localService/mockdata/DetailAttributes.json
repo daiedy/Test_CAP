@@ -1,0 +1,122 @@
+[
+  {
+    "code": "MATERIAL",
+    "name": "Material",
+    "descr": null,
+    "unit": null
+  },
+  {
+    "code": "WEIGHT",
+    "name": "Weight",
+    "descr": null,
+    "unit": "kg"
+  },
+  {
+    "code": "COLOUR",
+    "name": "Colour",
+    "descr": null,
+    "unit": null
+  },
+  {
+    "code": "DIMENSIONS",
+    "name": "Dimensions",
+    "descr": null,
+    "unit": "cm"
+  },
+  {
+    "code": "CAPACITY",
+    "name": "Capacity",
+    "descr": null,
+    "unit": "l"
+  },
+  {
+    "code": "BATTERY_LIFE",
+    "name": "Battery Life",
+    "descr": null,
+    "unit": "h"
+  },
+  {
+    "code": "CONNECTIVITY",
+    "name": "Connectivity",
+    "descr": null,
+    "unit": null
+  },
+  {
+    "code": "POWER",
+    "name": "Power",
+    "descr": null,
+    "unit": "W"
+  },
+  {
+    "code": "SCREEN_SIZE",
+    "name": "Screen Size",
+    "descr": null,
+    "unit": "in"
+  },
+  {
+    "code": "RAM",
+    "name": "Memory (RAM)",
+    "descr": null,
+    "unit": "GB"
+  },
+  {
+    "code": "STORAGE",
+    "name": "Storage",
+    "descr": null,
+    "unit": "GB"
+  },
+  {
+    "code": "MAX_LOAD",
+    "name": "Maximum Load",
+    "descr": null,
+    "unit": "kg"
+  },
+  {
+    "code": "BRIGHTNESS",
+    "name": "Brightness",
+    "descr": null,
+    "unit": "lm"
+  },
+  {
+    "code": "PAGE_COUNT",
+    "name": "Pages",
+    "descr": null,
+    "unit": null
+  },
+  {
+    "code": "PAPER_SIZE",
+    "name": "Paper Size",
+    "descr": null,
+    "unit": null
+  },
+  {
+    "code": "TIP_SIZE",
+    "name": "Tip Size",
+    "descr": null,
+    "unit": "mm"
+  },
+  {
+    "code": "PIECES",
+    "name": "Pieces",
+    "descr": null,
+    "unit": null
+  },
+  {
+    "code": "THICKNESS",
+    "name": "Thickness",
+    "descr": null,
+    "unit": "mm"
+  },
+  {
+    "code": "WATER_RESISTANCE",
+    "name": "Water Resistance",
+    "descr": null,
+    "unit": null
+  },
+  {
+    "code": "DPI",
+    "name": "Sensor Resolution",
+    "descr": null,
+    "unit": "dpi"
+  }
+]

@@ -1,0 +1,122 @@
+[
+  {
+    "code": "MATERIAL",
+    "locale": "ru",
+    "name": "Материал",
+    "descr": null
+  },
+  {
+    "code": "WEIGHT",
+    "locale": "ru",
+    "name": "Вес",
+    "descr": null
+  },
+  {
+    "code": "COLOUR",
+    "locale": "ru",
+    "name": "Цвет",
+    "descr": null
+  },
+  {
+    "code": "DIMENSIONS",
+    "locale": "ru",
+    "name": "Размеры",
+    "descr": null
+  },
+  {
+    "code": "CAPACITY",
+    "locale": "ru",
+    "name": "Объем",
+    "descr": null
+  },
+  {
+    "code": "BATTERY_LIFE",
+    "locale": "ru",
+    "name": "Время автономной работы",
+    "descr": null
+  },
+  {
+    "code": "CONNECTIVITY",
+    "locale": "ru",
+    "name": "Подключение",
+    "descr": null
+  },
+  {
+    "code": "POWER",
+    "locale": "ru",
+    "name": "Мощность",
+    "descr": null
+  },
+  {
+    "code": "SCREEN_SIZE",
+    "locale": "ru",
+    "name": "Диагональ экрана",
+    "descr": null
+  },
+  {
+    "code": "RAM",
+    "locale": "ru",
+    "name": "Оперативная память",
+    "descr": null
+  },
+  {
+    "code": "STORAGE",
+    "locale": "ru",
+    "name": "Накопитель",
+    "descr": null
+  },
+  {
+    "code": "MAX_LOAD",
+    "locale": "ru",
+    "name": "Максимальная нагрузка",
+    "descr": null
+  },
+  {
+    "code": "BRIGHTNESS",
+    "locale": "ru",
+    "name": "Яркость",
+    "descr": null
+  },
+  {
+    "code": "PAGE_COUNT",
+    "locale": "ru",
+    "name": "Количество страниц",
+    "descr": null
+  },
+  {
+    "code": "PAPER_SIZE",
+    "locale": "ru",
+    "name": "Формат бумаги",
+    "descr": null
+  },
+  {
+    "code": "TIP_SIZE",
+    "locale": "ru",
+    "name": "Толщина линии",
+    "descr": null
+  },
+  {
+    "code": "PIECES",
+    "locale": "ru",
+    "name": "Количество предметов",
+    "descr": null
+  },
+  {
+    "code": "THICKNESS",
+    "locale": "ru",
+    "name": "Толщина",
+    "descr": null
+  },
+  {
+    "code": "WATER_RESISTANCE",
+    "locale": "ru",
+    "name": "Водостойкость",
+    "descr": null
+  },
+  {
+    "code": "DPI",
+    "locale": "ru",
+    "name": "Разрешение сенсора",
+    "descr": null
+  }
+]

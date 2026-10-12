@@ -1,6 +1,6 @@
 ---
 name: sap-fe-test-api-verification
-description: Where to verify sap.fe.test OPA API signatures when fiori-mcp is down; measured ids (DataPoint column, custom filter field, action parameter dialog with a file field); absence checks; probing and mutation runs; runner test counting; vacuous iCheckField(field, ''), Object Page form ids, display-mode mdc Field without DOM, pop-in behind Show Details in the 60% OPA frame; dynamic FieldControl editMode/required, Create and discard of a new draft, emptying a dropdown
+description: Where to verify sap.fe.test OPA API signatures when fiori-mcp is down; measured ids (DataPoint column, custom filter field, action parameter dialog with a file field); absence checks; probing and mutation runs; runner test counting; vacuous iCheckField(field, ''), Object Page form ids, display-mode mdc Field without DOM, pop-in behind Show Details in the 60% OPA frame; dynamic FieldControl editMode/required, Create and discard of a new draft, emptying a dropdown; Object Page table section of a composition (column keys, F4 on a new row's cell, delete confirmation)
 metadata:
   type: reference
 ---
@@ -58,3 +58,11 @@ Related: [[test-cap-ui-test-run-baseline]]
 - `onTheProductsList.onTable().iExecuteCreate()` opens the new draft in edit mode; `onFooter().iExecuteCancel()` + `iConfirmCancel()` discards it (popover appears once a field was changed) and navigates back to the List Report by itself: no restart needed, `iCheckRows({}, 15, { isDraft: false })` passes right after.
 - `onForm().iChangeField(field, '')` empties a mandatory `ValueListWithFixedValues` field: one `$batch` with the `PATCH` and the side-effect read; the context value is `null` with no pending changes.
 - Cheap probe + mutation journey: call `Opa5.extendConfig({ timeout: 10 })` at the start of each probe `opaTest` (10 s per expected failure); one probe or mutation per `opaTest`, as its last step, so the app state stays usable for the next one; read the results from `job.js` (`report.failed`, `message`).
+
+## Object Page table section of a composition (measured 2026-10-12, FE 1.153.0, products-details-section)
+
+- `onTable({ property: 'details' })` -> `...--fe::table::details::LineItem`; column property keys are the paths (`attribute_code`, `value`, `attribute/unit`, slash kept; only the column id uses `::`); section `...--fe::FacetSection::<facet ID>`, asserted with `iCheckSection({ section: 'Details' }, { title })` (state key falls through to the `title` property, mutation-proven).
+- Inline Create puts the new row at index 0. `iPressCell` on a `ValueListWithFixedValues` cell does not open the list; F4 does: `iExecuteKeyboardShortcut('F4', rowValues, column)`. Index 0 is unusable there (`vRowValues && vColumn` is falsy, the shortcut goes to the table) and an empty expected cell matches every row, so type a value with `iChangeRow(0, { value })` (index documented there) and target `{ value }`. The cell list id `...--FieldValueHelp::<Entity>::<nav>::<prop>::Popover::qualifier::::SuggestTable` matches `pages/CategoryDropdown.js`.
+- Table Delete opens "Delete this object?": `onConfirmationDialog().iConfirm()` (the `on<DialogType>Dialog` shortcuts are generated in `TemplatePage`).
+- The full `npm run test:ui` (58 tests) runs longer than the 10-minute foreground Bash limit: start it with `run_in_background` and read the log when notified (4 min when green, 15 min with BROWSER TIMEOUTs).
+- A new Save-time constraint plus new seed rows can break OLDER journeys: `EditCategoryOnObjectPageJourney` and `SubcategoryDependsOnCategoryJourney` saved Laptop Pro 15 with another subcategory, D1 rejected it, the leftover draft failed every later 15-row/no-draft check (22 cascade failures). Before the gate, `grep iExecuteSave` across journeys and check each saved product against the new seed data; fixed by switching to a product without detail rows (Wireless Earbuds).

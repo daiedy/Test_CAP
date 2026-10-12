@@ -7,12 +7,15 @@
 // is not asserted.
 // products-subcategories (PLAN step 10): the Subcategory column header and, on the object page, the
 // Subcategory label and the localized name of Coffee Maker's subcategory (APPLIANCES) are Russian.
-sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts', './data/RatingTexts', './data/ImportTexts', './data/SubcategoryTexts'], function (
+// products-details-section (PLAN step 7): the Details section title, its column headers and the
+// localized attribute name of Coffee Maker's Power row are Russian; the unit stays Latin.
+sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts', './data/RatingTexts', './data/ImportTexts', './data/SubcategoryTexts', './data/DetailAttributeTexts'], function (
   opaTest,
   CategoryTexts,
   RatingTexts,
   ImportTexts,
-  SubcategoryTexts
+  SubcategoryTexts,
+  DetailAttributeTexts
 ) {
   'use strict';
 
@@ -78,6 +81,25 @@ sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts', './data/RatingTex
       Then.onTheProductsObjectPage
         .onForm({ section: 'GeneralInfo' })
         .iCheckField({ property: 'subcategory_code' }, SubcategoryTexts.names.ru.APPLIANCES);
+    });
+
+    opaTest('The Object Page shows the Details section in Russian', function (Given, When, Then) {
+      // Still on the object page of Coffee Maker (APPLIANCES: Power 900 W, Capacity 1.2 l seeded).
+      const detailLabels = DetailAttributeTexts.labels;
+      const details = { property: 'details' };
+      const powerRow = {
+        attribute_code: DetailAttributeTexts.names.ru.POWER,
+        value: '900',
+        'attribute/unit': DetailAttributeTexts.units.POWER,
+      };
+      const detailColumns = {
+        attribute_code: { header: detailLabels.attribute.ru },
+        value: { header: detailLabels.value.ru },
+        'attribute/unit': { header: detailLabels.unit.ru },
+      };
+      Then.onTheProductsObjectPage.iCheckSection({ section: 'Details' }, { title: detailLabels.section.ru });
+      Then.onTheProductsObjectPage.onTable(details).iCheckColumns(3, detailColumns);
+      Then.onTheProductsObjectPage.onTable(details).iCheckRows(powerRow, 1);
     });
 
     opaTest('Teardown', function (Given) {

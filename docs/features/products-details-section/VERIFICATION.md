@@ -217,6 +217,29 @@ Fresh `npx cds serve --in-memory --port 4004`, new isolated contexts, window 144
 - `final-6-viewer-en.png`: `viewer`, Laptop Pro 15, display, no Edit or Delete (Share only).
 Every draft created for these shots was deleted through the API (204); product count 15, draft count 0 at the end.
 
+### Counter badge check (c2673cb)
+
+Setup: NEW isolated context, freshly started `npx cds serve --in-memory --port 4004`, window 1440 x 1100.
+
+Fresh-code proof: the counter element `...CustomSubSection::Details--detailsCounter` is a `DIV` with the classes `sapMObjStatus sapMObjStatusSuccess sapMObjStatusInverted` (Laptop Pro 15, 3 of 3) and `sapMObjStatus sapMObjStatusWarning sapMObjStatusInverted` (Wireless Mouse 2 of 3, Office Chair 2 of 3, Wireless Mouse in Audio 1 of 3, Backpack 0 of 3).
+
+Screenshots (overwritten or new, `screenshots/`):
+- `final-1-display-laptop-en.png`: green badge with check, "Filled 3 of 3".
+- `final-2-display-mouse-ru.png`: orange badge with alert icon, "Заполнено 2 из 3".
+- `final-3-edit-office-chair-en.png`: edit mode, orange "Filled 2 of 3", Colour list open.
+- `final-5-subcategory-warning-en.png`: Mice to Audio, Warning bubble on Subcategory, orange "Filled 1 of 3".
+- `final-7-display-backpack-en.png` (new): orange "Filled 0 of 3", three empty indicators.
+
+DOM finding for a screen reader (SCREENS scenario 16, UX risk 12):
+| State | Visible text | Hidden text (`sapUiPseudoInvisibleText` spans, read after the text) | Icon |
+|---|---|---|---|
+| Success (3 of 3, en) | "Filled 3 of 3" | "Object Status", "Entry successfully validated" | `<span class="sapUiIcon" role="presentation" aria-hidden="true">`, decorative |
+| Warning (2 of 3 / 0 of 3, en) | "Filled 2 of 3" | "Object Status", "Warning issued" | `role="presentation" aria-hidden="true"` |
+| Warning (2 of 3, ru) | "Заполнено 2 из 3" | "Статус объекта", "Выдано предупреждение" | `role="presentation" aria-hidden="true"` |
+So the badge is read as "Filled 3 of 3, Object Status, Entry successfully validated" or "Filled 0 of 3, Object Status, Warning issued" (`ru`: "Заполнено 2 из 3, Статус объекта, Выдано предупреждение"). The icon is correctly hidden; the root has no `role`, `aria-label` or `aria-labelledby`, is not focusable (no tab stop) and has no live region (it is not announced when the value changes, as decided in SCREENS "Invisible messaging"). Observation (UX risk 12): the hidden state texts are the framework's generic ones ("Entry successfully validated", "Warning issued", a UI5 translation of the ValueState), so "Warning issued" is announced for an empty but allowed state such as "Filled 0 of 3"; the visible text still carries the real information, so nothing is lost, but the wording suggests a problem the user need not fix (U4). Not counted as a defect; a custom `ariaLabelledBy` or a state text owned by the fragment would change it.
+
+Verdict unchanged: ready for review. R2-D6 fixed; no open finding.
+
 ---
 
 # Round 1 (plan revision 1, table UI, history)

@@ -70,3 +70,19 @@ Important 2 (ADR-0027 rows-binding amendment), Important 4 (`app/products/bin/` 
 
 ### Verdict (re-review)
 ready to commit. No blocking findings. The fix batch closes Important 1 (in code) and 3, and Minors 1 and 3, without a regression of B6, B7 or the criterion 63 order.
+
+## Re-review (c2673cb)
+
+Scope: `git diff 8cd98c7..c2673cb`, the counter as a status badge (user decision of 2026-10-12, SCREENS "Title, counter, layout" amended, variant A). Findings above keep their counts; this section adds no item to them.
+
+### Gates (reviewer, fresh, on c2673cb)
+`npm run lint` clean; `npm test` 209 passed in 11 files; `cd app/products && npm run lint` (ui5lint) `Success! No findings detected.` (so `coreLibrary.ValueState` raises no deprecation finding); `npm run lint:js` 0 errors, 1 warning (the pre-existing `Component.js`). `npm run test:ui` 82/82 as measured by the orchestrator, not re-run. The Cyrillic scan of the changed code, test and doc files finds nothing.
+
+### Checked
+- Correctness: `counterStatus(filled, total)` returns Success with `sap-icon://sys-enter-2` only for `total > 0 && filled === total`, and Warning with `sap-icon://alert` otherwise, so partial and zero are Warning. This matches the SCREENS table row by row. `updateCounter` sets state and icon synchronously and the text through the existing `withBundle`. Visibility is unchanged (`hasSubcategory && total > 0`), so the M = 0 Warning result is never shown, as the JSDoc says. `inverted="true"` and `FlexItemData alignSelf="Start"` are in the fragment (default `sap.m` namespace). The badge has no `active` property, so it adds no tab stop and keeps the SCREENS Accessibility topic 4 claim that "the counter is not a tab stop" true.
+- Conventions: the states come from the `ValueState` enum of `sap/ui/core/library`, not string literals. The two icon URIs are named module constants with JSDoc. The new pure function has JSDoc, is exported next to `countFilled`, and is covered by 3 QUnit tests (complete, partial and zero, M = 0). No new i18n key is needed: the text key `ProductsObjectPage.details.filled` is reused, and the state announcement is the framework's own (no `stateAnnouncementText`, the orchestrator's and `ux-designer`'s decision, as for FE criticality statuses). The OPA page method `iSeeTheCounter(text, state)` asserts the control type `sap.m.ObjectStatus`, the text, the state and the icon of that state. Its icon map is written on the test side from SCREENS, not imported from the module, so a wrong icon in the code turns the test red. All 13 call sites in the two journeys pass the state that their N and M imply.
+- Not a finding: the icon URIs appear twice, in the module and in the test map. The test is meant as an independent statement of the spec. `max-params` grows to 15 (already covered by Minor 2). PATTERNS has no "status" row for custom fragments; this is a control choice inside ADR-0027 decision 5's counter and is decided by the user in SCREENS. `docs-keeper` can mention it in the "Custom section or column" example.
+- For `docs-keeper` (phase 6, already announced by the orchestrator): PLAN D20 and CONTEXT D20 still say "neutral text". Amend them to the badge with a pointer to the SCREENS amendment.
+
+### Verdict (re-review)
+ready to commit. No blocking findings and no new finding.

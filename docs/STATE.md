@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-10-12
-- Branch: feature/products-details-section
+- Branch: main
 - Feature: none
-- Phase: 7: completion (products-details-section #9 closed on GitHub and pruned on 2026-10-12, cost $186.32)
-- Last commit: 348a1b9 docs: products-details-section counter badge decision
-- Next: the user merges feature/products-details-section into main (--no-ff) and pushes on instruction; then the queue: #10 products-validations
+- Phase: 7: completion (products-details-section #9 closed, pruned and merged into main on 2026-10-12, cost $186.32)
+- Last commit: 438a68c Merge branch 'feature/products-details-section'
+- Next: push main on the user's instruction (not pushed since 06f5fb7); then the queue: #10 products-validations
 
 ## Open debt
 

@@ -205,6 +205,18 @@ State: product count 15, draft count 0 (the last open draft, Office Chair `ru` l
 
 Verdict: ready for review. R2-D6 fixed; no open finding.
 
+### Final screenshots (HEAD 031ae7e, code unchanged since f2e46c5)
+
+Fresh `npx cds serve --in-memory --port 4004`, new isolated contexts, window 1440 x 1100 CSS px so that the whole Object Page fits one frame. All in `screenshots/`:
+- `final-1-display-laptop-en.png`: Laptop Pro 15, display, `en` ("Filled 3 of 3", fields on the FE grid).
+- `final-2-display-mouse-ru.png`: Wireless Mouse, display, `ru` (MULTI_LIST join "Bluetooth 5.0, Беспроводное 2,4 ГГц", "1 600 dpi", empty indicator, "Заполнено 2 из 3").
+- `final-3-edit-office-chair-en.png`: Office Chair, Edit: Material tokens, Maximum Load 120 kg, Colour list open (12 values in order).
+- `final-4-edit-errors-en.png`: Office Chair, Colour "Purple" in Error, message popover "Select a value from the list. / Colour" after Save.
+- `final-4b-edit-errors-laptop-en.png`: Laptop Pro 15, Memory (RAM) "2000" in Error, popover "Enter a number with a maximum value of 1,024 / Memory (RAM)", footer error count 1.
+- `final-5-subcategory-warning-en.png`: Wireless Mouse, Edit, Subcategory Mice to Audio: Warning bubble "Values removed: 1. ... Sensor Resolution.", fields Connectivity, Battery Life, Colour, "Filled 1 of 3".
+- `final-6-viewer-en.png`: `viewer`, Laptop Pro 15, display, no Edit or Delete (Share only).
+Every draft created for these shots was deleted through the API (204); product count 15, draft count 0 at the end.
+
 ---
 
 # Round 1 (plan revision 1, table UI, history)

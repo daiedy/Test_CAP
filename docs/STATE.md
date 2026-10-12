@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-12
 - Branch: feature/products-details-section
 - Feature: products-details-section (#9)
-- Phase: 6: documentation (PLAN step 12 plus the open review items: ADR-0027 rows binding, PATTERNS facts, app/products/bin ignore)
-- Last commit: 7d804b4 docs: products-details-section re-review and review-fix check
-- Next: check-docs-fresh green, commit docs summary and registry; phase 7 (close #9, prune) waits for the user to look at the form
+- Phase: 6: documentation done (40 of 40 criteria; phase 7 held for the user to look at the form first)
+- Last commit: 031ae7e docs: products-details-section summary and registry
+- Next: the user reviews the form (screenshots in docs/features/products-details-section/screenshots/final-*), then phase 7: close #9, prune, metrics card; merge and push only on the user's instruction
 
 ## Open debt
 

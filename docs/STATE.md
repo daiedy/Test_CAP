@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-12
 - Branch: feature/products-details-section
 - Feature: products-details-section (#9)
-- Phase: 2: backend revision 2 (typed values, list values, generated rows; PLAN steps 2-6, ADR-0027 accepted 2026-10-12)
-- Last commit: 9b4d496 docs(spec): products-details-section plan revision 2 approved, ADR-0027 accepted
-- Next: PLAN step 6 (test-backend, metadata.xml 1591 done in step 4), npm test 208 green, commit feat(srv), then phase 3 browser proof B1-B11
+- Phase: 3: UI revision 2 (browser proof B1-B11, generic DetailsForm fragment in a custom section, OPA5; PLAN steps 7-9)
+- Last commit: cafaa26 feat(srv): products-details-section typed values backend
+- Next: research/ui-proof.md with B1-B11 proven or fallback chosen, then the fragment and OPA5 (test:ui 60), commit feat(app)
 
 ## Open debt
 

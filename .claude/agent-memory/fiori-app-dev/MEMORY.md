@@ -1,4 +1,4 @@
-- [fiori-mcp lacks filterFields/liveMode/OP table settings](project-fiori-mcp-no-filterfields-livemode.md) — 1.12.2: no filterFields, liveMode, Object Page table ids; stop and report
+- [fiori-mcp lacks filterFields/liveMode/OP table settings](project-fiori-mcp-no-filterfields-livemode.md) — 1.12.2: no filterFields, liveMode, OP table ids; custom sections via unlisted ["<Page>","sections"]
 - [Headless measurement recipe](reference-headless-measurement.md) — global puppeteer, $batch parsing, log level, mock on :8089, wait on registry not DOM
 - [Worktree Bash guard](project-worktree-bash-guard.md) — compound Bash is refused in .claude/worktrees; plain commands, scripts in /tmp, background servers
 - [Table pop-in order source](reference-table-popin-order.md) — order inside one UI.Importance group is only in sap/m/Table-dbg.js; rightmost of the lowest group first

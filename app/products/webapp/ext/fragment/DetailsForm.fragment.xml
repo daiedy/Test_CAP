@@ -1,0 +1,63 @@
+<!--
+    Custom section "Details" of the product Object Page (ADR-0027 decision 5), added through Fiori MCP after PricingStock.
+    One FormContainer whose form elements are built per detail row by the factory of DetailsForm.js; rows come in the
+    server's position order only (no client sorter). Edit state from the Fiori elements model ui>/isEditable; the
+    side effect #SubcategoryChanged (TargetEntities details) re-reads this binding after the server reconciles the rows.
+-->
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:app="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1"
+>
+    <VBox
+        id="detailsFormBox"
+        core:require="{ DetailsForm: 'products/ext/fragment/DetailsForm' }"
+        app:detailsRole="root"
+        modelContextChange="DetailsForm.onModelContextChange"
+    >
+        <core:InvisibleText id="detailsFormTitle" text="{i18n>ProductsObjectPage.details.title}" />
+        <Text id="detailsCounter" app:detailsRole="counter" visible="false" />
+        <Text
+            id="detailsNoSubcategory"
+            text="{i18n>ProductsObjectPage.details.noSubcategory}"
+            visible="{= !${subcategory_code} &amp;&amp; ${ui>/isEditable} !== true }"
+        />
+        <Text
+            id="detailsSelectSubcategory"
+            text="{i18n>ProductsObjectPage.details.selectSubcategory}"
+            visible="{= !${subcategory_code} &amp;&amp; ${ui>/isEditable} === true }"
+        />
+        <Text
+            id="detailsNoAttributes"
+            app:detailsRole="noAttributes"
+            text="{i18n>ProductsObjectPage.details.noAttributes}"
+            visible="false"
+        />
+        <form:Form
+            id="detailsForm"
+            app:detailsRole="form"
+            editable="{= ${ui>/isEditable} === true }"
+            ariaLabelledBy="detailsFormTitle"
+            visible="{= !!${subcategory_code} }"
+        >
+            <form:layout>
+                <form:ColumnLayout columnsXL="4" columnsL="3" columnsM="2" labelCellsLarge="12" />
+            </form:layout>
+            <form:formContainers>
+                <form:FormContainer
+                    id="detailsFormContainer"
+                    formElements="{
+                        path: 'details',
+                        parameters: {
+                            $select: 'ID,IsActiveEntity,position,textValue,numberValue,listValue_code',
+                            $expand: 'attribute($select=code,name,unit,valueType_code,minValue,maxValue,scale;$expand=values($select=code,name,position;$orderby=position)),selections($select=ID,IsActiveEntity,value_code)',
+                            $orderby: 'position'
+                        },
+                        factory: 'DetailsForm.createFormElement'
+                    }"
+                />
+            </form:formContainers>
+        </form:Form>
+    </VBox>
+</core:FragmentDefinition>

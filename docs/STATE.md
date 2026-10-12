@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-12
 - Branch: feature/products-details-section
 - Feature: products-details-section (#9)
-- Phase: 3: UI revision 2 (browser proof B1-B11, generic DetailsForm fragment in a custom section, OPA5; PLAN steps 7-9)
-- Last commit: cafaa26 feat(srv): products-details-section typed values backend
-- Next: PLAN step 9 OPA5 by test-ui (ProductDetailsFormJourney, test:ui 60), then commit feat(app); fragment of step 8 on disk, uncommitted
+- Phase: 4: verification round 2 (the typed form in the browser, en and ru, alice and viewer; PLAN step 10)
+- Last commit: 19d7f2d feat(app): products-details-section ui
+- Next: VERIFICATION.md round 2 with the verdict "ready for review", then phase 5 review
 
 ## Open debt
 

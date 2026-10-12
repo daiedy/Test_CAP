@@ -49,12 +49,17 @@
             </form:layout>
             <form:formContainers>
                 <!-- the rows are bound in the non-rendered dependents; DetailsForm.js keeps one form element per row
-                     context, so a details change keeps the controls (and the focus) of the rows that stay -->
+                     context, so a details change keeps the controls (and the focus) of the rows that stay.
+                     $$ownRequest: a dependent list binding without its own cache is refreshed by the OData model after
+                     every side-effect request of the product (ODataContextBinding#requestSideEffects ends with
+                     refreshDependentListBindingsWithoutCache), also after each DraftMessages read; with its own cache
+                     only a real re-read of details (#SubcategoryChanged, Edit) refreshes the rows -->
                 <form:FormContainer
                     id="detailsFormContainer"
                     dependents="{
                         path: 'details',
                         parameters: {
+                            $$ownRequest: true,
                             $select: 'ID,IsActiveEntity,position,textValue,numberValue,listValue_code',
                             $expand: 'attribute($select=code,name,unit,valueType_code,minValue,maxValue,scale;$expand=values($select=code,name,position;$orderby=position))',
                             $orderby: 'position'

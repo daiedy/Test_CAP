@@ -102,3 +102,26 @@ Assignments: the 45 rows of ADR-0026 D7 keep their UUIDs and get `position` 1-3 
 | Reconcile on the active path | the ADR-0024 rule: active writes are not reset; the root branch rejects (R16) |
 | Delete all rows when the category change empties the subcategory | D10 (b): loses `COLOUR`/`MATERIAL` values that the next subcategory may share; one more side-effect target |
 | Copy-free order (sort by attribute name) | the user asked for an order per subcategory; a calculated element cannot reach the assignment row (a to-many path, ADR-0026 compile fact) |
+
+## 10. Phase 2 findings and rulings (2026-10-12)
+
+Found by `test-backend` at PLAN step 6 on the worktree code (cds 10.1.1, uncommitted phase 2), R22 re-measured by `architect` on `cds serve --in-memory` with a throwaway script outside the repo; nothing in the project changed.
+
+| # | Request (as `alice` unless stated) | Result |
+|---|---|---|
+| R22 | top-level `DELETE ProductDetails(<dpi>,true)` and `DELETE ProductDetailSelections(<sel>,true)` of the seeded Wireless Mouse, no draft | 204 each, the row or the selection is gone (a cascade of a row's own selections not measured); `viewer` 403 on both sets (`test-backend`), `carol` 403 `code: '403'` on the row (the child grant). Lean draft refuses only `NEW`/`CREATE` and `UPDATE` of a child with 422 (`libx/_runtime/fiori/lean-draft.js`, the `DRAFT_MODIFICATION_ONLY_VIA_ROOT` throws); its active `DELETE` branch treats every draft-enabled entity alike, so the top-level `DELETE` equals `DELETE Products(<id>,true)/details(<dpi>,true)` |
+| R22b | the same while the product has a draft of `alice` (`draftEdit` first) | 403 `DRAFT_ACTIVE_DELETE_FORBIDDEN_DRAFT_EXISTS` for the row (top-level and through the root) and the selection (top-level); `viewer` on the row: 403 `DRAFT_LOCKED_BY_ANOTHER_USER` (the lock check answers before the grant) |
+| R23 | a row created through the API (deep `POST Products { IsActiveEntity: true, ..., details: [...] }`, `POST Products(<id>,true)/details`) | `position` is `null` (`@readonly` drops the input); `$orderby=position` on SQLite puts `null` first; the next Edit gives the draft row the assignment's position (`reconcileDetailRows` updates every kept row whose position differs) and activation keeps it (R5) |
+| R24 | `POST Products { ..., category_code, subcategory_code }` without `IsActiveEntity` (a new draft with the subcategory in the body) | 201, the draft has no rows: only a draft `PATCH` carrying `subcategory_code` reconciles (ADR-0027 decision 3); a later `PATCH` of the subcategory, or the first Edit after activation (D13), creates them. FE Create posts an empty draft and `PATCH`es the subcategory, so U2 holds in the UI |
+
+Rulings: R22 accepted and documented (ADR-0026 decision 2 and ADR-0027 decision 1 corrected in place, PLAN criterion split, a pinning test); R23 the Risk text corrected, the fragment relies on the server order and adds no client rule; R24 accepted under D13.
+
+Rejected guards for R22 and R24:
+
+| Mechanism | Why not |
+|---|---|
+| `@Capabilities.DeleteRestrictions.Deletable: false` on `ProductDetails` (`libx/_runtime/common/generic/auth/capabilities.js` answers 405 `ENTITY_IS_NOT_CRUD`; `lib/compile/for/lean_drafts.js` strips it from `.drafts`) | refuses the active `DELETE` through the product as well (the target is the child), which ADR-0026 decision 2 and D15 keep as API paths; source-read, not run |
+| The same plus `@Capabilities.NavigationRestrictions` on `Products` (and `ProductDetails` for `selections`) re-allowing `Deletable` through the composition | declarative and would refuse only the top-level `DELETE` (the runtime skips the entity restriction when a navigation restriction answers), but unmeasured, adds two `Capabilities` blocks to the contract that Fiori Elements also reads, and buys nothing: the same `DELETE` through the product stays allowed with the same grant and lock checks |
+| `before('DELETE', ProductDetails)` rejecting a one-segment `req.query.DELETE.from.ref` | imperative copy of lean draft's own `isDirectAccess` test, a new message or a borrowed framework key, no security or data gain over the path through the product |
+| `after('NEW', Products.drafts)` calling `fillDetailRows` (R24) | one registration and a test, cheap; not taken because D13 already decided that products created through the API get their rows at the first Edit, and no UI path posts a subcategory at create; reopen if an API client needs rows in a fresh draft |
+| A client-side sorter with a nulls rule in the fragment (R23) | `ODataListBinding` sorts on the server; a client comparator needs the client operation mode for one API-only case that the next Edit repairs |

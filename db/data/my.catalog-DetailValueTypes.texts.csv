@@ -1,0 +1,6 @@
+code;locale;name
+TEXT;ru;Текст
+INTEGER;ru;Целое число
+DECIMAL;ru;Десятичное число
+LIST;ru;Одиночный выбор
+MULTI_LIST;ru;Множественный выбор

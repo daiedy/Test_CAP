@@ -3,3 +3,4 @@
 - [Worktree Bash guard](project-worktree-bash-guard.md) — compound Bash is refused in .claude/worktrees; plain commands, scripts in /tmp, background servers
 - [Table pop-in order source](reference-table-popin-order.md) — order inside one UI.Importance group is only in sap/m/Table-dbg.js; rightmost of the lowest group first
 - [Sandbox has no flex connector](project-sandbox-no-flex-connector.md) — variant Save As 404s on /sap/bc/lrep, saved views lose all conditions; not a field defect
+- [cds-mcp stale in a worktree](project-cds-mcp-stale-in-worktree.md) — search_model misses the feature's new entities; read schema/service and diff a fresh EDMX compile instead

@@ -39,7 +39,14 @@
         <EntitySet Name="ProductDetails" EntityType="CatalogService.ProductDetails">
           <NavigationPropertyBinding Path="product" Target="Products"/>
           <NavigationPropertyBinding Path="attribute" Target="DetailAttributes"/>
+          <NavigationPropertyBinding Path="listValue" Target="DetailListValues"/>
+          <NavigationPropertyBinding Path="selections" Target="ProductDetailSelections"/>
           <NavigationPropertyBinding Path="SiblingEntity" Target="ProductDetails"/>
+        </EntitySet>
+        <EntitySet Name="ProductDetailSelections" EntityType="CatalogService.ProductDetailSelections">
+          <NavigationPropertyBinding Path="detail" Target="ProductDetails"/>
+          <NavigationPropertyBinding Path="value" Target="DetailListValues"/>
+          <NavigationPropertyBinding Path="SiblingEntity" Target="ProductDetailSelections"/>
         </EntitySet>
         <EntitySet Name="Categories" EntityType="CatalogService.Categories">
           <NavigationPropertyBinding Path="texts" Target="Categories_texts"/>
@@ -51,9 +58,20 @@
           <NavigationPropertyBinding Path="localized" Target="Subcategories_texts"/>
         </EntitySet>
         <EntitySet Name="DetailAttributes" EntityType="CatalogService.DetailAttributes">
+          <NavigationPropertyBinding Path="valueType" Target="DetailValueTypes"/>
           <NavigationPropertyBinding Path="subcategories" Target="SubcategoryAttributes"/>
+          <NavigationPropertyBinding Path="values" Target="DetailListValues"/>
           <NavigationPropertyBinding Path="texts" Target="DetailAttributes_texts"/>
           <NavigationPropertyBinding Path="localized" Target="DetailAttributes_texts"/>
+        </EntitySet>
+        <EntitySet Name="DetailValueTypes" EntityType="CatalogService.DetailValueTypes">
+          <NavigationPropertyBinding Path="texts" Target="DetailValueTypes_texts"/>
+          <NavigationPropertyBinding Path="localized" Target="DetailValueTypes_texts"/>
+        </EntitySet>
+        <EntitySet Name="DetailListValues" EntityType="CatalogService.DetailListValues">
+          <NavigationPropertyBinding Path="attribute" Target="DetailAttributes"/>
+          <NavigationPropertyBinding Path="texts" Target="DetailListValues_texts"/>
+          <NavigationPropertyBinding Path="localized" Target="DetailListValues_texts"/>
         </EntitySet>
         <EntitySet Name="SubcategoryAttributes" EntityType="CatalogService.SubcategoryAttributes">
           <NavigationPropertyBinding Path="subcategory" Target="Subcategories"/>
@@ -67,6 +85,8 @@
         <EntitySet Name="Categories_texts" EntityType="CatalogService.Categories_texts"/>
         <EntitySet Name="Subcategories_texts" EntityType="CatalogService.Subcategories_texts"/>
         <EntitySet Name="DetailAttributes_texts" EntityType="CatalogService.DetailAttributes_texts"/>
+        <EntitySet Name="DetailValueTypes_texts" EntityType="CatalogService.DetailValueTypes_texts"/>
+        <EntitySet Name="DetailListValues_texts" EntityType="CatalogService.DetailListValues_texts"/>
         <EntitySet Name="Currencies_texts" EntityType="CatalogService.Currencies_texts"/>
       </EntityContainer>
       <EntityType Name="Products">
@@ -121,12 +141,42 @@
           <ReferentialConstraint Property="attribute_code" ReferencedProperty="code"/>
         </NavigationProperty>
         <Property Name="attribute_code" Type="Edm.String" MaxLength="30"/>
-        <Property Name="value" Type="Edm.String" MaxLength="100"/>
+        <Property Name="position" Type="Edm.Int32"/>
+        <Property Name="textValue" Type="Edm.String" MaxLength="100"/>
+        <Property Name="numberValue" Type="Edm.Decimal" Precision="15" Scale="3"/>
+        <NavigationProperty Name="listValue" Type="CatalogService.DetailListValues">
+          <ReferentialConstraint Property="listValue_code" ReferencedProperty="code"/>
+        </NavigationProperty>
+        <Property Name="listValue_code" Type="Edm.String" MaxLength="30"/>
+        <NavigationProperty Name="selections" Type="Collection(CatalogService.ProductDetailSelections)" Partner="detail">
+          <OnDelete Action="Cascade"/>
+        </NavigationProperty>
         <Property Name="IsActiveEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="true"/>
         <Property Name="HasActiveEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="false"/>
         <Property Name="HasDraftEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="false"/>
         <NavigationProperty Name="DraftAdministrativeData" Type="CatalogService.DraftAdministrativeData" ContainsTarget="true"/>
         <NavigationProperty Name="SiblingEntity" Type="CatalogService.ProductDetails"/>
+        <Property Name="DraftMessages" Type="Collection(CatalogService.DRAFT_DraftAdministrativeData_DraftMessage)" Nullable="true"/>
+      </EntityType>
+      <EntityType Name="ProductDetailSelections">
+        <Key>
+          <PropertyRef Name="ID"/>
+          <PropertyRef Name="IsActiveEntity"/>
+        </Key>
+        <Property Name="ID" Type="Edm.Guid" Nullable="false"/>
+        <NavigationProperty Name="detail" Type="CatalogService.ProductDetails" Partner="selections">
+          <ReferentialConstraint Property="detail_ID" ReferencedProperty="ID"/>
+        </NavigationProperty>
+        <Property Name="detail_ID" Type="Edm.Guid"/>
+        <NavigationProperty Name="value" Type="CatalogService.DetailListValues">
+          <ReferentialConstraint Property="value_code" ReferencedProperty="code"/>
+        </NavigationProperty>
+        <Property Name="value_code" Type="Edm.String" MaxLength="30"/>
+        <Property Name="IsActiveEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="true"/>
+        <Property Name="HasActiveEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="false"/>
+        <Property Name="HasDraftEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="false"/>
+        <NavigationProperty Name="DraftAdministrativeData" Type="CatalogService.DraftAdministrativeData" ContainsTarget="true"/>
+        <NavigationProperty Name="SiblingEntity" Type="CatalogService.ProductDetailSelections"/>
         <Property Name="DraftMessages" Type="Collection(CatalogService.DRAFT_DraftAdministrativeData_DraftMessage)" Nullable="true"/>
       </EntityType>
       <EntityType Name="Categories">
@@ -169,11 +219,52 @@
         <Property Name="descr" Type="Edm.String" MaxLength="1000"/>
         <Property Name="code" Type="Edm.String" MaxLength="30" Nullable="false"/>
         <Property Name="unit" Type="Edm.String" MaxLength="10"/>
+        <NavigationProperty Name="valueType" Type="CatalogService.DetailValueTypes">
+          <ReferentialConstraint Property="valueType_code" ReferencedProperty="code"/>
+        </NavigationProperty>
+        <Property Name="valueType_code" Type="Edm.String" MaxLength="20"/>
+        <Property Name="minValue" Type="Edm.Decimal" Precision="15" Scale="3"/>
+        <Property Name="maxValue" Type="Edm.Decimal" Precision="15" Scale="3"/>
+        <Property Name="scale" Type="Edm.Int32"/>
         <NavigationProperty Name="subcategories" Type="Collection(CatalogService.SubcategoryAttributes)" Partner="attribute"/>
+        <NavigationProperty Name="values" Type="Collection(CatalogService.DetailListValues)" Partner="attribute"/>
         <NavigationProperty Name="texts" Type="Collection(CatalogService.DetailAttributes_texts)">
           <OnDelete Action="Cascade"/>
         </NavigationProperty>
         <NavigationProperty Name="localized" Type="CatalogService.DetailAttributes_texts">
+          <ReferentialConstraint Property="code" ReferencedProperty="code"/>
+        </NavigationProperty>
+      </EntityType>
+      <EntityType Name="DetailValueTypes">
+        <Key>
+          <PropertyRef Name="code"/>
+        </Key>
+        <Property Name="name" Type="Edm.String" MaxLength="255"/>
+        <Property Name="descr" Type="Edm.String" MaxLength="1000"/>
+        <Property Name="code" Type="Edm.String" MaxLength="20" Nullable="false"/>
+        <NavigationProperty Name="texts" Type="Collection(CatalogService.DetailValueTypes_texts)">
+          <OnDelete Action="Cascade"/>
+        </NavigationProperty>
+        <NavigationProperty Name="localized" Type="CatalogService.DetailValueTypes_texts">
+          <ReferentialConstraint Property="code" ReferencedProperty="code"/>
+        </NavigationProperty>
+      </EntityType>
+      <EntityType Name="DetailListValues">
+        <Key>
+          <PropertyRef Name="code"/>
+        </Key>
+        <Property Name="name" Type="Edm.String" MaxLength="255"/>
+        <Property Name="descr" Type="Edm.String" MaxLength="1000"/>
+        <Property Name="code" Type="Edm.String" MaxLength="30" Nullable="false"/>
+        <NavigationProperty Name="attribute" Type="CatalogService.DetailAttributes" Partner="values">
+          <ReferentialConstraint Property="attribute_code" ReferencedProperty="code"/>
+        </NavigationProperty>
+        <Property Name="attribute_code" Type="Edm.String" MaxLength="30"/>
+        <Property Name="position" Type="Edm.Int32"/>
+        <NavigationProperty Name="texts" Type="Collection(CatalogService.DetailListValues_texts)">
+          <OnDelete Action="Cascade"/>
+        </NavigationProperty>
+        <NavigationProperty Name="localized" Type="CatalogService.DetailListValues_texts">
           <ReferentialConstraint Property="code" ReferencedProperty="code"/>
         </NavigationProperty>
       </EntityType>
@@ -190,7 +281,7 @@
           <ReferentialConstraint Property="attribute_code" ReferencedProperty="code"/>
         </NavigationProperty>
         <Property Name="attribute_code" Type="Edm.String" MaxLength="30"/>
-        <Property Name="attributeName" Type="Edm.String" MaxLength="255"/>
+        <Property Name="position" Type="Edm.Int32"/>
       </EntityType>
       <EntityType Name="Permissions">
         <Key>
@@ -258,6 +349,26 @@
         <Property Name="descr" Type="Edm.String" MaxLength="1000"/>
         <Property Name="code" Type="Edm.String" MaxLength="30" Nullable="false"/>
       </EntityType>
+      <EntityType Name="DetailValueTypes_texts">
+        <Key>
+          <PropertyRef Name="locale"/>
+          <PropertyRef Name="code"/>
+        </Key>
+        <Property Name="locale" Type="Edm.String" MaxLength="14" Nullable="false"/>
+        <Property Name="name" Type="Edm.String" MaxLength="255"/>
+        <Property Name="descr" Type="Edm.String" MaxLength="1000"/>
+        <Property Name="code" Type="Edm.String" MaxLength="20" Nullable="false"/>
+      </EntityType>
+      <EntityType Name="DetailListValues_texts">
+        <Key>
+          <PropertyRef Name="locale"/>
+          <PropertyRef Name="code"/>
+        </Key>
+        <Property Name="locale" Type="Edm.String" MaxLength="14" Nullable="false"/>
+        <Property Name="name" Type="Edm.String" MaxLength="255"/>
+        <Property Name="descr" Type="Edm.String" MaxLength="1000"/>
+        <Property Name="code" Type="Edm.String" MaxLength="30" Nullable="false"/>
+      </EntityType>
       <EntityType Name="Currencies_texts">
         <Key>
           <PropertyRef Name="locale"/>
@@ -297,6 +408,11 @@
         <Parameter Name="SideEffectsQualifier" Type="Edm.String"/>
         <ReturnType Type="CatalogService.ProductDetails"/>
       </Action>
+      <Action Name="draftPrepare" IsBound="true" EntitySetPath="in">
+        <Parameter Name="in" Type="CatalogService.ProductDetailSelections"/>
+        <Parameter Name="SideEffectsQualifier" Type="Edm.String"/>
+        <ReturnType Type="CatalogService.ProductDetailSelections"/>
+      </Action>
       <Action Name="draftActivate" IsBound="true" EntitySetPath="in">
         <Parameter Name="in" Type="CatalogService.Products"/>
         <ReturnType Type="CatalogService.Products"/>
@@ -326,11 +442,6 @@
               <Collection>
                 <String>subcategory_code</String>
                 <String>subcategory/name</String>
-              </Collection>
-            </PropertyValue>
-            <PropertyValue Property="TargetEntities">
-              <Collection>
-                <NavigationPropertyPath>details</NavigationPropertyPath>
               </Collection>
             </PropertyValue>
           </Record>
@@ -442,11 +553,6 @@
               <PropertyValue Property="Target" AnnotationPath="@UI.FieldGroup#PricingStock"/>
             </Record>
             <Record Type="UI.ReferenceFacet">
-              <PropertyValue Property="ID" String="Details"/>
-              <PropertyValue Property="Label" String="Details"/>
-              <PropertyValue Property="Target" AnnotationPath="details/@UI.LineItem"/>
-            </Record>
-            <Record Type="UI.ReferenceFacet">
               <PropertyValue Property="ID" String="AdminData"/>
               <PropertyValue Property="Label" String="Administrative Data"/>
               <PropertyValue Property="Target" AnnotationPath="@UI.FieldGroup#AdminData"/>
@@ -545,11 +651,6 @@
               <Collection>
                 <String>subcategory_code</String>
                 <String>subcategory/name</String>
-              </Collection>
-            </PropertyValue>
-            <PropertyValue Property="TargetEntities">
-              <Collection>
-                <NavigationPropertyPath>details</NavigationPropertyPath>
               </Collection>
             </PropertyValue>
           </Record>
@@ -815,41 +916,6 @@
         <Annotation Term="Common.Label" String="File Name"/>
       </Annotations>
       <Annotations Target="CatalogService.ProductDetails">
-        <Annotation Term="UI.HeaderInfo">
-          <Record Type="UI.HeaderInfoType">
-            <PropertyValue Property="TypeName" String="Detail"/>
-            <PropertyValue Property="TypeNamePlural" String="Details"/>
-          </Record>
-        </Annotation>
-        <Annotation Term="UI.LineItem">
-          <Collection>
-            <Record Type="UI.DataField">
-              <PropertyValue Property="Value" Path="attribute_code"/>
-              <Annotation Term="UI.Importance" EnumMember="UI.ImportanceType/High"/>
-            </Record>
-            <Record Type="UI.DataField">
-              <PropertyValue Property="Value" Path="value"/>
-            </Record>
-            <Record Type="UI.DataField">
-              <PropertyValue Property="Value" Path="attribute/unit"/>
-            </Record>
-          </Collection>
-        </Annotation>
-        <Annotation Term="Common.SideEffects" Qualifier="AttributeChanged">
-          <Record Type="Common.SideEffectsType">
-            <PropertyValue Property="SourceProperties">
-              <Collection>
-                <PropertyPath>attribute_code</PropertyPath>
-              </Collection>
-            </PropertyValue>
-            <PropertyValue Property="TargetProperties">
-              <Collection>
-                <String>attribute/name</String>
-                <String>attribute/unit</String>
-              </Collection>
-            </PropertyValue>
-          </Record>
-        </Annotation>
         <Annotation Term="Common.SideEffects" Qualifier="alwaysFetchMessages">
           <Record Type="Common.SideEffectsType">
             <PropertyValue Property="SourceEntities">
@@ -867,21 +933,6 @@
         <Annotation Term="Common.Messages" Path="DraftMessages"/>
       </Annotations>
       <Annotations Target="CatalogService.EntityContainer/ProductDetails">
-        <Annotation Term="Common.SideEffects" Qualifier="AttributeChanged">
-          <Record Type="Common.SideEffectsType">
-            <PropertyValue Property="SourceProperties">
-              <Collection>
-                <PropertyPath>attribute_code</PropertyPath>
-              </Collection>
-            </PropertyValue>
-            <PropertyValue Property="TargetProperties">
-              <Collection>
-                <String>attribute/name</String>
-                <String>attribute/unit</String>
-              </Collection>
-            </PropertyValue>
-          </Record>
-        </Annotation>
         <Annotation Term="Common.DraftNode">
           <Record Type="Common.DraftNodeType">
             <PropertyValue Property="PreparationAction" String="CatalogService.draftPrepare"/>
@@ -915,37 +966,58 @@
         <Annotation Term="Common.Label" String="Attribute"/>
       </Annotations>
       <Annotations Target="CatalogService.ProductDetails/attribute_code">
-        <Annotation Term="Common.Text" Path="attribute/name">
-          <Annotation Term="UI.TextArrangement" EnumMember="UI.TextArrangementType/TextOnly"/>
-        </Annotation>
-        <Annotation Term="Common.ValueListWithFixedValues" Bool="true"/>
+        <Annotation Term="Common.Label" String="Attribute"/>
+        <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
         <Annotation Term="Common.ValueList">
           <Record Type="Common.ValueListType">
             <PropertyValue Property="Label" String="Attribute"/>
-            <PropertyValue Property="CollectionPath" String="SubcategoryAttributes"/>
+            <PropertyValue Property="CollectionPath" String="DetailAttributes"/>
             <PropertyValue Property="Parameters">
               <Collection>
                 <Record Type="Common.ValueListParameterInOut">
                   <PropertyValue Property="LocalDataProperty" PropertyPath="attribute_code"/>
-                  <PropertyValue Property="ValueListProperty" String="attribute_code"/>
-                </Record>
-                <Record Type="Common.ValueListParameterIn">
-                  <PropertyValue Property="LocalDataProperty" PropertyPath="product/subcategory_code"/>
-                  <PropertyValue Property="ValueListProperty" String="subcategory_code"/>
+                  <PropertyValue Property="ValueListProperty" String="code"/>
                 </Record>
                 <Record Type="Common.ValueListParameterDisplayOnly">
-                  <PropertyValue Property="ValueListProperty" String="attributeName"/>
+                  <PropertyValue Property="ValueListProperty" String="name"/>
                 </Record>
               </Collection>
             </PropertyValue>
           </Record>
         </Annotation>
-        <Annotation Term="Common.Label" String="Attribute"/>
-        <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
       </Annotations>
-      <Annotations Target="CatalogService.ProductDetails/value">
-        <Annotation Term="Common.Label" String="Value"/>
-        <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
+      <Annotations Target="CatalogService.ProductDetails/position">
+        <Annotation Term="Common.Label" String="Position"/>
+        <Annotation Term="Core.Computed" Bool="true"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetails/textValue">
+        <Annotation Term="Common.Label" String="Text Value"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetails/numberValue">
+        <Annotation Term="Common.Label" String="Number Value"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetails/listValue">
+        <Annotation Term="Common.Label" String="List Value"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetails/listValue_code">
+        <Annotation Term="Common.Label" String="List Value"/>
+        <Annotation Term="Common.ValueList">
+          <Record Type="Common.ValueListType">
+            <PropertyValue Property="Label" String="List Value"/>
+            <PropertyValue Property="CollectionPath" String="DetailListValues"/>
+            <PropertyValue Property="Parameters">
+              <Collection>
+                <Record Type="Common.ValueListParameterInOut">
+                  <PropertyValue Property="LocalDataProperty" PropertyPath="listValue_code"/>
+                  <PropertyValue Property="ValueListProperty" String="code"/>
+                </Record>
+                <Record Type="Common.ValueListParameterDisplayOnly">
+                  <PropertyValue Property="ValueListProperty" String="name"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
       </Annotations>
       <Annotations Target="CatalogService.ProductDetails/IsActiveEntity">
         <Annotation Term="UI.Hidden" Bool="true"/>
@@ -960,6 +1032,92 @@
         <Annotation Term="UI.Hidden" Bool="true"/>
       </Annotations>
       <Annotations Target="CatalogService.ProductDetails/DraftMessages">
+        <Annotation Term="Core.Computed" Bool="true"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetailSelections">
+        <Annotation Term="Common.SideEffects" Qualifier="alwaysFetchMessages">
+          <Record Type="Common.SideEffectsType">
+            <PropertyValue Property="SourceEntities">
+              <Collection>
+                <NavigationPropertyPath></NavigationPropertyPath>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="TargetProperties">
+              <Collection>
+                <String>DraftMessages</String>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+        <Annotation Term="Common.Messages" Path="DraftMessages"/>
+      </Annotations>
+      <Annotations Target="CatalogService.EntityContainer/ProductDetailSelections">
+        <Annotation Term="Common.DraftNode">
+          <Record Type="Common.DraftNodeType">
+            <PropertyValue Property="PreparationAction" String="CatalogService.draftPrepare"/>
+          </Record>
+        </Annotation>
+        <Annotation Term="Common.SideEffects" Qualifier="alwaysFetchMessages">
+          <Record Type="Common.SideEffectsType">
+            <PropertyValue Property="SourceEntities">
+              <Collection>
+                <NavigationPropertyPath></NavigationPropertyPath>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="TargetProperties">
+              <Collection>
+                <String>DraftMessages</String>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetailSelections/ID">
+        <Annotation Term="Core.ComputedDefaultValue" Bool="true"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetailSelections/detail">
+        <Annotation Term="Common.Label" String="Detail"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetailSelections/detail_ID">
+        <Annotation Term="Common.Label" String="Detail"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetailSelections/value">
+        <Annotation Term="Common.Label" String="Value"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetailSelections/value_code">
+        <Annotation Term="Common.Label" String="Value"/>
+        <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
+        <Annotation Term="Common.ValueList">
+          <Record Type="Common.ValueListType">
+            <PropertyValue Property="Label" String="Value"/>
+            <PropertyValue Property="CollectionPath" String="DetailListValues"/>
+            <PropertyValue Property="Parameters">
+              <Collection>
+                <Record Type="Common.ValueListParameterInOut">
+                  <PropertyValue Property="LocalDataProperty" PropertyPath="value_code"/>
+                  <PropertyValue Property="ValueListProperty" String="code"/>
+                </Record>
+                <Record Type="Common.ValueListParameterDisplayOnly">
+                  <PropertyValue Property="ValueListProperty" String="name"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetailSelections/IsActiveEntity">
+        <Annotation Term="UI.Hidden" Bool="true"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetailSelections/HasActiveEntity">
+        <Annotation Term="UI.Hidden" Bool="true"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetailSelections/HasDraftEntity">
+        <Annotation Term="UI.Hidden" Bool="true"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetailSelections/DraftAdministrativeData">
+        <Annotation Term="UI.Hidden" Bool="true"/>
+      </Annotations>
+      <Annotations Target="CatalogService.ProductDetailSelections/DraftMessages">
         <Annotation Term="Core.Computed" Bool="true"/>
       </Annotations>
       <Annotations Target="CatalogService.Categories">
@@ -1102,6 +1260,137 @@
       <Annotations Target="CatalogService.DetailAttributes/unit">
         <Annotation Term="Common.Label" String="Unit"/>
       </Annotations>
+      <Annotations Target="CatalogService.DetailAttributes/valueType">
+        <Annotation Term="Common.Label" String="Value Type"/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailAttributes/valueType_code">
+        <Annotation Term="Common.Label" String="Value Type"/>
+        <Annotation Term="Common.ValueList">
+          <Record Type="Common.ValueListType">
+            <PropertyValue Property="Label" String="Value Type"/>
+            <PropertyValue Property="CollectionPath" String="DetailValueTypes"/>
+            <PropertyValue Property="Parameters">
+              <Collection>
+                <Record Type="Common.ValueListParameterInOut">
+                  <PropertyValue Property="LocalDataProperty" PropertyPath="valueType_code"/>
+                  <PropertyValue Property="ValueListProperty" String="code"/>
+                </Record>
+                <Record Type="Common.ValueListParameterDisplayOnly">
+                  <PropertyValue Property="ValueListProperty" String="name"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailAttributes/minValue">
+        <Annotation Term="Common.Label" String="Minimum Value"/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailAttributes/maxValue">
+        <Annotation Term="Common.Label" String="Maximum Value"/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailAttributes/scale">
+        <Annotation Term="Common.Label" String="Decimal Places"/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailValueTypes">
+        <Annotation Term="UI.Identification">
+          <Collection>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Value" Path="name"/>
+            </Record>
+          </Collection>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="CatalogService.EntityContainer/DetailValueTypes">
+        <Annotation Term="Capabilities.DeleteRestrictions">
+          <Record Type="Capabilities.DeleteRestrictionsType">
+            <PropertyValue Property="Deletable" Bool="false"/>
+          </Record>
+        </Annotation>
+        <Annotation Term="Capabilities.InsertRestrictions">
+          <Record Type="Capabilities.InsertRestrictionsType">
+            <PropertyValue Property="Insertable" Bool="false"/>
+          </Record>
+        </Annotation>
+        <Annotation Term="Capabilities.UpdateRestrictions">
+          <Record Type="Capabilities.UpdateRestrictionsType">
+            <PropertyValue Property="Updatable" Bool="false"/>
+          </Record>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailValueTypes/name">
+        <Annotation Term="Common.Label" String="Value Type Name"/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailValueTypes/descr">
+        <Annotation Term="Common.Label" String="Value Type Description"/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailValueTypes/code">
+        <Annotation Term="Common.Label" String="Value Type"/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailListValues">
+        <Annotation Term="UI.Identification">
+          <Collection>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Value" Path="name"/>
+            </Record>
+          </Collection>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="CatalogService.EntityContainer/DetailListValues">
+        <Annotation Term="Capabilities.DeleteRestrictions">
+          <Record Type="Capabilities.DeleteRestrictionsType">
+            <PropertyValue Property="Deletable" Bool="false"/>
+          </Record>
+        </Annotation>
+        <Annotation Term="Capabilities.InsertRestrictions">
+          <Record Type="Capabilities.InsertRestrictionsType">
+            <PropertyValue Property="Insertable" Bool="false"/>
+          </Record>
+        </Annotation>
+        <Annotation Term="Capabilities.UpdateRestrictions">
+          <Record Type="Capabilities.UpdateRestrictionsType">
+            <PropertyValue Property="Updatable" Bool="false"/>
+          </Record>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailListValues/name">
+        <Annotation Term="Common.Label" String="List Value Name"/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailListValues/descr">
+        <Annotation Term="Common.Label" String="List Value Description"/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailListValues/code">
+        <Annotation Term="Common.Text" Path="name">
+          <Annotation Term="UI.TextArrangement" EnumMember="UI.TextArrangementType/TextOnly"/>
+        </Annotation>
+        <Annotation Term="Common.Label" String="List Value"/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailListValues/attribute">
+        <Annotation Term="Common.Label" String="Attribute"/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailListValues/attribute_code">
+        <Annotation Term="Common.Label" String="Attribute"/>
+        <Annotation Term="Common.ValueList">
+          <Record Type="Common.ValueListType">
+            <PropertyValue Property="Label" String="Attribute"/>
+            <PropertyValue Property="CollectionPath" String="DetailAttributes"/>
+            <PropertyValue Property="Parameters">
+              <Collection>
+                <Record Type="Common.ValueListParameterInOut">
+                  <PropertyValue Property="LocalDataProperty" PropertyPath="attribute_code"/>
+                  <PropertyValue Property="ValueListProperty" String="code"/>
+                </Record>
+                <Record Type="Common.ValueListParameterDisplayOnly">
+                  <PropertyValue Property="ValueListProperty" String="name"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailListValues/position">
+        <Annotation Term="Common.Label" String="Position"/>
+      </Annotations>
       <Annotations Target="CatalogService.EntityContainer/SubcategoryAttributes">
         <Annotation Term="Capabilities.DeleteRestrictions">
           <Record Type="Capabilities.DeleteRestrictionsType">
@@ -1149,9 +1438,6 @@
         <Annotation Term="Common.Label" String="Attribute"/>
       </Annotations>
       <Annotations Target="CatalogService.SubcategoryAttributes/attribute_code">
-        <Annotation Term="Common.Text" Path="attributeName">
-          <Annotation Term="UI.TextArrangement" EnumMember="UI.TextArrangementType/TextOnly"/>
-        </Annotation>
         <Annotation Term="Common.Label" String="Attribute"/>
         <Annotation Term="Common.ValueList">
           <Record Type="Common.ValueListType">
@@ -1171,8 +1457,8 @@
           </Record>
         </Annotation>
       </Annotations>
-      <Annotations Target="CatalogService.SubcategoryAttributes/attributeName">
-        <Annotation Term="Common.Label" String="Attribute Name"/>
+      <Annotations Target="CatalogService.SubcategoryAttributes/position">
+        <Annotation Term="Common.Label" String="Position"/>
       </Annotations>
       <Annotations Target="CatalogService.EntityContainer/Permissions">
         <Annotation Term="Capabilities.DeleteRestrictions">
@@ -1267,6 +1553,24 @@
         <Annotation Term="Common.Label" String="Name"/>
       </Annotations>
       <Annotations Target="CatalogService.DetailAttributes_texts/descr">
+        <Annotation Term="Common.Label" String="Description"/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailValueTypes_texts/locale">
+        <Annotation Term="Common.Label" String="Language Code"/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailValueTypes_texts/name">
+        <Annotation Term="Common.Label" String="Name"/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailValueTypes_texts/descr">
+        <Annotation Term="Common.Label" String="Description"/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailListValues_texts/locale">
+        <Annotation Term="Common.Label" String="Language Code"/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailListValues_texts/name">
+        <Annotation Term="Common.Label" String="Name"/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailListValues_texts/descr">
         <Annotation Term="Common.Label" String="Description"/>
       </Annotations>
       <Annotations Target="CatalogService.Currencies_texts/locale">

@@ -53,15 +53,15 @@ Result of `mcp__cds-mcp__search_model` (returns the pre-feature model in this wo
 | `srv/annotations/ProductDetails.cds` | `attribute` constraint (`NOT_ASSIGNED`, `DUPLICATE`), `value @mandatory` | `attribute` unchanged; `value` gone; `position @readonly`; typed constraints on `textValue`, `numberValue`, `listValue` (+ `@assert.target`); `ProductDetailSelections.value @mandatory @assert.target @assert`; titles (ADR-0027 decision 4) |
 | `srv/annotations/Products.cds` | `subcategory` constraint with `PRODUCTS_SUBCATEGORY_HAS_FOREIGN_DETAILS` | unchanged (API guard, D15) |
 | `srv/annotations/DetailAttributes.cds`, `SubcategoryAttributes.cds`, new `DetailListValues.cds`, `DetailValueTypes.cds` | titles | new titles; `attributeName` title gone |
-| `srv/catalog-service.js` | `before('PATCH', Products.drafts)` → `resetStaleSubcategory` | the same registration also reconciles the rows; new `after('EDIT', Products)` fills missing rows (ADR-0027 decision 3, research section 4) |
+| `srv/catalog-service.js` | `before('PATCH', Products.drafts)` → `resetStaleSubcategory` | the same registration also reconciles the rows; new `after('EDIT', Products)` fills missing rows (ADR-0027 decision 3, research section 4); a draft created by a `POST` that already carries `subcategory_code` is not reconciled (D13 covers it, research R24); no `DELETE` guard: a top-level `DELETE` of a row or selection is authorized like one through the product (R22) |
 | `_i18n/i18n*.properties`, `_i18n/messages*.properties` | revision 1 keys | labels: remove `Products.facet.details`, `ProductDetails.typeName`, `typeNamePlural`, `value`, `SubcategoryAttributes.attributeName`; add the new titles; messages: keep the three ADR-0026 keys, add `PRODUCTS_DETAIL_VALUE_TYPE_MISMATCH`, `PRODUCTS_DETAIL_VALUE_OUT_OF_RANGE`, `PRODUCTS_DETAIL_VALUE_NOT_INTEGER`, `PRODUCTS_DETAIL_VALUE_NOT_IN_LIST`, `PRODUCTS_DETAIL_SELECTION_DUPLICATE`, `PRODUCTS_DETAILS_VALUES_REMOVED` |
 | `app/products/annotations/Products.cds` | facet `Details` on `details/@UI.LineItem`; `details` in `#CategoryChanged`; `#SubcategoryChanged` | facet removed; `details` out of `#CategoryChanged` (D10); `#SubcategoryChanged` kept (re-reads the fragment) |
 | `app/products/annotations/ProductDetails.cds`, `SubcategoryAttributes.cds` | table presentation, the hand-written value list | deleted (and their `using` lines); new `DetailListValues.cds` (`code @Common.Text: name #TextOnly`) |
 | `app/products/webapp/manifest.json` | no custom section | custom section `Details` through Fiori MCP only (the revision 1 "no manifest diff" no longer holds) |
-| `app/products/webapp/ext/fragment/` | `RatingRangeFilter.*` | new `DetailsForm.fragment.xml` + `DetailsForm.js` |
+| `app/products/webapp/ext/fragment/` | `RatingRangeFilter.*` | new `DetailsForm.fragment.xml` + `DetailsForm.js`; rows ordered only by the server's `$orderby=position`, no client nulls rule (a `null` position exists only on API-created rows, sorts first on SQLite, repaired by the next Edit, research R23) |
 | `app/products/webapp/i18n/i18n*.properties` | app texts | section title, counter, combo box error text (`en`, `ru`) |
 | `metadata.xml`, snapshot | 1287 lines | 1591 measured on the scratch (phase 2); phase 3 unchanged |
-| `test/catalog-service.test.js` (96, 21 in the details `describe`), `test/metadata.test.js` (14) | | details `describe` 33 (13 kept, 5 rewritten, 15 new, 3 removed); two contract tests rewritten |
+| `test/catalog-service.test.js` (96, 21 in the details `describe`), `test/metadata.test.js` (14) | | details `describe` 34 (13 kept, 5 rewritten, 16 new including the top-level `DELETE` test of step 6b, 3 removed); two contract tests rewritten |
 | OPA5 (56 `opaTest` + 2 QUnit) | `ProductDetailsSectionJourney.js` (5), `RussianLocaleJourney` details test | journey deleted; new `ProductDetailsFormJourney.js` (7 with teardown), `pages/ProductDetailsForm.js`; the `ru` test rewritten |
 | `localService/mockdata` | revision 1 JSON | JSON for the new and changed entities (not a gate) |
 
@@ -94,6 +94,7 @@ Not affected: `importProducts` (D13), the List Report, `Permissions`, authentica
 - Revision 1 research section 7: a bare `"` in a `;` CSV swallows rows; the list names contain parentheses and dots but no quotes.
 - TESTING: activation targets are matched by suffix, `code` exactly; a child `POST` writes no draft message, a `PATCH` does; messages of a failed activation stay until the element is touched.
 - TESTING: OPA5 against `npx cds serve --in-memory --port 4004`, never `cds watch`; journeys restore seeded values and leave no draft.
+- Phase 2 findings (2026-10-12, research section 10): lean draft refuses a top-level child `POST`/`PATCH` with 422 but not a `DELETE`; a criterion that names "a write" is measured for every verb it covers.
 - Protocol section 3: fiori-mcp `search_docs` is down (embeddings) on 2026-10-12; the UI5 facts come from the 1.153.0 CDN debug sources, marked "not verified by MCP"; step 7 proves them in the browser.
 
 ## Open questions

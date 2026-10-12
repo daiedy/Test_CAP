@@ -1,0 +1,6 @@
+code;name
+TEXT;Text
+INTEGER;Whole number
+DECIMAL;Decimal number
+LIST;Single choice
+MULTI_LIST;Multiple choice

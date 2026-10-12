@@ -38,8 +38,7 @@ annotate CatalogService.Products with @(
   UI.Facets: [
     { $Type: 'UI.ReferenceFacet', ID: 'GeneralInfo',  Label: '{i18n>Products.facet.general}', Target: '@UI.FieldGroup#GeneralInfo' },
     { $Type: 'UI.ReferenceFacet', ID: 'PricingStock', Label: '{i18n>Products.facet.pricing}', Target: '@UI.FieldGroup#PricingStock' },
-    // Table section of the composition (ADR-0026 decision 7): the Label is the same word as ProductDetails.typeNamePlural.
-    { $Type: 'UI.ReferenceFacet', ID: 'Details',      Label: '{i18n>Products.facet.details}', Target: 'details/@UI.LineItem' },
+    // The Details section between PricingStock and AdminData is a custom section in manifest.json (ADR-0027 decision 5).
     { $Type: 'UI.ReferenceFacet', ID: 'AdminData',    Label: '{i18n>Products.facet.admin}',   Target: '@UI.FieldGroup#AdminData' }
   ],
   UI.FieldGroup #GeneralInfo: { Data: [
@@ -93,15 +92,14 @@ annotate CatalogService.Products with {
 
 // Category change on a draft (ADR-0024 decision 3): the server empties a subcategory of the old category in
 // before('PATCH', Products.drafts); this side effect makes Fiori Elements re-read the field and its text.
-// The detail rows are re-read too (ADR-0026 decision 7): they cache product/subcategory_code for their value help.
+// The detail rows are not re-read: an emptied subcategory keeps them unchanged (ADR-0027 decision 3).
 annotate CatalogService.Products with @(
   Common.SideEffects #CategoryChanged: {
     SourceProperties: [ category_code ],
-    TargetProperties: [ 'subcategory_code', 'subcategory/name' ],
-    TargetEntities  : [ details ]
+    TargetProperties: [ 'subcategory_code', 'subcategory/name' ]
   },
-  // Subcategory change on a draft (ADR-0026 decision 7): the rows re-read the new In value of their attribute
-  // value help; the server's set-membership check writes its message on the Subcategory field (PLAN D1).
+  // Subcategory change on a draft (ADR-0027 decision 3): the server keeps, deletes and creates the detail rows in
+  // the same PATCH; the custom section fragment DetailsForm relies on this re-read of details to show the new fields.
   Common.SideEffects #SubcategoryChanged: {
     SourceProperties: [ subcategory_code ],
     TargetEntities  : [ details ]

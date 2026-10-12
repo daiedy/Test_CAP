@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-12
 - Branch: feature/products-details-section
 - Feature: products-details-section (#9)
-- Phase: 1: plan revision (the user chose on 2026-10-12 a generated typed form instead of the table: value types, list values with ComboBox, rows created from the subcategory)
-- Last commit: cc23ef0 docs: products-details-section verification round 1
-- Next: revised PLAN, SCREENS and ADR approved by the user, then phases 2-4 redone for the changed parts
+- Phase: 2: backend revision 2 (typed values, list values, generated rows; PLAN steps 2-6, ADR-0027 accepted 2026-10-12)
+- Last commit: 9b4d496 docs(spec): products-details-section plan revision 2 approved, ADR-0027 accepted
+- Next: PLAN step 6 (test-backend, metadata.xml 1591 done in step 4), npm test 208 green, commit feat(srv), then phase 3 browser proof B1-B11
 
 ## Open debt
 
@@ -25,7 +25,7 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 | `initialLoad: true` in `manifest.json` is a boolean; UI5 1.153.0 logs `DEPRECATED: boolean value not allowed for 'initialLoad'`, supported `Disabled\|Enabled\|Auto` (found 2026-10-07) | Set `Enabled` through Fiori MCP, confirm the List Report still loads on open, OPA5 green | fiori-app-dev |
 ## What works
 
-- Backend on cds 10.1.1, Node 22: `npm run watch` (`cds watch`, port 4004), `npm run lint`, `npm test` (195 tests in 11 files: 96 in `test/catalog-service.test.js`, 20 in `test/products-import.test.js`, 13 in `test/metadata.test.js` incl. the `$metadata` snapshot, 11 in `test/backlog.test.js`, 7 in `test/hooks-protect-bash.test.js`, 8 in `test/hooks-registry-gate.test.js`, 4 in `test/hooks-state-hygiene.test.js`, 9 in `test/doc-shapes.test.js`, 3 in `test/prompt-budget.test.js`, 15 in `test/metrics.test.js`, 9 in `test/hooks-metrics.test.js`), `npm run docs:registry`
+- Backend on cds 10.1.1, Node 22: `npm run watch` (`cds watch`, port 4004), `npm run lint`, `npm test` (209 tests in 11 files: 109 in `test/catalog-service.test.js`, 20 in `test/products-import.test.js`, 14 in `test/metadata.test.js` incl. the `$metadata` snapshot, 11 in `test/backlog.test.js`, 7 in `test/hooks-protect-bash.test.js`, 8 in `test/hooks-registry-gate.test.js`, 4 in `test/hooks-state-hygiene.test.js`, 9 in `test/doc-shapes.test.js`, 3 in `test/prompt-budget.test.js`, 15 in `test/metrics.test.js`, 9 in `test/hooks-metrics.test.js`), `npm run docs:registry`
 - UI: `npm start` (proxy, :8080) and `npm run start-mock` in `app/products` both open the app from the FLP sandbox; `ui5lint` 0 problems; `npm run lint:js` (Fiori tools ESLint) 0 errors
 - Object Page editing of `Products` through drafts (ADR-0012): Edit, Save, Cancel with discard confirmation, Create and Delete on the List Report, Editing Status filter, draft lock across users
 - List Report row shows a draft/lock marker (ADR-0015, feature `products-draft-marker`): `Common.SemanticKey: [ name ]` renders a `sap.m.ObjectMarker` in the `Product Name` cell — text-only `Draft` for an own draft, icon-plus-text `LockedBy`/`UnsavedBy` for another user's draft; verified in `en` and `ru`, keyboard-reachable, with the Editing Status filter narrowing to the marked row

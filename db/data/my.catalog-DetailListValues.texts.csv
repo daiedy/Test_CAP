@@ -1,0 +1,34 @@
+code;locale;name
+MESH;ru;Сетка
+FABRIC;ru;Ткань
+LEATHER;ru;Кожа
+WOOD;ru;Дерево
+BAMBOO;ru;Бамбук
+PLASTIC;ru;Пластик
+SILICONE;ru;Силикон
+ALUMINIUM;ru;Алюминий
+STAINLESS_STEEL;ru;Нержавеющая сталь
+GLASS;ru;Стекло
+CERAMIC;ru;Керамика
+BLACK;ru;Черный
+WHITE;ru;Белый
+GREY;ru;Серый
+SILVER;ru;Серебристый
+BLUE;ru;Синий
+RED;ru;Красный
+GREEN;ru;Зеленый
+YELLOW;ru;Желтый
+PINK;ru;Розовый
+BROWN;ru;Коричневый
+BEIGE;ru;Бежевый
+MULTICOLOUR;ru;Разноцветный
+WIRELESS_2_4_GHZ;ru;Беспроводное 2,4 ГГц
+WIRED_USB;ru;Проводное (USB)
+WIRED_AUDIO_JACK;ru;Проводное (аудиоразъем)
+POCKET;ru;Карманный
+NONE;ru;Без защиты от воды
+IPX4;ru;Защита от брызг (IPX4)
+IPX5;ru;Защита от струй (IPX5)
+IPX6;ru;Защита от сильных струй (IPX6)
+IPX7;ru;Кратковременное погружение (IPX7)
+IPX8;ru;Длительное погружение (IPX8)

@@ -183,8 +183,6 @@ describe('OData contract of CatalogService', () => {
   // subcategories of the product's category through the In parameter category_code; the
   // hand-written ValueList replaces the compiler-generated one, a second one would list all 15.
   // Decision 3: a category change re-reads the subcategory the draft PATCH handler may have emptied.
-  // products-details-section, ADR-0026: it also re-reads the detail rows (TargetEntities details),
-  // which cache product/subcategory_code for the In parameter of their attribute value help.
   it('narrows the subcategory value help by category and refreshes it on a category change', async () => {
     const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
       headers: { 'Accept-Language': 'en' },
@@ -221,10 +219,7 @@ describe('OData contract of CatalogService', () => {
         '<PropertyPath>category_code</PropertyPath></Collection></PropertyValue>' +
         '<PropertyValue Property="TargetProperties"><Collection>' +
         '<String>subcategory_code</String><String>subcategory/name</String>' +
-        '</Collection></PropertyValue>' +
-        '<PropertyValue Property="TargetEntities"><Collection>' +
-        '<NavigationPropertyPath>details</NavigationPropertyPath></Collection></PropertyValue>' +
-        '</Record></Annotation>'
+        '</Collection></PropertyValue></Record></Annotation>'
     );
   });
 
@@ -255,10 +250,12 @@ describe('OData contract of CatalogService', () => {
     );
   });
 
-  // products-details-section, ADR-0026: the first composition. Products.details makes ProductDetails
-  // part of the product's draft (D9: no @odata.draft.enabled of its own), so the rows carry the
-  // draft key and elements; the attributes and their assignments are plain read-only entity sets.
-  it('exposes ProductDetails as the draft-enabled composition target of Products', async () => {
+  // products-details-section, ADR-0026 decisions 1 and 2, ADR-0027 decisions 1 and 2: Products.details
+  // and ProductDetails.selections make both levels part of the product's draft (D9: no
+  // @odata.draft.enabled of their own), so rows and selections carry the draft key and elements. A
+  // row keeps its value in the column of the attribute's value type; the attributes, their value
+  // types, list values and assignments are plain read-only entity sets.
+  it('exposes typed ProductDetails with their selections as draft-enabled composition targets', async () => {
     const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
       headers: { 'Accept-Language': 'en' },
     });
@@ -267,88 +264,112 @@ describe('OData contract of CatalogService', () => {
     const compact = data.replace(/>\s+</g, '><');
     const entityType = (name) =>
       compact.match(new RegExp(`<EntityType Name="${name}">.*?</EntityType>`))[0];
+    const draftElements = (name) =>
+      '<Property Name="IsActiveEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="true"/>' +
+      '<Property Name="HasActiveEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="false"/>' +
+      '<Property Name="HasDraftEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="false"/>' +
+      '<NavigationProperty Name="DraftAdministrativeData" ' +
+      'Type="CatalogService.DraftAdministrativeData" ContainsTarget="true"/>' +
+      `<NavigationProperty Name="SiblingEntity" Type="CatalogService.${name}"/>` +
+      '<Property Name="DraftMessages" ' +
+      'Type="Collection(CatalogService.DRAFT_DraftAdministrativeData_DraftMessage)" Nullable="true"/>';
+    const draftKey = '<Key><PropertyRef Name="ID"/><PropertyRef Name="IsActiveEntity"/></Key>';
 
     expect(entityType('Products')).toContain(
       '<NavigationProperty Name="details" Type="Collection(CatalogService.ProductDetails)" ' +
         'Partner="product"><OnDelete Action="Cascade"/></NavigationProperty>'
     );
     const details = entityType('ProductDetails');
-    expect(details).toContain(
-      '<Key><PropertyRef Name="ID"/><PropertyRef Name="IsActiveEntity"/></Key>'
-    );
+    expect(details).toContain(draftKey);
     expect(details).toContain(
       '<NavigationProperty Name="product" Type="CatalogService.Products" Partner="details">' +
         '<ReferentialConstraint Property="product_ID" ReferencedProperty="ID"/></NavigationProperty>'
     );
+    // The typed value columns in model order (ADR-0027 decision 1), then the second level.
     expect(details).toContain(
-      '<Property Name="IsActiveEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="true"/>' +
-        '<Property Name="HasActiveEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="false"/>' +
-        '<Property Name="HasDraftEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="false"/>' +
-        '<NavigationProperty Name="DraftAdministrativeData" ' +
-        'Type="CatalogService.DraftAdministrativeData" ContainsTarget="true"/>' +
-        '<NavigationProperty Name="SiblingEntity" Type="CatalogService.ProductDetails"/>' +
-        '<Property Name="DraftMessages" ' +
-        'Type="Collection(CatalogService.DRAFT_DraftAdministrativeData_DraftMessage)" Nullable="true"/>'
+      '<Property Name="position" Type="Edm.Int32"/>' +
+        '<Property Name="textValue" Type="Edm.String" MaxLength="100"/>' +
+        '<Property Name="numberValue" Type="Edm.Decimal" Precision="15" Scale="3"/>' +
+        '<NavigationProperty Name="listValue" Type="CatalogService.DetailListValues">' +
+        '<ReferentialConstraint Property="listValue_code" ReferencedProperty="code"/></NavigationProperty>' +
+        '<Property Name="listValue_code" Type="Edm.String" MaxLength="30"/>' +
+        '<NavigationProperty Name="selections" Type="Collection(CatalogService.ProductDetailSelections)" ' +
+        'Partner="detail"><OnDelete Action="Cascade"/></NavigationProperty>'
     );
-    // The rows are a draft node of the product's draft; Products stays the only draft root.
-    expect(annotationsOf(compact, 'CatalogService.EntityContainer/ProductDetails')).toContain(
-      '<Annotation Term="Common.DraftNode"><Record Type="Common.DraftNodeType">' +
-        '<PropertyValue Property="PreparationAction" String="CatalogService.draftPrepare"/>' +
-        '</Record></Annotation>'
+    // The untyped value column of ADR-0026 is gone.
+    expect(details).not.toMatch(/<Property Name="value"/);
+    expect(details).toContain(draftElements('ProductDetails'));
+
+    const selections = entityType('ProductDetailSelections');
+    expect(selections).toContain(draftKey);
+    expect(selections).toContain(
+      '<NavigationProperty Name="detail" Type="CatalogService.ProductDetails" Partner="selections">' +
+        '<ReferentialConstraint Property="detail_ID" ReferencedProperty="ID"/></NavigationProperty>' +
+        '<Property Name="detail_ID" Type="Edm.Guid"/>' +
+        '<NavigationProperty Name="value" Type="CatalogService.DetailListValues">' +
+        '<ReferentialConstraint Property="value_code" ReferencedProperty="code"/></NavigationProperty>'
     );
+    expect(selections).toContain(draftElements('ProductDetailSelections'));
+
+    // Both levels are draft nodes of the product's draft; Products stays the only draft root.
+    for (const set of ['ProductDetails', 'ProductDetailSelections']) {
+      expect(annotationsOf(compact, `CatalogService.EntityContainer/${set}`)).toContain(
+        '<Annotation Term="Common.DraftNode"><Record Type="Common.DraftNodeType">' +
+          '<PropertyValue Property="PreparationAction" String="CatalogService.draftPrepare"/>' +
+          '</Record></Annotation>'
+      );
+    }
     expect(compact.match(/Term="Common\.DraftRoot"/g)).toHaveLength(1);
-    expect(entityType('DetailAttributes')).not.toContain('IsActiveEntity');
-    expect(entityType('SubcategoryAttributes')).not.toContain('IsActiveEntity');
+
+    // The attribute carries what the generated form needs: type, bounds, scale and its list.
+    expect(entityType('DetailAttributes')).toContain(
+      '<NavigationProperty Name="valueType" Type="CatalogService.DetailValueTypes">' +
+        '<ReferentialConstraint Property="valueType_code" ReferencedProperty="code"/></NavigationProperty>' +
+        '<Property Name="valueType_code" Type="Edm.String" MaxLength="20"/>' +
+        '<Property Name="minValue" Type="Edm.Decimal" Precision="15" Scale="3"/>' +
+        '<Property Name="maxValue" Type="Edm.Decimal" Precision="15" Scale="3"/>' +
+        '<Property Name="scale" Type="Edm.Int32"/>'
+    );
+    expect(entityType('DetailAttributes')).toContain(
+      '<NavigationProperty Name="values" Type="Collection(CatalogService.DetailListValues)" ' +
+        'Partner="attribute"/>'
+    );
+    const readOnlySets = [
+      'DetailAttributes',
+      'SubcategoryAttributes',
+      'DetailListValues',
+      'DetailValueTypes',
+    ];
+    for (const set of readOnlySets) expect(entityType(set)).not.toContain('IsActiveEntity');
 
     expect(compact).toContain('<EntitySet Name="Products" EntityType="CatalogService.Products">');
     expect(compact).toContain(
       '<NavigationPropertyBinding Path="details" Target="ProductDetails"/>'
     );
-    for (const set of ['ProductDetails', 'DetailAttributes', 'SubcategoryAttributes']) {
+    expect(compact).toContain(
+      '<NavigationPropertyBinding Path="selections" Target="ProductDetailSelections"/>'
+    );
+    for (const set of ['ProductDetails', 'ProductDetailSelections', ...readOnlySets]) {
       expect(compact).toContain(`<EntitySet Name="${set}" EntityType="CatalogService.${set}">`);
     }
   });
 
-  // products-details-section, ADR-0026 decision 7: the rows are the table section "Details" of the
-  // Object Page (app/products/annotations/ProductDetails.cds). Decision 4: the attribute dropdown of a
-  // row lists only the attributes assigned to the product's subcategory through the navigation-path
-  // In parameter product/subcategory_code; the hand-written ValueList replaces the compiler-generated
-  // one of the DetailAttributes code list, a second one would list all 20. A subcategory or category
-  // change re-reads the rows (they cache product/subcategory_code), an attribute choice its name and unit.
-  it("shows the Details table section with its attribute value help narrowed by the product's subcategory", async () => {
+  // products-details-section, ADR-0027 (replaces ADR-0026 decisions 4 and 7): the details are a custom
+  // section fragment, not a table. The table facet, the row presentation and the hand-written
+  // attribute value help are gone; the compiler-generated value list of the DetailAttributes code
+  // list is the only one left on attribute_code. A subcategory change re-reads the rows the draft
+  // handler reconciled (#SubcategoryChanged); a category change no longer does (D10: the rows wait
+  // until a new subcategory is set).
+  it('re-reads the details after a subcategory change and has no table annotations', async () => {
     const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
       headers: { 'Accept-Language': 'en' },
     });
     expect(status).toBe(200);
     // The EDMX is pretty-printed, so compare without the whitespace between the tags.
     const compact = data.replace(/>\s+</g, '><');
-    // Asserted on the entity types, where the annotations are written; the compiler also copies the
-    // side effects to the entity sets.
+    // Asserted on the entity type, where the annotations are written; the compiler also copies the
+    // side effects to the entity set.
     const products = annotationsOf(compact, 'CatalogService.Products');
-    expect(products).toContain(
-      '<Record Type="UI.ReferenceFacet"><PropertyValue Property="ID" String="Details"/>' +
-        '<PropertyValue Property="Label" String="Details"/>' +
-        '<PropertyValue Property="Target" AnnotationPath="details/@UI.LineItem"/></Record>'
-    );
-
-    const attribute = annotationsOf(compact, 'CatalogService.ProductDetails/attribute_code');
-    // Term="Common.ValueList" with the closing quote: a qualified one counts, the FixedValues term does not.
-    expect(attribute.match(/Term="Common\.ValueList"/g) ?? []).toHaveLength(1);
-    const valueList = attribute.match(/<Annotation Term="Common.ValueList">.*?<\/Annotation>/)[0];
-    expect(valueList).toContain(
-      '<PropertyValue Property="CollectionPath" String="SubcategoryAttributes"/>'
-    );
-    expect(valueList).toContain(
-      '<Record Type="Common.ValueListParameterInOut">' +
-        '<PropertyValue Property="LocalDataProperty" PropertyPath="attribute_code"/>' +
-        '<PropertyValue Property="ValueListProperty" String="attribute_code"/></Record>'
-    );
-    expect(valueList).toContain(
-      '<Record Type="Common.ValueListParameterIn">' +
-        '<PropertyValue Property="LocalDataProperty" PropertyPath="product/subcategory_code"/>' +
-        '<PropertyValue Property="ValueListProperty" String="subcategory_code"/></Record>'
-    );
-
     expect(products).toContain(
       '<Annotation Term="Common.SideEffects" Qualifier="SubcategoryChanged">' +
         '<Record Type="Common.SideEffectsType">' +
@@ -361,30 +382,28 @@ describe('OData contract of CatalogService', () => {
     const categoryChanged = products.match(
       /<Annotation Term="Common.SideEffects" Qualifier="CategoryChanged">.*?<\/Annotation>/
     )[0];
-    expect(categoryChanged).toContain(
-      '<PropertyValue Property="TargetEntities"><Collection>' +
-        '<NavigationPropertyPath>details</NavigationPropertyPath></Collection></PropertyValue>'
-    );
+    expect(categoryChanged).not.toContain('TargetEntities');
 
+    // No Details facet: the Object Page keeps its three field-group facets.
+    const facets = products.match(/<Annotation Term="UI.Facets">.*?<\/Annotation>/)[0];
+    expect(facets).not.toContain('<PropertyValue Property="ID" String="Details"/>');
+    expect(compact).not.toContain('AnnotationPath="details/@UI.LineItem"');
+
+    // No row presentation: the only LineItem and HeaderInfo are those of Products.
     const details = annotationsOf(compact, 'CatalogService.ProductDetails');
-    expect(details).toContain(
-      '<Annotation Term="Common.SideEffects" Qualifier="AttributeChanged">' +
-        '<Record Type="Common.SideEffectsType">' +
-        '<PropertyValue Property="SourceProperties"><Collection>' +
-        '<PropertyPath>attribute_code</PropertyPath></Collection></PropertyValue>' +
-        '<PropertyValue Property="TargetProperties"><Collection>' +
-        '<String>attribute/name</String><String>attribute/unit</String>' +
-        '</Collection></PropertyValue></Record></Annotation>'
+    expect(details).not.toContain('Term="UI.LineItem"');
+    expect(details).not.toContain('Term="UI.HeaderInfo"');
+    expect(details).not.toContain('Qualifier="AttributeChanged"');
+    expect(compact.match(/Term="UI\.LineItem"/g)).toHaveLength(1);
+    expect(compact.match(/Term="UI\.HeaderInfo"/g)).toHaveLength(1);
+
+    // No hand-written value help: one ValueList on attribute_code, the generated code-list one.
+    const attribute = annotationsOf(compact, 'CatalogService.ProductDetails/attribute_code');
+    // Term="Common.ValueList" with the closing quote: a qualified one counts, the FixedValues term does not.
+    expect(attribute.match(/Term="Common\.ValueList"/g) ?? []).toHaveLength(1);
+    expect(attribute).toContain(
+      '<PropertyValue Property="CollectionPath" String="DetailAttributes"/>'
     );
-    // The columns Attribute, Value, Unit with their headers from @title (no Label in the records);
-    // High keeps the attribute in the table on narrow screens.
-    expect(details).toContain(
-      '<Annotation Term="UI.LineItem"><Collection>' +
-        '<Record Type="UI.DataField"><PropertyValue Property="Value" Path="attribute_code"/>' +
-        '<Annotation Term="UI.Importance" EnumMember="UI.ImportanceType/High"/></Record>' +
-        '<Record Type="UI.DataField"><PropertyValue Property="Value" Path="value"/></Record>' +
-        '<Record Type="UI.DataField"><PropertyValue Property="Value" Path="attribute/unit"/></Record>' +
-        '</Collection></Annotation>'
-    );
+    expect(compact).not.toContain('PropertyPath="product/subcategory_code"');
   });
 });

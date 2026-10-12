@@ -7,12 +7,16 @@
 // is not asserted.
 // products-subcategories (PLAN step 10): the Subcategory column header and, on the object page, the
 // Subcategory label and the localized name of Coffee Maker's subcategory (APPLIANCES) are Russian.
-sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts', './data/RatingTexts', './data/ImportTexts', './data/SubcategoryTexts'], function (
+// products-details-section (plan revision 2, PLAN step 9): the Details form of Coffee Maker shows the
+// Russian section title, counter and field labels and the ru decimal comma (the unit stays Latin);
+// Wireless Mouse shows its Connectivity values with their Russian names (pages/ProductDetailsForm.js).
+sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts', './data/RatingTexts', './data/ImportTexts', './data/SubcategoryTexts', './data/DetailAttributeTexts'], function (
   opaTest,
   CategoryTexts,
   RatingTexts,
   ImportTexts,
-  SubcategoryTexts
+  SubcategoryTexts,
+  DetailAttributeTexts
 ) {
   'use strict';
 
@@ -78,6 +82,39 @@ sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts', './data/RatingTex
       Then.onTheProductsObjectPage
         .onForm({ section: 'GeneralInfo' })
         .iCheckField({ property: 'subcategory_code' }, SubcategoryTexts.names.ru.APPLIANCES);
+    });
+
+    opaTest('The Object Page shows the Details section in Russian', function (Given, When, Then) {
+      // Still on the object page of Coffee Maker (APPLIANCES: Power 900 W, Capacity 1.2 l, Colour
+      // empty in the seed).
+      const detailLabels = DetailAttributeTexts.labels;
+      const detailNames = DetailAttributeTexts.names.ru;
+      const valueNames = DetailAttributeTexts.valueNames.ru;
+      const nbsp = String.fromCharCode(0xa0);
+      Then.onTheProductsObjectPage.iCheckSection({ section: 'Details' }, { title: detailLabels.section.ru });
+      Then.onTheDetailsForm.iSeeTheCounter(
+        detailLabels.filled.ru.replace('{0}', '2').replace('{1}', '3'),
+        'Warning'
+      );
+      Then.onTheDetailsForm.iSeeTheFieldLabels(
+        DetailAttributeTexts.bySubcategory.APPLIANCES.map(function (sCode) {
+          return detailNames[sCode];
+        })
+      );
+      // The ru decimal comma; the unit stays Latin, joined by a no-break space.
+      Then.onTheDetailsForm.iSeeTheDisplayValue(
+        detailNames.CAPACITY,
+        '1,2' + nbsp + DetailAttributeTexts.units.CAPACITY
+      );
+      // A list value in Russian: the Connectivity of Wireless Mouse, joined in the list order.
+      Given.iTearDownMyApp();
+      Given.iStartMyApp('products-display', { 'sap-ui-language': 'ru' });
+      When.onTheProductsList.onTable().iPressRow({ name: 'Wireless Mouse' });
+      Then.onTheProductsObjectPage.iSeeThisPage();
+      Then.onTheDetailsForm.iSeeTheDisplayValue(
+        detailNames.CONNECTIVITY,
+        valueNames.BLUETOOTH_5_0 + ', ' + valueNames.WIRELESS_2_4_GHZ
+      );
     });
 
     opaTest('Teardown', function (Given) {

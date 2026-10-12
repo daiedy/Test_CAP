@@ -4,12 +4,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## Now
 
-- Date: 2026-10-11
-- Branch: main
+- Date: 2026-10-12
+- Branch: feature/products-details-section
 - Feature: none
-- Phase: none (products-details-section #9 spec-ready: PLAN, SCREENS and ADR-0026 approved 2026-10-11, implementation not started; main not pushed since 3054fa0)
-- Last commit: 18d56ab docs: STATE after the products-subcategory-cascade merge
-- Next: `/feature #9` (products-details-section, P2)
+- Phase: 7: completion (products-details-section #9 closed on GitHub and pruned on 2026-10-12, cost $186.32)
+- Last commit: 348a1b9 docs: products-details-section counter badge decision
+- Next: the user merges feature/products-details-section into main (--no-ff) and pushes on instruction; then the queue: #10 products-validations
 
 ## Open debt
 
@@ -23,9 +23,14 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 | A forked session's `session` card counts the parent's copied history | Cut the scope at the fork point | architect |
 | `.claude/rules/ui-annotations.md:19` ("never written by hand") and `.claude/rules/srv-services.md:24` (no `@assert: (case ...)`) contradict accepted ADR-0024 (found 2026-10-09); `.claude/rules/ui-annotations.md` also lists the annotations of the file without `Common.FieldControl` (ADR-0025) | One sentence each naming the ADR-0024 exception and one word for `Common.FieldControl`, in a session started with `PIPELINE_ALLOW_PROTECTED=1` | user |
 | `initialLoad: true` in `manifest.json` is a boolean; UI5 1.153.0 logs `DEPRECATED: boolean value not allowed for 'initialLoad'`, supported `Disabled\|Enabled\|Auto` (found 2026-10-07) | Set `Enabled` through Fiori MCP, confirm the List Report still loads on open, OPA5 green | fiori-app-dev |
+| Stop hook backstop flags a `manifest.json` change made through Fiori MCP (audit log ok): it does not consult the MCP audit log (2026-10-12) | The stop gate script accepts it when the log shows `execute_functionality` (protected hook file, `PIPELINE_ALLOW_PROTECTED=1`) | user |
+| The db-model rule file lacks the ADR-0026 decision 1 exception: `@assert.unique` lives in `db/` (PATTERNS "New entity" has it) | Add one line: "persistence constraints `@assert.unique` live in `db/`" (`PIPELINE_ALLOW_PROTECTED=1`) | user |
+| `refreshRowsOfNewDraft` in `DetailsForm.js` (B2 re-read after Edit) is probably redundant since `$$ownRequest` (ADR-0027) | Remove it with `refreshedDrafts` after a browser proof on an API-created product | fiori-app-dev |
+| `DetailsForm.js` has an `eslint-disable` for `max-params` and `max-statements` (70 against 40) | Move the pure functions to a sibling module; narrow the directive to `max-params` | fiori-app-dev |
+
 ## What works
 
-- Backend on cds 10.1.1, Node 22: `npm run watch` (`cds watch`, port 4004), `npm run lint`, `npm test` (173 tests in 11 files: 75 in `test/catalog-service.test.js`, 20 in `test/products-import.test.js`, 12 in `test/metadata.test.js` incl. the `$metadata` snapshot, 11 in `test/backlog.test.js`, 7 in `test/hooks-protect-bash.test.js`, 8 in `test/hooks-registry-gate.test.js`, 4 in `test/hooks-state-hygiene.test.js`, 9 in `test/doc-shapes.test.js`, 3 in `test/prompt-budget.test.js`, 15 in `test/metrics.test.js`, 9 in `test/hooks-metrics.test.js`), `npm run docs:registry`
+- Backend on cds 10.1.1, Node 22: `npm run watch` (`cds watch`, port 4004), `npm run lint`, `npm test` (209 tests in 11 files: 109 in `test/catalog-service.test.js`, 20 in `test/products-import.test.js`, 14 in `test/metadata.test.js` incl. the `$metadata` snapshot, 11 in `test/backlog.test.js`, 7 in `test/hooks-protect-bash.test.js`, 8 in `test/hooks-registry-gate.test.js`, 4 in `test/hooks-state-hygiene.test.js`, 9 in `test/doc-shapes.test.js`, 3 in `test/prompt-budget.test.js`, 15 in `test/metrics.test.js`, 9 in `test/hooks-metrics.test.js`), `npm run docs:registry`
 - UI: `npm start` (proxy, :8080) and `npm run start-mock` in `app/products` both open the app from the FLP sandbox; `ui5lint` 0 problems; `npm run lint:js` (Fiori tools ESLint) 0 errors
 - Object Page editing of `Products` through drafts (ADR-0012): Edit, Save, Cancel with discard confirmation, Create and Delete on the List Report, Editing Status filter, draft lock across users
 - List Report row shows a draft/lock marker (ADR-0015, feature `products-draft-marker`): `Common.SemanticKey: [ name ]` renders a `sap.m.ObjectMarker` in the `Product Name` cell — text-only `Draft` for an own draft, icon-plus-text `LockedBy`/`UnsavedBy` for another user's draft; verified in `en` and `ru`, keyboard-reachable, with the Editing Status filter narrowing to the marked row
@@ -35,11 +40,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - STATE hygiene (#15, ADR-0023): the SessionStart briefing ends with a drift warning when `## Now` disagrees with git (`stateDrift()` in `scripts/lib/state-now.mjs`: other branch, unknown or non-ancestor `Last commit:`, more than 1 first-parent commit behind); the Stop gate repeats it once per drift key as `additionalContext` and never blocks; an open issue with a `PLAN.md` or `CONTEXT.md` folder is tagged "plan drafted" and recommended for review; a worktree under `.claude/worktrees/` no longer blocks the Stop gate
 - Product subcategories (feature `products-subcategories`, #8, ADR-0024): `Products.subcategory` from the read-only code list `Subcategories` (15 rows, each in one category); the Object Page dropdown and its value help list only the subcategories of the product's category (hand-written `Common.ValueList` with the `category_code` In parameter), a draft category change empties a foreign subcategory (`resetStaleSubcategory` plus `Common.SideEffects #CategoryChanged`), `@assert: (case ...)` rejects a mismatched pair with `PRODUCTS_SUBCATEGORY_MISMATCH`; List Report column `UI.Importance: #Low`; `en`/`ru` verified
 - Mandatory subcategory that waits for its category (feature `products-subcategory-cascade`, ADR-0025): Category and Subcategory are both `@mandatory`; `Common.FieldControl: (category.code is null ? 0 : 7)` keeps Subcategory disabled until a category is chosen and required after; the Excel workbook has a mandatory `subcategory` column and `subcategoryMismatches` reports a subcategory of another category per row before the inserts (ADR-0021 amendment 4 E, closes the #8 import debt); proved by `test/catalog-service.test.js`, `test/metadata.test.js` and the OPA5 `SubcategoryDependsOnCategoryJourney`; `en`/`ru` verified
-- UI tests: `npm run test:ui` in `app/products` (`ui5-test-runner` against `npx cds serve --in-memory --port 4004`, credentials from `app/products/ui5-test-runner.json`): 52 passed (50 `opaTest`s + 2 QUnit), 0 skipped
+- Typed Details form (feature `products-details-section`, #9, ADR-0026, ADR-0027): the Object Page section "Details" is a form generated from the product's subcategory, one field per assigned attribute with the value type TEXT, INTEGER, DECIMAL, LIST (ComboBox) or MULTI_LIST (MultiComboBox, Connectivity and Material); the server creates the rows on a draft and a subcategory change keeps the common rows and warns when filled values are removed; counter "Filled N of M", `en` and `ru`, `CatalogViewer` read-only; proved by `test/catalog-service.test.js` (109), `test/metadata.test.js` (14), OPA5 `ProductDetailsFormJourney` and `test/unit/DetailsForm.qunit.js`
+- UI tests: `npm run test:ui` in `app/products` (`ui5-test-runner` against `npx cds serve --in-memory --port 4004`, credentials from `app/products/ui5-test-runner.json`): 82 passed of 82 (58 `opaTest`s + 24 QUnit, of them 22 in `test/unit/DetailsForm.qunit.js`; feature `products-details-section` counter amendment, 2026-10-12, CHANGELOG)
 - Project-level Claude Code plugins: `ui5`, `cap-developer`; MCP in `.mcp.json`: `cds-mcp`, `fiori-mcp`, `chrome-devtools`, `ui5-mcp-server` (pinned 0.3.2 since 2026-10-07; the plugin's unpinned server `plugin:ui5:ui5-mcp-server` is toggled off in `/mcp` on each machine). Setup on a new machine: `docs/architecture/STACK.md`
 - Pipeline: 11 subagents in `.claude/agents`, 12 skills, 11 path-based rules, 7 hook events in `.claude/settings.json` (incl. the MCP audit on PostToolUse and PostToolUseFailure), the `docs/registry` registry, the release watcher `scripts/watch-releases.mjs` and the `upstream-check.yml` and `ci.yml` workflows, `.github/dependabot.yml`
 - `CatalogService` requires authentication (ADR-0013): logging in as `alice` or `bob` (`CatalogEditor`, browser Basic prompt, empty password) shows Create, Delete and Edit as before; logging in as `viewer` (`CatalogViewer`) shows the same 15-row List Report and Object Page but without those four actions - the read-only singleton `CatalogService.Permissions` drives `UI.CreateHidden`/`UpdateHidden`/`DeleteHidden` in `app/products/annotations/Products.cds` through the short singleton path `/Permissions/isEditor`, which opens the Object Page without the UI5 `$select` TypeError (ADR-0013 amendment).
 
 ## Decisions
 
-See `docs/decisions/` (ADR-0001 to ADR-0025); the accepted ways are rows in `docs/architecture/PATTERNS.md`.
+See `docs/decisions/` (ADR-0001 to ADR-0027); the accepted ways are rows in `docs/architecture/PATTERNS.md`.

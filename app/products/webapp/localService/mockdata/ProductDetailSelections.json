@@ -1,0 +1,37 @@
+[
+  {
+    "ID": "cbd307fc-385d-47b1-b7b7-86c595902e9a",
+    "detail_ID": "7ab3ef7b-0369-4c4c-8c52-7246f9bfd9b2",
+    "value_code": "WIRELESS_2_4_GHZ"
+  },
+  {
+    "ID": "6f510c4d-3659-4ff9-8ef1-623207d5084d",
+    "detail_ID": "7ab3ef7b-0369-4c4c-8c52-7246f9bfd9b2",
+    "value_code": "BLUETOOTH_5_0"
+  },
+  {
+    "ID": "2a0b9a62-c773-4d6a-804c-012d4794f4d5",
+    "detail_ID": "56ea2dc3-5564-4a1c-9227-fd0b65f93dec",
+    "value_code": "BLUETOOTH_5_0"
+  },
+  {
+    "ID": "05c19ca9-4335-474a-9f32-beedcc92b4d1",
+    "detail_ID": "2399d7a0-b986-4971-a4ac-70b4b106ab3d",
+    "value_code": "MESH"
+  },
+  {
+    "ID": "47c54565-a8f8-4f16-898f-085e7344530a",
+    "detail_ID": "2399d7a0-b986-4971-a4ac-70b4b106ab3d",
+    "value_code": "ALUMINIUM"
+  },
+  {
+    "ID": "006abef9-ede6-40ed-98e8-133900e9829b",
+    "detail_ID": "87da5028-1f8e-438b-b367-6c375475db63",
+    "value_code": "STAINLESS_STEEL"
+  },
+  {
+    "ID": "d282a497-3c78-4c99-9317-d96520ec90e6",
+    "detail_ID": "e3214e7e-5c31-4a64-898b-2db05885a26c",
+    "value_code": "TPE"
+  }
+]

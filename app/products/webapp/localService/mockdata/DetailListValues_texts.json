@@ -1,0 +1,200 @@
+[
+  {
+    "code": "MESH",
+    "locale": "ru",
+    "name": "Сетка",
+    "descr": null
+  },
+  {
+    "code": "FABRIC",
+    "locale": "ru",
+    "name": "Ткань",
+    "descr": null
+  },
+  {
+    "code": "LEATHER",
+    "locale": "ru",
+    "name": "Кожа",
+    "descr": null
+  },
+  {
+    "code": "WOOD",
+    "locale": "ru",
+    "name": "Дерево",
+    "descr": null
+  },
+  {
+    "code": "BAMBOO",
+    "locale": "ru",
+    "name": "Бамбук",
+    "descr": null
+  },
+  {
+    "code": "PLASTIC",
+    "locale": "ru",
+    "name": "Пластик",
+    "descr": null
+  },
+  {
+    "code": "SILICONE",
+    "locale": "ru",
+    "name": "Силикон",
+    "descr": null
+  },
+  {
+    "code": "ALUMINIUM",
+    "locale": "ru",
+    "name": "Алюминий",
+    "descr": null
+  },
+  {
+    "code": "STAINLESS_STEEL",
+    "locale": "ru",
+    "name": "Нержавеющая сталь",
+    "descr": null
+  },
+  {
+    "code": "GLASS",
+    "locale": "ru",
+    "name": "Стекло",
+    "descr": null
+  },
+  {
+    "code": "CERAMIC",
+    "locale": "ru",
+    "name": "Керамика",
+    "descr": null
+  },
+  {
+    "code": "BLACK",
+    "locale": "ru",
+    "name": "Черный",
+    "descr": null
+  },
+  {
+    "code": "WHITE",
+    "locale": "ru",
+    "name": "Белый",
+    "descr": null
+  },
+  {
+    "code": "GREY",
+    "locale": "ru",
+    "name": "Серый",
+    "descr": null
+  },
+  {
+    "code": "SILVER",
+    "locale": "ru",
+    "name": "Серебристый",
+    "descr": null
+  },
+  {
+    "code": "BLUE",
+    "locale": "ru",
+    "name": "Синий",
+    "descr": null
+  },
+  {
+    "code": "RED",
+    "locale": "ru",
+    "name": "Красный",
+    "descr": null
+  },
+  {
+    "code": "GREEN",
+    "locale": "ru",
+    "name": "Зеленый",
+    "descr": null
+  },
+  {
+    "code": "YELLOW",
+    "locale": "ru",
+    "name": "Желтый",
+    "descr": null
+  },
+  {
+    "code": "PINK",
+    "locale": "ru",
+    "name": "Розовый",
+    "descr": null
+  },
+  {
+    "code": "BROWN",
+    "locale": "ru",
+    "name": "Коричневый",
+    "descr": null
+  },
+  {
+    "code": "BEIGE",
+    "locale": "ru",
+    "name": "Бежевый",
+    "descr": null
+  },
+  {
+    "code": "MULTICOLOUR",
+    "locale": "ru",
+    "name": "Разноцветный",
+    "descr": null
+  },
+  {
+    "code": "WIRELESS_2_4_GHZ",
+    "locale": "ru",
+    "name": "Беспроводное 2,4 ГГц",
+    "descr": null
+  },
+  {
+    "code": "WIRED_USB",
+    "locale": "ru",
+    "name": "Проводное (USB)",
+    "descr": null
+  },
+  {
+    "code": "WIRED_AUDIO_JACK",
+    "locale": "ru",
+    "name": "Проводное (аудиоразъем)",
+    "descr": null
+  },
+  {
+    "code": "POCKET",
+    "locale": "ru",
+    "name": "Карманный",
+    "descr": null
+  },
+  {
+    "code": "NONE",
+    "locale": "ru",
+    "name": "Без защиты от воды",
+    "descr": null
+  },
+  {
+    "code": "IPX4",
+    "locale": "ru",
+    "name": "Защита от брызг (IPX4)",
+    "descr": null
+  },
+  {
+    "code": "IPX5",
+    "locale": "ru",
+    "name": "Защита от струй (IPX5)",
+    "descr": null
+  },
+  {
+    "code": "IPX6",
+    "locale": "ru",
+    "name": "Защита от сильных струй (IPX6)",
+    "descr": null
+  },
+  {
+    "code": "IPX7",
+    "locale": "ru",
+    "name": "Кратковременное погружение (IPX7)",
+    "descr": null
+  },
+  {
+    "code": "IPX8",
+    "locale": "ru",
+    "name": "Длительное погружение (IPX8)",
+    "descr": null
+  }
+]

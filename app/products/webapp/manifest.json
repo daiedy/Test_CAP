@@ -134,7 +134,21 @@
             "settings": {
               "editableHeaderContent": false,
               "contextPath": "/Products",
-              "enhanceI18n": "i18n/i18n.properties"
+              "enhanceI18n": "i18n/i18n.properties",
+              "content": {
+                "body": {
+                  "sections": {
+                    "Details": {
+                      "template": "products.ext.fragment.DetailsForm",
+                      "position": {
+                        "anchor": "PricingStock",
+                        "placement": "After"
+                      },
+                      "title": "{i18n>ProductsObjectPage.details.title}"
+                    }
+                  }
+                }
+              }
             }
           }
         }

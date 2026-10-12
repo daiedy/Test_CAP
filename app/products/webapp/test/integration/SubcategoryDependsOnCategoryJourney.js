@@ -4,8 +4,9 @@
 // Subcategory dropdown lists only the subcategories of the product's category (ValueList with the
 // category_code In parameter); changing the category empties a subcategory of the old category
 // (draft PATCH handler plus Common.SideEffects #CategoryChanged) and narrows the dropdown to the new
-// category; a saved pair is shown by name. Laptop Pro 15 is restored to Electronics / Laptops at the
-// end and no draft is left, so the seeded data the later journeys assert stays untouched.
+// category; a saved pair is shown by name. The edited product (Wireless Earbuds) is restored to
+// Electronics / Audio at the end and no draft is left, so the seeded data the later journeys assert
+// stays untouched.
 // products-subcategory-cascade (PLAN step 6, ADR-0025): Common.FieldControl
 // (category.code is null ? 0 : 7) disables Subcategory while the category is empty and makes it
 // mandatory once a category is set. Asserted on the sap.ui.mdc.Field of the form through the state
@@ -24,6 +25,10 @@ sap.ui.define(
     const categoryField = { property: CATEGORY };
     const subcategoryField = { property: SUBCATEGORY };
     const laptopName = 'Laptop Pro 15';
+    // The edit cases use Electronics / Audio Wireless Earbuds, a product without detail rows
+    // (products-details-section, ADR-0026 D1): Laptop Pro 15 carries seeded detail rows that fit only
+    // Laptops, so its Save with another subcategory is rejected by design and would leave a draft.
+    const productName = 'Wireless Earbuds';
 
     function namesOf(sCategoryCode) {
       return SubcategoryTexts.byCategory[sCategoryCode].map(function (sCode) {
@@ -75,7 +80,7 @@ sap.ui.define(
       Then.onTheProductsObjectPage.iSeeObjectPageInDisplayMode();
       Then.onTheProductsObjectPage.onForm(generalInfo).iCheckField(categoryField, sCategory);
       Then.onTheProductsObjectPage.onForm(generalInfo).iCheckField(subcategoryField, sSubcategory);
-      Then.onTheProductsObjectPage.onHeader().iCheckTitle(laptopName, sCategory);
+      Then.onTheProductsObjectPage.onHeader().iCheckTitle(productName, sCategory);
     }
 
     return function () {
@@ -136,21 +141,21 @@ sap.ui.define(
       opaTest(
         'In edit mode the subcategory dropdown lists only the subcategories of the category',
         function (Given, When, Then) {
-          When.onTheProductsList.onTable().iPressRow({ name: laptopName });
+          When.onTheProductsList.onTable().iPressRow({ name: productName });
           Then.onTheProductsObjectPage.iSeeThisPage();
           When.onTheProductsObjectPage.onHeader().iExecuteEdit();
           Then.onTheProductsObjectPage.iSeeObjectPageInEditMode();
           // Mandatory once a category is set (FieldControl 7), like Category.
           Then.onTheProductsObjectPage
             .onForm(generalInfo)
-            .iCheckField(subcategoryField, names.LAPTOPS, { required: true });
+            .iCheckField(subcategoryField, names.AUDIO, { required: true });
           When.onTheProductsObjectPage.onForm(generalInfo).iOpenValueHelp(subcategoryField);
           Then.onTheCategoryDropdown.iSeeItems(namesOf('ELECTRONICS'), SUBCATEGORY);
           // Closes the dropdown without changing the value.
-          When.onTheCategoryDropdown.iSelectItem(names.LAPTOPS, SUBCATEGORY);
+          When.onTheCategoryDropdown.iSelectItem(names.AUDIO, SUBCATEGORY);
           Then.onTheProductsObjectPage
             .onForm(generalInfo)
-            .iCheckField(subcategoryField, names.LAPTOPS);
+            .iCheckField(subcategoryField, names.AUDIO);
         }
       );
 
@@ -183,9 +188,9 @@ sap.ui.define(
           Then.onTheProductsObjectPage.iSeeObjectPageInEditMode();
           chooseCategory(When, Then, categories.ELECTRONICS);
           Then.onTheObjectPageForm.iSeeFormFieldEmpty(SUBCATEGORY);
-          chooseSubcategory(When, Then, names.LAPTOPS);
+          chooseSubcategory(When, Then, names.AUDIO);
           When.onTheProductsObjectPage.onFooter().iExecuteSave();
-          seeSavedPair(Then, categories.ELECTRONICS, names.LAPTOPS);
+          seeSavedPair(Then, categories.ELECTRONICS, names.AUDIO);
           // Back to the List Report by a restart (fallback of tests-ui.md; the page is in display
           // mode and the change is saved, so no dialog): all 15 rows, none with a draft marker.
           Given.iTearDownMyApp();
@@ -193,9 +198,9 @@ sap.ui.define(
           seeSeededListWithoutDraft(Then);
           Then.onTheProductsList.onTable().iCheckRows(
             {
-              name: laptopName,
+              name: productName,
               category_code: categories.ELECTRONICS,
-              subcategory_code: names.LAPTOPS,
+              subcategory_code: names.AUDIO,
             },
             1
           );
@@ -205,7 +210,7 @@ sap.ui.define(
       opaTest(
         'Emptying the category empties and disables the subcategory',
         function (Given, When, Then) {
-          When.onTheProductsList.onTable().iPressRow({ name: laptopName });
+          When.onTheProductsList.onTable().iPressRow({ name: productName });
           Then.onTheProductsObjectPage.iSeeThisPage();
           When.onTheProductsObjectPage.onHeader().iExecuteEdit();
           Then.onTheProductsObjectPage.iSeeObjectPageInEditMode();
@@ -216,7 +221,7 @@ sap.ui.define(
           Then.onTheObjectPageForm.iSeeFormFieldEmpty(SUBCATEGORY);
           seeSubcategoryDisabled(Then);
           discardDraft(When);
-          seeSavedPair(Then, categories.ELECTRONICS, names.LAPTOPS);
+          seeSavedPair(Then, categories.ELECTRONICS, names.AUDIO);
           // Back to the List Report by a restart, as in the restoring case.
           Given.iTearDownMyApp();
           Given.iStartMyApp('products-display');

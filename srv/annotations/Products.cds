@@ -11,13 +11,19 @@ annotate CatalogService.Products with {
   rating      @title: '{i18n>Products.rating}'       @assert.range: [0, 5];
   category    @title: '{i18n>Products.category}'     @mandatory  @assert.target;
   // Cross-field consistency (ADR-0024 decision 2): both null guards are required, CQL != treats null as a value.
+  // Second branch (ADR-0026 decisions 5 and 6): a subcategory that leaves detail rows with unassigned attributes.
   subcategory @title: '{i18n>Products.subcategory}'  @mandatory  @assert.target
               @assert: (case
                 when subcategory.code is not null and category.code is not null
                   and subcategory.category.code != category.code
                   then 'PRODUCTS_SUBCATEGORY_MISMATCH'
+                when subcategory.code is not null
+                  and exists details[attribute.code is not null
+                    and not exists attribute.subcategories[subcategory.code = $self.subcategory.code]]
+                  then 'PRODUCTS_SUBCATEGORY_HAS_FOREIGN_DETAILS'
               end);
   imageUrl    @title: '{i18n>Products.imageUrl}';
+  details     @title: '{i18n>Products.details}';
 };
 
 // Import from an xlsx workbook (ADR-0021): labels of the action and its file parameter.

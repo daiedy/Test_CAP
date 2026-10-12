@@ -1,6 +1,6 @@
 ---
 name: sap-fe-test-api-verification
-description: Where to verify sap.fe.test OPA API signatures when fiori-mcp is down; measured ids (DataPoint column, custom filter field, action parameter dialog with a file field); absence checks; probing and mutation runs; runner test counting; vacuous iCheckField(field, ''), Object Page form ids, display-mode mdc Field without DOM, pop-in behind Show Details in the 60% OPA frame; dynamic FieldControl editMode/required, Create and discard of a new draft, emptying a dropdown
+description: Where to verify sap.fe.test OPA API signatures when fiori-mcp is down; measured ids (DataPoint column, custom filter field, action parameter dialog with a file field); absence checks; probing and mutation runs; runner test counting; vacuous iCheckField(field, ''), Object Page form ids, display-mode mdc Field without DOM, pop-in behind Show Details in the 60% OPA frame; dynamic FieldControl editMode/required, Create and discard of a new draft, emptying a dropdown; Object Page table section of a composition (column keys, F4 on a new row's cell, delete confirmation); QUnit unit pages (no assert.true/false in the bundled QUnit, unit-only runner command, Decimal type checks)
 metadata:
   type: reference
 ---
@@ -12,7 +12,7 @@ metadata:
 
 `ui5-test-runner` 5.14 report (`--report-dir`): `output.txt` has only the page total (`17/17`), `job.js` and `<pageId>/browser.json` carry no per-test list; per-test evidence is the QUnit module/test names in the journey plus data checks over OData (`$count`, `$filter=IsActiveEntity eq false`) and the `cds watch` log (`draftEdit`, `PATCH ...IsActiveEntity=false`, `draftActivate`, `DELETE`).
 
-`npx prettier --check webapp/test/integration/` from `app/products` flags the pre-existing integration files (they were not formatted with the root `.prettierrc`); format only the file you changed, do not reformat the others in a test task.
+`npx prettier --check webapp/test/integration/` from `app/products` flags the pre-existing integration files (they were not formatted with the root `.prettierrc`); format only the file you changed, do not reformat the others in a test task. Still unformatted on 2026-10-12: `RussianLocaleJourney.js` (a one-line edit + `prettier --write` rewrote 226 lines); run `npx prettier --check <file>` BEFORE the edit and skip `--write` on files that already fail it.
 
 Related: [[test-cap-ui-test-run-baseline]]
 
@@ -58,3 +58,25 @@ Related: [[test-cap-ui-test-run-baseline]]
 - `onTheProductsList.onTable().iExecuteCreate()` opens the new draft in edit mode; `onFooter().iExecuteCancel()` + `iConfirmCancel()` discards it (popover appears once a field was changed) and navigates back to the List Report by itself: no restart needed, `iCheckRows({}, 15, { isDraft: false })` passes right after.
 - `onForm().iChangeField(field, '')` empties a mandatory `ValueListWithFixedValues` field: one `$batch` with the `PATCH` and the side-effect read; the context value is `null` with no pending changes.
 - Cheap probe + mutation journey: call `Opa5.extendConfig({ timeout: 10 })` at the start of each probe `opaTest` (10 s per expected failure); one probe or mutation per `opaTest`, as its last step, so the app state stays usable for the next one; read the results from `job.js` (`report.failed`, `message`).
+
+## Object Page table section of a composition (measured 2026-10-12, FE 1.153.0, products-details-section)
+
+- `onTable({ property: 'details' })` -> `...--fe::table::details::LineItem`; column property keys are the paths (`attribute_code`, `value`, `attribute/unit`, slash kept; only the column id uses `::`); section `...--fe::FacetSection::<facet ID>`, asserted with `iCheckSection({ section: 'Details' }, { title })` (state key falls through to the `title` property, mutation-proven).
+- Inline Create puts the new row at index 0. `iPressCell` on a `ValueListWithFixedValues` cell does not open the list; F4 does: `iExecuteKeyboardShortcut('F4', rowValues, column)`. Index 0 is unusable there (`vRowValues && vColumn` is falsy, the shortcut goes to the table) and an empty expected cell matches every row, so type a value with `iChangeRow(0, { value })` (index documented there) and target `{ value }`. The cell list id `...--FieldValueHelp::<Entity>::<nav>::<prop>::Popover::qualifier::::SuggestTable` matches `pages/CategoryDropdown.js`.
+- Table Delete opens "Delete this object?": `onConfirmationDialog().iConfirm()` (the `on<DialogType>Dialog` shortcuts are generated in `TemplatePage`).
+- The full `npm run test:ui` (58 tests) runs longer than the 10-minute foreground Bash limit: start it with `run_in_background` and read the log when notified (4 min when green, 15 min with BROWSER TIMEOUTs).
+## Custom section form (measured 2026-10-12, UI5 1.153.0, products-details-section revision 2)
+
+- `sap.fe.test` has no API for custom section content; `iCheckSection({ section: 'Details' }, { title })` does match a custom section (`(fe::FacetSection|fe::CustomSection)::<key>`). Fragment ids: `...--fe::CustomSubSection::<key>--<fragment id>`; factory-built form elements get generated ids, so find a field by its `FormElement#getLabelControl()` text and the stored value by the edit control's binding path (`pages/ProductDetailsForm.js`).
+- `EnterText({ pressEnterKey: true })` simulates NO focusout (Enter or focusout, never both); it commits Input, ComboBox and MultiComboBox (Enter on the exact name of an unselected MultiComboBox item fires `selectionFinish` itself). Use `clearTextFirst: false` on a MultiComboBox (the clear sends DELETE keys). Removing a token: `Press({ idSuffix: 'arrow' })` on the MultiComboBox, `Press({ idSuffix: 'selectMulti' })` on the `sap.m.List` item (`isDialogElement`), arrow again closes and fires `selectionFinish`. `Press` has no adapter for MultiComboBox (only `sap.m.ComboBox` -> arrow).
+- Save blocked by a client `validation: true` message: `sap.m.MessagePopover` (`mustBeVisible(false)`) `isOpen()` with an Error item of that title.
+- A relative `items` binding of a list control inside a factory row (`attribute/values`) is loaded in edit mode by a late `GET .../attribute/values?$select=code,name&$skip=0&$top=100` WITHOUT the parent `$expand`'s `$orderby`: CAP answers in key order, so a list order criterion fails unless the binding carries its own sorter or `$orderby`.
+- Restart guard: `if (Given.hasAppStarted()) { Given.iTearDownMyApp(); }` at the start of a case (evaluated after the previous case's queue ran) stops one red case from turning the next red with "Launch was called twice".
+- `--report-dir` + `timeout`/`> file 2>&1; echo $?` in one Bash command is refused by the worktree git guard; run the runner plain with `run_in_background`.
+
+- A new Save-time constraint plus new seed rows can break OLDER journeys: `EditCategoryOnObjectPageJourney` and `SubcategoryDependsOnCategoryJourney` saved Laptop Pro 15 with another subcategory, D1 rejected it, the leftover draft failed every later 15-row/no-draft check (22 cascade failures). Before the gate, `grep iExecuteSave` across journeys and check each saved product against the new seed data; fixed by switching to a product without detail rows (Wireless Earbuds).
+
+QUnit unit tests (measured 2026-10-12, UI5 1.153 served by `cds serve`, Test Starter `qunit: { version: 2 }`):
+- The bundled QUnit 2 has no `assert.true` / `assert.false` ("assert.false is not a function", the test dies at its first call); use `assert.strictEqual(value, true, msg)` for boolean returns.
+- Fast check of a unit module without the OPA part: `npx ui5-test-runner --url http://localhost:4004/products/webapp/test/testsuite.qunit.html --page-filter unitTests --parallel 1 --report-dir /tmp/<dir>` (about 7 s, prints `<passed>/<total>` of the unit page).
+- A `sap.ui.model.odata.type.Decimal` built from a module's settings can be exercised directly (`formatValue(v, 'string')`, `validateValue`, `parseValue`) to prove scale, bounds and no padding without a control; the Test Starter `ui5.language: 'EN'` keeps the grouping deterministic ("1,600").

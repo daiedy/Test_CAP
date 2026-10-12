@@ -1,0 +1,21 @@
+code;name;unit;valueType_code;minValue;maxValue;scale
+MATERIAL;Material;;MULTI_LIST;;;
+WEIGHT;Weight;kg;DECIMAL;0.01;100;2
+COLOUR;Colour;;LIST;;;
+DIMENSIONS;Dimensions;cm;TEXT;;;
+CAPACITY;Capacity;l;DECIMAL;0.01;100;2
+BATTERY_LIFE;Battery Life;h;INTEGER;1;10000;
+CONNECTIVITY;Connectivity;;MULTI_LIST;;;
+POWER;Power;W;INTEGER;1;5000;
+SCREEN_SIZE;Screen Size;in;DECIMAL;1;100;1
+RAM;Memory (RAM);GB;INTEGER;1;1024;
+STORAGE;Storage;GB;INTEGER;1;16384;
+MAX_LOAD;Maximum Load;kg;INTEGER;1;1000;
+BRIGHTNESS;Brightness;lm;INTEGER;1;20000;
+PAGE_COUNT;Pages;;INTEGER;1;2000;
+PAPER_SIZE;Paper Size;;LIST;;;
+TIP_SIZE;Tip Size;mm;DECIMAL;0.1;10;2
+PIECES;Pieces;;INTEGER;1;500;
+THICKNESS;Thickness;mm;DECIMAL;0.5;100;1
+WATER_RESISTANCE;Water Resistance;;LIST;;;
+DPI;Sensor Resolution;dpi;INTEGER;100;50000;

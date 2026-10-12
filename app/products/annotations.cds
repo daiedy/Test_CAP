@@ -2,3 +2,5 @@
 using from './annotations/Products';
 using from './annotations/Categories';
 using from './annotations/Subcategories';
+using from './annotations/DetailAttributes';
+using from './annotations/DetailListValues';

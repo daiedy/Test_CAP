@@ -38,6 +38,7 @@ annotate CatalogService.Products with @(
   UI.Facets: [
     { $Type: 'UI.ReferenceFacet', ID: 'GeneralInfo',  Label: '{i18n>Products.facet.general}', Target: '@UI.FieldGroup#GeneralInfo' },
     { $Type: 'UI.ReferenceFacet', ID: 'PricingStock', Label: '{i18n>Products.facet.pricing}', Target: '@UI.FieldGroup#PricingStock' },
+    // The Details section between PricingStock and AdminData is a custom section in manifest.json (ADR-0027 decision 5).
     { $Type: 'UI.ReferenceFacet', ID: 'AdminData',    Label: '{i18n>Products.facet.admin}',   Target: '@UI.FieldGroup#AdminData' }
   ],
   UI.FieldGroup #GeneralInfo: { Data: [
@@ -91,10 +92,17 @@ annotate CatalogService.Products with {
 
 // Category change on a draft (ADR-0024 decision 3): the server empties a subcategory of the old category in
 // before('PATCH', Products.drafts); this side effect makes Fiori Elements re-read the field and its text.
+// The detail rows are not re-read: an emptied subcategory keeps them unchanged (ADR-0027 decision 3).
 annotate CatalogService.Products with @(
   Common.SideEffects #CategoryChanged: {
     SourceProperties: [ category_code ],
     TargetProperties: [ 'subcategory_code', 'subcategory/name' ]
+  },
+  // Subcategory change on a draft (ADR-0027 decision 3): the server keeps, deletes and creates the detail rows in
+  // the same PATCH; the custom section fragment DetailsForm relies on this re-read of details to show the new fields.
+  Common.SideEffects #SubcategoryChanged: {
+    SourceProperties: [ subcategory_code ],
+    TargetEntities  : [ details ]
   }
 );
 

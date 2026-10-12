@@ -1,4 +1,4 @@
-- [Probing runtime behavior](project-probing-runtime-behavior.md) — throwaway probe under test/ logging to the scratchpad; Vitest 5 hides console output; delete before npm test
+- [Probing runtime behavior](project-probing-runtime-behavior.md) — throwaway probe under test/ logging to the scratchpad; Vitest 5 hides console output; delete before npm test; composition-child facts
 - [Hook sandbox](project-hook-sandbox.md) — use createSandbox() of test/fixtures/hook-sandbox.mjs; realpath, PIPELINE_LANG=en, worktree and Bash-guard traps
 - [Metrics CLI offline](project-metrics-cli-offline.md) — CLAUDE_CONFIG_DIR fixture + empty GH_CONFIG_DIR, no token: gh fails fast, no network; `--history` temp file
 - [Claude Code hook runtime](project-claude-code-hook-runtime.md) — hot reload, fork copies, SubagentStop flush race, what fires UserPromptSubmit (2.1.284)

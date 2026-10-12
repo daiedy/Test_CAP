@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-12
 - Branch: feature/products-details-section
 - Feature: products-details-section (#9)
-- Phase: 4: verification round 2 (the typed form in the browser, en and ru, alice and viewer; PLAN step 10)
-- Last commit: 0b9125b fix(app): products-details-section own cache for the details rows
-- Next: ui-verifier final re-check of R2-D2 and R2-D5 on fresh code, then phase 5 review; still failing means stop for the user
+- Phase: 5: review (PLAN step 11; low finding R2-D6 carried in from verification)
+- Last commit: 2088b7c docs: products-details-section verification round 2 final
+- Next: REVIEW.md with zero blocking findings, fixes through the owning agents, then phase 6 documentation
 
 ## Open debt
 

@@ -1,0 +1,32 @@
+[
+  {
+    "code": "TEXT",
+    "locale": "ru",
+    "name": "Текст",
+    "descr": null
+  },
+  {
+    "code": "INTEGER",
+    "locale": "ru",
+    "name": "Целое число",
+    "descr": null
+  },
+  {
+    "code": "DECIMAL",
+    "locale": "ru",
+    "name": "Десятичное число",
+    "descr": null
+  },
+  {
+    "code": "LIST",
+    "locale": "ru",
+    "name": "Одиночный выбор",
+    "descr": null
+  },
+  {
+    "code": "MULTI_LIST",
+    "locale": "ru",
+    "name": "Множественный выбор",
+    "descr": null
+  }
+]

@@ -3,90 +3,405 @@
     "ID": "25f5517a-ab14-44e5-b23f-a7fcbe4d462f",
     "product_ID": "4b7e1d2a-3c9f-4e5d-8b6a-1f2e3d4c5b6a",
     "attribute_code": "SCREEN_SIZE",
-    "value": "15"
+    "position": 1,
+    "textValue": null,
+    "numberValue": "15",
+    "listValue_code": null
   },
   {
     "ID": "42ee32c2-3153-474c-af09-3d1697e10bd7",
     "product_ID": "4b7e1d2a-3c9f-4e5d-8b6a-1f2e3d4c5b6a",
     "attribute_code": "RAM",
-    "value": "16"
+    "position": 2,
+    "textValue": null,
+    "numberValue": "16",
+    "listValue_code": null
   },
   {
     "ID": "0eb435a4-17cc-4c22-abf8-932dc842e063",
     "product_ID": "4b7e1d2a-3c9f-4e5d-8b6a-1f2e3d4c5b6a",
     "attribute_code": "STORAGE",
-    "value": "512"
+    "position": 3,
+    "textValue": null,
+    "numberValue": "512",
+    "listValue_code": null
   },
   {
     "ID": "7ab3ef7b-0369-4c4c-8c52-7246f9bfd9b2",
     "product_ID": "5c8f2e3b-4d0a-5f6e-9c7b-2a3f4e5d6c7b",
     "attribute_code": "CONNECTIVITY",
-    "value": "Wireless 2.4 GHz"
+    "position": 1,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
   },
   {
     "ID": "20e2df1c-f12b-4b02-af74-67312c33acab",
     "product_ID": "5c8f2e3b-4d0a-5f6e-9c7b-2a3f4e5d6c7b",
     "attribute_code": "DPI",
-    "value": "1600"
+    "position": 2,
+    "textValue": null,
+    "numberValue": "1600",
+    "listValue_code": null
   },
   {
-    "ID": "56ea2dc3-5564-4a1c-9227-fd0b65f93dec",
-    "product_ID": "9a2d6c7f-8b4e-9d0c-3a1f-6e7d8c9b0a1f",
-    "attribute_code": "CONNECTIVITY",
-    "value": "Bluetooth 5.0"
-  },
-  {
-    "ID": "9a47410a-f2af-49e3-a56a-f207c640d4a5",
-    "product_ID": "9a2d6c7f-8b4e-9d0c-3a1f-6e7d8c9b0a1f",
+    "ID": "6b2643d8-f4d2-4648-9224-e3262ba9c7fe",
+    "product_ID": "5c8f2e3b-4d0a-5f6e-9c7b-2a3f4e5d6c7b",
     "attribute_code": "BATTERY_LIFE",
-    "value": "12"
+    "position": 3,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
   },
   {
     "ID": "2399d7a0-b986-4971-a4ac-70b4b106ab3d",
     "product_ID": "6d9a3f4c-5e1b-6a7f-0d8c-3b4a5f6e7d8c",
     "attribute_code": "MATERIAL",
-    "value": "Mesh"
+    "position": 1,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
   },
   {
     "ID": "4bee81d5-c530-4bab-9ec0-00719afc26d3",
     "product_ID": "6d9a3f4c-5e1b-6a7f-0d8c-3b4a5f6e7d8c",
     "attribute_code": "MAX_LOAD",
-    "value": "120"
+    "position": 2,
+    "textValue": null,
+    "numberValue": "120",
+    "listValue_code": null
+  },
+  {
+    "ID": "418a54c0-4361-417b-8822-4b3c81fffdb7",
+    "product_ID": "6d9a3f4c-5e1b-6a7f-0d8c-3b4a5f6e7d8c",
+    "attribute_code": "COLOUR",
+    "position": 3,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
   },
   {
     "ID": "00e4e353-1205-4395-b980-019280497ae6",
     "product_ID": "7e0b4a5d-6f2c-7b8a-1e9d-4c5b6a7f8e9d",
     "attribute_code": "POWER",
-    "value": "900"
+    "position": 1,
+    "textValue": null,
+    "numberValue": "900",
+    "listValue_code": null
   },
   {
     "ID": "fb50ccd1-c8e9-4554-bf72-f17cc6df08eb",
     "product_ID": "7e0b4a5d-6f2c-7b8a-1e9d-4c5b6a7f8e9d",
     "attribute_code": "CAPACITY",
-    "value": "1.2"
+    "position": 2,
+    "textValue": null,
+    "numberValue": "1.2",
+    "listValue_code": null
+  },
+  {
+    "ID": "50e8e2f4-d34e-4128-9b65-7eef838df631",
+    "product_ID": "7e0b4a5d-6f2c-7b8a-1e9d-4c5b6a7f8e9d",
+    "attribute_code": "COLOUR",
+    "position": 3,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "311b83e8-3014-4607-aa61-90807d70c967",
+    "product_ID": "8f1c5b6e-7a3d-8c9b-2f0e-5d6c7b8a9f0e",
+    "attribute_code": "POWER",
+    "position": 1,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "c3906fa6-aa4a-4242-bee4-48826050e2c3",
+    "product_ID": "8f1c5b6e-7a3d-8c9b-2f0e-5d6c7b8a9f0e",
+    "attribute_code": "BRIGHTNESS",
+    "position": 2,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "6d6faabb-4b6c-469a-a54d-75f3c2adf8a6",
+    "product_ID": "8f1c5b6e-7a3d-8c9b-2f0e-5d6c7b8a9f0e",
+    "attribute_code": "COLOUR",
+    "position": 3,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "56ea2dc3-5564-4a1c-9227-fd0b65f93dec",
+    "product_ID": "9a2d6c7f-8b4e-9d0c-3a1f-6e7d8c9b0a1f",
+    "attribute_code": "CONNECTIVITY",
+    "position": 1,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "9a47410a-f2af-49e3-a56a-f207c640d4a5",
+    "product_ID": "9a2d6c7f-8b4e-9d0c-3a1f-6e7d8c9b0a1f",
+    "attribute_code": "BATTERY_LIFE",
+    "position": 2,
+    "textValue": null,
+    "numberValue": "12",
+    "listValue_code": null
+  },
+  {
+    "ID": "e7a330df-bd2c-4229-b938-c622fe3fe8f0",
+    "product_ID": "9a2d6c7f-8b4e-9d0c-3a1f-6e7d8c9b0a1f",
+    "attribute_code": "COLOUR",
+    "position": 3,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "27eaa9b8-b7e4-45c8-8ce0-b8e00226b2b1",
+    "product_ID": "0b3e7d8a-9c5f-0e1d-4b2a-7f8e9d0c1b2a",
+    "attribute_code": "PAGE_COUNT",
+    "position": 1,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "823fe202-82aa-4283-873d-4dd0d3337d93",
+    "product_ID": "0b3e7d8a-9c5f-0e1d-4b2a-7f8e9d0c1b2a",
+    "attribute_code": "PAPER_SIZE",
+    "position": 2,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "443a2e2e-b709-4335-aa45-7f759cda7c32",
+    "product_ID": "0b3e7d8a-9c5f-0e1d-4b2a-7f8e9d0c1b2a",
+    "attribute_code": "COLOUR",
+    "position": 3,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
   },
   {
     "ID": "b8bbe394-e9fe-402e-902b-bc903d00dcce",
     "product_ID": "1c4f8e9b-0d6a-1f2e-5c3b-8a9f0e1d2c3b",
     "attribute_code": "CAPACITY",
-    "value": "0.75"
+    "position": 1,
+    "textValue": null,
+    "numberValue": "0.75",
+    "listValue_code": null
   },
   {
     "ID": "87da5028-1f8e-438b-b367-6c375475db63",
     "product_ID": "1c4f8e9b-0d6a-1f2e-5c3b-8a9f0e1d2c3b",
     "attribute_code": "MATERIAL",
-    "value": "Stainless steel"
+    "position": 2,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
   },
   {
-    "ID": "186cfa94-11f0-4b33-912b-6641a1ae5701",
-    "product_ID": "4f7c1b2e-3a9d-4c5b-8f6e-1d2c3b4a5f6e",
-    "attribute_code": "THICKNESS",
-    "value": "6"
+    "ID": "a3d0ac19-cb5b-4621-9dfa-c0524be2d5cf",
+    "product_ID": "1c4f8e9b-0d6a-1f2e-5c3b-8a9f0e1d2c3b",
+    "attribute_code": "COLOUR",
+    "position": 3,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "3dc83b00-50a4-4ea7-9d62-9edc2e63a63d",
+    "product_ID": "2d5a9f0c-1e7b-2a3f-6d4c-9b0a1f2e3d4c",
+    "attribute_code": "MATERIAL",
+    "position": 1,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "2fa08440-f9f7-46d6-8fcf-e2a7f3077566",
+    "product_ID": "2d5a9f0c-1e7b-2a3f-6d4c-9b0a1f2e3d4c",
+    "attribute_code": "CAPACITY",
+    "position": 2,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "a385be98-87cc-4e6c-a85d-7a80414780d7",
+    "product_ID": "2d5a9f0c-1e7b-2a3f-6d4c-9b0a1f2e3d4c",
+    "attribute_code": "COLOUR",
+    "position": 3,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "673581c8-9f8f-43e6-98c4-5c2ddbdabada",
+    "product_ID": "3e6b0a1d-2f8c-3b4a-7e5d-0c1b2a3f4e5d",
+    "attribute_code": "MATERIAL",
+    "position": 1,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "ffc86be9-0836-4cf6-bf1e-8469944d8f7a",
+    "product_ID": "3e6b0a1d-2f8c-3b4a-7e5d-0c1b2a3f4e5d",
+    "attribute_code": "COLOUR",
+    "position": 2,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "e86df8ae-9c1d-4ef6-8025-dd30022c390a",
+    "product_ID": "3e6b0a1d-2f8c-3b4a-7e5d-0c1b2a3f4e5d",
+    "attribute_code": "WEIGHT",
+    "position": 3,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
   },
   {
     "ID": "e3214e7e-5c31-4a64-898b-2db05885a26c",
     "product_ID": "4f7c1b2e-3a9d-4c5b-8f6e-1d2c3b4a5f6e",
     "attribute_code": "MATERIAL",
-    "value": "TPE"
+    "position": 1,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "186cfa94-11f0-4b33-912b-6641a1ae5701",
+    "product_ID": "4f7c1b2e-3a9d-4c5b-8f6e-1d2c3b4a5f6e",
+    "attribute_code": "THICKNESS",
+    "position": 2,
+    "textValue": null,
+    "numberValue": "6",
+    "listValue_code": null
+  },
+  {
+    "ID": "fd9a96f0-733e-4677-8d44-5dbb510669e8",
+    "product_ID": "4f7c1b2e-3a9d-4c5b-8f6e-1d2c3b4a5f6e",
+    "attribute_code": "COLOUR",
+    "position": 3,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "9b39016e-8f88-4cd1-8eeb-257a4b66c71e",
+    "product_ID": "5a8d2c3f-4b0e-5d6c-9a7f-2e3d4c5b6a7b",
+    "attribute_code": "CONNECTIVITY",
+    "position": 1,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "7232e2b3-1cb3-43f9-ad45-256d08081b91",
+    "product_ID": "5a8d2c3f-4b0e-5d6c-9a7f-2e3d4c5b6a7b",
+    "attribute_code": "BATTERY_LIFE",
+    "position": 2,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "9d0396c5-4a87-48c4-b60a-79353d92be6d",
+    "product_ID": "5a8d2c3f-4b0e-5d6c-9a7f-2e3d4c5b6a7b",
+    "attribute_code": "COLOUR",
+    "position": 3,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "11816dc6-d7e7-4097-849e-a35128e52463",
+    "product_ID": "6b9e3d4a-5c1f-6e7d-0b8a-3f4e5d6c7b8c",
+    "attribute_code": "POWER",
+    "position": 1,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "d5d4b2b1-812f-49f2-a329-9d4154fbd365",
+    "product_ID": "6b9e3d4a-5c1f-6e7d-0b8a-3f4e5d6c7b8c",
+    "attribute_code": "BRIGHTNESS",
+    "position": 2,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "c6bf4a96-35cb-4c9f-8862-c04b2c5f178d",
+    "product_ID": "6b9e3d4a-5c1f-6e7d-0b8a-3f4e5d6c7b8c",
+    "attribute_code": "COLOUR",
+    "position": 3,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "ae083a9f-09c0-44e7-843e-656555da18ca",
+    "product_ID": "7c0f4e5b-6d2a-7f8e-1c9b-4a5f6e7d8c9d",
+    "attribute_code": "MATERIAL",
+    "position": 1,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "c38a0ec0-9005-4de4-8d0f-629f91c18118",
+    "product_ID": "7c0f4e5b-6d2a-7f8e-1c9b-4a5f6e7d8c9d",
+    "attribute_code": "PIECES",
+    "position": 2,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "b109f070-bdc3-4d0d-a5df-2083cc4480fc",
+    "product_ID": "7c0f4e5b-6d2a-7f8e-1c9b-4a5f6e7d8c9d",
+    "attribute_code": "WEIGHT",
+    "position": 3,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "4965153a-dab0-4ecc-bad5-c6d26fb4b13c",
+    "product_ID": "8d1a5f6c-7e3b-8a9f-2d0c-5b6a7f8e9d0e",
+    "attribute_code": "MATERIAL",
+    "position": 1,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "5d5bf449-cb7e-4dec-b409-3744e72370ae",
+    "product_ID": "8d1a5f6c-7e3b-8a9f-2d0c-5b6a7f8e9d0e",
+    "attribute_code": "DIMENSIONS",
+    "position": 2,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
+  },
+  {
+    "ID": "3103cc74-553f-4f7b-96d9-79881c4f13da",
+    "product_ID": "8d1a5f6c-7e3b-8a9f-2d0c-5b6a7f8e9d0e",
+    "attribute_code": "COLOUR",
+    "position": 3,
+    "textValue": null,
+    "numberValue": null,
+    "listValue_code": null
   }
 ]

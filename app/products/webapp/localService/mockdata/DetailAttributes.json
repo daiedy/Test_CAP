@@ -3,120 +3,200 @@
     "code": "MATERIAL",
     "name": "Material",
     "descr": null,
-    "unit": null
+    "unit": null,
+    "valueType_code": "MULTI_LIST",
+    "minValue": null,
+    "maxValue": null,
+    "scale": null
   },
   {
     "code": "WEIGHT",
     "name": "Weight",
     "descr": null,
-    "unit": "kg"
+    "unit": "kg",
+    "valueType_code": "DECIMAL",
+    "minValue": "0.01",
+    "maxValue": "100",
+    "scale": 2
   },
   {
     "code": "COLOUR",
     "name": "Colour",
     "descr": null,
-    "unit": null
+    "unit": null,
+    "valueType_code": "LIST",
+    "minValue": null,
+    "maxValue": null,
+    "scale": null
   },
   {
     "code": "DIMENSIONS",
     "name": "Dimensions",
     "descr": null,
-    "unit": "cm"
+    "unit": "cm",
+    "valueType_code": "TEXT",
+    "minValue": null,
+    "maxValue": null,
+    "scale": null
   },
   {
     "code": "CAPACITY",
     "name": "Capacity",
     "descr": null,
-    "unit": "l"
+    "unit": "l",
+    "valueType_code": "DECIMAL",
+    "minValue": "0.01",
+    "maxValue": "100",
+    "scale": 2
   },
   {
     "code": "BATTERY_LIFE",
     "name": "Battery Life",
     "descr": null,
-    "unit": "h"
+    "unit": "h",
+    "valueType_code": "INTEGER",
+    "minValue": "1",
+    "maxValue": "10000",
+    "scale": null
   },
   {
     "code": "CONNECTIVITY",
     "name": "Connectivity",
     "descr": null,
-    "unit": null
+    "unit": null,
+    "valueType_code": "MULTI_LIST",
+    "minValue": null,
+    "maxValue": null,
+    "scale": null
   },
   {
     "code": "POWER",
     "name": "Power",
     "descr": null,
-    "unit": "W"
+    "unit": "W",
+    "valueType_code": "INTEGER",
+    "minValue": "1",
+    "maxValue": "5000",
+    "scale": null
   },
   {
     "code": "SCREEN_SIZE",
     "name": "Screen Size",
     "descr": null,
-    "unit": "in"
+    "unit": "in",
+    "valueType_code": "DECIMAL",
+    "minValue": "1",
+    "maxValue": "100",
+    "scale": 1
   },
   {
     "code": "RAM",
     "name": "Memory (RAM)",
     "descr": null,
-    "unit": "GB"
+    "unit": "GB",
+    "valueType_code": "INTEGER",
+    "minValue": "1",
+    "maxValue": "1024",
+    "scale": null
   },
   {
     "code": "STORAGE",
     "name": "Storage",
     "descr": null,
-    "unit": "GB"
+    "unit": "GB",
+    "valueType_code": "INTEGER",
+    "minValue": "1",
+    "maxValue": "16384",
+    "scale": null
   },
   {
     "code": "MAX_LOAD",
     "name": "Maximum Load",
     "descr": null,
-    "unit": "kg"
+    "unit": "kg",
+    "valueType_code": "INTEGER",
+    "minValue": "1",
+    "maxValue": "1000",
+    "scale": null
   },
   {
     "code": "BRIGHTNESS",
     "name": "Brightness",
     "descr": null,
-    "unit": "lm"
+    "unit": "lm",
+    "valueType_code": "INTEGER",
+    "minValue": "1",
+    "maxValue": "20000",
+    "scale": null
   },
   {
     "code": "PAGE_COUNT",
     "name": "Pages",
     "descr": null,
-    "unit": null
+    "unit": null,
+    "valueType_code": "INTEGER",
+    "minValue": "1",
+    "maxValue": "2000",
+    "scale": null
   },
   {
     "code": "PAPER_SIZE",
     "name": "Paper Size",
     "descr": null,
-    "unit": null
+    "unit": null,
+    "valueType_code": "LIST",
+    "minValue": null,
+    "maxValue": null,
+    "scale": null
   },
   {
     "code": "TIP_SIZE",
     "name": "Tip Size",
     "descr": null,
-    "unit": "mm"
+    "unit": "mm",
+    "valueType_code": "DECIMAL",
+    "minValue": "0.1",
+    "maxValue": "10",
+    "scale": 2
   },
   {
     "code": "PIECES",
     "name": "Pieces",
     "descr": null,
-    "unit": null
+    "unit": null,
+    "valueType_code": "INTEGER",
+    "minValue": "1",
+    "maxValue": "500",
+    "scale": null
   },
   {
     "code": "THICKNESS",
     "name": "Thickness",
     "descr": null,
-    "unit": "mm"
+    "unit": "mm",
+    "valueType_code": "DECIMAL",
+    "minValue": "0.5",
+    "maxValue": "100",
+    "scale": 1
   },
   {
     "code": "WATER_RESISTANCE",
     "name": "Water Resistance",
     "descr": null,
-    "unit": null
+    "unit": null,
+    "valueType_code": "LIST",
+    "minValue": null,
+    "maxValue": null,
+    "scale": null
   },
   {
     "code": "DPI",
     "name": "Sensor Resolution",
     "descr": null,
-    "unit": "dpi"
+    "unit": "dpi",
+    "valueType_code": "INTEGER",
+    "minValue": "100",
+    "maxValue": "50000",
+    "scale": null
   }
 ]

@@ -7,6 +7,7 @@ sap.ui.define(
     './ObjectPageForm',
     './RatingRangeSlider',
     './ImportProductsDialog',
+    './ProductDetailsForm',
   ],
   function (
     JourneyRunner,
@@ -15,7 +16,8 @@ sap.ui.define(
     CategoryDropdown,
     ObjectPageForm,
     RatingRangeSlider,
-    ImportProductsDialog
+    ImportProductsDialog,
+    ProductDetailsForm
   ) {
     'use strict';
 
@@ -32,6 +34,7 @@ sap.ui.define(
         onTheObjectPageForm: ObjectPageForm,
         onTheRatingRangeSlider: RatingRangeSlider,
         onTheImportDialog: ImportProductsDialog,
+        onTheDetailsForm: ProductDetailsForm,
       },
     });
 

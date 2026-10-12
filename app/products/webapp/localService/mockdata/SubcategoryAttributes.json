@@ -3,270 +3,270 @@
     "ID": "324cead9-b6e0-4d5e-93fa-204431abaae6",
     "subcategory_code": "LAPTOPS",
     "attribute_code": "SCREEN_SIZE",
-    "attributeName": "Screen Size"
+    "position": 1
   },
   {
     "ID": "8d50288d-157b-4ca6-869a-7ad57e9ee30d",
     "subcategory_code": "LAPTOPS",
     "attribute_code": "RAM",
-    "attributeName": "Memory (RAM)"
+    "position": 2
   },
   {
     "ID": "35c5127e-8cd6-4e30-8ca4-dbe759859e10",
     "subcategory_code": "LAPTOPS",
     "attribute_code": "STORAGE",
-    "attributeName": "Storage"
+    "position": 3
   },
   {
     "ID": "cd0dcfc9-b30a-4e1c-881f-32907e7fd0da",
     "subcategory_code": "MICE",
     "attribute_code": "CONNECTIVITY",
-    "attributeName": "Connectivity"
+    "position": 1
   },
   {
     "ID": "831186ae-9d4c-49ed-b2b2-60ddb746c0f8",
     "subcategory_code": "MICE",
     "attribute_code": "DPI",
-    "attributeName": "Sensor Resolution"
+    "position": 2
   },
   {
     "ID": "4466a6db-5a3b-49b2-b8ff-86ddf43f3867",
     "subcategory_code": "MICE",
     "attribute_code": "BATTERY_LIFE",
-    "attributeName": "Battery Life"
+    "position": 3
   },
   {
     "ID": "f786290e-b718-45f6-b55f-2e0cbd9c1840",
     "subcategory_code": "AUDIO",
     "attribute_code": "CONNECTIVITY",
-    "attributeName": "Connectivity"
+    "position": 1
   },
   {
     "ID": "856ae215-04f0-4d33-a8be-6a0e1b5ea103",
     "subcategory_code": "AUDIO",
     "attribute_code": "BATTERY_LIFE",
-    "attributeName": "Battery Life"
+    "position": 2
   },
   {
     "ID": "a0087d64-fa75-4ad0-860c-3fc41454da6b",
     "subcategory_code": "AUDIO",
     "attribute_code": "COLOUR",
-    "attributeName": "Colour"
+    "position": 3
   },
   {
     "ID": "5faa3d60-b7a6-4ee6-9ce4-05a5b858df61",
     "subcategory_code": "SEATING",
     "attribute_code": "MATERIAL",
-    "attributeName": "Material"
+    "position": 1
   },
   {
     "ID": "fceb3636-0efa-448b-b4a3-7156db157f88",
     "subcategory_code": "SEATING",
     "attribute_code": "MAX_LOAD",
-    "attributeName": "Maximum Load"
+    "position": 2
   },
   {
     "ID": "599e7878-1069-4425-8e47-9d5fe4d05808",
     "subcategory_code": "SEATING",
     "attribute_code": "COLOUR",
-    "attributeName": "Colour"
+    "position": 3
   },
   {
     "ID": "1e0eaa24-7e4b-4668-8396-f0bb7973a08f",
     "subcategory_code": "LIGHTING",
     "attribute_code": "POWER",
-    "attributeName": "Power"
+    "position": 1
   },
   {
     "ID": "f422c195-1946-4da1-81b1-da94fdf403b0",
     "subcategory_code": "LIGHTING",
     "attribute_code": "BRIGHTNESS",
-    "attributeName": "Brightness"
+    "position": 2
   },
   {
     "ID": "5587105f-1ab5-481a-a5c1-7aa769b0ee6a",
     "subcategory_code": "LIGHTING",
     "attribute_code": "COLOUR",
-    "attributeName": "Colour"
+    "position": 3
   },
   {
     "ID": "3c62f0cb-d4c6-4ebf-83a9-dcc4a2c0b3c8",
     "subcategory_code": "DESK_ORGANIZATION",
     "attribute_code": "MATERIAL",
-    "attributeName": "Material"
+    "position": 1
   },
   {
     "ID": "908d3217-0d94-47fa-b8a9-13bb503fe9b8",
     "subcategory_code": "DESK_ORGANIZATION",
     "attribute_code": "DIMENSIONS",
-    "attributeName": "Dimensions"
+    "position": 2
   },
   {
     "ID": "ba4ea59c-6451-402f-b299-1246dbd01f43",
     "subcategory_code": "DESK_ORGANIZATION",
     "attribute_code": "COLOUR",
-    "attributeName": "Colour"
+    "position": 3
   },
   {
     "ID": "f0258861-06d0-4834-aafd-6a0ec31d49fe",
     "subcategory_code": "APPLIANCES",
     "attribute_code": "POWER",
-    "attributeName": "Power"
+    "position": 1
   },
   {
     "ID": "1a1daecf-3521-4606-bb7b-a28d1dc32574",
     "subcategory_code": "APPLIANCES",
     "attribute_code": "CAPACITY",
-    "attributeName": "Capacity"
+    "position": 2
   },
   {
     "ID": "7a305fc1-0973-4faf-b051-c22ff51aa05a",
     "subcategory_code": "APPLIANCES",
     "attribute_code": "COLOUR",
-    "attributeName": "Colour"
+    "position": 3
   },
   {
     "ID": "6e75b026-459a-467d-90e0-5b2c7f48eafa",
     "subcategory_code": "DRINKWARE",
     "attribute_code": "CAPACITY",
-    "attributeName": "Capacity"
+    "position": 1
   },
   {
     "ID": "21124376-b8c8-44fe-b106-6e6b4682dbed",
     "subcategory_code": "DRINKWARE",
     "attribute_code": "MATERIAL",
-    "attributeName": "Material"
+    "position": 2
   },
   {
     "ID": "7fc4b214-cf15-400a-b440-54a5389b7059",
     "subcategory_code": "DRINKWARE",
     "attribute_code": "COLOUR",
-    "attributeName": "Colour"
+    "position": 3
   },
   {
     "ID": "82597f39-beca-4521-bf68-da5ed1c2a4ad",
     "subcategory_code": "CUTLERY",
     "attribute_code": "MATERIAL",
-    "attributeName": "Material"
+    "position": 1
   },
   {
     "ID": "bd3405ee-748d-4cc7-9c32-de06563a4c83",
     "subcategory_code": "CUTLERY",
     "attribute_code": "PIECES",
-    "attributeName": "Pieces"
+    "position": 2
   },
   {
     "ID": "f8fa4a25-918f-426b-a7c1-ecde1979004b",
     "subcategory_code": "CUTLERY",
     "attribute_code": "WEIGHT",
-    "attributeName": "Weight"
+    "position": 3
   },
   {
     "ID": "38432d96-f46f-4a69-8f92-b572a0844a04",
     "subcategory_code": "BAGS",
     "attribute_code": "MATERIAL",
-    "attributeName": "Material"
+    "position": 1
   },
   {
     "ID": "e03af2d4-0106-4045-95aa-abc8ec2986dc",
     "subcategory_code": "BAGS",
     "attribute_code": "CAPACITY",
-    "attributeName": "Capacity"
+    "position": 2
   },
   {
     "ID": "9d5a39bb-ec01-483d-9869-a458da606c79",
     "subcategory_code": "BAGS",
     "attribute_code": "COLOUR",
-    "attributeName": "Colour"
+    "position": 3
   },
   {
     "ID": "5c1273b0-e703-462d-9c80-cbadc46a3a82",
     "subcategory_code": "PHONE_ACCESSORIES",
     "attribute_code": "MATERIAL",
-    "attributeName": "Material"
+    "position": 1
   },
   {
     "ID": "e962db94-3b57-40e4-b325-2edeb52b4dbc",
     "subcategory_code": "PHONE_ACCESSORIES",
     "attribute_code": "COLOUR",
-    "attributeName": "Colour"
+    "position": 2
   },
   {
     "ID": "97c4897f-2844-4596-bae5-0380ad6bcd2f",
     "subcategory_code": "PHONE_ACCESSORIES",
     "attribute_code": "WEIGHT",
-    "attributeName": "Weight"
+    "position": 3
   },
   {
     "ID": "e2b80a3a-4799-411f-9ffb-1f0208843205",
     "subcategory_code": "FITNESS",
     "attribute_code": "MATERIAL",
-    "attributeName": "Material"
+    "position": 1
   },
   {
     "ID": "a1a3ffc9-b0bc-471a-98a0-c7c5f6f3e753",
     "subcategory_code": "FITNESS",
     "attribute_code": "THICKNESS",
-    "attributeName": "Thickness"
+    "position": 2
   },
   {
     "ID": "b4499ae8-7d3d-4dab-bb10-da7c63644e13",
     "subcategory_code": "FITNESS",
     "attribute_code": "COLOUR",
-    "attributeName": "Colour"
+    "position": 3
   },
   {
     "ID": "1c166a5e-d9e4-4cf8-8448-9298b1d4bd9f",
     "subcategory_code": "OUTDOOR",
     "attribute_code": "MATERIAL",
-    "attributeName": "Material"
+    "position": 1
   },
   {
     "ID": "e4fa6e13-3e02-469c-ae18-d71471e315ee",
     "subcategory_code": "OUTDOOR",
     "attribute_code": "WEIGHT",
-    "attributeName": "Weight"
+    "position": 2
   },
   {
     "ID": "f7814c53-1cfa-41c1-bdee-ed7f9b3519e4",
     "subcategory_code": "OUTDOOR",
     "attribute_code": "WATER_RESISTANCE",
-    "attributeName": "Water Resistance"
+    "position": 3
   },
   {
     "ID": "c3255d19-c1a1-481c-9357-c45b7e8b8970",
     "subcategory_code": "NOTEBOOKS",
     "attribute_code": "PAGE_COUNT",
-    "attributeName": "Pages"
+    "position": 1
   },
   {
     "ID": "fed69109-1fe4-41b2-bf59-f2daffc90f3f",
     "subcategory_code": "NOTEBOOKS",
     "attribute_code": "PAPER_SIZE",
-    "attributeName": "Paper Size"
+    "position": 2
   },
   {
     "ID": "4b96a780-a5ae-490c-b6cf-72cf843dbcb3",
     "subcategory_code": "NOTEBOOKS",
     "attribute_code": "COLOUR",
-    "attributeName": "Colour"
+    "position": 3
   },
   {
     "ID": "13715f28-ed61-473a-9eab-89ecea31d284",
     "subcategory_code": "WRITING_INSTRUMENTS",
     "attribute_code": "TIP_SIZE",
-    "attributeName": "Tip Size"
+    "position": 1
   },
   {
     "ID": "b67b450f-89c8-45be-9266-9812ad7b4b7c",
     "subcategory_code": "WRITING_INSTRUMENTS",
     "attribute_code": "COLOUR",
-    "attributeName": "Colour"
+    "position": 2
   },
   {
     "ID": "3f852c82-f901-4314-a316-c72b627b7ba3",
     "subcategory_code": "WRITING_INSTRUMENTS",
     "attribute_code": "MATERIAL",
-    "attributeName": "Material"
+    "position": 3
   }
 ]

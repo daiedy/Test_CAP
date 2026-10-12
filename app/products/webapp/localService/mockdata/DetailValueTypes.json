@@ -1,0 +1,27 @@
+[
+  {
+    "code": "TEXT",
+    "name": "Text",
+    "descr": null
+  },
+  {
+    "code": "INTEGER",
+    "name": "Whole number",
+    "descr": null
+  },
+  {
+    "code": "DECIMAL",
+    "name": "Decimal number",
+    "descr": null
+  },
+  {
+    "code": "LIST",
+    "name": "Single choice",
+    "descr": null
+  },
+  {
+    "code": "MULTI_LIST",
+    "name": "Multiple choice",
+    "descr": null
+  }
+]

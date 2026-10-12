@@ -3,6 +3,8 @@
     One FormContainer whose form elements are built per detail row by the factory of DetailsForm.js; rows come in the
     server's position order only (no client sorter). Edit state from the Fiori elements model ui>/isEditable; the
     side effect #SubcategoryChanged (TargetEntities details) re-reads this binding after the server reconciles the rows.
+    The selections of a MULTI_LIST row are not expanded here: each multi combo box reads them with its own request
+    (ADR-0027 amendment, ruling B7). subcategory_code is a string code, so the visible expressions use targetType any.
 -->
 <core:FragmentDefinition
     xmlns="sap.m"
@@ -21,12 +23,12 @@
         <Text
             id="detailsNoSubcategory"
             text="{i18n>ProductsObjectPage.details.noSubcategory}"
-            visible="{= !${subcategory_code} &amp;&amp; ${ui>/isEditable} !== true }"
+            visible="{= !${path: 'subcategory_code', targetType: 'any'} &amp;&amp; ${ui>/isEditable} !== true }"
         />
         <Text
             id="detailsSelectSubcategory"
             text="{i18n>ProductsObjectPage.details.selectSubcategory}"
-            visible="{= !${subcategory_code} &amp;&amp; ${ui>/isEditable} === true }"
+            visible="{= !${path: 'subcategory_code', targetType: 'any'} &amp;&amp; ${ui>/isEditable} === true }"
         />
         <Text
             id="detailsNoAttributes"
@@ -39,7 +41,7 @@
             app:detailsRole="form"
             editable="{= ${ui>/isEditable} === true }"
             ariaLabelledBy="detailsFormTitle"
-            visible="{= !!${subcategory_code} }"
+            visible="{= !!${path: 'subcategory_code', targetType: 'any'} }"
         >
             <form:layout>
                 <form:ColumnLayout columnsXL="4" columnsL="3" columnsM="2" labelCellsLarge="12" />
@@ -51,7 +53,7 @@
                         path: 'details',
                         parameters: {
                             $select: 'ID,IsActiveEntity,position,textValue,numberValue,listValue_code',
-                            $expand: 'attribute($select=code,name,unit,valueType_code,minValue,maxValue,scale;$expand=values($select=code,name,position;$orderby=position)),selections($select=ID,IsActiveEntity,value_code)',
+                            $expand: 'attribute($select=code,name,unit,valueType_code,minValue,maxValue,scale;$expand=values($select=code,name,position;$orderby=position))',
                             $orderby: 'position'
                         },
                         factory: 'DetailsForm.createFormElement'

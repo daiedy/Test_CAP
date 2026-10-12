@@ -1,35 +1,67 @@
 sap.ui.define(
     [
-        "sap/ui/layout/form/FormElement",
-        "sap/m/Label",
-        "sap/m/Text",
-        "sap/m/Input",
-        "sap/m/ComboBox",
-        "sap/m/MultiComboBox",
+        "sap/base/Log",
         "sap/ui/core/Item",
-        "sap/ui/model/odata/type/Decimal"
+        "sap/ui/core/Messaging",
+        "sap/ui/core/message/ControlMessageProcessor",
+        "sap/ui/core/message/Message",
+        "sap/ui/core/message/MessageType",
+        "sap/ui/layout/form/ColumnElementData",
+        "sap/ui/layout/form/FormElement",
+        "sap/ui/model/odata/type/Decimal",
+        "sap/m/ComboBox",
+        "sap/m/Input",
+        "sap/m/Label",
+        "sap/m/MultiComboBox",
+        "sap/m/Text"
     ],
-    function (FormElement, Label, Text, Input, ComboBox, MultiComboBox, Item, Decimal) {
+    // eslint-disable-next-line max-params, max-statements -- one parameter per UI5 class the factory creates, one statement per named function of the section module (ADR-0027 decision 5)
+    function (
+        Log,
+        Item,
+        Messaging,
+        ControlMessageProcessor,
+        Message,
+        MessageType,
+        ColumnElementData,
+        FormElement,
+        Decimal,
+        ComboBox,
+        Input,
+        Label,
+        MultiComboBox,
+        Text
+    ) {
         "use strict";
 
         /**
-         * Module of the custom section "Details" (ADR-0027 decision 5): a factory builds one form element per
-         * detail row of the product by the attribute's value type; the fragment names no attribute.
-         * Rows come from the server in `position` order (no client sorter, PLAN step 8).
+         * Module of the custom section "Details" (ADR-0027 decision 5 and its amendment "Browser proof of the
+         * fragment"): a factory builds one form element per detail row of the product by the attribute's value
+         * type; the fragment names no attribute. Rows come from the server in `position` order (no client sorter).
          */
 
         /** Custom data key that marks the fragment controls this module looks up (root, form, counter, noAttributes). */
         const ROLE = "detailsRole";
+        /** Foreign key of a LIST row to its list value. */
+        const LIST_VALUE = "listValue_code";
         /** Foreign key of a `ProductDetailSelections` row to its list value. */
         const VALUE_CODE = "value_code";
-        /** Aggregation of the multi combo box that holds the row's `selections` binding (not rendered). */
+        /** Aggregation of the multi combo box that holds the row's own `selections` binding (not rendered). */
         const SELECTIONS = "dependents";
         /** Precision of `ProductDetails.numberValue` (Decimal(15, 3)). */
         const PRECISION = 15;
         /** No-break space between a value and its unit, so they never wrap apart (SCREENS "Fields per value type"). */
         const NBSP = String.fromCharCode(0xa0);
-        /** The `details` list binding keeps its identity across Object Page contexts, so its handlers are attached once. */
+        /** i18n key of the error of a list field whose text matches no item (SCREENS "Value states" row 5). */
+        const NOT_IN_LIST = "ProductsObjectPage.details.valueNotInList";
+        /** Log component of this module. */
+        const LOG_COMPONENT = "products.ext.fragment.DetailsForm";
+        /** The `details` list binding keeps its identity across Object Page contexts, so its handler is attached once. */
         const wiredBindings = new WeakSet();
+        /** Draft product contexts whose rows were re-read after Edit (ruling B2); a new Edit brings a new context. */
+        const refreshedDrafts = new WeakSet();
+        /** Client validation message of each list field with a text that matches no item (ruling B6). */
+        const listMessages = new Map();
 
         /**
          * Visibility of the edit control of a field.
@@ -54,10 +86,11 @@ sap.ui.define(
         /**
          * Whether a detail row counts as filled for the counter (SCREENS "Title, counter, layout").
          *
-         * @param {object} row detail row as read by the section binding, with `attribute` and `selections`
+         * @param {object} row detail row as read by the section binding, with `attribute`
+         * @param {number} [selectionCount] number of selections of a MULTI_LIST row, read from its own binding
          * @returns {boolean} TEXT non-empty after trimming, a number, a list value, or at least one selection
          */
-        function isFilled(row) {
+        function isFilled(row, selectionCount) {
             const type = row && row.attribute ? row.attribute.valueType_code : undefined;
             switch (type) {
                 case "TEXT":
@@ -66,9 +99,9 @@ sap.ui.define(
                 case "DECIMAL":
                     return row.numberValue !== null && row.numberValue !== undefined && row.numberValue !== "";
                 case "LIST":
-                    return Boolean(row.listValue_code);
+                    return Boolean(row[LIST_VALUE]);
                 case "MULTI_LIST":
-                    return Array.isArray(row.selections) && row.selections.length > 0;
+                    return typeof selectionCount === "number" && selectionCount > 0;
                 default:
                     return false;
             }
@@ -78,11 +111,16 @@ sap.ui.define(
          * Counts filled rows.
          *
          * @param {object[]} rows detail rows of one product
+         * @param {Array<number|undefined>} [selectionCounts] selections per row, same order as `rows`
          * @returns {{filled: number, total: number}} N and M of "Filled N of M"
          */
-        function countFilled(rows) {
+        function countFilled(rows, selectionCounts) {
             const list = Array.isArray(rows) ? rows : [];
-            return { filled: list.filter(isFilled).length, total: list.length };
+            const counts = Array.isArray(selectionCounts) ? selectionCounts : [];
+            const filled = list.filter(function (row, index) {
+                return isFilled(row, counts[index]);
+            });
+            return { filled: filled.length, total: list.length };
         }
 
         /**
@@ -156,6 +194,47 @@ sap.ui.define(
         }
 
         /**
+         * Meaning of the text of a list field when it is committed (ruling B6): an empty text clears the value,
+         * the text of the selected item stands for its key, any other text is no value of the list.
+         *
+         * @param {string} text value of the combo box at the commit
+         * @param {{key: string, text: string}|null} selected key and text of the selected item, or null
+         * @returns {{valid: boolean, key: (string|null)}} whether the text is a value and the key to store
+         */
+        function resolveListText(text, selected) {
+            if (!text) {
+                return { valid: true, key: null };
+            }
+            if (selected && selected.text === text) {
+                return { valid: true, key: selected.key };
+            }
+            return { valid: false, key: null };
+        }
+
+        /**
+         * Whether a list key differs from the stored one; an empty key and no key are the same.
+         *
+         * @param {string|null|undefined} stored the stored `listValue_code`
+         * @param {string|null} key the key to store
+         * @returns {boolean} true when a write is needed
+         */
+        function isDifferentKey(stored, key) {
+            return (stored || null) !== (key || null);
+        }
+
+        /**
+         * Whether a product context is a draft whose rows the server may have filled after the Edit response
+         * (ruling B2, PLAN D13): only a draft with a subcategory has rows.
+         *
+         * @param {any} isActiveEntity value of `IsActiveEntity`, undefined while not loaded
+         * @param {any} subcategoryCode value of `subcategory_code`, undefined while not loaded
+         * @returns {boolean} true for a loaded draft with a subcategory
+         */
+        function isDraftWithSubcategory(isActiveEntity, subcategoryCode) {
+            return isActiveEntity === false && Boolean(subcategoryCode);
+        }
+
+        /**
          * Format options and constraints of the per-row Decimal type (PLAN D19): the attribute's scale for
          * DECIMAL, 0 for INTEGER, bounds from the attribute; no padding zeros in the display ("15", not "15.0").
          *
@@ -175,6 +254,15 @@ sap.ui.define(
                 formatOptions: { minFractionDigits: 0, maxFractionDigits: scale, preserveDecimals: false },
                 constraints: constraints
             };
+        }
+
+        /**
+         * Rejection handler of a request whose failure the OData model has already put into the message model.
+         *
+         * @param {Error} error the rejection reason
+         */
+        function ignoreReported(error) {
+            Log.debug("Request failed, reported by the OData model", error && error.message, LOG_COMPONENT);
         }
 
         /**
@@ -205,32 +293,38 @@ sap.ui.define(
         }
 
         /**
+         * The form container whose form elements are the rows.
+         *
+         * @param {sap.m.VBox} root the fragment root
+         * @returns {sap.ui.layout.form.FormContainer|undefined} the container
+         */
+        function getContainer(root) {
+            const form = findByRole(root, "form");
+            return form ? form.getFormContainers()[0] : undefined;
+        }
+
+        /**
          * The list binding of the form elements.
          *
          * @param {sap.m.VBox} root the fragment root
          * @returns {sap.ui.model.odata.v4.ODataListBinding|undefined} the `details` binding
          */
         function getRowsBinding(root) {
-            const form = findByRole(root, "form");
-            const container = form ? form.getFormContainers()[0] : undefined;
+            const container = getContainer(root);
             return container ? container.getBinding("formElements") : undefined;
         }
 
         /**
-         * Sets a text from the app bundle.
+         * Runs a callback with the app resource bundle of a control.
          *
-         * @param {sap.m.Text} control the text control
-         * @param {string} key i18n key
-         * @param {any[]} args placeholder values
+         * @param {sap.ui.core.Control} control a control that sees the `i18n` model
+         * @param {function(sap.base.i18n.ResourceBundle): void} apply callback with the bundle
          */
-        function setBundleText(control, key, args) {
+        function withBundle(control, apply) {
             const model = control.getModel("i18n");
             if (!model) {
                 return;
             }
-            const apply = function (bundle) {
-                control.setText(bundle.getText(key, args));
-            };
             // getResourceBundle returns the bundle, or a promise while an async bundle is still loading
             const bundle = model.getResourceBundle();
             if (bundle && typeof bundle.then === "function") {
@@ -241,6 +335,105 @@ sap.ui.define(
         }
 
         /**
+         * The draft product the fragment shows, if it shows a draft.
+         *
+         * @param {sap.ui.core.Element} element a control inside the fragment
+         * @returns {sap.ui.model.odata.v4.Context|null} the draft product context
+         */
+        function draftProductOf(element) {
+            const root = findRoot(element);
+            const product = root ? root.getBindingContext() : null;
+            return product && product.getProperty("IsActiveEntity") === false ? product : null;
+        }
+
+        /**
+         * Requests side effects on the product context; a synchronous refusal of the model is logged, not thrown,
+         * so a field handler never breaks the page.
+         *
+         * @param {sap.ui.model.odata.v4.Context} product the product context
+         * @param {object[]} paths `$PropertyPath` or `$NavigationPropertyPath` objects
+         * @returns {boolean} whether the request was accepted
+         */
+        function requestOnProduct(product, paths) {
+            try {
+                product.requestSideEffects(paths).catch(ignoreReported);
+                return true;
+            } catch (error) {
+                Log.warning("Side effects not requested", error.message, LOG_COMPONENT);
+                return false;
+            }
+        }
+
+        /**
+         * Reads the draft messages of the product after a field write (PLAN D-2), as Fiori elements does after
+         * its own field changes: the `GET ...?$select=DraftMessages` joins the write's `$auto` batch, so a server
+         * message of the row reaches its field at once.
+         *
+         * @param {sap.ui.core.Element} element the field that wrote
+         */
+        function requestDraftMessages(element) {
+            const product = draftProductOf(element);
+            if (product) {
+                requestOnProduct(product, [{ $PropertyPath: "DraftMessages" }]);
+            }
+        }
+
+        /**
+         * Re-reads the rows once per draft context after Edit (ruling B2): the `draftEdit` response of a product
+         * without rows carries `details: []`, the server's `after('EDIT')` fill comes later. A dependent binding
+         * cannot refresh itself, so the request goes through the product context.
+         *
+         * @param {sap.m.VBox} root the fragment root
+         */
+        function refreshRowsOfNewDraft(root) {
+            const product = root.getBindingContext();
+            if (!product || refreshedDrafts.has(product)) {
+                return;
+            }
+            if (!isDraftWithSubcategory(product.getProperty("IsActiveEntity"), product.getProperty("subcategory_code"))) {
+                return;
+            }
+            if (requestOnProduct(product, [{ $NavigationPropertyPath: "details" }])) {
+                refreshedDrafts.add(product);
+            }
+        }
+
+        /**
+         * `value_code`s of the row's selections, read from the multi combo box's own binding (ruling B7).
+         *
+         * @param {sap.m.MultiComboBox} multiComboBox the edit control of a MULTI_LIST row
+         * @returns {string[]} the selected codes, in selection order
+         */
+        function selectedCodes(multiComboBox) {
+            const binding = multiComboBox.getBinding(SELECTIONS);
+            if (!binding) {
+                return [];
+            }
+            return binding
+                .getCurrentContexts()
+                .filter(Boolean)
+                .map(function (context) {
+                    return context.getProperty(VALUE_CODE);
+                })
+                .filter(Boolean);
+        }
+
+        /**
+         * Number of selections of the row shown by a form element, if it is a MULTI_LIST row.
+         *
+         * @param {sap.ui.layout.form.FormElement} [formElement] the form element of the row
+         * @returns {number|undefined} the count, undefined for other value types
+         */
+        function selectionCountOf(formElement) {
+            const multiComboBox = formElement
+                ? formElement.getFields().find(function (field) {
+                      return field.isA("sap.m.MultiComboBox");
+                  })
+                : undefined;
+            return multiComboBox ? selectedCodes(multiComboBox).length : undefined;
+        }
+
+        /**
          * Recomputes "Filled N of M" from the bound rows and switches the counter and the "no details" text
          * (browser proof B10). Shown only when the product has a subcategory.
          *
@@ -248,23 +441,32 @@ sap.ui.define(
          */
         function updateCounter(root) {
             const binding = getRowsBinding(root);
+            const container = getContainer(root);
             const counter = findByRole(root, "counter");
             const noAttributes = findByRole(root, "noAttributes");
-            if (!binding || !counter || !noAttributes) {
+            if (!binding || !container || !counter || !noAttributes) {
                 return;
             }
-            const rows = binding
-                .getCurrentContexts()
-                .filter(Boolean)
-                .map(function (context) {
-                    return context.getObject();
-                });
-            const result = countFilled(rows);
-            const context = root.getBindingContext();
-            const hasSubcategory = Boolean(context && context.getProperty("subcategory_code"));
+            const contexts = binding.getCurrentContexts().filter(Boolean);
+            const formElements = container.getFormElements();
+            const rows = contexts.map(function (context) {
+                return context.getObject();
+            });
+            const selectionCounts = contexts.map(function (context) {
+                return selectionCountOf(
+                    formElements.find(function (formElement) {
+                        return formElement.getBindingContext() === context;
+                    })
+                );
+            });
+            const result = countFilled(rows, selectionCounts);
+            const product = root.getBindingContext();
+            const hasSubcategory = Boolean(product && product.getProperty("subcategory_code"));
             counter.setVisible(hasSubcategory && result.total > 0);
             noAttributes.setVisible(hasSubcategory && result.total === 0 && binding.isLengthFinal());
-            setBundleText(counter, "ProductsObjectPage.details.filled", [result.filled, result.total]);
+            withBundle(counter, function (bundle) {
+                counter.setText(bundle.getText("ProductsObjectPage.details.filled", [result.filled, result.total]));
+            });
         }
 
         /**
@@ -280,86 +482,168 @@ sap.ui.define(
         }
 
         /**
-         * `modelContextChange` of the fragment root: attaches the counter to the `details` binding once and
-         * asks the product for its draft messages after a row PATCH, as Fiori Elements does after its own
-         * field changes (browser proof B4), so server messages reach the fields.
+         * Removes the "not in the list" message of a list field, if it has one.
          *
-         * @param {sap.ui.base.Event} event the event of the root VBox
+         * @param {sap.m.ComboBox} comboBox the list field
          */
-        function onModelContextChange(event) {
-            const root = event.getSource();
-            const binding = getRowsBinding(root);
-            if (binding && !wiredBindings.has(binding)) {
-                wiredBindings.add(binding);
-                binding.attachChange(function () {
-                    updateCounter(root);
-                });
-                binding.attachPatchCompleted(function () {
-                    updateCounter(root);
-                    const product = root.getBindingContext();
-                    if (product && product.getProperty("IsActiveEntity") === false) {
-                        product.requestSideEffects([{ $PropertyPath: "DraftMessages" }]).catch(function () {
-                            // the model reports a failed request in the message model
-                        });
-                    }
-                });
+        function removeListMessage(comboBox) {
+            const entry = listMessages.get(comboBox);
+            if (entry) {
+                listMessages.delete(comboBox);
+                Messaging.removeMessages(entry.message);
             }
-            updateCounter(root);
         }
 
         /**
-         * `change` of a text or number input: the binding has written the value (or rejected it with a value
-         * state); the counter follows.
+         * Adds the "not in the list" message to a list field (ruling B6): a client validation message on the
+         * control's `selectedKey`, shaped like the framework's own type errors, so the field shows the Error state
+         * with its text, the message popover lists it under the field label and Fiori elements blocks Save; a
+         * `DraftMessages` read does not remove it. The stored value is not touched.
          *
-         * @param {sap.ui.base.Event} event the input's change event
+         * @param {sap.m.ComboBox} comboBox the list field
          */
-        function onValueChange(event) {
-            updateCounterFrom(event.getSource());
+        function showNotInList(comboBox) {
+            removeListMessage(comboBox);
+            const row = comboBox.getBindingContext();
+            withBundle(comboBox, function (bundle) {
+                if (comboBox.isDestroyed()) {
+                    return;
+                }
+                const message = new Message({
+                    message: bundle.getText(NOT_IN_LIST),
+                    type: MessageType.Error,
+                    target: comboBox.getId() + "/selectedKey",
+                    processor: new ControlMessageProcessor(),
+                    validation: true
+                });
+                listMessages.set(comboBox, { message: message, rowPath: row ? row.getPath() : "" });
+                Messaging.addMessages(message);
+            });
         }
 
         /**
-         * `change` of a list field: typed text that matches no item gets the error state (PLAN B6, SCREENS row 5).
+         * Removes the messages of list fields that are gone: every change of the `details` binding destroys the
+         * form elements and builds new ones with the same ids, so a message must not outlive its control object.
+         */
+        function removeOrphanedListMessages() {
+            listMessages.forEach(function (entry, comboBox) {
+                if (comboBox.isDestroyed()) {
+                    removeListMessage(comboBox);
+                }
+            });
+        }
+
+        /**
+         * `modelContextChange` of a list field: a message never outlives the row it was raised on.
+         *
+         * @param {sap.ui.base.Event} event the event of the combo box
+         */
+        function onListContextChange(event) {
+            const comboBox = event.getSource();
+            const entry = listMessages.get(comboBox);
+            const row = comboBox.getBindingContext();
+            if (entry && (!row || row.getPath() !== entry.rowPath)) {
+                removeListMessage(comboBox);
+            }
+        }
+
+        /**
+         * `change` of a list field (ruling B6), fired on Enter, focus leave and a list choice, never per typed
+         * character: `selectedKey` is bound one-way, so only this handler writes `listValue_code`, through the row
+         * context. Empty text writes null, the text of the selected item writes its key, any other text writes
+         * nothing and raises the field's message.
          *
          * @param {sap.ui.base.Event} event the combo box change event
          */
         function onListChange(event) {
             const comboBox = event.getSource();
-            const invalid = comboBox.getValue() !== "" && !comboBox.getSelectedKey();
-            comboBox.setValueState(invalid ? "Error" : "None");
+            const item = comboBox.getSelectedItem();
+            const commit = resolveListText(
+                comboBox.getValue(),
+                item ? { key: item.getKey(), text: item.getText() } : null
+            );
+            if (!commit.valid) {
+                showNotInList(comboBox);
+                return;
+            }
+            removeListMessage(comboBox);
+            const row = comboBox.getBindingContext();
+            if (row && isDifferentKey(row.getProperty(LIST_VALUE), commit.key)) {
+                const update = function () {
+                    updateCounterFrom(comboBox);
+                };
+                row.setProperty(LIST_VALUE, commit.key).then(update, ignoreReported);
+                requestDraftMessages(comboBox);
+            }
             updateCounterFrom(comboBox);
         }
 
         /**
-         * List value codes of selection contexts.
+         * Whether the value of an input passed its binding type, so the binding wrote it to the model.
          *
-         * @param {sap.ui.model.odata.v4.Context[]} contexts contexts of the row's `selections` binding
-         * @returns {string[]} their `value_code`s
+         * @param {sap.m.Input} input a text or number input
+         * @returns {boolean} false while the input shows a client type error
          */
-        function codesOf(contexts) {
-            return contexts.map(function (context) {
-                return context.getProperty(VALUE_CODE);
+        function hasValidValue(input) {
+            const binding = input.getBinding("value");
+            return Boolean(binding) && binding.getDataState().getInvalidValue() === undefined;
+        }
+
+        /**
+         * `change` of a text or number input: the binding has written the value (or rejected it with a client
+         * message); the draft messages are read after a write and the counter follows.
+         *
+         * @param {sap.ui.base.Event} event the input's change event
+         */
+        function onValueChange(event) {
+            const input = event.getSource();
+            if (hasValidValue(input)) {
+                requestDraftMessages(input);
+            }
+            updateCounterFrom(input);
+        }
+
+        /**
+         * The display text of the form element a field belongs to.
+         *
+         * @param {sap.ui.core.Control} field the edit control
+         * @returns {sap.m.Text|undefined} the display control
+         */
+        function displayOf(field) {
+            const formElement = field.getParent();
+            if (!formElement || !formElement.getFields) {
+                return undefined;
+            }
+            return formElement.getFields().find(function (control) {
+                return control !== field && control.isA("sap.m.Text");
             });
         }
 
         /**
-         * Aligns a multi combo box and its display text with the row's selections.
+         * Aligns a multi combo box, its display text and the counter with the row's selections (ruling B7).
+         * Runs on every change of the selections binding and of the items binding.
          *
-         * @param {sap.m.MultiComboBox} multiComboBox the edit control
-         * @param {sap.m.Text} display the display control
+         * @param {sap.m.MultiComboBox} multiComboBox the edit control of a MULTI_LIST row
          */
-        function syncSelections(multiComboBox, display) {
-            const binding = multiComboBox.getBinding(SELECTIONS);
-            const codes = binding ? codesOf(binding.getCurrentContexts().filter(Boolean)).filter(Boolean) : [];
+        function syncSelections(multiComboBox) {
+            if (multiComboBox.isDestroyed()) {
+                return;
+            }
+            const codes = selectedCodes(multiComboBox);
             multiComboBox.setSelectedKeys(codes);
+            const display = displayOf(multiComboBox);
             const row = multiComboBox.getBindingContext();
-            display.setText(joinSelectedNames(row ? row.getObject("attribute/values") : [], codes));
+            if (display) {
+                display.setText(joinSelectedNames(row ? row.getObject("attribute/values") : [], codes));
+            }
             updateCounterFrom(multiComboBox);
         }
 
         /**
-         * `selectionFinish` of a multi combo box (PLAN B7): creates a selection for every added key and deletes
-         * the selection of every removed key through the row's `selections` list binding, so the requests go to
-         * `Products(...)/details(...)/selections`. Fired on popover close, on Enter after typing and on token delete.
+         * `selectionFinish` of a multi combo box (ruling B7): creates a selection for every added key and deletes
+         * the selection of every removed key through the row's own `selections` binding, so the requests go to
+         * `Products(...)/details(...)/selections` (`POST` 201, `DELETE` 204, measured). The binding's change
+         * event then syncs the keys, the display text and the counter.
          *
          * @param {sap.ui.base.Event} event the selectionFinish event
          */
@@ -370,21 +654,27 @@ sap.ui.define(
                 return;
             }
             const contexts = binding.getCurrentContexts().filter(Boolean);
-            const change = diffSelections(codesOf(contexts), multiComboBox.getSelectedKeys());
-            const resync = function () {
-                updateCounterFrom(multiComboBox);
-            };
+            const change = diffSelections(
+                contexts.map(function (context) {
+                    return context.getProperty(VALUE_CODE);
+                }),
+                multiComboBox.getSelectedKeys()
+            );
+            if (change.added.length === 0 && change.removed.length === 0) {
+                return;
+            }
             contexts
                 .filter(function (context) {
                     return change.removed.includes(context.getProperty(VALUE_CODE));
                 })
                 .forEach(function (context) {
-                    context.delete().then(resync, resync);
+                    context.delete().catch(ignoreReported);
                 });
             change.added.forEach(function (code) {
                 // created without a refresh: the POST response carries every selected property
-                binding.create({ [VALUE_CODE]: code }, true).created().then(resync, resync);
+                binding.create({ [VALUE_CODE]: code }, true).created().catch(ignoreReported);
             });
+            requestDraftMessages(multiComboBox);
         }
 
         /**
@@ -399,29 +689,53 @@ sap.ui.define(
         }
 
         /**
-         * Item template of the attribute's allowed values.
+         * Layout data that gives a field the whole width of its form column under the label (PLAN D-5): the
+         * `ColumnLayout` splits the cells of an element among all its fields, the hidden one included, so without
+         * it the display text sits in the right half and the input is half as wide as the Fiori elements fields.
+         *
+         * @returns {sap.ui.layout.form.ColumnElementData} new layout data, one per field
+         */
+        function fullRow() {
+            return new ColumnElementData({ cellsSmall: 12, cellsLarge: 12 });
+        }
+
+        /**
+         * Binding info of the edit-mode visibility.
+         *
+         * @returns {object} binding info for `visible`
+         */
+        function editModeBinding() {
+            return { path: "ui>/isEditable", formatter: isEditMode };
+        }
+
+        /**
+         * Item template of the attribute's allowed values, in the list order of SCREENS "Texts". In edit mode the
+         * binding can send its own request (`.../attribute/values`), so it carries the same server order as the
+         * section's `$expand` (`$orderby=position`); no client sorter (PLAN step 8).
          *
          * @returns {object} aggregation binding info for `items`
          */
         function valuesBindingInfo() {
             return {
                 path: "attribute/values",
+                parameters: { $orderby: "position" },
                 template: new Item({ key: { path: "code" }, text: { path: "name" } }),
                 templateShareable: false
             };
         }
 
         /**
-         * Display control of a field: label above the value, empty indicator for no value.
+         * Display control of a field: the value under its label, empty indicator for no value.
          *
          * @param {string} id id of the form element
-         * @param {object} [text] binding info of the text, none for MULTI_LIST
+         * @param {object} [text] binding info of the text, none for MULTI_LIST (set by the selection sync)
          * @returns {sap.m.Text} the display text
          */
         function createDisplay(id, text) {
             const settings = {
                 emptyIndicatorMode: "On",
-                visible: { path: "ui>/isEditable", formatter: isDisplayMode }
+                visible: { path: "ui>/isEditable", formatter: isDisplayMode },
+                layoutData: fullRow()
             };
             if (text) {
                 settings.text = text;
@@ -430,104 +744,147 @@ sap.ui.define(
         }
 
         /**
-         * Edit and display controls of one row by the attribute's value type. The edit control comes first,
-         * so the FormElement assigns its label to it.
+         * Edit control of a TEXT row.
+         *
+         * @param {string} id id of the form element
+         * @param {string} unit unit of the attribute, or ""
+         * @returns {sap.m.Input} the input
+         */
+        function createTextInput(id, unit) {
+            return new Input(id + "-edit", {
+                value: { path: "textValue" },
+                maxLength: 100,
+                description: unit,
+                fieldWidth: unit ? "75%" : "100%",
+                visible: editModeBinding(),
+                change: onValueChange,
+                layoutData: fullRow()
+            });
+        }
+
+        /**
+         * Edit control of an INTEGER or DECIMAL row, with the per-row Decimal type (browser proof B5).
+         *
+         * @param {string} id id of the form element
+         * @param {string} unit unit of the attribute, or ""
+         * @param {{formatOptions: object, constraints: object}} settings result of `numberTypeSettings`
+         * @returns {sap.m.Input} the input
+         */
+        function createNumberInput(id, unit, settings) {
+            return new Input(id + "-edit", {
+                value: { path: "numberValue", type: new Decimal(settings.formatOptions, settings.constraints) },
+                textAlign: "End",
+                description: unit,
+                fieldWidth: unit ? "75%" : "100%",
+                visible: editModeBinding(),
+                change: onValueChange,
+                layoutData: fullRow()
+            });
+        }
+
+        /**
+         * Edit control of a LIST row (ruling B6): the key is bound one-way, `change` writes it.
+         *
+         * @param {string} id id of the form element
+         * @returns {sap.m.ComboBox} the combo box
+         */
+        function createListBox(id) {
+            return new ComboBox(id + "-edit", {
+                selectedKey: { path: LIST_VALUE, mode: "OneWay" },
+                items: valuesBindingInfo(),
+                showClearIcon: true,
+                visible: editModeBinding(),
+                change: onListChange,
+                modelContextChange: onListContextChange,
+                layoutData: fullRow()
+            });
+        }
+
+        /**
+         * Edit control of a MULTI_LIST row (ruling B7): the row's selections are an own-request list binding in
+         * the `dependents` aggregation, rebound with the row and destroyed with the control; no value state text
+         * (PLAN D-6), so the flash of an invalid character shows the framework text.
+         *
+         * @param {string} id id of the form element
+         * @returns {sap.m.MultiComboBox} the multi combo box
+         */
+        function createMultiListBox(id) {
+            // the binding events below fire after construction, when holder.control is set
+            const holder = {};
+            const sync = function () {
+                if (holder.control) {
+                    syncSelections(holder.control);
+                }
+            };
+            holder.control = new MultiComboBox(id + "-edit", {
+                items: Object.assign(valuesBindingInfo(), { events: { change: sync } }),
+                [SELECTIONS]: {
+                    path: "selections",
+                    parameters: { $$ownRequest: true, $select: "ID,IsActiveEntity," + VALUE_CODE },
+                    template: new Item({ key: { path: VALUE_CODE } }),
+                    templateShareable: false,
+                    events: { change: sync }
+                },
+                showClearIcon: true,
+                visible: editModeBinding(),
+                selectionFinish: onSelectionFinish,
+                layoutData: fullRow()
+            });
+            return holder.control;
+        }
+
+        /**
+         * Edit and display controls of one row by the attribute's value type.
          *
          * @param {string} id id of the form element
          * @param {object} attribute the row's attribute
-         * @returns {sap.ui.core.Control[]} fields of the form element
+         * @returns {{edit: (sap.ui.core.Control|undefined), display: sap.m.Text}} the controls of the row
          */
         function createFields(id, attribute) {
             const unit = attribute.unit || "";
-            const editVisible = { path: "ui>/isEditable", formatter: isEditMode };
-            const errorText = { path: "i18n>ProductsObjectPage.details.valueNotInList" };
             switch (attribute.valueType_code) {
                 case "TEXT":
-                    return [
-                        new Input(id + "-edit", {
-                            value: { path: "textValue" },
-                            maxLength: 100,
-                            description: unit,
-                            fieldWidth: unit ? "75%" : "100%",
-                            visible: editVisible,
-                            change: onValueChange
-                        }),
-                        createDisplay(id, {
+                    return {
+                        edit: createTextInput(id, unit),
+                        display: createDisplay(id, {
                             path: "textValue",
                             formatter: function (value) {
                                 return joinValueAndUnit(value, unit);
                             }
                         })
-                    ];
+                    };
                 case "INTEGER":
                 case "DECIMAL": {
                     const settings = numberTypeSettings(attribute);
-                    return [
-                        new Input(id + "-edit", {
-                            value: {
-                                path: "numberValue",
-                                type: new Decimal(settings.formatOptions, settings.constraints)
-                            },
-                            textAlign: "End",
-                            description: unit,
-                            fieldWidth: unit ? "75%" : "100%",
-                            visible: editVisible,
-                            change: onValueChange
-                        }),
-                        createDisplay(id, {
+                    return {
+                        edit: createNumberInput(id, unit, settings),
+                        display: createDisplay(id, {
                             path: "numberValue",
                             type: new Decimal(settings.formatOptions, settings.constraints),
                             formatter: function (value) {
                                 return joinValueAndUnit(value, unit);
                             }
                         })
-                    ];
+                    };
                 }
                 case "LIST":
-                    return [
-                        new ComboBox(id + "-edit", {
-                            selectedKey: { path: "listValue_code" },
-                            items: valuesBindingInfo(),
-                            showClearIcon: true,
-                            valueStateText: errorText,
-                            visible: editVisible,
-                            change: onListChange
-                        }),
-                        createDisplay(id, { path: "listValue_code", formatter: formatListValue })
-                    ];
-                case "MULTI_LIST": {
-                    // the binding events below run after construction, when parts.edit is set
-                    const parts = { display: createDisplay(id) };
-                    const sync = {
-                        change: function () {
-                            syncSelections(parts.edit, parts.display);
-                        }
+                    return {
+                        edit: createListBox(id),
+                        display: createDisplay(id, { path: LIST_VALUE, formatter: formatListValue })
                     };
-                    parts.edit = new MultiComboBox(id + "-edit", {
-                        items: Object.assign(valuesBindingInfo(), { events: sync }),
-                        // the row's selections as a list binding without its own request (data of the section
-                        // binding's $expand); selectionFinish creates and deletes its contexts
-                        [SELECTIONS]: {
-                            path: "selections",
-                            template: new Item({ key: { path: VALUE_CODE } }),
-                            templateShareable: false,
-                            events: sync
-                        },
-                        showClearIcon: true,
-                        valueStateText: errorText,
-                        visible: editVisible,
-                        selectionFinish: onSelectionFinish
-                    });
-                    return [parts.edit, parts.display];
-                }
+                case "MULTI_LIST":
+                    return { edit: createMultiListBox(id), display: createDisplay(id) };
                 default:
-                    return [createDisplay(id, { path: "textValue" })];
+                    return { edit: undefined, display: createDisplay(id, { path: "textValue" }) };
             }
         }
 
         /**
-         * Factory of the `formElements` aggregation (PLAN B1): one form element per detail row, label = the
-         * localized attribute name, fields by `attribute/valueType_code`.
+         * Factory of the `formElements` aggregation (browser proof B1): one form element per detail row, label =
+         * the localized attribute name, fields by `attribute/valueType_code`. The display control comes first, so
+         * in display mode the hidden edit control's empty cell lies below the value, not between label and value
+         * (PLAN D-5); the label therefore names the edit control explicitly. The factory creates that control
+         * itself, so its id is exact (no template clone suffix).
          *
          * @param {string} id id proposed by the aggregation binding
          * @param {sap.ui.model.odata.v4.Context} context the row context
@@ -535,10 +892,45 @@ sap.ui.define(
          */
         function createFormElement(id, context) {
             const row = context.getObject() || {};
+            const fields = createFields(id, row.attribute || {});
+            const label = { text: { path: "attribute/name" } };
+            if (fields.edit) {
+                label.labelFor = fields.edit;
+            }
             return new FormElement(id, {
-                label: new Label(id + "-label", { text: { path: "attribute/name" } }),
-                fields: createFields(id, row.attribute || {})
+                label: new Label(id + "-label", label),
+                fields: fields.edit ? [fields.display, fields.edit] : [fields.display]
             });
+        }
+
+        /**
+         * Attaches the module to the `details` binding once: after each change the form elements are new, so
+         * the messages of destroyed list fields go and the counter is recomputed.
+         *
+         * @param {sap.m.VBox} root the fragment root
+         */
+        function wireRowsBinding(root) {
+            const binding = getRowsBinding(root);
+            if (binding && !wiredBindings.has(binding)) {
+                wiredBindings.add(binding);
+                binding.attachChange(function () {
+                    removeOrphanedListMessages();
+                    updateCounter(root);
+                });
+            }
+        }
+
+        /**
+         * `modelContextChange` of the fragment root: wires the `details` binding, re-reads the rows of a draft
+         * just entered by Edit (ruling B2) and updates the counter.
+         *
+         * @param {sap.ui.base.Event} event the event of the root VBox
+         */
+        function onModelContextChange(event) {
+            const root = event.getSource();
+            wireRowsBinding(root);
+            refreshRowsOfNewDraft(root);
+            updateCounter(root);
         }
 
         return {
@@ -550,6 +942,9 @@ sap.ui.define(
             listValueName: listValueName,
             joinSelectedNames: joinSelectedNames,
             diffSelections: diffSelections,
+            resolveListText: resolveListText,
+            isDifferentKey: isDifferentKey,
+            isDraftWithSubcategory: isDraftWithSubcategory,
             numberTypeSettings: numberTypeSettings
         };
     }

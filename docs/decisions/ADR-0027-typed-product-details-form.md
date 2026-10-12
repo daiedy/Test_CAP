@@ -18,6 +18,12 @@ Evidence: `docs/features/products-details-section/research/typed-form-facts.md` 
 
 First application: feature `products-details-section` (#9), revision 2.
 
+## Amendment: browser proof of the fragment (feature products-details-section, phase 3, 2026-10-12)
+The browser proof (`docs/features/products-details-section/research/ui-proof.md`, section "Architect ruling on B2, B6, B7" with the framework facts F1-F9) refuted three mechanisms of decision 5; the decision otherwise stands and no user decision changes.
+- **LIST.** A two-way `selectedKey` writes the model while the user types (a `PATCH` of `null`, or of a type-ahead item), and a value state set by the module is no message, so FE saves anyway. The `sap.m.ComboBox` stays (the user's choice): `selectedKey` is bound `OneWay`; the module writes `listValue_code` through the row context `setProperty` only in `change` (empty text: `null`; the selected item's text: its key); any other text writes nothing and adds a client validation message shaped like the framework's own type errors (`target` `<comboBoxId>/selectedKey`, `processor` `ControlMessageProcessor`, `validation: true`), which sets the Error state, blocks FE Save and is not removed by `DraftMessages` reads; the module removes it on a valid commit, on another row context and when its control is gone. The MULTI_LIST sync is therefore no longer the only custom write code. `sap.m.Select` is not the fallback any more (row in "Alternatives").
+- **MULTI_LIST.** The row's `selections` binding read from the section's `$expand` has no cache of its own and cannot `create()`. `selections` leaves the section's `$expand`; the multi combo box holds the row's `selections` in its `dependents` aggregation with `parameters: { $$ownRequest: true, $select: 'ID,IsActiveEntity,value_code' }` (one `GET` per MULTI_LIST row); `selectionFinish` creates and deletes its contexts; the keys, the display join and the counter read it.
+- **Edit of a product without rows** (PLAN D13). The `draftEdit` response does not carry the rows the `after('EDIT')` fill inserts. On entering a draft context with a subcategory the module calls `requestSideEffects([{ $NavigationPropertyPath: 'details' }])` on the product context once; after its own field writes it requests `DraftMessages` the same way, since FE's `#alwaysFetchMessages` runs only for FE fields.
+
 ## Alternatives
 | Option | Why rejected |
 |---|---|
@@ -33,7 +39,7 @@ First application: feature `products-details-section` (#9), revision 2.
 | Reconcile active writes too | ADR-0024 decision 3 keeps active writes unchanged; the root branch rejects instead |
 | Order by attribute name | the user asked for an order per subcategory; a calculated element cannot reach the assignment row (ADR-0026 compile fact), so the position is copied once by the handler |
 | Static template with four controls per element instead of a factory | the user decided a factory; kept as the named fallback of browser proof B1 |
-| `sap.m.Select` for LIST | the user decided `ComboBox` with a non-item check; kept as the fallback of B6 |
+| `sap.m.Select` for LIST | the user decided `ComboBox` with a non-item check; named as the fallback of B6 until the 2026-10-12 amendment kept the ComboBox with a one-way key and a client validation message |
 | Amend ADR-0026 in place | four of its seven decisions change and five new mechanisms appear; a separate ADR keeps both readable; ADR-0026 keeps its status (the `superseded by` form would retire decisions 1, 2, 5) and gets an amendment pointer |
 
 ## Consequences
@@ -47,5 +53,6 @@ First application: feature `products-details-section` (#9), revision 2.
 ## Sources
 - capire "`@assert:` constraints" (path expressions, `exists` with infix filters), "Portable Functions" (`floor`, `round`), "Programmatic APIs" of drafts and `.drafts` access, via `mcp__cds-mcp__search_docs`, 2026-10-12
 - UI5 1.153.0 CDN debug sources `sap/ui/base/BindingParser`, `sap/ui/model/odata/v4/Context`, `sap/ui/model/odata/type/Decimal`, `sap/m/MultiComboBox`; not verified by MCP (fiori-mcp `search_docs` outage on 2026-10-12)
-- `docs/features/products-details-section/research/typed-form-facts.md`, `research/framework-facts.md`
+- UI5 1.153.0 CDN debug sources `sap/m/ComboBox`, `sap/m/InputBase`, `sap/m/MultiComboBox`, `sap/ui/core/Messaging`, `sap/ui/core/message/Message`, `ControlMessageProcessor`, `MessageMixin`, `sap/ui/model/odata/v4/ODataModel`, `sap/fe/core/controllerextensions/EditFlow` and `messageHandler/messageHandling` (amendment, 2026-10-12); not verified by MCP
+- `docs/features/products-details-section/research/typed-form-facts.md`, `research/framework-facts.md`, `research/ui-proof.md`
 - ADR-0011, ADR-0012, ADR-0013, ADR-0024, ADR-0026

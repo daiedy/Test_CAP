@@ -22,8 +22,8 @@
   "devDependencies": {
     "@sap-ux/eslint-plugin-fiori-tools": "^10",
     "@sap-ux/ui5-middleware-fe-mockserver": "^2",
-    "@sap-ux/ui5-test-writer": "^1.15.1",
-    "@sap/ux-ui5-tooling": "^1.32.0",
+    "@sap-ux/ui5-test-writer": "^1.15.5",
+    "@sap/ux-ui5-tooling": "^1.33.0",
     "@ui5/cli": "^4",
     "@ui5/linter": "^1",
     "ui5-test-runner": "^5.14.1",

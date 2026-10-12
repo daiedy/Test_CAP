@@ -4,7 +4,7 @@
 
 Date: 2026-10-12. Agent: `ui-verifier`. Commit under test: `19d7f2d` (fragment `DetailsForm` in the custom section `Details`). Server: `npx cds serve --in-memory --port 4004` from the worktree root, started by this run (stopped at the end). Browser: Chrome DevTools MCP, `http://localhost:4004/products/webapp/test/flpSandbox.html`, users `alice` (editor) and `viewer`, empty password (Basic auth primed by XHR); `?sap-ui-language=ru` for `ru`. Screenshots: `screenshots/r2-s<N>-<what>.png` (the MCP refuses `filePath`; each PNG is copied from the tool-result path with `cp`).
 
-Current verdict: see "Round 2 re-check" (defects found: R2-D2, R2-D5). First-pass verdict: defects found: R2-D1, R2-D2, R2-D3 (all low). Scenarios 1-11, 13, 15, 18 and the checklist items B2, B6, B7, D-1, D-2, D-5, D-6 completed; scenarios 12, 14, 16, 17 not completed (budget) and D-3 not reproduced. Criteria 68 (partly: en/ru display and edit of TEXT is not covered, no TEXT attribute was driven; INTEGER, DECIMAL, LIST, MULTI_LIST were), 69 and 70 evidenced.
+Current verdict: see "Round 2 final re-check (0b9125b)" (ready for review; open low finding R2-D6 carried into the review by the orchestrator). First-pass verdict: defects found: R2-D1, R2-D2, R2-D3 (all low). Scenarios 1-11, 13, 15, 18 and the checklist items B2, B6, B7, D-1, D-2, D-5, D-6 completed; scenarios 12, 14, 16, 17 not completed (budget) and D-3 not reproduced. Criteria 68 (partly: en/ru display and edit of TEXT is not covered, no TEXT attribute was driven; INTEGER, DECIMAL, LIST, MULTI_LIST were), 69 and 70 evidenced.
 
 Defects (round 2):
 - R2-D1 (low), layout: steps: Laptop Pro 15 display or edit at a 2000 px window. Expected (SCREENS scenario 1): the three fields in the first three of four columns, aligned with the 4-column grid of General Information. Observed: three equal columns at x = 89, 711, 1333 px against 89, 556, 1022, 1489 for Administrative Data (`ColumnLayout columnsXL=4` spreads three elements over three columns). Screenshots `screenshots/r2-s1-display-laptop.png`, `r2-s2-ru-display-mouse.png`.
@@ -165,7 +165,32 @@ Fresh document, whole flow (list, create, object pages, edit, phone): only known
 
 R2-D5 (medium), steps: Wireless Mouse (or any product with a LIST field), Edit, Colour typed "Purple" + Tab (Error "Select a value from the list.", no request), then edit Description (or any FE field) + Tab, then Cmd+S. Expected: the Colour error stays (B6 ruling "survives `DraftMessages` reads", item 5) and Save is blocked. Observed: after the Description `PATCH` + `GET ...$select=DraftMessages` the message model is empty, the combo box shows an empty text with no error state, and Save succeeds (`draftPrepare` + `draftActivate`, 0 drafts). The stored value is not corrupted (the invalid text is simply dropped), so the harm is a silently discarded entry. Evidence: `$batch` lines in RC-5.
 
-Verdict (round 2 after the fix, supersedes the earlier verdicts): defects found: R2-D2 (open, focus is lost to the footer after each fragment field commit), R2-D5 (open, invalid list text dropped by the next field commit, Save not blocked). R2-D1 and R2-D3 are fixed; R2-D4 was a stale-code artifact.
+Verdict (after 4c0b5cd, superseded by the final re-check): defects found: R2-D2 (open, focus is lost to the footer after each fragment field commit), R2-D5 (open, invalid list text dropped by the next field commit, Save not blocked). R2-D1 and R2-D3 are fixed; R2-D4 was a stale-code artifact.
+
+### Round 2 final re-check (0b9125b)
+
+Setup: NEW isolated browser context `r2final`, freshly started `npx cds serve --in-memory --port 4004`. Fresh-code proof: the served `DetailsForm.fragment.xml` contains `$$ownRequest` (2 matches); the form element ids are `detailsFormContainer-row<n>-label/-edit-inner`; the page load sends its own `GET Products(...,IsActiveEntity=true)/details?$select=ID,IsActiveEntity,listValue_code,numberValue,position,textValue&$expand=attribute(...)` (an own request, no longer merged into the product GET), and Edit sends one such `GET Products(...,IsActiveEntity=false)/details?...` next to `draftEdit` and `SiblingEntity`. (The `details` list binding is not reachable through the FormContainer aggregation any more, so `mParameters.$$ownRequest` could not be read from the control; the own-request URL is the evidence.)
+
+#### F-1 R2-D2 (focus, extra GETs): FIXED for field writes and selection POST; one residual (R2-D6)
+- Laptop Pro 15, Edit: Screen Size "15.5" + Tab: `PATCH .../details(ID=25f5517a-...)` + `GET ...$select=DraftMessages` in one batch, focus on Memory (RAM) (`detailsFormContainer-row5-edit-inner [16]`); "17" + Tab there: `PATCH` + DraftMessages GET, focus on Storage (`row6 ... [512]`). Counter "Filled 3 of 3". Discard: 0 drafts.
+- Wireless Mouse, Edit: one `GET .../selections` on Edit. Connectivity "Blu" + Enter: `POST .../selections` 201 + DraftMessages GET, NO `GET .../selections` afterwards, focus stays in the Connectivity input (`row13-edit-inner`), tokens "Bluetooth 5.3, Bluetooth 5.0, Wireless 2.4 GHz". Backspace twice: `DELETE .../selections(ID=cbd307fc-...)` 204 + DraftMessages GET, no `GET .../selections` after it, tokens "Bluetooth 5.3, Bluetooth 5.0"; BUT the focus is on `body` (`sapUiBody`) after the token removal, not in Connectivity (R2-D6, low: SCREENS scenario 9 "focus stays"; likely the removed token held the focus, not the fragment re-rendering, because the focus is no longer sent to the Save button; not compared with a bare MultiComboBox).
+- Monitor Stand, Dimensions "30 x 20 x 10" + Tab: `PATCH .../details(ID=5d5bf449-...)` + DraftMessages GET only, NO `GET .../selections` although the product has a MULTI_LIST row (Material); focus moves on to the next field (Colour).
+
+#### F-2 R2-D5 / B6: FIXED
+Wireless Mouse draft, Subcategory Audio, Colour "Purple" + Tab (Error "Select a value from the list.", target `...detailsFormContainer-row18-edit/selectedKey`, no request), then Description "Desc r2 final" + Tab: `PATCH Products(...,false)` + `GET ...$select=DraftMessages`; the Colour combo box still shows "Purple" with `aria-invalid="true"`, the Error message is still in the message model (the Warning of the subcategory change is gone, as before). Cmd+S: blocked (no `draftPrepare`/`draftActivate`, draft count stays 1), footer count 1, popover "Select a value from the list. / Colour" (screenshot `screenshots/r2d-s7-purple-survives-description-edit.png`). "Black" + Tab: one `PATCH .../details(ID=0edc183d-...) {listValue_code}` + DraftMessages GET, message model empty, counter "Filled 2 of 3". Discard: 0 drafts.
+
+#### F-3 B1 / B8 / U3 / B2: passed
+- Load: one own `GET .../details?...`; Edit: one own `GET .../details?...` (Laptop, Mouse, API product).
+- Subcategory change Mice to Audio (Wireless Mouse): `GET Subcategories?$filter=...`, `PATCH {"subcategory_code":"AUDIO"}` + `GET ...$select=DraftMessages...`, then one `GET .../selections` for the kept Connectivity row; the fields become Connectivity, Battery Life, Colour ("Filled 1 of 3"), the Warning "Values removed: 1. ... Sensor Resolution." is in the message model; no dialog, 0 inner responses with status 4xx/5xx in the session (so no 404, no "Not Found").
+- B2: product `R2 API Mouse` created with curl (category ELECTRONICS, subcategory MICE, no rows): display "No details available."; after Edit: `draftEdit`, one own `GET .../details?...`, then the fields Connectivity, Sensor Resolution (dpi), Battery Life (h), counter "Filled 0 of 3". Discard, product deleted (204).
+
+#### F-4 Console "Error: validation errors exist": FE noise
+Monitor Stand draft, Price "abc" + Cmd+S (FE field error, Save blocked): console `[error] Error while saving the document - Error: validation errors exist` and `Uncaught (in promise) Error: validation errors exist`. With the fragment's Colour "Purple" error (Price corrected to 19.99) and Cmd+S: the same two messages again. Identical for an FE field and for the fragment: FE's blocked-Save noise, not ours.
+
+#### F-5 Scenario 16 leftovers
+Alt+Down on the Connectivity multi combo box opens the list (Bluetooth 5.0, Bluetooth 5.3, Wireless 2.4 GHz, Wi-Fi, Wired (USB), Wired (audio jack)) with the framework text "No tokens selected" for an empty control; Escape closes it. F6 from Connectivity moves to the footer bar (an F6 group; the section-to-section F6 path was not walked). The `ru` token text was not read (not run).
+
+Verdict: ready for review. Open low finding R2-D6 carried into the review by the orchestrator (fix rounds exhausted).
 
 ---
 

@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-12
 - Branch: feature/products-details-section
 - Feature: products-details-section (#9)
-- Phase: 4: verification on hold (defect D-1 open; the user rejected the table section on 2026-10-12 and is choosing a form-like or list design)
-- Last commit: 001f961 feat(app): products-details-section ui
-- Next: user picks the Details section design (form fields generated from the subcategory, a cleaned list, or typed product fields); then `architect` and `ux-designer` revise PLAN and SCREENS and phases 2-4 are redone for the changed parts
+- Phase: 1: plan revision (the user chose on 2026-10-12 a generated typed form instead of the table: value types, list values with ComboBox, rows created from the subcategory)
+- Last commit: cc23ef0 docs: products-details-section verification round 1
+- Next: revised PLAN, SCREENS and ADR approved by the user, then phases 2-4 redone for the changed parts
 
 ## Open debt
 

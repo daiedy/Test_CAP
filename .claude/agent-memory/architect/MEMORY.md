@@ -18,3 +18,4 @@
 - [Dynamic field control](fe-v4-dynamic-field-control.md) — FieldControl expression via assoc path, integers, 0 = Disabled, server ignores it, +10 EDMX, 7 with @mandatory; ADR-0025 accepted 2026-10-10
 - [Composition under lean draft](composition-under-lean-draft.md) — child writes only via the root (422), draft parent nav, `@assert` with `exists`/`$self`, `@assert.unique` 500, nav-path In parameter and parent-path FieldControl (+9), pair-entity value list repeats names; ADR-0026
 - [EDMX cost per CDS edit](contract-delta-facts.md) — @assert.target 0 lines, @assert.range 1, Decimal precision 1, UI.*Hidden $Path 2 per term; Currencies CSV facts; catalog-hygiene (#20) merged 2026-10-09, ADR-0003 amended in place
+- [Handler-created draft children](handler-created-draft-children.md) — insert into Child.drafts needs parent DraftUUID, cascade delete, req.warn not persisted, ASSERT_DATA_TYPE on draft, 2-level composition; ADR-0027

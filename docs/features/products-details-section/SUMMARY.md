@@ -30,7 +30,36 @@ Completion date: 2026-10-12. Commits (`git log --oneline main..HEAD`, oldest fir
 Entities `DetailAttributes`, `DetailListValues`, `DetailValueTypes`, `SubcategoryAttributes`, `ProductDetails`, `ProductDetailSelections` and their service projections; handler functions `reconcileDetailRows` and `fillDetailRows` in `srv/catalog-service.js`; fragment `DetailsForm` with its exported pure functions; value-type, constraint and warning keys in `_i18n`; 8 `ProductsObjectPage.details.*` keys in `webapp/i18n`; QUnit module `DetailsForm.qunit.js`.
 
 ## Cost
-The orchestrator pastes the card printed by `node scripts/metrics.mjs feature products-details-section` after the prune.
+Sessions 1 (2026-10-11 .. 2026-10-12), lead 10h 28m, active 8h 2m, waiting 2h 27m, agent-minutes 13h 58m (parallelism 1.7); idle cap 5 min, tool cap 10 min; phases: markers; rework: plan; pricing 2026-09-29; Claude Code 2.1.295; spec: not attributed
+
+Cost $186.32 (no cost-state record); tokens in 5.7K / cache write 13.4M / cache read 527M / out 885K; cache hit 98%; context avg 209K, peak 519K
+
+| Phase | Rounds | Active | Waiting | Calls | Cost | Rework cost |
+|---|---|---|---|---|---|---|
+| 0 | - | 1m | 0m | 4 | $0.58 | $0.00 |
+| 1 | 2 | 43m | 8m | 175 | $15.72 | $0.00 |
+| 2 | 2 | 1h 17m | 0m | 378 | $24.98 | $4.29 |
+| 3 | 3 | 3h 7m | 0m | 934 | $62.12 | $12.87 |
+| 4 | 2 | 2h 0m | 17m | 774 | $53.97 | $1.27 |
+| 5 | 1 | 28m | 0m | 192 | $16.46 | $1.50 |
+| 6 | 1 | 26m | 2h 2m | 129 | $12.38 | $0.00 |
+| 7 | 1 | 0m | 0m | 1 | $0.10 | $0.00 |
+
+| Agent | Launches | Resumes | Active | Calls / maxTurns | Cost | Rework |
+|---|---|---|---|---|---|---|
+| main | - | - | 5h 26m | 310 / - | $29.27 | 0 |
+| architect | 7 | 4 | 56m | 210 / 60 | $11.96 | 4 ($5.84) |
+| cap-backend-dev | 2 | 1 | 22m | 122 / 60 | $6.73 | 0 |
+| test-backend | 3 | 2 | 45m | 158 / 60 | $13.30 | 0 |
+| fiori-app-dev | 5 | 8 | 2h 2m | 354 / 60 | $35.27 | 1 ($1.96) |
+| test-ui | 4 | 2 | 1h 36m | 316 / 80 | $21.83 | 1 ($1.50) |
+| ui-verifier | 3 | 13 | 1h 42m | 877 / 80 | $50.79 | 1 ($7.72) |
+| general-purpose | 1 | 0 | 3m | 17 / - | $0.64 | 0 |
+| ux-designer | 4 | 3 | 39m | 88 / 30 | $9.11 | 2 ($2.75) |
+| reviewer | 1 | 3 | 21m | 72 / 50 | $5.94 | 0 |
+| docs-keeper | 2 | 1 | 8m | 63 / 80 | $1.48 | 1 ($0.16) |
+
+Gates: 7 blocks (protected 5, docs 1, mcp 1); review 0 blocking / 10 findings; criteria 40/40; MCP 1194 queries, 0 unjustified, 34 failed; rule-covered edits with a query 48/49; prompts 11, hand-backs 49, notifications 68; lines +12138 / -2097
 
 ## Lessons
 Eight entries in `docs/LESSONS.md` (2026-10-12): a UI rejected after phase 4, the fiori-mcp `search_docs` outage, V4 `refreshDependentListBindingsWithoutCache`, the mechanisms of a data-writing custom fragment decided at plan time, measuring every verb a criterion names, the stale browser module cache, `cds-mcp search_model` in a worktree, agent turn limits. Candidate for a rule: the plan gate shows the user a mockup and alternatives for any new screen shape.
@@ -41,3 +70,7 @@ Eight entries in `docs/LESSONS.md` (2026-10-12): a UI rejected after phase 4, th
 - `refreshRowsOfNewDraft` is probably redundant since `$$ownRequest`; remove after a browser proof on an API-created product (fiori-app-dev).
 - `eslint-disable` for `max-params` and `max-statements` on `DetailsForm.js`; move the pure functions into a sibling module (fiori-app-dev).
 - Follow-ups, each its own issue: filtering products by a detail value, an Excel import column for details, a maintenance screen for attributes and lists, per-subcategory narrowing of a list.
+
+## Full record
+
+Pruned to this file (ADR-0019). CONTEXT.md, PLAN.md, REVIEW.md, SCREENS.md, VERIFICATION.md, research, screenshots of this feature stay in git history at https://github.com/daiedy/Test_CAP/tree/348a1b961a8a98b7993797d4ee1796b6d5337f31/docs/features/products-details-section (commit `348a1b9`).

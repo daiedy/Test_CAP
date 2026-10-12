@@ -6,10 +6,10 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 - Date: 2026-10-12
 - Branch: feature/products-details-section
-- Feature: products-details-section (#9)
-- Phase: 3: UI change after the user's review (counter as sap.m.ObjectStatus: green with a check when complete, orange with an alert icon when incomplete; user decision 2026-10-12)
-- Last commit: c7e67a2 docs: products-details-section counter badge review and screenshots
-- Next: docs-keeper records the D20 amendment and SUMMARY; then phase 7 (close #9, prune, metrics) on the user's word
+- Feature: none
+- Phase: 7: completion (products-details-section #9 closed on GitHub and pruned on 2026-10-12, cost $186.32)
+- Last commit: 348a1b9 docs: products-details-section counter badge decision
+- Next: the user merges feature/products-details-section into main (--no-ff) and pushes on instruction; then the queue: #10 products-validations
 
 ## Open debt
 

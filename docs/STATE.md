@@ -8,8 +8,8 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Branch: feature/products-details-section
 - Feature: products-details-section (#9)
 - Phase: 5: review (PLAN step 11; low finding R2-D6 carried in from verification)
-- Last commit: 2088b7c docs: products-details-section verification round 2 final
-- Next: REVIEW.md with zero blocking findings, fixes through the owning agents, then phase 6 documentation
+- Last commit: f2e46c5 fix(app): products-details-section review findings
+- Next: re-review of the fixed items and the browser check of R2-D6, then phase 6 documentation
 
 ## Open debt
 

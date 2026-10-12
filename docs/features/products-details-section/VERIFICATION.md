@@ -4,7 +4,7 @@
 
 Date: 2026-10-12. Agent: `ui-verifier`. Commit under test: `19d7f2d` (fragment `DetailsForm` in the custom section `Details`). Server: `npx cds serve --in-memory --port 4004` from the worktree root, started by this run (stopped at the end). Browser: Chrome DevTools MCP, `http://localhost:4004/products/webapp/test/flpSandbox.html`, users `alice` (editor) and `viewer`, empty password (Basic auth primed by XHR); `?sap-ui-language=ru` for `ru`. Screenshots: `screenshots/r2-s<N>-<what>.png` (the MCP refuses `filePath`; each PNG is copied from the tool-result path with `cp`).
 
-Current verdict: see "Round 2 final re-check (0b9125b)" (ready for review; open low finding R2-D6 carried into the review by the orchestrator). First-pass verdict: defects found: R2-D1, R2-D2, R2-D3 (all low). Scenarios 1-11, 13, 15, 18 and the checklist items B2, B6, B7, D-1, D-2, D-5, D-6 completed; scenarios 12, 14, 16, 17 not completed (budget) and D-3 not reproduced. Criteria 68 (partly: en/ru display and edit of TEXT is not covered, no TEXT attribute was driven; INTEGER, DECIMAL, LIST, MULTI_LIST were), 69 and 70 evidenced.
+Current verdict: see "Round 2 review-fix check (f2e46c5)": ready for review, R2-D6 fixed. First-pass verdict: defects found: R2-D1, R2-D2, R2-D3 (all low). Scenarios 1-11, 13, 15, 18 and the checklist items B2, B6, B7, D-1, D-2, D-5, D-6 completed; scenarios 12, 14, 16, 17 not completed (budget) and D-3 not reproduced. Criteria 68 (partly: en/ru display and edit of TEXT is not covered, no TEXT attribute was driven; INTEGER, DECIMAL, LIST, MULTI_LIST were), 69 and 70 evidenced.
 
 Defects (round 2):
 - R2-D1 (low), layout: steps: Laptop Pro 15 display or edit at a 2000 px window. Expected (SCREENS scenario 1): the three fields in the first three of four columns, aligned with the 4-column grid of General Information. Observed: three equal columns at x = 89, 711, 1333 px against 89, 556, 1022, 1489 for Administrative Data (`ColumnLayout columnsXL=4` spreads three elements over three columns). Screenshots `screenshots/r2-s1-display-laptop.png`, `r2-s2-ru-display-mouse.png`.
@@ -190,7 +190,20 @@ Monitor Stand draft, Price "abc" + Cmd+S (FE field error, Save blocked): console
 #### F-5 Scenario 16 leftovers
 Alt+Down on the Connectivity multi combo box opens the list (Bluetooth 5.0, Bluetooth 5.3, Wireless 2.4 GHz, Wi-Fi, Wired (USB), Wired (audio jack)) with the framework text "No tokens selected" for an empty control; Escape closes it. F6 from Connectivity moves to the footer bar (an F6 group; the section-to-section F6 path was not walked). The `ru` token text was not read (not run).
 
-Verdict: ready for review. Open low finding R2-D6 carried into the review by the orchestrator (fix rounds exhausted).
+Verdict (superseded by the review-fix check below): ready for review with the open low finding R2-D6.
+
+### Round 2 review-fix check (f2e46c5)
+
+Setup: NEW isolated context `r2fix`, freshly started `npx cds serve --in-memory --port 4004`. Fresh-code proof: opening edit mode (Wireless Mouse and Office Chair) sent NO `GET .../attribute/values` (0 recorded in the `$batch` hook over the whole session, also when the combo boxes were opened); the list items are built from the expanded values; element ids `detailsFormContainer-row<n>`.
+
+1. R2-D6 (focus after token removal): FIXED. Wireless Mouse, Edit, Connectivity, Backspace twice: `DELETE .../selections(ID=cbd307fc-...)` 204 + `GET ...$select=DraftMessages` 200, no `GET .../selections`; `document.activeElement` is the remaining token (`sapMToken`, inside the Details section), no longer the body; counter "Filled 2 of 3". "Blu" + Enter (input focused): `POST .../details(ID=7ab3ef7b-...)/selections` 201 + DraftMessages GET, focus stays in the Connectivity input (`detailsFormContainer-row4-edit-inner`), tokens "Bluetooth 5.0, Bluetooth 5.3". Save: display "Connectivity: Bluetooth 5.0, Bluetooth 5.3" (list order), "Filled 2 of 3", 0 drafts.
+2. List order in edit mode: Colour (Office Chair), Alt+Down: Black, White, Grey, Silver, Blue, Red, Green, Yellow, Pink, Brown, Beige, Multicolour. Connectivity (Wireless Mouse): Bluetooth 5.0, Bluetooth 5.3, Wireless 2.4 GHz, Wi-Fi, Wired (USB), Wired (audio jack). `ru` Colour (Office Chair): Черный, Белый, Серый, Серебристый, Синий, Красный, Зеленый, Желтый, Розовый, Коричневый, Бежевый, Разноцветный (first two read as U+0427 U+0435 U+0440 U+043D U+044B U+0439 and U+0411 U+0435 U+043B U+044B U+0439, as in SCREENS).
+3. B6 regression: Office Chair, Colour "Purple" + Tab (Error "Select a value from the list.", target `...row21-edit/selectedKey`); Description "Desc fix check" + Tab: `PATCH` + `GET ...$select=DraftMessages`, error and text "Purple" stay (`aria-invalid="true"`); Cmd+S: no request, draft count stays 1 (blocked); "Black" + Tab: one `PATCH .../details(ID=418a54c0-...)` + DraftMessages GET, message model empty. Discard.
+4. R2-D2 regression: Laptop Pro 15, Edit, Screen Size "15.5" + Tab: `PATCH` + DraftMessages GET, focus on Memory (RAM) (`row29-edit-inner [16]`). Discard.
+
+State: product count 15, draft count 0 (the last open draft, Office Chair `ru` list check, deleted through the API), server stopped.
+
+Verdict: ready for review. R2-D6 fixed; no open finding.
 
 ---
 

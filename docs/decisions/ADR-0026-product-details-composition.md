@@ -19,6 +19,9 @@ Evidence: `docs/features/products-details-section/research/framework-facts.md` (
 
 First application: feature `products-details-section` (#9).
 
+## Amendment: decisions 3, 4, 6, 7 replaced by ADR-0027 (2026-10-12, feature `products-details-section`)
+After phase 4 round 1 the user rejected the table UI. [ADR-0027](ADR-0027-typed-product-details-form.md) replaces decision 3 (free-text `value`), decision 4 (the row's attribute value help with the navigation-path In parameter), decision 6 (reject at Save on a subcategory change; the server now reconciles the rows on the draft) and decision 7 (table facet, `UI.LineItem`, `UI.HeaderInfo`, `#AttributeChanged`). Decisions 1, 2 and 5 stay in force, with the corrected authorization sentence of decision 2 (a top-level `DELETE` is authorized like one through the root, 403 `DRAFT_ACTIVE_DELETE_FORBIDDEN_DRAFT_EXISTS` while the product has a draft). The "Consequences" items on a navigation-path In parameter for the dependent value help and on a commented child-row value help block in `templates/annotations-ui.cds` were not carried out: the mechanism left the code with decision 4.
+
 ## Alternatives
 | Option | Why rejected |
 |---|---|

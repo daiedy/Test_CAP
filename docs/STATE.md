@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-12
 - Branch: feature/products-details-section
 - Feature: products-details-section (#9)
-- Phase: 5: review (PLAN step 11; low finding R2-D6 carried in from verification)
-- Last commit: f2e46c5 fix(app): products-details-section review findings
-- Next: re-review of the fixed items and the browser check of R2-D6, then phase 6 documentation
+- Phase: 6: documentation (PLAN step 12 plus the open review items: ADR-0027 rows binding, PATTERNS facts, app/products/bin ignore)
+- Last commit: 7d804b4 docs: products-details-section re-review and review-fix check
+- Next: check-docs-fresh green, commit docs summary and registry; phase 7 (close #9, prune) waits for the user to look at the form
 
 ## Open debt
 
@@ -23,6 +23,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 | A forked session's `session` card counts the parent's copied history | Cut the scope at the fork point | architect |
 | `.claude/rules/ui-annotations.md:19` ("never written by hand") and `.claude/rules/srv-services.md:24` (no `@assert: (case ...)`) contradict accepted ADR-0024 (found 2026-10-09); `.claude/rules/ui-annotations.md` also lists the annotations of the file without `Common.FieldControl` (ADR-0025) | One sentence each naming the ADR-0024 exception and one word for `Common.FieldControl`, in a session started with `PIPELINE_ALLOW_PROTECTED=1` | user |
 | `initialLoad: true` in `manifest.json` is a boolean; UI5 1.153.0 logs `DEPRECATED: boolean value not allowed for 'initialLoad'`, supported `Disabled\|Enabled\|Auto` (found 2026-10-07) | Set `Enabled` through Fiori MCP, confirm the List Report still loads on open, OPA5 green | fiori-app-dev |
+| Stop hook backstop flags a `manifest.json` change made through Fiori MCP (audit log ok): it does not consult the MCP audit log (2026-10-12) | The stop gate script accepts it when the log shows `execute_functionality` (protected hook file, `PIPELINE_ALLOW_PROTECTED=1`) | user |
+| The db-model rule file lacks the ADR-0026 decision 1 exception: `@assert.unique` lives in `db/` (PATTERNS "New entity" has it) | Add one line: "persistence constraints `@assert.unique` live in `db/`" (`PIPELINE_ALLOW_PROTECTED=1`) | user |
+| `refreshRowsOfNewDraft` in `DetailsForm.js` (B2 re-read after Edit) is probably redundant since `$$ownRequest` (ADR-0027) | Remove it with `refreshedDrafts` after a browser proof on an API-created product | fiori-app-dev |
+| `DetailsForm.js` has an `eslint-disable` for `max-params` and `max-statements` (70 against 40) | Move the pure functions to a sibling module; narrow the directive to `max-params` | fiori-app-dev |
+
 ## What works
 
 - Backend on cds 10.1.1, Node 22: `npm run watch` (`cds watch`, port 4004), `npm run lint`, `npm test` (209 tests in 11 files: 109 in `test/catalog-service.test.js`, 20 in `test/products-import.test.js`, 14 in `test/metadata.test.js` incl. the `$metadata` snapshot, 11 in `test/backlog.test.js`, 7 in `test/hooks-protect-bash.test.js`, 8 in `test/hooks-registry-gate.test.js`, 4 in `test/hooks-state-hygiene.test.js`, 9 in `test/doc-shapes.test.js`, 3 in `test/prompt-budget.test.js`, 15 in `test/metrics.test.js`, 9 in `test/hooks-metrics.test.js`), `npm run docs:registry`
@@ -35,6 +40,7 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - STATE hygiene (#15, ADR-0023): the SessionStart briefing ends with a drift warning when `## Now` disagrees with git (`stateDrift()` in `scripts/lib/state-now.mjs`: other branch, unknown or non-ancestor `Last commit:`, more than 1 first-parent commit behind); the Stop gate repeats it once per drift key as `additionalContext` and never blocks; an open issue with a `PLAN.md` or `CONTEXT.md` folder is tagged "plan drafted" and recommended for review; a worktree under `.claude/worktrees/` no longer blocks the Stop gate
 - Product subcategories (feature `products-subcategories`, #8, ADR-0024): `Products.subcategory` from the read-only code list `Subcategories` (15 rows, each in one category); the Object Page dropdown and its value help list only the subcategories of the product's category (hand-written `Common.ValueList` with the `category_code` In parameter), a draft category change empties a foreign subcategory (`resetStaleSubcategory` plus `Common.SideEffects #CategoryChanged`), `@assert: (case ...)` rejects a mismatched pair with `PRODUCTS_SUBCATEGORY_MISMATCH`; List Report column `UI.Importance: #Low`; `en`/`ru` verified
 - Mandatory subcategory that waits for its category (feature `products-subcategory-cascade`, ADR-0025): Category and Subcategory are both `@mandatory`; `Common.FieldControl: (category.code is null ? 0 : 7)` keeps Subcategory disabled until a category is chosen and required after; the Excel workbook has a mandatory `subcategory` column and `subcategoryMismatches` reports a subcategory of another category per row before the inserts (ADR-0021 amendment 4 E, closes the #8 import debt); proved by `test/catalog-service.test.js`, `test/metadata.test.js` and the OPA5 `SubcategoryDependsOnCategoryJourney`; `en`/`ru` verified
+- Typed Details form (feature `products-details-section`, #9, ADR-0026, ADR-0027): the Object Page section "Details" is a form generated from the product's subcategory, one field per assigned attribute with the value type TEXT, INTEGER, DECIMAL, LIST (ComboBox) or MULTI_LIST (MultiComboBox, Connectivity and Material); the server creates the rows on a draft and a subcategory change keeps the common rows and warns when filled values are removed; counter "Filled N of M", `en` and `ru`, `CatalogViewer` read-only; proved by `test/catalog-service.test.js` (109), `test/metadata.test.js` (14), OPA5 `ProductDetailsFormJourney` and `test/unit/DetailsForm.qunit.js`
 - UI tests: `npm run test:ui` in `app/products` (`ui5-test-runner` against `npx cds serve --in-memory --port 4004`, credentials from `app/products/ui5-test-runner.json`): 79 passed of 79 (58 `opaTest`s + 21 QUnit, of them 19 in `test/unit/DetailsForm.qunit.js`; feature `products-details-section` review fix loop, 2026-10-12, CHANGELOG)
 - Project-level Claude Code plugins: `ui5`, `cap-developer`; MCP in `.mcp.json`: `cds-mcp`, `fiori-mcp`, `chrome-devtools`, `ui5-mcp-server` (pinned 0.3.2 since 2026-10-07; the plugin's unpinned server `plugin:ui5:ui5-mcp-server` is toggled off in `/mcp` on each machine). Setup on a new machine: `docs/architecture/STACK.md`
 - Pipeline: 11 subagents in `.claude/agents`, 12 skills, 11 path-based rules, 7 hook events in `.claude/settings.json` (incl. the MCP audit on PostToolUse and PostToolUseFailure), the `docs/registry` registry, the release watcher `scripts/watch-releases.mjs` and the `upstream-check.yml` and `ci.yml` workflows, `.github/dependabot.yml`
@@ -42,4 +48,4 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## Decisions
 
-See `docs/decisions/` (ADR-0001 to ADR-0025); the accepted ways are rows in `docs/architecture/PATTERNS.md`.
+See `docs/decisions/` (ADR-0001 to ADR-0027); the accepted ways are rows in `docs/architecture/PATTERNS.md`.

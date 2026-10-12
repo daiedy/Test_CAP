@@ -12,7 +12,7 @@ metadata:
 
 `ui5-test-runner` 5.14 report (`--report-dir`): `output.txt` has only the page total (`17/17`), `job.js` and `<pageId>/browser.json` carry no per-test list; per-test evidence is the QUnit module/test names in the journey plus data checks over OData (`$count`, `$filter=IsActiveEntity eq false`) and the `cds watch` log (`draftEdit`, `PATCH ...IsActiveEntity=false`, `draftActivate`, `DELETE`).
 
-`npx prettier --check webapp/test/integration/` from `app/products` flags the pre-existing integration files (they were not formatted with the root `.prettierrc`); format only the file you changed, do not reformat the others in a test task.
+`npx prettier --check webapp/test/integration/` from `app/products` flags the pre-existing integration files (they were not formatted with the root `.prettierrc`); format only the file you changed, do not reformat the others in a test task. Still unformatted on 2026-10-12: `RussianLocaleJourney.js` (a one-line edit + `prettier --write` rewrote 226 lines); run `npx prettier --check <file>` BEFORE the edit and skip `--write` on files that already fail it.
 
 Related: [[test-cap-ui-test-run-baseline]]
 

@@ -101,7 +101,7 @@ sap.ui.define(
 
     // Wireless Mouse as seeded, in display mode.
     function seeSeededMouse(Then) {
-      Then.onTheDetailsForm.iSeeTheCounter(filled(2, 3));
+      Then.onTheDetailsForm.iSeeTheCounter(filled(2, 3), 'Warning');
       Then.onTheDetailsForm.iSeeTheFieldLabels(labelsOf('MICE'));
       Then.onTheDetailsForm.iSeeTheDisplayValue(
         names.CONNECTIVITY,
@@ -125,7 +125,7 @@ sap.ui.define(
 
       opaTest('The Object Page shows the details as form fields', function (Given, When, Then) {
         openProduct(Given, When, Then, laptopName);
-        Then.onTheDetailsForm.iSeeTheCounter(filled(3, 3));
+        Then.onTheDetailsForm.iSeeTheCounter(filled(3, 3), 'Success');
         Then.onTheDetailsForm.iSeeTheFieldLabels(labelsOf('LAPTOPS'));
         Then.onTheDetailsForm.iSeeTheDisplayValue(names.SCREEN_SIZE, withUnit('15', 'SCREEN_SIZE'));
         Then.onTheDetailsForm.iSeeTheDisplayValue(names.RAM, withUnit('16', 'RAM'));
@@ -164,15 +164,15 @@ sap.ui.define(
           When.onTheDetailsForm.iEnterValue(battery, '12');
           Then.onTheDetailsForm.iSeeTheValueState(battery, 'None');
           Then.onTheDetailsForm.iSeeTheStoredValue(battery, 12);
-          Then.onTheDetailsForm.iSeeTheCounter(filled(3, 3));
+          Then.onTheDetailsForm.iSeeTheCounter(filled(3, 3), 'Success');
           save(When, Then);
           Then.onTheDetailsForm.iSeeTheDisplayValue(battery, withUnit('12', 'BATTERY_LIFE'));
-          Then.onTheDetailsForm.iSeeTheCounter(filled(3, 3));
+          Then.onTheDetailsForm.iSeeTheCounter(filled(3, 3), 'Success');
           // Restore the seed: Battery Life empty again.
           edit(When, Then);
           When.onTheDetailsForm.iEnterValue(battery, '');
           Then.onTheDetailsForm.iSeeTheStoredValue(battery, null);
-          Then.onTheDetailsForm.iSeeTheCounter(filled(2, 3));
+          Then.onTheDetailsForm.iSeeTheCounter(filled(2, 3), 'Warning');
           save(When, Then);
           seeSeededMouse(Then);
         }
@@ -182,7 +182,7 @@ sap.ui.define(
         const colour = names.COLOUR;
         const notInList = labels.valueNotInList.en;
         openProduct(Given, When, Then, speakerName);
-        Then.onTheDetailsForm.iSeeTheCounter(filled(2, 3));
+        Then.onTheDetailsForm.iSeeTheCounter(filled(2, 3), 'Warning');
         edit(When, Then);
         Then.onTheDetailsForm.iSeeTheListItems(
           colour,
@@ -202,17 +202,17 @@ sap.ui.define(
         When.onTheDetailsForm.iEnterValue(colour, valueNames.BLACK);
         Then.onTheDetailsForm.iSeeTheValueState(colour, 'None');
         Then.onTheDetailsForm.iSeeTheStoredValue(colour, 'BLACK');
-        Then.onTheDetailsForm.iSeeTheCounter(filled(3, 3));
+        Then.onTheDetailsForm.iSeeTheCounter(filled(3, 3), 'Success');
         save(When, Then);
         Then.onTheDetailsForm.iSeeTheDisplayValue(colour, valueNames.BLACK);
-        Then.onTheDetailsForm.iSeeTheCounter(filled(3, 3));
+        Then.onTheDetailsForm.iSeeTheCounter(filled(3, 3), 'Success');
         // Restore the seed: Colour empty again.
         edit(When, Then);
         When.onTheDetailsForm.iEnterValue(colour, '');
         Then.onTheDetailsForm.iSeeTheStoredValue(colour, null);
         save(When, Then);
         Then.onTheDetailsForm.iSeeAnEmptyDisplayValue(colour);
-        Then.onTheDetailsForm.iSeeTheCounter(filled(2, 3));
+        Then.onTheDetailsForm.iSeeTheCounter(filled(2, 3), 'Warning');
       });
 
       opaTest('A multi-value field adds and removes values', function (Given, When, Then) {
@@ -226,13 +226,13 @@ sap.ui.define(
         When.onTheDetailsForm.iEnterValue(connectivity, valueNames.BLUETOOTH_5_3);
         Then.onTheDetailsForm.iSeeTheSelectedItems(connectivity, namesOf(withBluetooth53));
         Then.onTheDetailsForm.iSeeTheStoredValue(connectivity, withBluetooth53);
-        Then.onTheDetailsForm.iSeeTheCounter(filled(2, 3));
+        Then.onTheDetailsForm.iSeeTheCounter(filled(2, 3), 'Warning');
         save(When, Then);
         Then.onTheDetailsForm.iSeeTheDisplayValue(
           connectivity,
           joinedNames('CONNECTIVITY', withBluetooth53)
         );
-        Then.onTheDetailsForm.iSeeTheCounter(filled(2, 3));
+        Then.onTheDetailsForm.iSeeTheCounter(filled(2, 3), 'Warning');
         // Unchecking it in the list removes the selection again: the seeded two are back.
         edit(When, Then);
         When.onTheDetailsForm.iToggleListItems(connectivity, [valueNames.BLUETOOTH_5_3]);
@@ -266,7 +266,7 @@ sap.ui.define(
           Then.onTheDetailsForm.iSeeTheStoredValue(names.CONNECTIVITY, seededConnectivity);
           Then.onTheDetailsForm.iSeeTheStoredValue(names.BATTERY_LIFE, null);
           Then.onTheDetailsForm.iSeeTheStoredValue(names.COLOUR, null);
-          Then.onTheDetailsForm.iSeeTheCounter(filled(1, 3));
+          Then.onTheDetailsForm.iSeeTheCounter(filled(1, 3), 'Warning');
           // Discard Draft restores the seeded Mice fields with their values.
           When.onTheProductsObjectPage.onFooter().iExecuteCancel();
           When.onTheProductsObjectPage.onFooter().iConfirmCancel();

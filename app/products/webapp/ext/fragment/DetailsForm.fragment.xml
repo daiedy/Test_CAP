@@ -19,7 +19,14 @@
         modelContextChange="DetailsForm.onModelContextChange"
     >
         <core:InvisibleText id="detailsFormTitle" text="{i18n>ProductsObjectPage.details.title}" />
-        <Text id="detailsCounter" app:detailsRole="counter" visible="false" />
+        <!-- the counter "Filled N of M" (SCREENS "Title, counter, layout"): an inverted status, Success when every field is
+             filled, Warning otherwise; DetailsForm.js sets its text, state, icon (counterStatus) and visibility.
+             alignSelf Start keeps the badge as wide as its text, not as wide as the card -->
+        <ObjectStatus id="detailsCounter" app:detailsRole="counter" inverted="true" visible="false">
+            <layoutData>
+                <FlexItemData alignSelf="Start" />
+            </layoutData>
+        </ObjectStatus>
         <Text
             id="detailsNoSubcategory"
             text="{i18n>ProductsObjectPage.details.noSubcategory}"

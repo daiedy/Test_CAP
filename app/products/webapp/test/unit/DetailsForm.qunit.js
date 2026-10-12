@@ -10,12 +10,20 @@ sap.ui.define(
     'sap/ui/model/odata/type/Decimal',
     'sap/ui/model/ParseException',
     'sap/ui/model/ValidateException',
+    'sap/ui/core/library',
   ],
-  function (DetailsForm, Decimal, ParseException, ValidateException) {
+  function (DetailsForm, Decimal, ParseException, ValidateException, coreLibrary) {
     'use strict';
 
     /** No-break space between a value and its unit (SCREENS "Fields per value type"). */
     const NBSP = String.fromCharCode(0xa0);
+
+    /** Value states of the counter badge (SCREENS "Title, counter, layout"). */
+    const ValueState = coreLibrary.ValueState;
+    /** Counter icon when every field is filled. */
+    const ICON_COMPLETE = 'sap-icon://sys-enter-2';
+    /** Counter icon while a field is empty, zero filled included. */
+    const ICON_INCOMPLETE = 'sap-icon://alert';
 
     /** Allowed values of CONNECTIVITY in their list order (db/data DetailListValues, position). */
     const CONNECTIVITY = [
@@ -197,6 +205,35 @@ sap.ui.define(
       );
       assert.deepEqual(countFilled([]), { filled: 0, total: 0 }, 'no rows: 0 of 0');
       assert.deepEqual(countFilled(undefined), { filled: 0, total: 0 }, 'rows not loaded: 0 of 0');
+    });
+
+    QUnit.test(
+      'counterStatus is Success with a check mark when every field is filled',
+      function (assert) {
+        assert.deepEqual(
+          this.form.counterStatus(3, 3),
+          { state: ValueState.Success, icon: ICON_COMPLETE },
+          'Filled 3 of 3'
+        );
+      }
+    );
+
+    QUnit.test(
+      'counterStatus is Warning with an alert sign while a field is empty',
+      function (assert) {
+        const counterStatus = this.form.counterStatus;
+        const incomplete = { state: ValueState.Warning, icon: ICON_INCOMPLETE };
+        assert.deepEqual(counterStatus(2, 3), incomplete, 'Filled 2 of 3');
+        assert.deepEqual(counterStatus(0, 3), incomplete, 'Filled 0 of 3, nothing filled');
+      }
+    );
+
+    QUnit.test('counterStatus is Warning when there are no fields', function (assert) {
+      assert.deepEqual(
+        this.form.counterStatus(0, 0),
+        { state: ValueState.Warning, icon: ICON_INCOMPLETE },
+        '0 of 0 is not complete (the counter is hidden then)'
+      );
     });
 
     QUnit.module('DetailsForm: display texts', hooks);

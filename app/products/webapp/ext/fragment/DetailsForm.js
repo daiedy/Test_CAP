@@ -1,6 +1,7 @@
 sap.ui.define(
     [
         "sap/base/Log",
+        "sap/ui/core/library",
         "sap/ui/core/Item",
         "sap/ui/core/Messaging",
         "sap/ui/core/message/ControlMessageProcessor",
@@ -18,6 +19,7 @@ sap.ui.define(
     // eslint-disable-next-line max-params, max-statements -- one parameter per UI5 class the factory creates, one statement per named function of the section module (ADR-0027 decision 5)
     function (
         Log,
+        coreLibrary,
         Item,
         Messaging,
         ControlMessageProcessor,
@@ -56,6 +58,12 @@ sap.ui.define(
         const NOT_IN_LIST = "ProductsObjectPage.details.valueNotInList";
         /** Log component of this module. */
         const LOG_COMPONENT = "products.ext.fragment.DetailsForm";
+        /** Value states of the counter (the `ValueState` enum of the core library, no string literals). */
+        const ValueState = coreLibrary.ValueState;
+        /** Icon of the counter when every field is filled. */
+        const ICON_COMPLETE = "sap-icon://sys-enter-2";
+        /** Icon of the counter while a field is empty. */
+        const ICON_INCOMPLETE = "sap-icon://alert";
         /** The `details` list binding keeps its identity across Object Page contexts, so its handler is attached once. */
         const wiredBindings = new WeakSet();
         /** Draft product contexts whose rows were re-read after Edit (ruling B2); a new Edit brings a new context. */
@@ -125,6 +133,22 @@ sap.ui.define(
                 return isFilled(row, counts[index]);
             });
             return { filled: filled.length, total: list.length };
+        }
+
+        /**
+         * Semantic state and icon of the counter "Filled N of M" (SCREENS "Title, counter, layout", variant A):
+         * Success with a check mark when every field is filled, Warning with an alert sign otherwise, 0 filled
+         * included. With no fields (M = 0) the counter is hidden; the result is then Warning.
+         *
+         * @param {number} filled N, the number of filled fields
+         * @param {number} total M, the number of fields shown
+         * @returns {{state: sap.ui.core.ValueState, icon: string}} `state` and `icon` of the `sap.m.ObjectStatus`
+         */
+        function counterStatus(filled, total) {
+            if (total > 0 && filled === total) {
+                return { state: ValueState.Success, icon: ICON_COMPLETE };
+            }
+            return { state: ValueState.Warning, icon: ICON_INCOMPLETE };
         }
 
         /**
@@ -501,8 +525,9 @@ sap.ui.define(
         }
 
         /**
-         * Recomputes "Filled N of M" from the bound rows and switches the counter and the "no details" text
-         * (browser proof B10). Shown only when the product has a subcategory.
+         * Recomputes "Filled N of M" from the bound rows, sets the counter's text, state and icon (`counterStatus`)
+         * and switches the counter and the "no details" text (browser proof B10). Shown only when the product has
+         * a subcategory.
          *
          * @param {sap.m.VBox} root the fragment root
          */
@@ -529,7 +554,10 @@ sap.ui.define(
             const result = countFilled(rows, selectionCounts);
             const product = root.getBindingContext();
             const hasSubcategory = Boolean(product && product.getProperty("subcategory_code"));
+            const status = counterStatus(result.filled, result.total);
             counter.setVisible(hasSubcategory && result.total > 0);
+            counter.setState(status.state);
+            counter.setIcon(status.icon);
             noAttributes.setVisible(hasSubcategory && result.total === 0 && binding.isLengthFinal());
             withBundle(counter, function (bundle) {
                 counter.setText(bundle.getText("ProductsObjectPage.details.filled", [result.filled, result.total]));
@@ -1071,6 +1099,7 @@ sap.ui.define(
             onModelContextChange: onModelContextChange,
             isFilled: isFilled,
             countFilled: countFilled,
+            counterStatus: counterStatus,
             joinValueAndUnit: joinValueAndUnit,
             listValueName: listValueName,
             joinSelectedNames: joinSelectedNames,

@@ -30,6 +30,11 @@ sap.ui.define(
     const IN_FRAGMENT = new RegExp(SECTION_PREFIX);
     const SELECTIONS_AGGREGATION = 'dependents';
     const SELECTION_VALUE = 'value_code';
+    // The icon the counter shows in each of its two value states (SCREENS "Title, counter, layout").
+    const COUNTER_ICONS = {
+      Success: 'sap-icon://sys-enter-2',
+      Warning: 'sap-icon://alert',
+    };
 
     function fragmentId(sLocalId) {
       return new RegExp(SECTION_PREFIX + sLocalId + '$');
@@ -183,13 +188,22 @@ sap.ui.define(
         },
       },
       assertions: {
-        // The counter line under the section title ("Filled N of M").
-        iSeeTheCounter: function (sText) {
+        // The counter under the section title ("Filled N of M"), an inverted sap.m.ObjectStatus. With
+        // a state, also its value state and the icon of that state (SCREENS "Title, counter, layout"):
+        // Success with a check mark when every field is filled, Warning with an alert sign otherwise.
+        iSeeTheCounter: function (sText, sState) {
+          const mProperties = { text: sText };
+          let sDescription = "The Details counter reads '" + sText + "'";
+          if (sState) {
+            mProperties.state = sState;
+            mProperties.icon = COUNTER_ICONS[sState];
+            sDescription += ' with the state ' + sState + ' and the icon ' + mProperties.icon;
+          }
           return OpaBuilder.create(this)
-            .hasType('sap.m.Text')
+            .hasType('sap.m.ObjectStatus')
             .hasId(fragmentId('detailsCounter'))
-            .hasProperties({ text: sText })
-            .description("The Details counter reads '" + sText + "'")
+            .hasProperties(mProperties)
+            .description(sDescription)
             .execute();
         },
         // The labels of the rendered fields, in this order and no other field.

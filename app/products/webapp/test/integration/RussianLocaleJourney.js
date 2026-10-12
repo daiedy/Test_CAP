@@ -93,7 +93,8 @@ sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts', './data/RatingTex
       const nbsp = String.fromCharCode(0xa0);
       Then.onTheProductsObjectPage.iCheckSection({ section: 'Details' }, { title: detailLabels.section.ru });
       Then.onTheDetailsForm.iSeeTheCounter(
-        detailLabels.filled.ru.replace('{0}', '2').replace('{1}', '3')
+        detailLabels.filled.ru.replace('{0}', '2').replace('{1}', '3'),
+        'Warning'
       );
       Then.onTheDetailsForm.iSeeTheFieldLabels(
         DetailAttributeTexts.bySubcategory.APPLIANCES.map(function (sCode) {

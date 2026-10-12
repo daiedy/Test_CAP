@@ -1,6 +1,6 @@
 # products-details-section: plan
 
-Date: 2026-10-12 (revision 2). Status: draft (the user rejected the table section on 2026-10-12 after phase 4 round 1 and decided U1-U7 plus the MULTI_LIST addition, `CONTEXT.md` "User decisions"; revision 1 was approved on 2026-10-11 and its phases 2-3 are committed at `59b51fc` and `001f961`). Gate mode: autonomous. Issue: #9.
+Date: 2026-10-12 (revision 2). Status: approved (user, 2026-10-12: revision 2, D10-D23 as recommended, D18 ADR-0027 accepted; the user rejected the table section on 2026-10-12 after phase 4 round 1 and decided U1-U7 plus the MULTI_LIST addition, `CONTEXT.md` "User decisions"; revision 1 was approved on 2026-10-11 and its phases 2-3 are committed at `59b51fc` and `001f961`). Gate mode: autonomous. Issue: #9.
 
 Shape (ADR-0018): one criterion per line under "Acceptance criteria", table rows only under "Steps"; explanations belong in `CONTEXT.md` or `research/`. `node scripts/check-feature-docs.mjs products-details-section` verifies the shape at the phase 1 gate.
 
@@ -10,7 +10,7 @@ Baseline at `cc23ef0` (re-count at each gate): `npm test` 196 in 11 files (`test
 
 ## Decisions for the user
 
-Revision 1 decisions (approved 2026-10-11) and their state now: D1 (reject at Save) **replaced** by U3; D2 (duplicate branch, no `@assert.unique`) kept as an API guard (D15); D3 (`SubcategoryAttributes : cuid` + `@assert.unique.pair`) kept; D4 (`value` mandatory) **replaced** by U4; D5 (Create before a subcategory) **moot** (no Create in the UI); D6 (section label "Details" / "Kharakteristiki", position between "Pricing & Stock" and "Administrative Data") kept for the custom section; D7 (seed) **replaced** by D17; D8 ADR-0026 kept for its decisions 1, 2, 5, partly replaced by ADR-0027 (D18); D9 (drafts on the root only) kept. The questions below are new; the "Recommended default" column is the proposal.
+Revision 1 decisions (approved 2026-10-11) and their state now: D1 (reject at Save) **replaced** by U3; D2 (duplicate branch, no `@assert.unique`) kept as an API guard (D15); D3 (`SubcategoryAttributes : cuid` + `@assert.unique.pair`) kept; D4 (`value` mandatory) **replaced** by U4; D5 (Create before a subcategory) **moot** (no Create in the UI); D6 (section label "Details" / "Kharakteristiki", position between "Pricing & Stock" and "Administrative Data") kept for the custom section; D7 (seed) **replaced** by D17; D8 ADR-0026 kept for its decisions 1, 2, 5, partly replaced by ADR-0027 (D18); D9 (drafts on the root only) kept. The questions below are new. Approved by the user on 2026-10-12 (revision 2 plan gate): D10-D23 at their recommended defaults, D18 ADR-0027 accepted; the "Recommended default" column is the decision.
 
 | # | Question | Recommended default | Alternatives and their cost |
 |---|---|---|---|
@@ -114,4 +114,4 @@ Revision 1 decisions (approved 2026-10-11) and their state now: D1 (reject at Sa
 - No change to what any endpoint answers to an unauthenticated caller: the new sets sit under `@requires: 'authenticated-user'`; the CI readiness probe, the `run-app`/`test-all` smoke curls, the `ui-verifier` server check and the README need no update.
 
 ## Open questions
-- D10-D18 above, to be answered at the plan gate together with the `SCREENS.md` questions of the `ux-designer`.
+None.

@@ -1,6 +1,6 @@
 # ADR-0027: Typed product details as a generated form
 
-Date: 2026-10-12. Status: proposed (feature `products-details-section`; decision by the user pending).
+Date: 2026-10-12. Status: accepted (user, 2026-10-12, feature `products-details-section`).
 <!-- On acceptance replace the whole Status sentence with the accepted form; never append to the proposed one. -->
 
 ## Context

@@ -16,4 +16,6 @@ Learned 2026-10-12 while redesigning `products-details-section` (#9) revision 2,
 - Not answerable without fiori-mcp: what a FE V4 custom section offers on its heading line, and how FE shows a server Warning on a field. Hand both to the verifier.
 - Measured FE form look (screenshots of revision 1): label above the value with a colon in both modes, 4 columns at the verifier's desktop window, numeric inputs end-aligned, currency to the right of the amount, and each section heading is one H2.
 
+- Reconciling SCREENS with an approved plan (2026-10-12, #9 step 1b): besides the items the orchestrator names, diff the layouts and verifier scenarios against the seed decision (D17 gave Wireless Mouse and Office Chair two list values each; three scenarios and two layouts were stale) and the fragment name in the ADR. `@assert` constraint texts carry no placeholders, so server texts cannot name bounds; the client `sap.ui.model.odata.type.Decimal` (`minimum`/`maximum`/`scale`, `validateValue` throws) gives the bound-naming framework texts. This agent has no Bash: `check-feature-docs.mjs` cannot be run, and it checks only PLAN.md and CONTEXT.md anyway.
+
 Related: [[fiori-mcp-search-outage]], [[table-section-design-sources]], [[docs-cyrillic-code-points]].

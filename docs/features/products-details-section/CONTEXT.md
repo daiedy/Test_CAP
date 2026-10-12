@@ -9,6 +9,7 @@ Issue #9: "Object Page: a new section Details, dependent on the subcategory". Th
 
 ## User decisions
 Fixed on 2026-10-11 and still valid: reading (a), dynamic attributes reusable across subcategories through `SubcategoryAttributes`; units on the attribute, Latin, not localized (`in` for inches); `CatalogViewer` read-only, `CatalogEditor` edits in the draft; `@odata.draft.enabled` on `Products` only (D9); `SubcategoryAttributes : cuid` with `@assert.unique.pair` (D3); section label "Details" / "Kharakteristiki" between "Pricing & Stock" and "Administrative Data" (D6); ADR-0026 decisions 1, 2 and 5.
+Replaced or retired by revision 2: D1 by U3, D4 by U4, D7 (seed) by D17, ADR-0026 decisions 3, 4, 6 and 7 by ADR-0027 (D18); D5 (Create before a subcategory) moot; D2 kept as the API guard of D15.
 
 Decided on 2026-10-12 (verbatim in intent, not reopened):
 - U1: the Details section is form fields generated from the subcategory, like "General Information" (label above value in display, labelled inputs in edit); one generic custom section fragment (`ext/fragment/<Name>.fragment.xml` through Fiori MCP); no table, no Create/Delete, no attribute dropdown; the fragment knows no attribute; a JS factory builds each form element by the attribute's value type; `sap.ui.layout.form.Form` with `ColumnLayout` (never `SimpleForm`); display/edit from `ui>/isEditable`; a counter "Filled N of M".
@@ -20,7 +21,21 @@ Decided on 2026-10-12 (verbatim in intent, not reopened):
 - U7: type on the attribute, a separate numeric column, UI5 types instead of JS regex.
 - Addition (2026-10-12): value type `MULTI_LIST` next to `LIST`; `CONNECTIVITY` is MULTI_LIST; the selected values live normalized in a child composition of the detail row, each validated declaratively (belongs to the attribute, only on MULTI_LIST rows, no duplicate per row); edited with `sap.m.MultiComboBox` (syncing its keys with the child entities is the one piece of custom JS beyond the factory); display joins the names with a comma; "filled" means at least one value.
 
-Open at the plan gate: PLAN D10-D23 (with the `SCREENS.md` questions merged into them).
+Approved at the plan gate on 2026-10-12 (revision 2, user: "approved"), every decision at its PLAN recommended default (the `SCREENS.md` questions are merged into them):
+- D10: rows stay unchanged while the subcategory is empty; the U3 rule applies once when a new subcategory is set; `details` leaves `#CategoryChanged`.
+- D11: `MATERIAL` is `MULTI_LIST`.
+- D12: INTEGER attributes get the server whole-number branch `PRODUCTS_DETAIL_VALUE_NOT_INTEGER`.
+- D13: products without rows get them at the first Edit (`after('EDIT')` fill); `importProducts` untouched.
+- D14: field order by `SubcategoryAttributes.position`, copied by the handler to `ProductDetails.position @readonly`.
+- D15: the ADR-0026 API guards stay (`PRODUCTS_DETAIL_ATTRIBUTE_NOT_ASSIGNED`, `PRODUCTS_DETAIL_ATTRIBUTE_DUPLICATE`, `PRODUCTS_SUBCATEGORY_HAS_FOREIGN_DETAILS`).
+- D16: warning `PRODUCTS_DETAILS_VALUES_REMOVED` (`req.warn`, target `subcategory_code`) only when a filled value is removed.
+- D17: seed of `research/typed-form-facts.md` section 8 with the SCREENS ranges and lists (42 list values, 45 rows, 7 selections), numbers and bounds `Decimal(15, 3)`.
+- D18: ADR-0027 accepted; it supersedes ADR-0026 decisions 3, 4, 6 and 7; ADR-0026 gets an amendment section in phase 6.
+- D19: format, decimals and bounds checked on the client by the per-row UI5 Decimal type; the server keeps range, whole-number, column-type and list-membership checks with texts without placeholders.
+- D20: the counter on its own line under the section title, neutral text.
+- D21: UI5 default number grouping.
+- D22: Latin designations stay Latin in `ru` list names.
+- D23: no undo hint in the warning.
 
 ## Affected entities and services
 Result of `mcp__cds-mcp__search_model` (returns the pre-feature model in this worktree; the committed revision 1 model was read from `db/schema.cds` and `srv/`), `docs/registry/DOMAIN-MODEL.md`, `SERVICES.md` and the scratch of `research/typed-form-facts.md`:
@@ -82,4 +97,4 @@ Not affected: `importProducts` (D13), the List Report, `Permissions`, authentica
 - Protocol section 3: fiori-mcp `search_docs` is down (embeddings) on 2026-10-12; the UI5 facts come from the 1.153.0 CDN debug sources, marked "not verified by MCP"; step 7 proves them in the browser.
 
 ## Open questions
-PLAN "Decisions for the user" D10-D23 (the SCREENS questions are merged there); nothing else.
+None.

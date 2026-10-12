@@ -5,7 +5,7 @@ metadata:
   type: project
 ---
 
-Facts measured on a scratch for products-details-section revision 2 (ADR-0027 proposed 2026-10-12; research/typed-form-facts.md R1-R21):
+Facts measured on a scratch for products-details-section revision 2 (ADR-0027 accepted by the user 2026-10-12 with plan revision 2, D10-D23 at recommended defaults; research/typed-form-facts.md R1-R21):
 
 - `INSERT.into(Child.drafts)` from a handler needs the parent's `DraftAdministrativeData_DraftUUID` (500 NOT NULL otherwise) plus `IsActiveEntity:false, HasActiveEntity:false, HasDraftEntity:false`; `SELECT.one.from(req.subject).columns(..., 'DraftAdministrativeData_DraftUUID')` works in `before('PATCH', Root.drafts)`; the `after('EDIT')` result lacks the UUID, read it from `Root.drafts`.
 - `DELETE.from(Child.drafts)` cascades to the child's own composition drafts; activation then removes the active grandchildren too.

@@ -8,8 +8,8 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Branch: feature/products-details-section
 - Feature: products-details-section (#9)
 - Phase: 4: verification round 2 (the typed form in the browser, en and ru, alice and viewer; PLAN step 10)
-- Last commit: 694ae14 docs: products-details-section verification round 2
-- Next: R2-D1..D3 fixed in DetailsForm (uncommitted), test:ui re-run, ui-verifier re-check and scenarios 12, 14, 16, 17, then phase 5 review
+- Last commit: 4c0b5cd fix(app): products-details-section verification round 2 defects
+- Next: last fix round for R2-D2 (focus after a fragment field commit) and R2-D5 (invalid list text dropped by a DraftMessages read), ui-verifier re-check, then phase 5 review; still failing means stop for the user
 
 ## Open debt
 

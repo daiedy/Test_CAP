@@ -4,7 +4,7 @@
 
 Date: 2026-10-12. Agent: `ui-verifier`. Commit under test: `19d7f2d` (fragment `DetailsForm` in the custom section `Details`). Server: `npx cds serve --in-memory --port 4004` from the worktree root, started by this run (stopped at the end). Browser: Chrome DevTools MCP, `http://localhost:4004/products/webapp/test/flpSandbox.html`, users `alice` (editor) and `viewer`, empty password (Basic auth primed by XHR); `?sap-ui-language=ru` for `ru`. Screenshots: `screenshots/r2-s<N>-<what>.png` (the MCP refuses `filePath`; each PNG is copied from the tool-result path with `cp`).
 
-Verdict: defects found: R2-D1, R2-D2, R2-D3 (all low, none blocks a PLAN criterion). Scenarios 1-11, 13, 15, 18 and the checklist items B2, B6, B7, D-1, D-2, D-5, D-6 completed; scenarios 12, 14, 16, 17 not completed (budget) and D-3 not reproduced. Criteria 68 (partly: en/ru display and edit of TEXT is not covered, no TEXT attribute was driven; INTEGER, DECIMAL, LIST, MULTI_LIST were), 69 and 70 evidenced.
+Current verdict: see "Round 2 re-check" (defects found: R2-D2, R2-D5). First-pass verdict: defects found: R2-D1, R2-D2, R2-D3 (all low). Scenarios 1-11, 13, 15, 18 and the checklist items B2, B6, B7, D-1, D-2, D-5, D-6 completed; scenarios 12, 14, 16, 17 not completed (budget) and D-3 not reproduced. Criteria 68 (partly: en/ru display and edit of TEXT is not covered, no TEXT attribute was driven; INTEGER, DECIMAL, LIST, MULTI_LIST were), 69 and 70 evidenced.
 
 Defects (round 2):
 - R2-D1 (low), layout: steps: Laptop Pro 15 display or edit at a 2000 px window. Expected (SCREENS scenario 1): the three fields in the first three of four columns, aligned with the 4-column grid of General Information. Observed: three equal columns at x = 89, 711, 1333 px against 89, 556, 1022, 1489 for Administrative Data (`ColumnLayout columnsXL=4` spreads three elements over three columns). Screenshots `screenshots/r2-s1-display-laptop.png`, `r2-s2-ru-display-mouse.png`.
@@ -112,7 +112,60 @@ Read with `sap-ui-log-level=WARNING` (the UI5 warnings appear, so the filter wor
 #### Final state and verdict (round 2)
 OData as alice at the end: 0 draft products, 15 active products (the API product `R2 API Mouse` and its draft deleted), seeded detail values restored (Laptop 15/16/512, Coffee Maker 1.2 l, Wireless Mouse Connectivity 5.0 + 2.4 GHz and Sensor Resolution 1600, Office Chair Colour empty). The :4004 server was started by this run and stopped at the end.
 
-Verdict: defects found: R2-D1, R2-D2, R2-D3 (all low).
+First-pass verdict (superseded by the Round 2 re-check): defects found: R2-D1, R2-D2, R2-D3 (all low).
+
+### Round 2 re-check (fix commit 4c0b5cd, fresh server, fresh browser context)
+
+Note: a first re-check ran STALE code (the browser context `r2alice` served the old `DetailsForm.js` from its HTTP cache even after a cache-ignoring reload: element ids `detailsFormContainer-0-label`, message target `.../detailsFormContainer-2-edit/selectedKey`, counter hidden, grid 64/512/960). Its results (RC-1..RC-6 of that attempt) are discarded; everything below ran in a NEW isolated browser context `r2fresh` against a freshly started `npx cds serve --in-memory --port 4004`.
+
+Proof the new code ran: page `...flpSandbox.html?sap-ui-log-level=WARNING&nocache=1760268000#...` in the new context; `sap.ui.require('products/ext/fragment/DetailsForm')` is loaded and exports `createFormElement, onModelContextChange, isFilled, countFilled, joinValueAndUnit, listValueName, joinSelectedNames, diffSelections, resolveListText, isDifferentKey, isDraftWithSubcategory, numberTypeSettings` (`syncFormElements` and `clearFormElements` are module-internal functions, not exports; the served source `curl .../ext/fragment/DetailsForm.js` contains both and the string `-row`); the form element ids are `detailsFormContainer-row1-label`, `-row1-display`, `-row2-...`, `-row3-...` (the factory ids of 19d7f2d are `-0-`). Window 1440 CSS px.
+
+#### RC-1 R2-D1 (grid): FIXED at XL; M and S in RC-11
+1440 px window, display: Details labels at x = 64 / 400 / 736; General Information 64 / 400 / 736 / 1072 and Administrative Data 64 / 400 / 736 / 1072: the three fields sit in the first three columns of the FE grid (Laptop Pro 15, Wireless Mouse). Edit mode: inputs at x = 64 / 400 / 736, width 228 px (unit inputs, about 75 percent of the 304 px FE "Product Name" field plus the unit); Connectivity multi combo box also starts at 64.
+
+#### RC-2 R2-D2 (focus, extra GETs): focus NOT FIXED; GET count improved
+- Laptop Pro 15, Edit: Screen Size "15.5" + Tab: one batch `PATCH .../details(ID=25f5517a-...)` + `GET ...?$select=DraftMessages` (D-2 holds); counter stays "Filled 3 of 3"; BUT `document.activeElement` is the footer Save button (expected Memory (RAM)). Same with a separately pressed Tab after typing "17" in Memory (RAM): `PATCH` + DraftMessages, focus on Save instead of Storage. Control case, an FE field in the same page (Image URL typed, Tab pressed separately): focus moves to the next field (Price), so the loss is specific to the fragment's fields. (For Product Name the focus also goes to the page body, a title re-render, not compared.)
+- Wireless Mouse, Edit, Connectivity "Blu" + Enter: `POST .../selections {"value_code":"BLUETOOTH_5_3"}` 201 + DraftMessages GET, then one `GET .../selections?$select=ID,IsActiveEntity,value_code&$skip=0&$top=100`; focus on Save. Two Backspace (token Wireless 2.4 GHz): `DELETE .../selections(ID=cbd307fc-...)` 204 + DraftMessages GET and one `GET .../selections`; focus on Save. On Edit: exactly ONE `GET .../details(...)/selections` (was two); no `GET .../selections` after a field PATCH on a row without selections.
+- So R2-D2 keeps: the focus is lost to the footer Save button after every field write or selection change (expected: stays in the control, SCREENS scenarios 8 and 9). Severity low to medium (keyboard users: every commit by Tab jumps to the footer).
+
+#### RC-3 R2-D3 (labels): FIXED
+Display mode: the Details labels have no `for` (SPAN). Edit mode: `label[for]` = `...detailsFormContainer-row<n>-edit-inner`, all three targets exist (Screen Size, Memory (RAM), Storage). DevTools issues: see RC-3b.
+
+#### RC-4 regression of the fix: passed
+Wireless Mouse, Edit, Subcategory Audio: PATCH + re-read, fields Connectivity, Battery Life, Colour, "Filled 1 of 3", warning "Values removed: 1. ... Sensor Resolution."; Category Furniture: Subcategory empties, "Select a subcategory to fill in the details."; Subcategory Lighting: Power, Brightness, Colour appear, "Filled 0 of 3". No dialog, 0 inner responses with status 4xx/5xx in the whole session (no "Not Found").
+
+#### RC-5 B6 after the rework: FAILED (R2-D5), same on fresh code
+Wireless Mouse draft (Lighting), Colour typed "Purple" + Tab: Error "Select a value from the list." (message target `...detailsFormContainer-row51-edit/selectedKey`, `validation`), no request. Then Description typed "Desc r2" + Tab: `PATCH Products(...,false)` + `GET Products(...,false)?$select=DraftMessages` (no `details` expand); afterwards the UI5 message model is EMPTY and the Colour combo box text is empty (`aria-invalid` gone). Cmd+S: `draftPrepare` + `draftActivate`, 0 drafts: the Save was NOT blocked. Expected (item 5, PLAN risk B6 ruling): the error survives a Description edit and a DraftMessages read, Save blocked while it shows, removed only on a valid commit or Discard.
+Evidence also in the first pass (stale code): same behaviour.
+
+#### RC-4b Counter (R2-D4 of the discarded first re-check): WITHDRAWN
+The "counter hidden" finding came from the stale code. On the fresh code the counter shows on every product ("Filled 3 of 3" Laptop, "Filled 2 of 3" Bluetooth Speaker and Wireless Mouse, "Filled 0 of 3" Monitor Stand, "Filled 1 of 3" after Maximum Load / Dimensions / Connectivity changes) in display, edit and phone width. R2-D4 does not exist.
+
+#### RC-6 scenarios 11, 12, 14, 17 and the TEXT attribute (fresh code)
+- Scenario 12: Bluetooth Speaker, Edit, Subcategory Mice: Connectivity (Bluetooth 5.0) and Battery Life (12 h) kept, Sensor Resolution appears empty, "Filled 2 of 3", the message model is EMPTY (no warning). Discard: 0 drafts. The `ru` warning text: server `sap-messages` header of the `PATCH` with `Accept-Language: ru` (Laptop Pro 15 to MICE, tested on the first server instance, draft deleted): "Удалено значений: 3. Эти характеристики не относятся к новой подкатегории: Диагональ экрана, Оперативная память, Накопитель." (the on-screen `ru` value state was not opened).
+- Scenario 11 with Save: Wireless Mouse, Edit, Subcategory Audio: warning "Values removed: 1. ... Sensor Resolution." in the message model; Cmd+S at once: `draftPrepare` + `draftActivate` 200, 0 drafts, display "Filled 1 of 3 | Connectivity: Bluetooth 5.0, Wireless 2.4 GHz | Battery Life | Colour" (the warning does not block Save).
+- Scenario 14: List Report Create: "Select a subcategory to fill in the details."; name "R2 UI Product", price 100 USD, stock 5, Category Furniture, Subcategory Seating: fields Material, Maximum Load (kg), Colour appear, "Filled 0 of 3"; Maximum Load 100 + Tab: "Filled 1 of 3"; Cmd+S: display "Maximum Load 100 kg". Product deleted through the API (204).
+- TEXT attribute (Monitor Stand, Dimensions, unit cm): edit input 228 px with the unit, Material multi combo box 272 px and Colour combo box 240 px (no unit, wider); "30 x 20 x 10" + Tab: `PATCH .../details(ID=5d5bf449-...)` + `GET ...$select=DraftMessages`, counter "Filled 1 of 3"; Save: display "Dimensions: 30 x 20 x 10 cm". Observation: this PATCH on a row of a product that also has a MULTI_LIST row (Material) is followed by one `GET .../details(ID=4965153a-...)/selections?$select=ID,IsActiveEntity,value_code&$skip=0`: the "no `GET .../selections` after a field PATCH" expectation holds only for products without a MULTI_LIST row (Laptop). 200, harmless, recorded with R2-D2.
+- Scenario 17: 900 px window (M): Details fields at x = 64 / 332 / 600, the same three columns as General Information and Administrative Data (aligned). 375 px phone (mobile emulation, screenshot `screenshots/r2c-s17-phone-display.png`): one column, label above value, counter shown (its left edge a little left of the field labels, cosmetic); phone edit mode not checked.
+- Scenario 16: partial. In edit mode the Tab order from Stock Quantity reaches the first Details field; each input has `aria-labelledby` its label SPAN and `aria-describedby` for its unit; the form is named "Details"; the multi combo box announces "Contains 2 tokens"; F6, Alt+Down and the `ru` token text were not exercised.
+
+#### RC-3b Console
+Fresh document, whole flow (list, create, object pages, edit, phone): only known sandbox noise (FLP deprecations, 404 on sandbox resources, `Component-preload.js` 404, NavContainer page stack, `View is generated without a component`, `toggleHeaderOnTitleClick`, PersonalizationV2, sync ResourceModel, `[FUTURE FATAL] AddBookmarkButton`, "Semantic Object not valid"); DevTools issues: only "Deprecated feature used"; no "Incorrect use of <label for>" (count 0, baseline 1); no `FormatException`, no "Not Found" from `details` or `selections`.
+
+#### Re-check summary (fresh code, commit 4c0b5cd)
+| Item | Result |
+|---|---|
+| R2-D1 grid | FIXED (XL 64/400/736, M 64/332/600, phone one column) |
+| R2-D2 focus after field write and after selection POST/DELETE | NOT FIXED (focus goes to the footer Save button; FE fields keep it); extra `GET .../selections` after a write on products with a MULTI_LIST row; Edit sends one `GET .../selections` (improved) |
+| R2-D3 label for / DevTools count | FIXED (edit `for` on `-edit-inner`, display no `for`, issue count 0) |
+| Regression Audio to Furniture to Lighting | passed (no dialog, no 4xx) |
+| B6: "Purple" error survives a Description edit and a DraftMessages read; Save blocked | FAILED (R2-D5: error and combo text cleared by the Description `PATCH`'s DraftMessages read; Save went through) |
+| Scenarios 11 (Save), 12, 14, 17 (M, S), TEXT | passed |
+| Scenario 16 | partial |
+
+R2-D5 (medium), steps: Wireless Mouse (or any product with a LIST field), Edit, Colour typed "Purple" + Tab (Error "Select a value from the list.", no request), then edit Description (or any FE field) + Tab, then Cmd+S. Expected: the Colour error stays (B6 ruling "survives `DraftMessages` reads", item 5) and Save is blocked. Observed: after the Description `PATCH` + `GET ...$select=DraftMessages` the message model is empty, the combo box shows an empty text with no error state, and Save succeeds (`draftPrepare` + `draftActivate`, 0 drafts). The stored value is not corrupted (the invalid text is simply dropped), so the harm is a silently discarded entry. Evidence: `$batch` lines in RC-5.
+
+Verdict (round 2 after the fix, supersedes the earlier verdicts): defects found: R2-D2 (open, focus is lost to the footer after each fragment field commit), R2-D5 (open, invalid list text dropped by the next field commit, Save not blocked). R2-D1 and R2-D3 are fixed; R2-D4 was a stale-code artifact.
 
 ---
 

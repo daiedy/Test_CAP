@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-12
 - Branch: feature/products-details-section
 - Feature: products-details-section (#9)
-- Phase: 3: UI (steps 5-7: UI annotations and mock data, contract test, OPA5 journeys)
-- Last commit: 59b51fc feat(srv): products-details-section backend
-- Next: phase 3 gate (`npm test` 196, `metadata.xml` 1277 expected, `npm run test:ui` 58, ui5lint and lint:js clean), commit `feat(app)`, then phase 4 verification
+- Phase: 4: verification on hold (defect D-1 open; the user rejected the table section on 2026-10-12 and is choosing a form-like or list design)
+- Last commit: 001f961 feat(app): products-details-section ui
+- Next: user picks the Details section design (form fields generated from the subcategory, a cleaned list, or typed product fields); then `architect` and `ux-designer` revise PLAN and SCREENS and phases 2-4 are redone for the changed parts
 
 ## Open debt
 

@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-13
 - Branch: main
 - Feature: none
-- Phase: between features (products-details-section #9 closed on 2026-10-12; main merged with the dependabot PRs #22-#25 from GitHub and pushed on 2026-10-13)
-- Last commit: cdc25f1 Merge branch 'main' of github.com:daiedy/Test_CAP
-- Next: the queue: /spec #10 products-validations
+- Phase: none (products-validations #10 spec written on `spec/products-validations`: CONTEXT, PLAN, SCREENS and ADR-0028 proposed; plan-gate decisions D1-D10 pending with the user; implementation not started)
+- Last commit: baab1d0 docs: STATE, CHANGELOG and STACK after the dependabot merge
+- Next: answer D1-D10 in `docs/features/products-validations/CONTEXT.md`, then `/feature #10` (products-validations, P2)
 
 ## Open debt
 

@@ -20,3 +20,4 @@
 - [EDMX cost per CDS edit](contract-delta-facts.md) — @assert.target 0 lines, @assert.range 1, Decimal precision 1, UI.*Hidden $Path 2 per term; Currencies CSV facts; catalog-hygiene (#20) merged 2026-10-09, ADR-0003 amended in place
 - [Handler-created draft children](handler-created-draft-children.md) — insert into Child.drafts needs parent DraftUUID, cascade delete, req.warn not persisted, ASSERT_DATA_TYPE on draft, 2-level composition; ADR-0027
 - [Custom fragment writes in FE V4](fe-v4-custom-fragment-writes.md) — one-way ComboBox key, validation:true control message blocks Save, $$ownRequest for create, draftEdit lacks after-EDIT rows
+- [Validation toolkit facts](validation-toolkit-facts.md) — .message keys, open bounds, undocumented error() with additionalTargets, self-association uniqueness from a draft, before(SAVE) sees deep children, EDMX costs; ADR-0028 proposed

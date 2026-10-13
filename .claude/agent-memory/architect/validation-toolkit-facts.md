@@ -1,6 +1,6 @@
 ---
 name: validation-toolkit-facts
-description: Measured 2026-10-13/14 (cds 10.1.1, scratch probes for the products-validations spec, #10) - @assert.format/range .message keys, open bounds, the undocumented error('KEY', args, targets) CQL function with additionalTargets and path arguments (coalesce localized), self-association uniqueness from a draft, $self value compared inside an infix filter, rule between two child rows (an association starting outside the draft tree reads active rows), portable matchespattern() in a constraint, EDMX cost of a code-list association (+28); ADR-0028 proposed
+description: Measured 2026-10-13/14 (cds 10.1.1, scratch probes for the products-validations spec, #10) - @assert.format/range .message keys, open bounds, the undocumented error('KEY', args, targets) CQL function with additionalTargets and path arguments (coalesce localized), self-association uniqueness from a draft, $self value compared inside an infix filter, rule between two child rows (an association starting outside the draft tree reads active rows), portable matchespattern() in a constraint, EDMX cost of a code-list association (+28); ADR-0028 accepted 2026-10-14 (#10 plan approved: R1-R6, R8, R10-R13, currency code list as the R4 control)
 metadata:
   type: project
 ---

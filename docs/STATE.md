@@ -4,12 +4,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## Now
 
-- Date: 2026-10-13
+- Date: 2026-10-14
 - Branch: main
 - Feature: none
-- Phase: none (products-validations #10 spec written on `spec/products-validations`: CONTEXT, PLAN, SCREENS and ADR-0028 proposed; plan-gate decisions D1-D10 pending with the user; implementation not started)
+- Phase: none (products-validations #10 spec-ready: CONTEXT, PLAN, SCREENS and ADR-0028 approved by the user on 2026-10-14 on `spec/products-validations`, implementation not started; #26 product-details-dimensions queued after #10)
 - Last commit: baab1d0 docs: STATE, CHANGELOG and STACK after the dependabot merge
-- Next: answer D1-D10 in `docs/features/products-validations/CONTEXT.md`, then `/feature #10` (products-validations, P2)
+- Next: `/feature #10` (products-validations, P2)
 
 ## Open debt
 

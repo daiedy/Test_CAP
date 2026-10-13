@@ -33,12 +33,12 @@ Database in development: SQLite in-memory, CSV deployed on every start (`cds wat
 |---|---|---|
 | SAPUI5 from CDN `https://ui5.sap.com` | current, minUI5Version 1.136.0 | Fiori Elements V4 (`sap.fe.templates`), FLP sandbox |
 | `@ui5/cli` | ^4 (4.0.69) | Build and development server |
-| `@sap/ux-ui5-tooling` | ^1.32 | `fiori run`, proxy, appreload |
+| `@sap/ux-ui5-tooling` | ^1.33 (1.33.0) | `fiori run`, proxy, appreload |
 | `@sap-ux/ui5-middleware-fe-mockserver` | ^2 (2.4.17) | OData V4 mock without backend, `ui5-mock.yaml` |
 | `@ui5/linter` | ^1 (1.23.6) | `ui5lint`, deprecated APIs, CSP, manifest |
 | `@sap-ux/eslint-plugin-fiori-tools` | ^10 (10.11.0) | ESLint for Fiori applications (wired in phase 3) |
 | `@sap/ux-specification` | ^1.144 | Schemas for Fiori tools and the page editor |
-| `@sap-ux/ui5-test-writer` | ^1.13.1 (1.13.1) | Generates OPA5 page objects for Fiori Elements V4 from the app model |
+| `@sap-ux/ui5-test-writer` | ^1.15.5 (1.15.5) | Generates OPA5 page objects for Fiori Elements V4 from the app model |
 | `ui5-test-runner` | ^5.14.1 (5.14.1) | Runs QUnit/OPA5 without a browser via `npm run test:ui` (`app/products`) |
 
 ## Agent tools

@@ -4,12 +4,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## Now
 
-- Date: 2026-10-12
+- Date: 2026-10-13
 - Branch: main
 - Feature: none
-- Phase: 7: completion (products-details-section #9 closed, pruned and merged into main on 2026-10-12, cost $186.32)
-- Last commit: 438a68c Merge branch 'feature/products-details-section'
-- Next: push main on the user's instruction (not pushed since 06f5fb7); then the queue: #10 products-validations
+- Phase: between features (products-details-section #9 closed on 2026-10-12; main merged with the dependabot PRs #22-#25 from GitHub and pushed on 2026-10-13)
+- Last commit: cdc25f1 Merge branch 'main' of github.com:daiedy/Test_CAP
+- Next: the queue: /spec #10 products-validations
 
 ## Open debt
 

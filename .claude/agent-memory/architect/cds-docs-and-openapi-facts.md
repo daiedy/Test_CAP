@@ -1,0 +1,19 @@
+---
+name: cds-docs-and-openapi-facts
+description: Measured facts for CDS doc comments, cdsc.docs, @description propagation, the OpenAPI export and Swagger plugin, and the jsdoc lint (feature docs-toolchain #27, 2026-10-14); ADR-0029 accepted 2026-10-14
+metadata:
+  type: project
+---
+
+Doc comments (`/** */`) need `cds.cdsc.docs: true` in `package.json` (env form `CDS_CDSC_DOCS=true`); `cds.load('*')`, the snapshot test, `cds watch` and the registry generator then all agree, `--docs` per command is redundant. They are NOT propagated from a `db/` entity or element to the projection; a doc comment above an `annotate X with {` statement and above elements inside its block does land in CSN `doc`, EDMX `Core.Description` and OpenAPI, so `srv/annotations/<Entity>.cds` can carry them. When a doc comment and `@description` meet on one target the annotation wins. `cds-mcp` compiles with docs on regardless of the project switch (its `doc` fields prove nothing about the switch).
+
+Contract cost on the catalog model: the switch +13 lines (4 to 11 `Core.Description`); each further doc comment +1 line on a target with an `<Annotations>` block, +3 without; `@title` + `@Core.SchemaVersion` on the service +2; `@protocol: 'odata-v4'` 0. Scratch set (10 projections, 51 elements) gave 1670 lines / 67 descriptions.
+
+OpenAPI (`@cap-js/openapi` 1.6.0 bundled in cds-dk 10.1.0): `-l en` applies to the openapi target and resolves `{i18n>}` (7 to 0); `-l ru` gives Cyrillic; default server `/rest/catalog` unless the service has `@protocol: 'odata-v4'`; `${service-path}` in `--openapi:url` already contains `rest/`; `--openapi:diagram false` is truthy (adds a yuml diagram); `-o dir` writes `CatalogService.openapi3.json`. Mapping quirks: schema `title` = `Core.Description`, schema `description` = `Core.LongDescription` only, property `description` = `Core.Description`, action `summary` = its doc, bound-action tag humanized before localization ("Products.import Products"). `info.title` needs `@title` on the service, `info.version` `@Core.SchemaVersion`.
+
+`cds-swagger-ui-express` 0.11.x: devDependency, auto-registers on `bootstrap`, mounts `/$api-docs/<service.path>` and `/openapi.json` outside the service auth, Express 5 ok since 0.11.0, `CDS_SWAGGER=false` disables; loaded by `cds.test()` too.
+
+JSDoc tooling: `cds lint` lints CDS files only (no JS ESLint in CI today); the hook runs the root ESLint for `srv/**` but never the app ESLint; `eslint-plugin-jsdoc` 65.3.2 (eslint ^10, node ^22.22.2) backfill with publicOnly + method contexts: 4 errors in `srv/catalog-service.js`, 4 in `DetailsForm.js`; `tag-lines` `startLines: null` avoids 18/55 style rewrites; `no-undefined-types` off under `webapp/` (49 UI5 namespace types). `jsdoc-to-markdown` fails on TS-flavoured JSDoc types and renders nothing for `sap.ui.define` members even with `@module`; TypeDoc needs TypeScript.
+
+**Why:** #27 needed one description mechanism, a committed OpenAPI document and a JSDoc gate; these facts decided ADR-0029 (accepted by the user 2026-10-14, all five plan-gate questions by the recommendation).
+**How to apply:** when a feature adds descriptions, write doc comments in `srv/annotations/<Entity>.cds`, one sentence (it becomes the Swagger schema title); re-measure the contract figure per phase; never pass `--openapi:diagram`; remember `check-docs-fresh.mjs` is unprotected while `scripts/lib/**` is.

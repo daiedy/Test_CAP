@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-10-14
-- Branch: main
-- Feature: none
-- Phase: none (products-validations #10 spec-ready: CONTEXT, PLAN, SCREENS and ADR-0028 approved by the user on 2026-10-14 on `spec/products-validations`, implementation not started; #26 product-details-dimensions queued after #10)
-- Last commit: baab1d0 docs: STATE, CHANGELOG and STACK after the dependabot merge
-- Next: `/feature #10` (products-validations, P2)
+- Branch: feature/docs-toolchain (from `spec/products-validations` bebb34c, which carries the approved #10 spec)
+- Feature: docs-toolchain (#27)
+- Phase: 1: plan approved on 2026-10-14 (ADR-0029 accepted, `check-feature-docs` green); semi-autonomous gates; plan steps 3 and 4 need a session with `PIPELINE_ALLOW_PROTECTED=1`
+- Last commit: bebb34c docs(spec): products-validations plan approved, ADR-0028 accepted
+- Next: phase 2, plan step 2 (doc comments, service header, contract regeneration) by `cap-backend-dev`, then `test-backend`; `/feature #10` after this feature
 
 ## Open debt
 

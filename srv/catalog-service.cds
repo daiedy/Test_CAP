@@ -2,6 +2,9 @@ using { my.catalog as catalog } from '../db/schema';
 
 /** Public catalog API. UI annotations live in app/products/annotations. */
 @requires: 'authenticated-user'
+@protocol: 'odata-v4'
+@title: 'Product Catalog API'
+@Core.SchemaVersion: '1.0.0'
 // importProducts: a 1,000-row workbook with long descriptions exceeds the 100kb default (research 5.6, ADR-0021)
 @cds.server.body_parser.limit: '1mb'
 service CatalogService {
@@ -12,32 +15,38 @@ service CatalogService {
   ]
   entity Products as projection on catalog.Products actions {
     /** Creates active products from an uploaded xlsx workbook, all-or-nothing (ADR-0021). */
-    action importProducts(in: many $self, file: ProductsImportFile not null) returns Integer;
+    action importProducts(
+      /** Products collection the action is bound to. */
+      in: many $self,
+      /** Workbook to import, with its content, media type and file name. */
+      file: ProductsImportFile not null
+    ) returns Integer;
   };
 
   /** Uploaded workbook of importProducts: base64 content, media type and file name (ADR-0021). */
   type ProductsImportFile {
+    /** Base64-encoded content of the xlsx workbook. */
     content   : LargeBinary;
+    /** Media type of the workbook, the xlsx spreadsheet type. */
     mediaType : String(100);
+    /** Name of the uploaded workbook file. */
     fileName  : String(255);
   }
 
-  /**
-   * Detail rows of a product (ADR-0026): draft-enabled through the composition Products.details.
-   * The root's grants are repeated because a directly read child is authorized on itself only;
-   * writes outside the product are refused by lean draft (422 DRAFT_MODIFICATION_ONLY_VIA_ROOT).
-   */
+  // Detail rows of a product (ADR-0026): draft-enabled through the composition Products.details.
+  // The root's grants are repeated because a directly read child is authorized on itself only;
+  // writes outside the product are refused by lean draft (422 DRAFT_MODIFICATION_ONLY_VIA_ROOT).
+  /** Detail row of a product: one attribute and its typed value, written only through the product's draft. */
   @restrict: [
     { grant: 'READ', to: 'CatalogViewer' },
     { grant: '*',    to: 'CatalogEditor' }
   ]
   entity ProductDetails as projection on catalog.ProductDetails;
 
-  /**
-   * Selected values of a MULTI_LIST detail row (ADR-0027 decision 2): the second composition level,
-   * draft-enabled through Products.details.selections; the root's grants are repeated for the same
-   * reason as on ProductDetails.
-   */
+  // Selected values of a MULTI_LIST detail row (ADR-0027 decision 2): the second composition level,
+  // draft-enabled through Products.details.selections; the root's grants are repeated for the same
+  // reason as on ProductDetails.
+  /** Selected list value of a MULTI_LIST detail row, written only through the product's draft. */
   @restrict: [
     { grant: 'READ', to: 'CatalogViewer' },
     { grant: '*',    to: 'CatalogEditor' }
@@ -50,7 +59,8 @@ service CatalogService {
   @readonly entity DetailValueTypes as projection on catalog.DetailValueTypes;
   @readonly entity DetailListValues as projection on catalog.DetailListValues;
 
-  /** Attributes assigned to a subcategory with their field order; read by the draft handler (ADR-0027 decision 3). */
+  // Attributes assigned to a subcategory with their field order; read by the draft handler (ADR-0027 decision 3).
+  /** Detail attribute assigned to a subcategory, with the position of its field in a product's details. */
   @readonly entity SubcategoryAttributes as projection on catalog.SubcategoryAttributes;
 
   /** Permission signal for the UI: read-only singleton, no table, filled by srv/catalog-service.js (ADR-0013). */
@@ -59,6 +69,7 @@ service CatalogService {
   @readonly
   entity Permissions {
     key ID       : String;
+        /** True when the current user may create, edit and import products. */
         isEditor : Boolean;
   }
 }

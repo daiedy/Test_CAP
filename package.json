@@ -41,6 +41,9 @@
     "format:check": "prettier --check --no-error-on-unmatched-pattern \"srv/**/*.js\" \"test/**/*.js\" \"scripts/**/*.mjs\""
   },
   "cds": {
+    "cdsc": {
+      "docs": true
+    },
     "requires": {
       "auth": {
         "users": {

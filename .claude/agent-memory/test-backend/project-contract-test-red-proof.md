@@ -76,6 +76,15 @@ Phase 3 repeat (products-details-section step 6, 2026-10-12): the same copy plus
 worktree guard also refused a plain `for p in ...; do ... $(grep -c ...) ...; done` (no git in
 it): put substring counts in a node script too.
 
+Model-scan variant (docs-toolchain step 2, 2026-10-14): a scratch dir under `/tmp` written with the
+Write tool and run as `node /tmp/.../run.mjs` passed the worktree guard, as did one multi-source
+`cp -R` and `ln -s`. One labeled runner did baseline, 13 source mutations, a "must stay green"
+mutation and a final restored run in ~2 min. The green mutation (a `//` comment naming
+`@description`) proves a "never written" scan is precise: scan with `cds.parse.cdl(text)` per file,
+not a regex, because the parsed CSN flattens `@(description: ..)` and `@Core: { Description: .. }`
+into dotted keys and drops comments. A clause no source change can turn red (cds 10.1 emits the same
+EDMX for every `@protocol` value) is reported as a guard for a future compiler, not as proven.
+
 **How to apply:** whenever a plan asks for a contract test that "must fail on main", or a new `it`
 could pass vacuously. Count the asserted substring in the pre-feature EDMX; if the count is not 0,
 say so in the report instead of claiming the test proves the change. See

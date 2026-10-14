@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-14
 - Branch: feature/docs-toolchain (from `spec/products-validations` bebb34c, which carries the approved #10 spec)
 - Feature: docs-toolchain (#27)
-- Phase: 1: plan approved on 2026-10-14 (ADR-0029 accepted, `check-feature-docs` green); semi-autonomous gates; plan steps 3 and 4 need a session with `PIPELINE_ALLOW_PROTECTED=1`
-- Last commit: bebb34c docs(spec): products-validations plan approved, ADR-0028 accepted
-- Next: phase 2, plan step 2 (doc comments, service header, contract regeneration) by `cap-backend-dev`, then `test-backend`; `/feature #10` after this feature
+- Phase: 2: backend done, plan step 2 gate green (lint 0, `npm test` 212/212, `test:ui` 82/82, `metadata.xml` 1674 lines and 69 `Core.Description`); semi-autonomous gates
+- Last commit: 9ee1c32 docs(spec): docs-toolchain plan, research and ADR-0029
+- Next: phase 3, plan steps 3 and 4 (tooling, ESLint jsdoc, OpenAPI, protected pipeline files), needs a session with `PIPELINE_ALLOW_PROTECTED=1`; `/feature #10` after this feature
 
 ## Open debt
 

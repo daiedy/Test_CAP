@@ -1,6 +1,7 @@
 using { my.catalog as catalog } from '../db/schema';
 
-/** Public catalog API. UI annotations live in app/products/annotations. */
+// UI annotations live in app/products/annotations.
+/** Reads and maintains catalog products with their categories, subcategories and typed details, and imports products from an Excel workbook. */
 @requires: 'authenticated-user'
 @protocol: 'odata-v4'
 @title: 'Product Catalog API'
@@ -14,7 +15,8 @@ service CatalogService {
     { grant: '*',    to: 'CatalogEditor' }
   ]
   entity Products as projection on catalog.Products actions {
-    /** Creates active products from an uploaded xlsx workbook, all-or-nothing (ADR-0021). */
+    // Excel import, ADR-0021.
+    /** Creates active products from an uploaded xlsx workbook, all-or-nothing. */
     action importProducts(
       /** Products collection the action is bound to. */
       in: many $self,
@@ -23,7 +25,8 @@ service CatalogService {
     ) returns Integer;
   };
 
-  /** Uploaded workbook of importProducts: base64 content, media type and file name (ADR-0021). */
+  // Parameter type of importProducts, ADR-0021.
+  /** Uploaded workbook of importProducts: base64 content, media type and file name. */
   type ProductsImportFile {
     /** Base64-encoded content of the xlsx workbook. */
     content   : LargeBinary;
@@ -36,7 +39,7 @@ service CatalogService {
   // Detail rows of a product (ADR-0026): draft-enabled through the composition Products.details.
   // The root's grants are repeated because a directly read child is authorized on itself only;
   // writes outside the product are refused by lean draft (422 DRAFT_MODIFICATION_ONLY_VIA_ROOT).
-  /** Detail row of a product: one attribute and its typed value, written only through the product's draft. */
+  // The API description is the doc comment in srv/annotations/ProductDetails.cds.
   @restrict: [
     { grant: 'READ', to: 'CatalogViewer' },
     { grant: '*',    to: 'CatalogEditor' }
@@ -45,8 +48,7 @@ service CatalogService {
 
   // Selected values of a MULTI_LIST detail row (ADR-0027 decision 2): the second composition level,
   // draft-enabled through Products.details.selections; the root's grants are repeated for the same
-  // reason as on ProductDetails.
-  /** Selected list value of a MULTI_LIST detail row, written only through the product's draft. */
+  // reason as on ProductDetails. The API description is the doc comment in srv/annotations/ProductDetails.cds.
   @restrict: [
     { grant: 'READ', to: 'CatalogViewer' },
     { grant: '*',    to: 'CatalogEditor' }
@@ -60,10 +62,11 @@ service CatalogService {
   @readonly entity DetailListValues as projection on catalog.DetailListValues;
 
   // Attributes assigned to a subcategory with their field order; read by the draft handler (ADR-0027 decision 3).
-  /** Detail attribute assigned to a subcategory, with the position of its field in a product's details. */
+  // The API description is the doc comment in srv/annotations/SubcategoryAttributes.cds.
   @readonly entity SubcategoryAttributes as projection on catalog.SubcategoryAttributes;
 
-  /** Permission signal for the UI: read-only singleton, no table, filled by srv/catalog-service.js (ADR-0013). */
+  // Permission signal for the UI: read-only singleton, no table, filled by srv/catalog-service.js (ADR-0013).
+  /** Tells the caller whether the current user may change the catalog. */
   @odata.singleton
   @cds.persistence.skip
   @readonly

@@ -427,7 +427,7 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
       </Action>
       <Annotation Term="Core.SchemaVersion" String="1.0.0"/>
       <Annotations Target="CatalogService.EntityContainer">
-        <Annotation Term="Core.Description" String="Public catalog API. UI annotations live in app/products/annotations."/>
+        <Annotation Term="Core.Description" String="Reads and maintains catalog products with their categories, subcategories and typed details, and imports products from an Excel workbook."/>
         <Annotation Term="Common.AddressViaNavigationPath" Bool="true"/>
         <Annotation Term="Common.Label" String="Product Catalog API"/>
       </Annotations>
@@ -905,7 +905,7 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
           </Record>
         </Annotation>
         <Annotation Term="Common.Label" String="{i18n>Products.importProducts}"/>
-        <Annotation Term="Core.Description" String="Creates active products from an uploaded xlsx workbook, all-or-nothing (ADR-0021)."/>
+        <Annotation Term="Core.Description" String="Creates active products from an uploaded xlsx workbook, all-or-nothing."/>
       </Annotations>
       <Annotations Target="CatalogService.importProducts(Collection(CatalogService.Products))/in">
         <Annotation Term="Core.Description" String="Products collection the action is bound to."/>
@@ -916,7 +916,7 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         <Annotation Term="Core.Description" String="Workbook to import, with its content, media type and file name."/>
       </Annotations>
       <Annotations Target="CatalogService.ProductsImportFile">
-        <Annotation Term="Core.Description" String="Uploaded workbook of importProducts: base64 content, media type and file name (ADR-0021)."/>
+        <Annotation Term="Core.Description" String="Uploaded workbook of importProducts: base64 content, media type and file name."/>
       </Annotations>
       <Annotations Target="CatalogService.ProductsImportFile/content">
         <Annotation Term="Core.MediaType" Path="mediaType"/>
@@ -1541,7 +1541,7 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         <Annotation Term="Core.Description" String="Position of the attribute's field in a product's details."/>
       </Annotations>
       <Annotations Target="CatalogService.Permissions">
-        <Annotation Term="Core.Description" String="Permission signal for the UI: read-only singleton, no table, filled by srv/catalog-service.js (ADR-0013)."/>
+        <Annotation Term="Core.Description" String="Tells the caller whether the current user may change the catalog."/>
       </Annotations>
       <Annotations Target="CatalogService.EntityContainer/Permissions">
         <Annotation Term="Capabilities.DeleteRestrictions">

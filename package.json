@@ -17,12 +17,15 @@
   },
   "devDependencies": {
     "@cap-js/cds-test": "^1",
+    "@cap-js/openapi": "1.6.0",
     "@cap-js/sqlite": "^3",
     "@sap/cds-dk": "^10",
     "@sap/eslint-plugin-cds": "^4",
     "@sap/ux-specification": "^1.144.12",
     "@vitest/coverage-v8": "^5",
+    "cds-swagger-ui-express": "^0.11.0",
     "eslint": "^10",
+    "eslint-plugin-jsdoc": "^65.4.2",
     "prettier": "^3",
     "vitest": "^5",
     "write-excel-file": "^4.1.1"
@@ -36,8 +39,10 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "cds lint",
+    "lint:js": "eslint .",
     "format": "prettier --write --no-error-on-unmatched-pattern \"srv/**/*.js\" \"test/**/*.js\" \"scripts/**/*.mjs\"",
     "docs:registry": "node scripts/gen-registry.mjs",
+    "docs:api": "node scripts/gen-api-docs.mjs",
     "format:check": "prettier --check --no-error-on-unmatched-pattern \"srv/**/*.js\" \"test/**/*.js\" \"scripts/**/*.mjs\""
   },
   "cds": {
@@ -56,5 +61,8 @@
   },
   "sapux": [
     "app/products"
-  ]
+  ],
+  "scarfSettings": {
+    "enabled": false
+  }
 }

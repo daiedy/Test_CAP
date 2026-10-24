@@ -9,15 +9,19 @@ const MAX_IMPORT_ROWS = 1000;
 /**
  * Handlers of CatalogService.
  * - READ Permissions: tells the Fiori UI whether the caller may edit. Enforcement is declarative
- *   (@requires / @restrict in catalog-service.cds); this is the signal behind UI.CreateHidden /
+ *   (`@requires` / `@restrict` in catalog-service.cds); this is the signal behind UI.CreateHidden /
  *   UI.UpdateHidden / UI.DeleteHidden (ADR-0013).
  * - importProducts: creates active products from an xlsx workbook, all-or-nothing (ADR-0021).
  * - PATCH Products.drafts: clears a subcategory that does not belong to the new category
- *   (ADR-0024 decision 3); the pair itself is checked by the @assert constraint (decision 2).
+ *   (ADR-0024 decision 3); the pair itself is checked by the `@assert` constraint (decision 2).
  *   Then a new subcategory reconciles the detail rows of the draft (ADR-0027 decision 3).
  * - EDIT Products: fills the detail rows a product without rows lacks (ADR-0027 decision 3, PLAN D13).
  */
 export default class CatalogService extends cds.ApplicationService {
+  /**
+   * Registers the handlers of the service in the order before, on, after.
+   * @returns {Promise<void>} the generic initialization of cds.ApplicationService
+   */
   async init() {
     const { Products, Subcategories } = this.entities;
 
@@ -43,7 +47,7 @@ export default class CatalogService extends cds.ApplicationService {
  * without carrying the subcategory, a stored subcategory that does not belong to the new category
  * is cleared, so the stale value neither stays visible nor fails at Save. A subcategory of the new
  * category is kept (for example one chosen before the category on a new draft). Silent: no message,
- * no rejection; active writes are not reset, there the @assert constraint rejects (decision 2).
+ * no rejection; active writes are not reset, there the `@assert` constraint rejects (decision 2).
  * @param {object} Subcategories the service entity of the code list
  * @param {cds.Request} req PATCH request on Products.drafts
  */
@@ -211,7 +215,7 @@ async function warnValuesRemoved(srv, removed, req) {
 }
 
 /**
- * One INSERT per row through the service, so @mandatory / @assert.* / data types are checked by
+ * One INSERT per row through the service, so `@mandatory` / `@assert.*` / data types are checked by
  * the framework (research 5.3, 5.3a) and attributed to the sheet row. Duplicate names and the
  * subcategory-category pair are checked before the inserts, because no annotation reports them per
  * row (ADR-0021 decision 5, amendment 4 E). Any error rejects the whole request, which rolls back
@@ -276,6 +280,7 @@ function rejectImport(req, messages) {
  * @param {Array<{ row: number, entry: Record<string, unknown> }>} rows import rows
  * @param {(column: string) => number} order header position of a column
  * @returns {Promise<Array<{ row: number, order: number, code: string, args: Array<unknown> }>>}
+ *   one PRODUCTS_IMPORT_DUPLICATE_NAME per row whose name an earlier row or an active product has
  */
 async function duplicateNames(rows, order) {
   const key = (name) => String(name).trim().toLowerCase();
@@ -345,10 +350,12 @@ async function subcategoryMismatches(rows, order, locale) {
  * Map a rejected INSERT to row messages, one per column: the framework's input validation
  * reports ASSERT_* codes with the element as target (research 5.3). Anything else is rethrown.
  * @param {Error & { details?: Array<object>, code?: string, target?: string, args?: Array<unknown> }} err
+ *   error of the rejected INSERT, with the framework's messages in `details` when there are several
  * @param {number} row sheet row, header = 1
  * @param {string} locale request locale for the framework's reason text
  * @param {(column: string) => number} order header position of a column
  * @returns {Array<{ row: number, order: number, code: string, args: Array<unknown> }>}
+ *   one PRODUCTS_IMPORT_ROW_INVALID per rejected column of the row
  */
 function validationErrors(err, row, locale, order) {
   const details = err.details?.length ? err.details : [err];

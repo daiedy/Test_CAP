@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Generates docs/registry/*.md from the effective CDS model and project sources.
+// Generates docs/registry/*.md from the effective CDS model and project sources, and the OpenAPI
+// documents of docs/api through scripts/gen-api-docs.mjs (ADR-0029 decision 4).
 // Output files are overwritten; never edit them by hand. Run: npm run docs:registry
 import cds from '@sap/cds';
 import {
@@ -14,6 +15,7 @@ import {
 import { join, relative, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { sourcesHash } from './lib/registry-sources.mjs';
+import { writeOpenApi } from './gen-api-docs.mjs';
 
 const ROOT = process.cwd();
 cds.root = ROOT;
@@ -90,6 +92,90 @@ function annots(el) {
   return out.join(', ');
 }
 
+// Declarations a JSDoc block documents, tried in order at the first code after the block (line
+// comments skipped): [pattern, group of the name]; the whole match is the signature.
+const KEYWORDS = new Set(['if', 'for', 'while', 'switch', 'catch', 'return', 'function']);
+const DECLARATIONS = [
+  /^export\s+(?:default\s+)?class\s+(\w+)(?:\s+extends\s+[\w.]+)?/,
+  /^export\s+(?:default\s+)?(?:async\s+)?function\s*\*?\s*(\w+)\s*\([^)]*\)/,
+  /^export\s+(?:const|let|var)\s+(\w+)/,
+  /^(?:async\s+)?function\s*\*?\s*(\w+)\s*\([^)]*\)/,
+  /^(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?(?:function\s*\*?\s*\w*\s*\([^)]*\)|\([^)]*\)\s*=>|\w+\s*=>)/,
+  /^(\w+)\s*:\s*(?:async\s+)?function\s*\w*\s*\([^)]*\)/,
+  /^(?:static\s+)?(?:async\s+)?(?:get\s+|set\s+)?(\w+)\s*\([^)]*\)(?=\s*\{)/,
+];
+const TAG_ALIASES = { return: 'returns', arg: 'param', argument: 'param', exception: 'throws' };
+const NAMED_TAGS = new Set(['param', 'property']);
+// Inline links read as code in the page.
+const unlink = (s) => s.replace(/\{@link\s+([^}\s|]+)[^}]*\}/g, '`$1`');
+
+/** Split one tag text (`@param {type} name description`) into its parts; the type may nest braces. */
+function parseTag(raw) {
+  const m = raw.match(/^@(\w+)\s*/);
+  const tag = TAG_ALIASES[m[1]] ?? m[1];
+  let rest = raw.slice(m[0].length);
+  let type = '';
+  if (rest.startsWith('{')) {
+    let depth = 0;
+    let i = 0;
+    for (; i < rest.length; i++) {
+      if (rest[i] === '{') depth++;
+      else if (rest[i] === '}' && --depth === 0) break;
+    }
+    type = rest.slice(1, i).trim();
+    rest = rest.slice(i + 1).trim();
+  }
+  let name = '';
+  if (NAMED_TAGS.has(tag)) {
+    const n = rest.match(/^(\[[^\]]*\]|\S+)\s*/);
+    name = n ? n[1] : '';
+    rest = rest.slice(n ? n[0].length : 0);
+  }
+  return { tag, type, name, text: unlink(rest.replace(/^-\s+/, '')) };
+}
+
+/**
+ * JSDoc blocks of one JavaScript source: the file overview (a first block that documents no
+ * declaration) and one symbol per block followed by a declaration.
+ */
+function jsdocOf(src) {
+  const symbols = [];
+  let overview = '';
+  const block = /\/\*\*([\s\S]*?)\*\//g;
+  let mm;
+  while ((mm = block.exec(src))) {
+    const lines = mm[1].split('\n').map((l) => l.replace(/^\s*\*?\s?/, '').trimEnd());
+    const first = lines.findIndex((l) => /^@\w/.test(l));
+    const body = first < 0 ? lines : lines.slice(0, first);
+    const description = unlink(body.join('\n').trim());
+    const tags = [];
+    for (const l of first < 0 ? [] : lines.slice(first)) {
+      if (/^@\w/.test(l)) tags.push(l);
+      else if (l.trim() && tags.length) tags[tags.length - 1] += ' ' + l.trim();
+    }
+    const rest = src.slice(block.lastIndex);
+    const after = rest.replace(/^(?:\s*\/\/[^\n]*\n)*\s*/, '');
+    const decl = DECLARATIONS.map((re) => after.match(re)).find((x) => x && !KEYWORDS.has(x[1]));
+    if (!decl) {
+      // The overview is a first block that stands apart: a blank line separates it from the code.
+      const detached = /^[ \t]*\n[ \t]*\n/.test(rest);
+      if (detached && !symbols.length && !overview) overview = description;
+      continue;
+    }
+    symbols.push({
+      name: decl[1],
+      signature: decl[0]
+        .replace(/\s+/g, ' ')
+        .replace(/\(\s+/g, '(')
+        .replace(/,?\s+\)/g, ')'),
+      line: src.slice(0, src.length - after.length).split('\n').length,
+      description,
+      tags: tags.map((t) => parseTag(t.replace(/\s+/g, ' ').trim())),
+    });
+  }
+  return { overview, symbols };
+}
+
 // ---------- model ----------
 const csn = await cds.load('*');
 const m = cds.linked(cds.compile.for.nodejs(csn));
@@ -128,11 +214,16 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
     const p = projectionOf[e.name]?.elements?.[el.name];
     return text(el['@title'] ?? el['@Common.Label'] ?? p?.['@title'] ?? p?.['@Common.Label']);
   };
+  // Descriptions (ADR-0029 decisions 2 and 8): a db/ doc comment is a developer note about the
+  // table; the API description is the doc comment of the projection and of its elements.
+  const descriptionOf = (e, el) => projectionOf[e.name]?.elements?.[el.name]?.doc ?? el.doc;
   md += '## Entities\n\n';
   for (const e of entities) {
     const includes = (e.includes || []).join(', ');
+    const projection = projectionOf[e.name];
     md += `### ${e.name}\n\n`;
     if (e.doc) md += `${e.doc.trim()}\n\n`;
+    if (projection?.doc) md += `Description (\`${projection.name}\`): ${projection.doc.trim()}\n\n`;
     md += `Aspects: ${includes || 'none'}. Keys: ${Object.values(e.elements)
       .filter((x) => x.key)
       .map((x) => x.name)
@@ -149,11 +240,12 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
     }.\n\n`;
     md +=
       table(
-        ['Element', 'Type', 'Title (en)', 'Annotations'],
+        ['Element', 'Type', 'Title (en)', 'Description', 'Annotations'],
         Object.values(e.elements).map((el) => [
           el.name,
           typeOf(el),
           titleOf(e, el),
+          descriptionOf(e, el)?.trim() ?? '',
           annots(projectionOf[e.name]?.elements?.[el.name] ?? el) || annots(el),
         ])
       ) + '\n';
@@ -329,7 +421,11 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
           '',
         ]);
   }
-  md += '## Functions in srv/lib\n\n' + table(['File', 'Export', 'Purpose'], rows) + '\n';
+  md +=
+    '## Functions in srv/lib\n\n' +
+    'Purpose is the first line of the JSDoc block; signatures, parameters and return values of every documented function of `srv/` and `webapp/ext/` are in `JSDOC.md`.\n\n' +
+    table(['File', 'Export', 'Purpose'], rows) +
+    '\n';
   const types = Object.values(m.definitions).filter(
     (d) => (d.kind === 'type' || d.kind === 'aspect') && !isForeign(d.name) && !inService(d.name)
   );
@@ -447,5 +543,48 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
   writeFileSync(join(OUT, 'UI-ARTIFACTS.md'), md);
 }
 
+// ---------- JSDOC.md ----------
+// Every /** */ block followed by a declaration (ADR-0029 decision 5); in-house on purpose: jsdoc and
+// jsdoc-to-markdown reject the TypeScript-flavoured types and see nothing inside sap.ui.define.
+{
+  let md = header(
+    'JSDoc',
+    'Documented functions, classes and constants of `srv/**/*.js` and `app/*/webapp/ext/**/*.js` (and `webapp/model/**/*.js`), one section per file: signature, description, parameters and return value. The source of truth is the JSDoc block in the file; `npm run lint:js` requires it. For what is handled where see `HANDLERS.md`.'
+  );
+  const appDir = join(ROOT, 'app');
+  const apps = existsSync(appDir)
+    ? readdirSync(appDir).filter((a) => statSync(join(appDir, a)).isDirectory())
+    : [];
+  const files = [
+    ...walk(join(ROOT, 'srv')),
+    ...apps.flatMap((a) => [
+      ...walk(join(appDir, a, 'webapp/ext')),
+      ...walk(join(appDir, a, 'webapp/model')),
+    ]),
+  ]
+    .filter((f) => f.endsWith('.js'))
+    .map(rel)
+    .sort();
+  for (const file of files) {
+    const { overview, symbols } = jsdocOf(readFileSync(join(ROOT, file), 'utf8'));
+    md += `## ${file}\n\n`;
+    if (overview) md += `${overview}\n\n`;
+    if (!symbols.length) md += '_No documented symbols._\n\n';
+    for (const s of symbols) {
+      md += `### ${s.name}\n\n\`${s.signature}\` (line ${s.line})\n\n`;
+      if (s.description) md += `${s.description}\n\n`;
+      if (s.tags.length) {
+        md +=
+          table(
+            ['Tag', 'Name', 'Type', 'Description'],
+            s.tags.map((t) => [`@${t.tag}`, t.name, t.type ? `\`${t.type}\`` : '', t.text])
+          ) + '\n';
+      }
+    }
+  }
+  writeFileSync(join(OUT, 'JSDOC.md'), md);
+}
+
+writeOpenApi(ROOT, HASH);
 rmSync(join(OUT, '.stale'), { force: true });
-console.log(`docs/registry updated (sources ${HASH}).`);
+console.log(`docs/registry and docs/api updated (sources ${HASH}).`);

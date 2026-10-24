@@ -95,7 +95,7 @@ Proposed rule set (errors: `require-jsdoc`, `require-param`, `require-param-desc
 |---|---|---|---|
 | `eslint-plugin-jsdoc` | 65.3.2 | `eslint ^7 || ^8 || ^9 || ^10`, `typescript *`; node `^22.22.2 || >=24.15.0` | flat configs `flat/recommended`, `flat/recommended-error`, typescript flavours |
 | `cds-swagger-ui-express` | 0.11.0 (main 0.11.1) | `express >=4`, `@sap/cds >=7` (main `>=9`); node `>=18` (main `>=22`) | Express 5 since 0.11.0 |
-| `@cap-js/openapi` | 1.7.0 | `@sap/cds >=7.6` | 1.6.0 bundled inside `@sap/cds-dk` 10.1.0 (`node_modules/@sap/cds-dk/node_modules/@cap-js/openapi`), not resolvable from the project root |
+| `@cap-js/openapi` | 1.7.0 | `@sap/cds >=7.6` | 1.6.0 bundled inside `@sap/cds-dk` 10.1.0 (`node_modules/@sap/cds-dk/node_modules/@cap-js/openapi`), not resolvable from the project root on 2026-10-14; since phase 3 a project copy exists (the Swagger plugin's dependency), `cds compile` prefers it, and the root pins 1.6.0 because 1.7.0 fails on the served draft model (ADR-0029 amendment A, 2026-10-25) |
 | `jsdoc-to-markdown` | 9.1.3 | `@75lb/nature latest`; node >= 12.17 | rejected (section 6) |
 | `jsdoc` | 4.0.5 | node >= 12 | transitive via `@ui5/builder` only |
 | `typedoc` | 0.28.20 | `typescript 5.0.x ... 6.0.x` | rejected |

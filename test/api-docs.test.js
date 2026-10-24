@@ -1,14 +1,59 @@
 // docs-toolchain (ADR-0029): the documentation of the model, the API and the code reaches its consumers.
 // Decision 2: the CDS doc comment is the only description mechanism of the project; with cds.cdsc.docs
 // the compiled CSN keeps it as `doc`, the EDMX and the OpenAPI export turn it into a description.
-// Plan step 3 extends this file with the OpenAPI document, JSDOC.md and Swagger UI tests.
+// Decisions 4-8: the committed OpenAPI document and its freshness, JSDOC.md, the descriptions in
+// DOMAIN-MODEL.md, the Swagger UI of development and the JSDoc lint gate.
 import cds from '@sap/cds';
-import { readdirSync, readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { createRequire } from 'node:module';
+import os from 'node:os';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { ESLint } from 'eslint';
+import { API_DIR, apiDocsStatus, stampOpenApi } from '../scripts/gen-api-docs.mjs';
+import { sourcesHash } from '../scripts/lib/registry-sources.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
-// These tests read the model and start no server: switch cds.root (and with it cds.env) only.
-cds.test.in(root);
+// One server for the file: the Swagger UI test needs it (the plugin mounts on bootstrap); the
+// other tests read the model, the generated files and the lint configs.
+const test = cds.test(root);
+// @requires on CatalogService; /$api-docs itself is served without authentication (PLAN risk 2).
+test.defaults.auth = { username: 'alice' };
+
+const read = (file) => readFileSync(path.join(root, file), 'utf8');
+const OPENAPI = `${API_DIR}/CatalogService.openapi3.json`;
+
+// The project projections of CatalogService (entities on a my.catalog entity).
+const PROJECTIONS = [
+  'Products',
+  'ProductDetails',
+  'ProductDetailSelections',
+  'Categories',
+  'Subcategories',
+  'DetailValueTypes',
+  'DetailAttributes',
+  'DetailListValues',
+  'SubcategoryAttributes',
+];
+
+// The generated registry pages scripts/check-docs-fresh.mjs checks (its FILES list).
+const REGISTRY_FILES = [
+  'DOMAIN-MODEL.md',
+  'SERVICES.md',
+  'HANDLERS.md',
+  'UI-ARTIFACTS.md',
+  'REUSE-CATALOG.md',
+  'JSDOC.md',
+];
 
 // Elements the project does not describe: the technical key ID (of cuid and of the Permissions
 // singleton), the admin data of `managed` (createdBy and modifiedBy carry SAP's @description), and the
@@ -28,13 +73,17 @@ const DESCRIPTION_ANNOTATION = /^@(description|Core\.Description|Core\.LongDescr
 
 const described = (definition) => typeof definition?.doc === 'string' && /\S/.test(definition.doc);
 
-// Every .cds file of the project model under db/, srv/ and app/, without node_modules.
-const cdsFiles = (dir) =>
-  readdirSync(path.join(root, dir), { withFileTypes: true }).flatMap((entry) => {
-    const file = path.posix.join(dir, entry.name);
-    if (entry.isDirectory()) return entry.name === 'node_modules' ? [] : cdsFiles(file);
-    return entry.name.endsWith('.cds') ? [file] : [];
-  });
+// Every file with the extension under a project folder, without node_modules, repo-relative.
+const filesUnder = (dir, extension) =>
+  existsSync(path.join(root, dir))
+    ? readdirSync(path.join(root, dir), { withFileTypes: true }).flatMap((entry) => {
+        const file = path.posix.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          return entry.name === 'node_modules' ? [] : filesUnder(file, extension);
+        }
+        return entry.name.endsWith(extension) ? [file] : [];
+      })
+    : [];
 
 // The keys naming a forbidden description annotation anywhere in a parsed CSN. The parser flattens
 // @(description: ...) and @Core: { Description: ... } into these keys and drops comments.
@@ -64,19 +113,7 @@ describe('Descriptions of CatalogService in the model', () => {
         (d.projection ?? d.query?.SELECT)?.from?.ref?.[0]?.startsWith('my.catalog.')
     );
     expect(projections.map(([name]) => name)).toEqual(
-      expect.arrayContaining(
-        [
-          'Products',
-          'ProductDetails',
-          'ProductDetailSelections',
-          'Categories',
-          'Subcategories',
-          'DetailValueTypes',
-          'DetailAttributes',
-          'DetailListValues',
-          'SubcategoryAttributes',
-        ].map((entity) => `CatalogService.${entity}`)
-      )
+      expect.arrayContaining(PROJECTIONS.map((entity) => `CatalogService.${entity}`))
     );
     // The singleton and the action's parameter type are defined in the service file itself.
     const structured = [
@@ -106,7 +143,7 @@ describe('Descriptions of CatalogService in the model', () => {
 
     // Never written as an annotation: every project .cds file is parsed on its own, so the
     // @description that createdBy, modifiedBy and currency inherit from @sap/cds/common is not seen.
-    const files = ['db', 'srv', 'app'].flatMap(cdsFiles);
+    const files = ['db', 'srv', 'app'].flatMap((dir) => filesUnder(dir, '.cds'));
     expect(files).toEqual(
       expect.arrayContaining([
         'db/schema.cds',
@@ -122,5 +159,280 @@ describe('Descriptions of CatalogService in the model', () => {
       )
     );
     expect(written).toEqual([]);
+  });
+});
+
+describe('OpenAPI document of CatalogService (ADR-0029 decision 4)', () => {
+  it("exports the service to an English OpenAPI document with the model's descriptions", async () => {
+    const text = read(OPENAPI);
+    const doc = JSON.parse(text);
+    // The expected texts are the doc comments of the compiled model, not written a second time here.
+    const csn = await cds.load('*');
+    const products = csn.definitions['CatalogService.Products'];
+
+    expect(doc.openapi).toMatch(/^3\.0\.\d+$/);
+    expect(doc.info).toMatchObject({
+      title: 'Product Catalog API',
+      version: '1.0.0',
+      description: csn.definitions.CatalogService.doc,
+    });
+    expect(doc.info.description).toMatch(/\S/);
+    // From @protocol: 'odata-v4'; the converter's default would be /rest/catalog.
+    expect(doc.servers[0].url).toBe('/odata/v4/catalog');
+    expect(doc.components.schemas['CatalogService.Products'].properties.name.description).toBe(
+      products.elements.name.doc
+    );
+
+    // Every documented entity set (the projections and the Permissions singleton) has a tag whose
+    // description is its doc comment; the tag is found through the set's own path. Currencies is
+    // SAP's and undocumented.
+    const documented = Object.entries(csn.definitions).filter(
+      ([name, d]) => name.startsWith('CatalogService.') && d.kind === 'entity' && described(d)
+    );
+    expect(documented.map(([name]) => name)).toEqual(
+      expect.arrayContaining(
+        [...PROJECTIONS, 'Permissions'].map((entity) => `CatalogService.${entity}`)
+      )
+    );
+    const tagDescriptions = Object.fromEntries(doc.tags.map((tag) => [tag.name, tag.description]));
+    const mismatched = [];
+    for (const [name, d] of documented) {
+      const set = name.slice('CatalogService.'.length);
+      const tag = doc.paths[`/${set}`]?.get?.tags?.[0];
+      if (tagDescriptions[tag] !== d.doc) mismatched.push(`${set}: tag ${tag}`);
+    }
+    expect(mismatched).toEqual([]);
+
+    // English only: every i18n text resolved (-l en), no Russian text.
+    expect(text).not.toContain('{i18n>');
+    expect(text).not.toMatch(/\p{Script=Cyrillic}/u);
+  });
+
+  // The export runs once in this file (about 3 s). The bytes compared are the committed
+  // serialization of stampOpenApi() (ADR-0029 amendment B), the stamp the registry hash.
+  it('keeps docs/api/CatalogService.openapi3.json in sync with the model', () => {
+    const hash = sourcesHash(root);
+    const committed = read(OPENAPI);
+    expect(JSON.parse(committed).info['x-sources']).toBe(hash);
+
+    const out = mkdtempSync(path.join(os.tmpdir(), 'api-docs-export-'));
+    try {
+      // The command of writeOpenApi() in scripts/gen-api-docs.mjs, into a temp folder instead of
+      // docs/api.
+      const r = spawnSync(
+        'npx',
+        ['cds', 'compile', 'srv', '--to', 'openapi', '-l', 'en', '-s', 'all', '-o', out],
+        { cwd: root, encoding: 'utf8', timeout: 120000 }
+      );
+      expect(r.status, r.stderr).toBe(0);
+      // One service, one document, and docs/api keeps no document of a removed service.
+      const documents = (dir) => readdirSync(dir).filter((name) => name.endsWith('.openapi3.json'));
+      expect(documents(out)).toEqual(['CatalogService.openapi3.json']);
+      expect(documents(path.join(root, API_DIR))).toEqual(['CatalogService.openapi3.json']);
+      const fresh = readFileSync(path.join(out, 'CatalogService.openapi3.json'), 'utf8');
+      // On a difference: npm run docs:api (or npm run docs:registry), never a hand edit.
+      expect(committed).toBe(stampOpenApi(fresh, hash));
+    } finally {
+      rmSync(out, { recursive: true, force: true });
+    }
+  });
+
+  // A minimal project in a temp folder: one source file, the registry headers and docs/api.
+  // check-docs-fresh.mjs takes the folder it runs in as the project root and runs without --fix
+  // here, so it reads the temp folder and never touches the real docs.
+  it('reports a missing or stale OpenAPI document and accepts a fresh one', () => {
+    const tmp = mkdtempSync(path.join(os.tmpdir(), 'api-docs-status-'));
+    const write = (file, content) => {
+      mkdirSync(path.dirname(path.join(tmp, file)), { recursive: true });
+      writeFileSync(path.join(tmp, file), content);
+    };
+    const stampRegistry = (hash, files) => {
+      for (const file of files) {
+        write(
+          `docs/registry/${file}`,
+          `<!-- generated by scripts/gen-registry.mjs | sources: ${hash} | 2026-10-25 | do not edit -->\n# ${file}\n`
+        );
+      }
+    };
+    const checkDocsFresh = () =>
+      spawnSync(process.execPath, [path.join(root, 'scripts/check-docs-fresh.mjs')], {
+        cwd: tmp,
+        encoding: 'utf8',
+      });
+    try {
+      write('srv/service.cds', 'service S {}\n');
+      expect(apiDocsStatus(tmp)).toEqual([
+        `${API_DIR}: no OpenAPI document (*.openapi3.json) is present`,
+      ]);
+
+      write(OPENAPI, JSON.stringify({ openapi: '3.0.2', info: { title: 'S' } }));
+      expect(apiDocsStatus(tmp)).toEqual([`${OPENAPI}: no info['x-sources'] stamp`]);
+
+      const generated = sourcesHash(tmp);
+      write(OPENAPI, stampOpenApi(read(OPENAPI), generated));
+      expect(apiDocsStatus(tmp)).toEqual([]);
+      stampRegistry(generated, REGISTRY_FILES);
+      const fresh = checkDocsFresh();
+      expect(fresh.status, fresh.stderr).toBe(0);
+      expect(fresh.stdout).toContain('docs/registry is fresh.');
+
+      // A source change makes every stamp stale; the five other registry pages are regenerated,
+      // so the reasons name exactly JSDOC.md and the OpenAPI document.
+      write('srv/service.cds', 'service S { entity E { key ID : Integer } }\n');
+      const current = sourcesHash(tmp);
+      expect(current).not.toBe(generated);
+      expect(apiDocsStatus(tmp)).toEqual([
+        `${OPENAPI}: x-sources ${generated} does not match the current sources ${current}`,
+      ]);
+      stampRegistry(
+        current,
+        REGISTRY_FILES.filter((file) => file !== 'JSDOC.md')
+      );
+      const stale = checkDocsFresh();
+      expect(stale.status).toBe(1);
+      const reasons = stale.stderr
+        .split('\n')
+        .filter((line) => line.startsWith('  - '))
+        .map((line) => line.slice(4));
+      expect(reasons).toEqual([
+        expect.stringMatching(/^JSDOC\.md: hash /),
+        expect.stringMatching(/^docs\/api\/CatalogService\.openapi3\.json: x-sources /),
+      ]);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('Registry pages of the documentation (ADR-0029 decisions 5 and 8)', () => {
+  it('lists every documented function of srv and ext with its parameters in JSDOC.md', () => {
+    const md = read('docs/registry/JSDOC.md');
+    expect(md.slice(0, md.indexOf('\n'))).toMatch(
+      /^<!-- generated by scripts\/gen-registry\.mjs \| sources: [0-9a-f]{16} \| \d{4}-\d{2}-\d{2} \| do not edit -->$/
+    );
+    // One section per JavaScript file, named by its repo-relative path; the generator also reads
+    // webapp/model, which the app does not have today.
+    const sections = Object.fromEntries(
+      md
+        .split(/^## /m)
+        .slice(1)
+        .map((section) => [section.slice(0, section.indexOf('\n')), section])
+    );
+    const sources = ['srv', 'app/products/webapp/ext', 'app/products/webapp/model']
+      .flatMap((dir) => filesUnder(dir, '.js'))
+      .sort();
+    expect(sources).toEqual(
+      expect.arrayContaining([
+        'srv/catalog-service.js',
+        'srv/lib/products-import.js',
+        'app/products/webapp/ext/fragment/DetailsForm.js',
+      ])
+    );
+    expect(Object.keys(sections)).toEqual(sources);
+
+    const symbol = (file, name) =>
+      sections[file].split(/^### /m).find((part) => part.startsWith(`${name}\n`));
+    // An exported async function of srv/lib.
+    const readImportRows = symbol('srv/lib/products-import.js', 'readImportRows');
+    expect(readImportRows, 'readImportRows in srv/lib/products-import.js').toBeDefined();
+    expect(readImportRows).toContain('`export async function readImportRows(bytes)`');
+    expect(readImportRows).toContain(
+      'Read the first sheet of an xlsx workbook and map it to import rows.'
+    );
+    expect(readImportRows).toContain('| @param | bytes | `Buffer` | workbook bytes |');
+    expect(readImportRows).toMatch(
+      /^\| @returns \| {2}\| `Promise<ReturnType<typeof toImportRows>>` \| as `toImportRows`, /m
+    );
+    // A function inside the sap.ui.define factory of webapp/ext, with an optional parameter.
+    const countFilled = symbol('app/products/webapp/ext/fragment/DetailsForm.js', 'countFilled');
+    expect(countFilled, 'countFilled in DetailsForm.js').toBeDefined();
+    expect(countFilled).toContain('`function countFilled(rows, selectionCounts)`');
+    expect(countFilled).toContain('Counts filled rows.');
+    expect(countFilled).toContain('| @param | rows | `object[]` | detail rows of one product |');
+    expect(countFilled).toContain(
+      '| @param | [selectionCounts] | `Array<number\\|undefined>` | selections per row, same order as `rows` |'
+    );
+    expect(countFilled).toContain(
+      '| @returns |  | `{filled: number, total: number}` | N and M of "Filled N of M" |'
+    );
+  });
+
+  it('shows the descriptions in DOMAIN-MODEL.md', async () => {
+    const csn = await cds.load('*');
+    const products = csn.definitions['CatalogService.Products'];
+    const md = read('docs/registry/DOMAIN-MODEL.md');
+    const start = md.indexOf('### my.catalog.Products\n');
+    expect(start).toBeGreaterThan(-1);
+    const section = md.slice(start, md.indexOf('\n### ', start));
+    // The projection's doc comment, next to the db/ developer note of the entity.
+    expect(section).toContain(`Description (\`CatalogService.Products\`): ${products.doc}\n`);
+    const rows = section
+      .split('\n')
+      .filter((line) => line.startsWith('| '))
+      .map((line) => line.slice(2, -2).split(' | '));
+    const column = rows[0].indexOf('Description');
+    expect(column).toBeGreaterThan(0);
+    expect(rows.find((cells) => cells[0] === 'name')?.[column]).toBe(products.elements.name.doc);
+  });
+});
+
+describe('Swagger UI in development (ADR-0029 decision 6)', () => {
+  // The guard of the @cap-js/openapi 1.6.0 pin (amendment A): 1.7.0 answers 500 on the document of
+  // the draft-enabled CatalogService, so a bump to it turns this test red.
+  it('serves the Swagger UI and its OpenAPI document in development', async () => {
+    const { status, data } = await test.get('/$api-docs/odata/v4/catalog/openapi.json');
+    expect(status).toBe(200);
+    expect(data.info.title).toBe('Product Catalog API');
+
+    const ui = await test.get('/$api-docs/odata/v4/catalog/');
+    expect(ui.status).toBe(200);
+    expect(ui.headers['content-type']).toMatch(/^text\/html/);
+    expect(ui.data).toContain('swagger-ui');
+  });
+});
+
+describe('JSDoc lint gate (ADR-0029 decision 7)', () => {
+  // The jsdoc findings of one lintText() result: rule, severity (2 = error, what the SubagentStop
+  // hook blocks on), line.
+  const jsdocFindings = ([result]) =>
+    result.messages
+      .filter((message) => message.ruleId?.startsWith('jsdoc/'))
+      .map((message) => [message.ruleId, message.severity, message.line]);
+
+  it('requires JSDoc on exported functions of srv and leaves scripts alone', async () => {
+    // An undocumented exported function (line 1) and an undocumented internal helper (line 5).
+    const source =
+      'export function exported(value) {\n  return internal(value);\n}\n\n' +
+      'function internal(value) {\n  return value;\n}\n';
+    const eslint = new ESLint({ cwd: root });
+    const srv = await eslint.lintText(source, { filePath: path.join(root, 'srv/x.js') });
+    expect(jsdocFindings(srv)).toEqual([['jsdoc/require-jsdoc', 2, 1]]);
+    const scripts = await eslint.lintText(source, { filePath: path.join(root, 'scripts/x.mjs') });
+    expect(jsdocFindings(scripts)).toEqual([]);
+  });
+
+  it('requires JSDoc on every function of webapp/ext', async () => {
+    // The app's own ESLint installation and config (app/products/node_modules, eslint.config.mjs).
+    const app = path.join(root, 'app/products');
+    const entry = createRequire(path.join(app, 'package.json')).resolve('eslint');
+    const { ESLint: AppESLint } = await import(pathToFileURL(entry).href);
+    const eslint = new AppESLint({ cwd: app });
+    // Inside a sap.ui.define factory, neither exported: an undocumented function declaration
+    // (line 3) and an undocumented function expression of the module object (line 8).
+    const source =
+      'sap.ui.define([], function () {\n  "use strict";\n' +
+      '  function helper(value) {\n    return value;\n  }\n' +
+      '  return {\n    helper: helper,\n    format: function (value) {\n      return value;\n    }\n  };\n});\n';
+    const ext = await eslint.lintText(source, {
+      filePath: path.join(app, 'webapp/ext/fragment/x.js'),
+    });
+    expect(jsdocFindings(ext)).toEqual(
+      expect.arrayContaining([
+        ['jsdoc/require-jsdoc', 2, 3],
+        ['jsdoc/require-jsdoc', 2, 8],
+      ])
+    );
+    const tests = await eslint.lintText(source, { filePath: path.join(app, 'webapp/test/x.js') });
+    expect(jsdocFindings(tests)).toEqual([]);
   });
 });

@@ -6,9 +6,9 @@ allowed-tools: Bash, Read
 
 Run in order from the root (PATH with `/opt/homebrew/opt/node@22/bin`), without stopping at the first error, and build a table "check → result":
 
-1. `npm run lint`
+1. `npm run lint`, then `npm run lint:js` (ESLint with the JSDoc gate of `srv/`)
 2. `npm test`
-3. `cd app/products && npm run lint`
+3. `cd app/products && npm run lint`, then `npm run lint:js` there (Fiori tools ESLint with the JSDoc gate of `webapp/ext/`)
 4. `node scripts/check-docs-fresh.mjs`
 5. `npm run format:check`
 6. Smoke of the dev server: start `npm run watch` in the background, wait up to 15 s for `curl -sf -u alice: 'http://localhost:4004/odata/v4/catalog/$metadata'` (anonymous callers get 401 since ADR-0013), then `pkill -f 'cds watch'`; report "up in N s" or the first error lines.

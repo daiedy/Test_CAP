@@ -17,6 +17,7 @@ paths:
 - Logs: `const LOG = cds.log('<module>')` at module level. `console.*` is forbidden.
 - Queries only through `cds.ql`. No manual transactions, do not open `cds.tx()` manually.
 - Shared code: `srv/lib/<topic>.js`, named exports, JSDoc, no access to `req`.
+- JSDoc gate (ADR-0029 decision 7): the jsdoc rules of the root `eslint.config.mjs` define "JSDoc on every exported function" (exported functions, the handler class and its methods, described `@param` and `@returns`); their errors block the hand-over, and `npm run lint:js` exits 0.
 - Templates: `templates/handler.js`, `templates/lib.js`.
 
 ## After editing

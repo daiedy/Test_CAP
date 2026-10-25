@@ -16,7 +16,23 @@ import {
 
 const TIMEOUT = 60_000;
 const STALE_SCOPE = ['db/**', 'srv/**', 'app/**'];
-const STALE_EXCLUDE = ['app/**/webapp/localService/**', 'app/**/webapp/test/**'];
+// An app's package files are not registry sources (sourcesHash in registry-sources.mjs).
+const STALE_EXCLUDE = [
+  'app/**/webapp/localService/**',
+  'app/**/webapp/test/**',
+  'app/*/package.json',
+  'app/*/package-lock.json',
+];
+// isUnder() of hook-utils.mjs does not expand {a,b}: one glob per extension.
+const UI5_SCOPE = [
+  'app/**/webapp/**/*.js',
+  'app/**/webapp/**/*.xml',
+  'app/**/webapp/**/*.html',
+  'app/**/webapp/manifest.json',
+];
+// ADR-0029 decision 7: the app ESLint (JSDoc gate of webapp/ext) runs on the app's own JavaScript.
+const APP_ESLINT_SCOPE = ['webapp/**/*.js'];
+const APP_ESLINT_EXCLUDE = ['webapp/test/**', 'webapp/localService/**'];
 
 function markStale(root, r) {
   const dir = path.join(root, 'docs', 'registry');
@@ -31,35 +47,52 @@ function checkCds(root, r) {
   return null;
 }
 
+/** ESLint on `target` with the config found from `cwd`; the note names the repo path `r`. */
+function eslintNote(cwd, target, r) {
+  const lint = run('npx', ['eslint', '--format', 'json', target], { cwd, timeoutMs: TIMEOUT });
+  if (lint.timedOut) return 'eslint: 60 s limit exceeded.';
+  try {
+    const report = JSON.parse(lint.stdout || '[]');
+    const msgs = report.flatMap((f) => f.messages || []);
+    if (!msgs.length) return null;
+    const lines = msgs
+      .slice(0, 20)
+      .map(
+        (m) =>
+          `  ${m.severity === 2 ? 'error' : 'warn '} ${m.line}:${m.column} ${m.message} (${m.ruleId || 'parse'})`
+      );
+    return `eslint ${r}: ${msgs.length} findings\n${lines.join('\n')}`;
+  } catch {
+    return lint.code !== 0 ? `eslint ${r}: ${truncate(lint.stderr || lint.stdout, 800)}` : null;
+  }
+}
+
 function checkJs(root, r) {
   const notes = [];
   const fmt = run('npx', ['prettier', '--write', r], { cwd: root, timeoutMs: TIMEOUT });
   if (fmt.code !== 0) notes.push(`prettier ${r}: ${truncate(fmt.stderr || fmt.stdout, 600)}`);
-  const lint = run('npx', ['eslint', '--format', 'json', r], { cwd: root, timeoutMs: TIMEOUT });
-  if (lint.timedOut) return notes.concat('eslint: 60 s limit exceeded.');
-  try {
-    const report = JSON.parse(lint.stdout || '[]');
-    const msgs = report.flatMap((f) => f.messages || []);
-    if (msgs.length) {
-      const lines = msgs
-        .slice(0, 20)
-        .map(
-          (m) =>
-            `  ${m.severity === 2 ? 'error' : 'warn '} ${m.line}:${m.column} ${m.message} (${m.ruleId || 'parse'})`
-        );
-      notes.push(`eslint ${r}: ${msgs.length} findings\n${lines.join('\n')}`);
-    }
-  } catch {
-    if (lint.code !== 0) notes.push(`eslint ${r}: ${truncate(lint.stderr || lint.stdout, 800)}`);
-  }
+  const lint = eslintNote(root, r, r);
+  if (lint) notes.push(lint);
   return notes;
 }
 
 function checkUi5(root, r) {
   const abs = path.resolve(root, r);
   const appDir = findUp(path.dirname(abs), 'ui5.yaml', root);
-  if (!appDir) return null;
+  if (!appDir) return [];
   const relToApp = path.relative(appDir, abs).split(path.sep).join('/');
+  const notes = [ui5lintNote(appDir, relToApp, r)];
+  // An app without its own installed ESLint is skipped: npx would download one instead.
+  if (
+    isUnder(relToApp, APP_ESLINT_SCOPE) &&
+    !isUnder(relToApp, APP_ESLINT_EXCLUDE) &&
+    exists(path.join(appDir, 'node_modules', '.bin', 'eslint'))
+  )
+    notes.push(eslintNote(appDir, relToApp, r));
+  return notes.filter(Boolean);
+}
+
+function ui5lintNote(appDir, relToApp, r) {
   const res = run('npx', ['ui5lint', '--format', 'json', relToApp], {
     cwd: appDir,
     timeoutMs: TIMEOUT,
@@ -285,9 +318,8 @@ export function runFileChecks(root, r, { markRegistryStale = true } = {}) {
     if (n) notes.push(n);
   } else if (isUnder(r, ['srv/**/*.js', 'test/**/*.js', 'scripts/**/*.mjs', 'scripts/**/*.js'])) {
     notes.push(...checkJs(root, r));
-  } else if (isUnder(r, ['app/**/webapp/**/*.{js,xml,html}', 'app/**/webapp/manifest.json'])) {
-    const n = checkUi5(root, r);
-    if (n) notes.push(n);
+  } else if (isUnder(r, UI5_SCOPE)) {
+    notes.push(...checkUi5(root, r));
   }
   if (isUnder(r, ['_i18n/**/*.properties', 'app/**/webapp/i18n/**/*.properties'])) {
     const n = checkI18n(root, r);

@@ -38,10 +38,10 @@ Contract rule: a step that changes the OData model (`db/*.cds`, `srv/**/*.cds`, 
 - [x] SubagentStop exits 2 for a changed file of the stub app, its stderr naming each tool failure, verified by `test/hooks-subagent-stop.test.js` "blocks a hand-over when a linter fails without a report"
 - [x] `.github/dependabot.yml` group `sap-cap` keeps its four patterns and carries `exclude-patterns: ["@cap-js/openapi"]`, verified by `grep -n -A3 "sap-cap:" .github/dependabot.yml` at the step 4 gate
 - [x] `npm run lint` (ui5lint) in `app/products` reports no findings, ui5lint on the 42 `.js`, `.html` and view or fragment `.xml` files of `app/products/webapp` (every one except `localService/metadata.xml`) gives 0 findings, and `npm run lint:js` there gives 0 errors, so the widened SubagentStop scope blocks no agent on existing code, recorded at the step 4 gate
-- [ ] `_i18n/*.properties` and `app/products/webapp/i18n/*.properties` are unchanged (`git diff --stat` at the step 7 gate shows none of them)
-- [ ] Swagger UI at `http://localhost:4004/$api-docs/odata/v4/catalog` shows the title "Product Catalog API", the version, the tag descriptions, the `Products` schema with its description and a successful `GET /Products` try-out as `alice`, and the Fiori List Report and Object Page still open, verified by `VERIFICATION.md` (ui-verifier, screenshots, console check)
-- [ ] Review: zero blocking findings in `REVIEW.md`; no `@description` in project CDS, no second service-path formula, no hand edit of `docs/api/**` or `docs/registry/**`, every doc comment on a projection is one sentence
-- [ ] Documentation updated: PATTERNS rows, CONVENTIONS, TESTING, STACK, README, templates, registry, STATE, CHANGELOG, SUMMARY, LESSONS
+- [x] `_i18n/*.properties` and `app/products/webapp/i18n/*.properties` are unchanged (`git diff --stat` at the step 7 gate shows none of them)
+- [x] Swagger UI at `http://localhost:4004/$api-docs/odata/v4/catalog` shows the title "Product Catalog API", the version, the tag descriptions, the `Products` schema with its description and a successful `GET /Products` try-out as `alice`, and the Fiori List Report and Object Page still open, verified by `VERIFICATION.md` (ui-verifier, screenshots, console check)
+- [x] Review: zero blocking findings in `REVIEW.md`; no `@description` in project CDS, no second service-path formula, no hand edit of `docs/api/**` or `docs/registry/**`, every doc comment on a projection is one sentence
+- [x] Documentation updated: PATTERNS rows, CONVENTIONS, TESTING, STACK, README, templates, registry, STATE, CHANGELOG, SUMMARY, LESSONS
 
 ## Steps
 

@@ -16,7 +16,7 @@ cd app/products && npm install && cd ../..
 npm run watch
 ```
 
-Open http://localhost:4004/products/webapp/test/flpSandbox.html#products-display. Service: http://localhost:4004/odata/v4/catalog/, metadata: `/odata/v4/catalog/$metadata`.
+Open http://localhost:4004/products/webapp/test/flpSandbox.html#products-display. Service: http://localhost:4004/odata/v4/catalog/, metadata: `/odata/v4/catalog/$metadata`. Swagger UI of the service (development only): http://localhost:4004/$api-docs/odata/v4/catalog/ (login `alice`).
 
 ## UI run modes
 
@@ -49,8 +49,10 @@ Root:
 | `npm run watch` | CAP server with auto restart, SQLite in-memory |
 | `npm test` | Backend tests (Vitest + @cap-js/cds-test), including the `$metadata` contract snapshot in `test/__snapshots__` |
 | `npm run lint` | `cds lint` |
+| `npm run lint:js` | ESLint for the JavaScript of the root project (`app/` has its own), including the JSDoc rules of `srv/` |
 | `npm run format` / `npm run format:check` | Prettier for `srv/`, `test/`, `scripts/` |
-| `npm run docs:registry` | Regenerate `docs/registry/*.md` from the model and sources |
+| `npm run docs:registry` | Regenerate `docs/registry/*.md` and `docs/api/CatalogService.openapi3.json` from the model and sources |
+| `npm run docs:api` | Regenerate only the OpenAPI document `docs/api/CatalogService.openapi3.json` |
 | `npm run build` | `cds build --production` |
 
 `app/products`:
@@ -105,6 +107,10 @@ scripts/       pipeline scripts: registry generator, hooks, backlog CLI, feature
 ```
 
 Details in `docs/architecture/`, working rules in `CLAUDE.md`, the current state and open debt in `docs/STATE.md`.
+
+## Documentation
+
+Descriptions of the entities, elements, actions and types are CDS doc comments (`/** ... */`, English, ADR-0029). `npm run docs:registry` turns them into `docs/api/CatalogService.openapi3.json`, the OpenAPI document of the service, and writes `docs/registry/JSDOC.md`, the page with the JSDoc of `srv/**/*.js` and `app/products/webapp/ext/**/*.js`. Both are generated and never edited by hand; the Stop gate and CI check that they are fresh.
 
 ## Deployment
 
@@ -365,11 +371,11 @@ Two checks can be switched off with an environment variable. An environment vari
 
 - **When it fires.** When a worker finishes its work.
 - **What problem it solves.** A worker could hand over work with linter errors, write a file past the checks through the terminal, or never ask the reference at all.
-- **What it does.** Three checks over the list of changed files. First: linter errors. Second: files for which the service log has no record of an edit through the editor. That means they were written around the checks, through the terminal. Such files are checked here, and the protected ones among them are blocked. Third: a comparison of the edits with the reference call log; if the file type requires a reference query and there was none, the worker is sent back once with a request either to ask the reference or to write in the report the section "MCP not used", that is "reference not used", with the reason. On a repeated handover without the section it is let through, but recorded in the log for the retrospective.
+- **What it does.** Three checks over the list of changed files. First: linter errors; the root ESLint runs on changed CDS, `srv/`, `test/` and `scripts/` files, the app ESLint on changed `webapp/` JavaScript outside `test/` and `localService/` (including the JSDoc rules for `ext/`), and ui5lint on changed webapp JavaScript and HTML files and on view and fragment XML. A linter runs only when it is installed in the app; a missing one is a note advising `npm install`, not a block. A run that crashes without a report counts as a failure and blocks the handover like an error does. Second: files for which the service log has no record of an edit through the editor. That means they were written around the checks, through the terminal. Such files are checked here, and the protected ones among them are blocked. Third: a comparison of the edits with the reference call log; if the file type requires a reference query and there was none, the worker is sent back once with a request either to ask the reference or to write in the report the section "MCP not used", that is "reference not used", with the reason. On a repeated handover without the section it is let through, but recorded in the log for the retrospective.
 - **What the human sees.** The worker makes an extra round and fixes things. A section with the reason appears in the report.
 - **How to bypass it and who can.** Only for protected files, with the same environment variable `PIPELINE_ALLOW_PROTECTED=1`. Only the human sets it.
 
-> **In code.** event `SubagentStop`, script `subagent-stop.mjs`. Changed files by `git status`; eslint and ui5lint only at severity error; files without an `edit` record go through `runFileChecks`, protected ones are blocked by `protectedWriteHit`; MCP gaps are counted by `mcpGaps` against the `MCP_RULES` table in `scripts/lib/mcp-audit.mjs`; the `## MCP not used` section is looked up in `last_assistant_message`. Answer: exit 2 and text in stderr; with `stop_hook_active` the record `skipped-unjustified`.
+> **In code.** event `SubagentStop`, script `subagent-stop.mjs`. Changed files by `git status`; eslint (root and per-app pass) and ui5lint only at severity error, the ui5lint scope is `UI5_SCOPE` and the app ESLint scope `APP_ESLINT_SCOPE`/`APP_ESLINT_EXCLUDE` of `scripts/lib/file-checks.mjs`, a tool runs only when `<app>/node_modules/.bin/<tool>` exists and a non-zero exit without a parsable report is a blocking failure (ADR-0029 amendments D-F); files without an `edit` record go through `runFileChecks`, protected ones are blocked by `protectedWriteHit`; MCP gaps are counted by `mcpGaps` against the `MCP_RULES` table in `scripts/lib/mcp-audit.mjs`; the `## MCP not used` section is looked up in `last_assistant_message`. Answer: exit 2 and text in stderr; with `stop_hook_active` the record `skipped-unjustified`.
 
 #### Check 6 · Final gate
 

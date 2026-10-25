@@ -22,8 +22,18 @@ State as of 2026-09-29. Versions are updated through `upstream-check` (see `docs
 | `vitest`, `@vitest/coverage-v8` | ^5 (5.0.1) | Main test runner as recommended by capire since April 2026 |
 | `eslint`, `@sap/eslint-plugin-cds` | ^10 (10.11.0), ^4 (4.2.5) | `cds lint`, config `eslint.config.mjs` |
 | `prettier` | ^3 (3.9.8) | JS formatting |
+| `eslint-plugin-jsdoc` | ^65.4.2 | JSDoc rule set of ADR-0029, in the root `eslint.config.mjs` (`srv/**/*.js`) and in `app/products/eslint.config.mjs` (`webapp/ext/**/*.js`); engines `node ^22.22.2 \|\| >=24.15.0`; two installations, one per `package.json` |
+| `cds-swagger-ui-express` | ^0.11.0 | Dev plugin (devDependency, never runtime): Swagger UI at `/$api-docs/odata/v4/catalog/` under `cds watch`, login `alice`; registers itself on `cds.on('bootstrap')` |
+| `@cap-js/openapi` | 1.6.0, exact devDependency | OpenAPI converter for `docs/api/CatalogService.openapi3.json` and for the Swagger UI. Pinned because 1.7.0 answers 500 on the Swagger document of a draft-enabled service (`cds.clone(csn)` on the served model); `cds compile --to openapi` prefers the project-local converter over the copy in `@sap/cds-dk`. Drop the pin when a release serves a draft-enabled service without the error, in the change that regenerates the document. A Dependabot bump comes as its own PR (`exclude-patterns` in the `sap-cap` group), and its red Swagger test in `test/api-docs.test.js` is the intended guard (ADR-0029 amendments A, G) |
 | `@sap/cds-common-content` | ^3 (3.2.0) | ISO code lists for currencies, countries, languages for `sap.common.*`; imported in `db/schema.cds` |
 | `express` | ^5 (5.2.1) | Web server under CAP. `@sap/cds` 10 declares `express ^4.22.1 \|\| ^5`; the project has no custom `server.js` or express middleware, so the major bump (Dependabot #1) needed no code change |
+
+`package.json` sets `"scarfSettings": { "enabled": false }`: the install-time analytics of `@scarf/scarf` (a dependency of `swagger-ui-dist`) stay off for every local `npm install` (ADR-0029 amendment C).
+
+Known limits of the Swagger document served in development (ADR-0029):
+- It is not localized: `cds-swagger-ui-express/lib/middleware.js:49` compiles `service.model` without `cds.localize`, which leaves 7 `{i18n>` strings (3 keys).
+- Its ER diagram image is fetched from yuml.me, so the structure of the model (entity, type, association, entity-set and action names, no data) leaves the machine when Swagger UI opens. The user decided on 2026-10-26 to keep it, because this repository is public anyway. A confidential project sets `cds.swagger.diagram: false`.
+- The committed `docs/api/CatalogService.openapi3.json` has neither problem (compiled with `-l en`, no diagram).
 
 Database in development: SQLite in-memory, CSV deployed on every start (`cds watch`). The `db.sqlite` file is created only by `cds deploy` and is not committed. The productive database is not chosen (HANA Cloud per `mta.yaml`, decision postponed).
 

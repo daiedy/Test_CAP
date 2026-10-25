@@ -1,6 +1,9 @@
 /**
- * SubagentStop hook: a subagent may not finish while changed files have lint ERRORS.
- * Warnings pass. Exit 2 blocks with a summary on stderr.
+ * SubagentStop hook: a subagent may not finish while changed files have lint ERRORS: the root
+ * ESLint, and per app ui5lint plus the app ESLint (the JSDoc gate of webapp/ext, ADR-0029
+ * decision 7 and amendment D-F). Warnings pass; a linter run without a JSON report blocks like an
+ * error; a tool the app has not installed is not run and only advised. Exit 2 blocks with a
+ * summary on stderr.
  * MCP audit (ADR-0014): if the agent edited files that expect an MCP query and made no attempt,
  * it is blocked once and asked for a "## MCP not used" section in its report; the reason is logged for /retro.
  * Write route (ADR-0016): changed files with no `edit` audit record were written outside Edit/Write,
@@ -18,7 +21,6 @@ import {
   repoRoot,
   changedFiles,
   isUnder,
-  run,
   truncate,
   findUp,
   readStdinJson,
@@ -27,7 +29,15 @@ import {
 } from '../lib/hook-utils.mjs';
 import { agentKey, readAudit, appendAudit, mcpGaps } from '../lib/mcp-audit.mjs';
 import { protectedWriteHit, reasonFor } from '../lib/protected-paths.mjs';
-import { runFileChecks } from '../lib/file-checks.mjs';
+import {
+  runFileChecks,
+  runLinter,
+  appHasTool,
+  notInstalledNote,
+  UI5_SCOPE,
+  APP_ESLINT_SCOPE,
+  APP_ESLINT_EXCLUDE,
+} from '../lib/file-checks.mjs';
 import {
   appendMetric,
   recordGate,
@@ -88,31 +98,28 @@ async function recordAgentStop(root, input) {
   }
 }
 
-function eslintErrors(root, files) {
-  if (!files.length) return [];
-  const res = run('npx', ['eslint', '--format', 'json', ...files], {
-    cwd: root,
-    timeoutMs: TIMEOUT,
-  });
-  if (res.timedOut) return ['eslint: time limit exceeded'];
-  try {
-    const report = JSON.parse(res.stdout || '[]');
-    return report.flatMap((f) =>
-      (f.messages || [])
-        .filter((m) => m.severity === 2)
-        .map(
-          (m) =>
-            `${path.relative(root, f.filePath)}:${m.line}:${m.column} ${m.message} (${m.ruleId || 'parse'})`
-        )
+/** The blocking lines of one `runLinter` result: errors (severity 2) and a failed run. */
+function errorLines(root, label, result) {
+  if (result.failure) return [`${label}: ${result.failure}`];
+  return result.messages
+    .filter((m) => m.severity === 2)
+    .map(
+      (m) =>
+        `${path.relative(root, m.file)}:${m.line ?? '?'}:${m.column ?? '?'} ${m.message} (${m.ruleId || 'parse'})`
     );
-  } catch {
-    return res.code !== 0 && res.code !== 1
-      ? [`eslint: ${truncate(res.stderr || res.stdout, 600)}`]
-      : [];
-  }
 }
 
-function ui5Errors(root, files) {
+function eslintErrors(root, files) {
+  if (!files.length) return [];
+  return errorLines(root, 'eslint', runLinter('eslint', root, files, TIMEOUT));
+}
+
+/**
+ * Per app: ui5lint on the changed UI5 files and one app ESLint pass on the changed JavaScript of
+ * `APP_ESLINT_SCOPE` (ADR-0029 amendment E). A tool the app has not installed is not run; it is
+ * an advisory, because an agent may not install dependencies (amendment F).
+ */
+function appErrors(root, files) {
   const byApp = new Map();
   for (const f of files) {
     const appDir = findUp(path.dirname(path.resolve(root, f)), 'ui5.yaml', root);
@@ -121,34 +128,23 @@ function ui5Errors(root, files) {
     byApp.get(appDir).push(path.relative(appDir, path.resolve(root, f)).split(path.sep).join('/'));
   }
   const errors = [];
+  const notes = [];
   for (const [appDir, rels] of byApp) {
-    const res = run('npx', ['ui5lint', '--format', 'json', ...rels], {
-      cwd: appDir,
-      timeoutMs: TIMEOUT,
-    });
-    if (res.timedOut) {
-      errors.push(`ui5lint (${path.relative(root, appDir)}): time limit exceeded`);
-      continue;
-    }
-    try {
-      const report = JSON.parse(res.stdout || '[]');
-      const list = Array.isArray(report) ? report : report.files || [];
-      for (const f of list) {
-        for (const m of f.messages || []) {
-          if (m.severity === 2)
-            errors.push(
-              `${path.relative(root, path.resolve(appDir, f.filePath))}:${m.line ?? '?'}:${m.column ?? '?'} ${m.message} (${m.ruleId})`
-            );
-        }
-      }
-    } catch {
-      if (res.code !== 0)
+    const app = path.relative(root, appDir);
+    const js = rels.filter((r) => isUnder(r, APP_ESLINT_SCOPE) && !isUnder(r, APP_ESLINT_EXCLUDE));
+    for (const [tool, targets] of [
+      ['ui5lint', rels],
+      ['eslint', js],
+    ]) {
+      if (!targets.length) continue;
+      if (!appHasTool(appDir, tool)) notes.push(notInstalledNote(root, appDir, tool));
+      else
         errors.push(
-          `ui5lint (${path.relative(root, appDir)}): ${truncate(res.stderr || res.stdout, 600)}`
+          ...errorLines(root, `${tool} (${app})`, runLinter(tool, appDir, targets, TIMEOUT))
         );
     }
   }
-  return errors;
+  return { errors, notes };
 }
 
 try {
@@ -168,11 +164,10 @@ try {
       p.endsWith('.cds') ||
       isUnder(p, ['srv/**/*.js', 'test/**/*.js', 'scripts/**/*.mjs', 'scripts/**/*.js'])
   );
-  const ui5 = changed.filter((p) =>
-    isUnder(p, ['app/**/webapp/**/*.{js,xml,html}', 'app/**/webapp/manifest.json'])
-  );
+  const ui5 = changed.filter((p) => isUnder(p, UI5_SCOPE));
 
-  const errors = [...eslintErrors(root, cdsAndSrv), ...ui5Errors(root, ui5)];
+  const app = appErrors(root, ui5);
+  const errors = [...eslintErrors(root, cdsAndSrv), ...app.errors];
   if (errors.length) {
     gate('lint');
     process.stderr.write(
@@ -190,7 +185,7 @@ try {
     auditRecords.filter((e) => e.event === 'edit' && e.file).map((e) => e.file)
   );
   const unrecorded = changed.filter((p) => !recorded.has(p));
-  const advisories = [];
+  const advisories = [...app.notes];
 
   const protectedWrites = unrecorded
     .map((p) => ({ p, hit: protectedWriteHit(root, p) }))
@@ -217,7 +212,9 @@ try {
 
   const CHECK_LIMIT = 12;
   for (const p of unrecorded.slice(0, CHECK_LIMIT)) {
-    advisories.push(...runFileChecks(root, p).map((n) => `${p}: ${n}`));
+    // A "not installed" note of the lint gate above is not repeated per file.
+    const notes = runFileChecks(root, p).filter((n) => !app.notes.includes(n));
+    advisories.push(...notes.map((n) => `${p}: ${n}`));
   }
   if (unrecorded.length > CHECK_LIMIT) {
     advisories.push(

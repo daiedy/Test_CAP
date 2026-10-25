@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-25
 - Branch: feature/docs-toolchain (from `spec/products-validations` bebb34c, which carries the approved #10 spec)
 - Feature: docs-toolchain (#27)
-- Phase: 2: backend done in two rounds, round 2 applied the gate decisions of 2026-10-25 (service-file copies of 3 projection doc comments are `//`; public descriptions keep one consumer sentence, developer notes as `//`); gate green (lint 0, `npm test` 212/212, `metadata.xml` 1674 lines and 69 `Core.Description`, none naming an ADR or a path); semi-autonomous gates
-- Last commit: 8df9413 feat(srv): docs-toolchain backend
-- Next: phase 3, plan steps 3 and 4 (tooling, ESLint jsdoc, OpenAPI, protected pipeline files; this session has `PIPELINE_ALLOW_PROTECTED=1`); `/feature #10` after this feature
+- Phase: 3: tooling, steps 3 and 4 done (`npm test` 231/231, hook lint gates of ADR-0029 amendment D-G); gate waits for the user; semi-autonomous gates
+- Last commit: 785558f chore(pipeline): docs-toolchain jsdoc gate in hooks, rules and skills
+- Next: phase 4 verification (`ui-verifier`: Swagger UI, `$metadata` descriptions, List Report and Object Page), then review and docs; `/feature #10` after this feature
 
 ## Open debt
 

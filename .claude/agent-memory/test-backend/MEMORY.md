@@ -6,3 +6,5 @@
 - [Measuring suite duration](project-measuring-suite-duration.md) — uptime first; A/B alternating pairs for a cost; absolute npm test figure only on a quiet machine
 - [File checks on a temp app](project-file-checks-temp-app.md) — runFileChecks on a temp app: npx walk-up, ui5lint 404 without node_modules, semi in webapp/test, localService "File ignored"
 - [Pricing-check diagnosis](project-pricing-check-diagnosis.md) — per-process all-5m/all-1h interval test tells a wrong price from a cache-split artefact; prompt events = D13 sum
+- [Turn budget and write-first](feedback_turn_budget.md) — 60-turn limit; write the test file first, no exploration, minimal hook runs, report added npm test time
+- [Hook test mutation check](hook-test-mutation-check.md) — scratch-root harness to prove hook tests are red under mutations; app ESLint/ui5lint facts; npm cache proves no npx

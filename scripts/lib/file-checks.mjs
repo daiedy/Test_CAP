@@ -1,7 +1,9 @@
 /**
  * Per-file-type quality checks shared by the PostToolUse hook (Edit/Write) and the
  * git-based gates (SubagentStop, Stop), so a file written through Bash is checked too.
- * ADR-0016. Every check is advisory and returns a string note or null.
+ * ADR-0016. Every check is advisory and returns a string note or null. The scopes, the install
+ * check and the one JSON-report reader of the linters are exported for the blocking lint gate of
+ * SubagentStop (ADR-0029 amendment D-F).
  */
 import path from 'node:path';
 import fs from 'node:fs';
@@ -23,16 +25,17 @@ const STALE_EXCLUDE = [
   'app/*/package.json',
   'app/*/package-lock.json',
 ];
-// isUnder() of hook-utils.mjs does not expand {a,b}: one glob per extension.
-const UI5_SCOPE = [
-  'app/**/webapp/**/*.js',
-  'app/**/webapp/**/*.xml',
-  'app/**/webapp/**/*.html',
+// The UI5 files of the edit checks and of the SubagentStop lint gate (ADR-0029 amendment D): what
+// ui5lint lints. Of XML that is views and fragments only (`**/{*.view.xml,*.fragment.xml}` in
+// @ui5/linter); a call naming any other XML, such as localService/metadata.xml, fails as a whole.
+export const UI5_SCOPE = [
+  'app/**/webapp/**/*.{js,html}',
+  'app/**/webapp/**/*.{view,fragment}.xml',
   'app/**/webapp/manifest.json',
 ];
 // ADR-0029 decision 7: the app ESLint (JSDoc gate of webapp/ext) runs on the app's own JavaScript.
-const APP_ESLINT_SCOPE = ['webapp/**/*.js'];
-const APP_ESLINT_EXCLUDE = ['webapp/test/**', 'webapp/localService/**'];
+export const APP_ESLINT_SCOPE = ['webapp/**/*.js'];
+export const APP_ESLINT_EXCLUDE = ['webapp/test/**', 'webapp/localService/**'];
 
 function markStale(root, r) {
   const dir = path.join(root, 'docs', 'registry');
@@ -47,31 +50,81 @@ function checkCds(root, r) {
   return null;
 }
 
-/** ESLint on `target` with the config found from `cwd`; the note names the repo path `r`. */
-function eslintNote(cwd, target, r) {
-  const lint = run('npx', ['eslint', '--format', 'json', target], { cwd, timeoutMs: TIMEOUT });
-  if (lint.timedOut) return 'eslint: 60 s limit exceeded.';
+/**
+ * Whether the app has `tool` in its own node_modules/.bin. An install in an ancestor directory
+ * does not count, and npx would fetch a missing tool from the registry (ADR-0029 amendment F).
+ */
+export function appHasTool(appDir, tool) {
+  return exists(path.join(appDir, 'node_modules', '.bin', tool));
+}
+
+/** The note of a skipped check: the app has not installed `tool`. */
+export function notInstalledNote(root, appDir, tool) {
+  const app = path.relative(root, appDir).split(path.sep).join('/') || '.';
+  return `${app}: ${tool} is not installed (no ${app}/node_modules/.bin/${tool}), its check was skipped; run \`npm install\` in ${app}.`;
+}
+
+/**
+ * The one reader of a linter's JSON report (ESLint, ui5lint) for the edit notes and the SubagentStop
+ * gate. A run is clean only when its stdout parses as a report without messages; a run without a
+ * report, an empty stdout included, is a failure with the exit code and the end of stderr.
+ * @param {{code: number|null, stdout: string, stderr: string, timedOut: boolean}} res the run
+ * @param {string} cwd the directory the run started in; ui5lint paths are relative to it
+ * @returns {{messages: object[]} | {failure: string}} findings with an absolute `file`, or the failure
+ */
+export function readLintReport(res, cwd) {
+  if (res.timedOut) return { failure: 'failed: time limit exceeded' };
+  let report;
   try {
-    const report = JSON.parse(lint.stdout || '[]');
-    const msgs = report.flatMap((f) => f.messages || []);
-    if (!msgs.length) return null;
-    const lines = msgs
-      .slice(0, 20)
-      .map(
-        (m) =>
-          `  ${m.severity === 2 ? 'error' : 'warn '} ${m.line}:${m.column} ${m.message} (${m.ruleId || 'parse'})`
-      );
-    return `eslint ${r}: ${msgs.length} findings\n${lines.join('\n')}`;
+    report = JSON.parse(res.stdout);
   } catch {
-    return lint.code !== 0 ? `eslint ${r}: ${truncate(lint.stderr || lint.stdout, 800)}` : null;
+    report = null;
   }
+  // ESLint: an array with absolute paths; ui5lint: an array or `{ files }`, paths relative to cwd.
+  const files = Array.isArray(report) ? report : report?.files;
+  if (!Array.isArray(files)) {
+    const err = (res.stderr || res.stdout || '').trim() || 'no output';
+    const end = err.length > 1000 ? `...${err.slice(-1000)}` : err;
+    return { failure: `failed (exit ${res.code}) without a JSON report: ${end}` };
+  }
+  return {
+    messages: files.flatMap((f) =>
+      (f.messages || []).map((m) => ({ ...m, file: path.resolve(cwd, f.filePath || '') }))
+    ),
+  };
+}
+
+/** `npx <tool> --format json <targets>` in `cwd`, read by `readLintReport`. */
+export function runLinter(tool, cwd, targets, timeoutMs = TIMEOUT) {
+  const res = run('npx', [tool, '--format', 'json', ...targets], { cwd, timeoutMs });
+  return readLintReport(res, cwd);
+}
+
+/** The advisory note of one linted file `r` (repo path); null without findings. */
+function lintNote(tool, r, result) {
+  if (result.failure) return `${tool} ${r}: ${result.failure}`;
+  const msgs = result.messages;
+  if (!msgs.length) return null;
+  const errors = msgs.filter((m) => m.severity === 2).length;
+  const head =
+    tool === 'ui5lint'
+      ? `${errors} errors, ${msgs.length - errors} warnings`
+      : `${msgs.length} findings`;
+  const lines = msgs
+    .slice(0, 20)
+    .map(
+      (m) =>
+        `  ${m.severity === 2 ? 'error' : 'warn '} ${m.line ?? '?'}:${m.column ?? '?'} ${m.message} (${m.ruleId || 'parse'})`
+    );
+  return `${tool} ${r}: ${head}\n${lines.join('\n')}`;
 }
 
 function checkJs(root, r) {
   const notes = [];
   const fmt = run('npx', ['prettier', '--write', r], { cwd: root, timeoutMs: TIMEOUT });
   if (fmt.code !== 0) notes.push(`prettier ${r}: ${truncate(fmt.stderr || fmt.stdout, 600)}`);
-  const lint = eslintNote(root, r, r);
+  // The root install is the precondition of every hook: no install check here (amendment F).
+  const lint = lintNote('eslint', r, runLinter('eslint', root, [r]));
   if (lint) notes.push(lint);
   return notes;
 }
@@ -81,39 +134,14 @@ function checkUi5(root, r) {
   const appDir = findUp(path.dirname(abs), 'ui5.yaml', root);
   if (!appDir) return [];
   const relToApp = path.relative(appDir, abs).split(path.sep).join('/');
-  const notes = [ui5lintNote(appDir, relToApp, r)];
-  // An app without its own installed ESLint is skipped: npx would download one instead.
-  if (
-    isUnder(relToApp, APP_ESLINT_SCOPE) &&
-    !isUnder(relToApp, APP_ESLINT_EXCLUDE) &&
-    exists(path.join(appDir, 'node_modules', '.bin', 'eslint'))
-  )
-    notes.push(eslintNote(appDir, relToApp, r));
+  const lint = (tool) =>
+    appHasTool(appDir, tool)
+      ? lintNote(tool, r, runLinter(tool, appDir, [relToApp]))
+      : notInstalledNote(root, appDir, tool);
+  const notes = [lint('ui5lint')];
+  if (isUnder(relToApp, APP_ESLINT_SCOPE) && !isUnder(relToApp, APP_ESLINT_EXCLUDE))
+    notes.push(lint('eslint'));
   return notes.filter(Boolean);
-}
-
-function ui5lintNote(appDir, relToApp, r) {
-  const res = run('npx', ['ui5lint', '--format', 'json', relToApp], {
-    cwd: appDir,
-    timeoutMs: TIMEOUT,
-  });
-  if (res.timedOut) return `ui5lint ${r}: 60 s limit exceeded.`;
-  try {
-    const report = JSON.parse(res.stdout || '[]');
-    const files = Array.isArray(report) ? report : report.files || [];
-    const msgs = files.flatMap((f) => f.messages || []);
-    if (!msgs.length) return null;
-    const errors = msgs.filter((m) => m.severity === 2).length;
-    const lines = msgs
-      .slice(0, 20)
-      .map(
-        (m) =>
-          `  ${m.severity === 2 ? 'error' : 'warn '} ${m.line ?? '?'}:${m.column ?? '?'} ${m.message} (${m.ruleId})`
-      );
-    return `ui5lint ${r}: ${errors} errors, ${msgs.length - errors} warnings\n${lines.join('\n')}`;
-  } catch {
-    return res.code !== 0 ? `ui5lint ${r}: ${truncate(res.stderr || res.stdout, 800)}` : null;
-  }
 }
 
 // Project language rule (CONVENTIONS, Languages): code and docs are English. Cyrillic is allowed

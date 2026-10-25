@@ -106,20 +106,18 @@ function globToRegExp(glob) {
       }
     } else if (c === '?') {
       re += '[^/]';
+    } else if (c === '{' && glob.indexOf('}', i) !== -1) {
+      // Before the escape branch, which lists `{` too: in that order every brace glob had
+      // matched nothing (CHANGELOG 2026-10-25). An unclosed `{` falls through and is escaped.
+      const end = glob.indexOf('}', i);
+      const alts = glob
+        .slice(i + 1, end)
+        .split(',')
+        .map((s) => s.replace(/[.+^${}()|[\]\\*?]/g, '\\$&'));
+      re += '(?:' + alts.join('|') + ')';
+      i = end;
     } else if ('.+^${}()|[]\\'.includes(c)) {
       re += '\\' + c;
-    } else if (c === '{') {
-      const end = glob.indexOf('}', i);
-      if (end === -1) {
-        re += '\\{';
-      } else {
-        const alts = glob
-          .slice(i + 1, end)
-          .split(',')
-          .map((s) => s.replace(/[.+^${}()|[\]\\*?]/g, '\\$&'));
-        re += '(?:' + alts.join('|') + ')';
-        i = end;
-      }
     } else {
       re += c;
     }
@@ -128,8 +126,9 @@ function globToRegExp(glob) {
 }
 
 /**
- * Glob-like matcher: `**` any depth, `*` within a segment, `{a,b}` alternatives.
- * Patterns are matched against a posix path relative to the repo root.
+ * Glob-like matcher: `**` any depth, `*` within a segment, `{a,b}` alternatives. Alternatives are
+ * literal text (no wildcard, no nesting inside braces); an unclosed `{` and a lone `}` match
+ * themselves. Patterns are matched against a posix path relative to the repo root.
  */
 export function isUnder(relPath, patterns) {
   const list = Array.isArray(patterns) ? patterns : [patterns];

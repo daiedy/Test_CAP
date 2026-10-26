@@ -1,0 +1,28 @@
+# Auto-merge for Dependabot pull requests (version and security updates): patch and minor updates
+# get `gh pr merge --auto`, so GitHub merges them once the required checks of the main branch
+# protection (Backend lint, tests, docs; UI lint; OPA5 journeys) are green. Majors and red pull
+# requests stay for a human. Pattern from the GitHub docs "Automating Dependabot with GitHub Actions".
+name: dependabot-automerge
+
+on: pull_request
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  dependabot:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'daiedy/Test_CAP'
+    steps:
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Enable auto-merge for patch and minor updates
+        if: contains(fromJSON('["version-update:semver-patch", "version-update:semver-minor"]'), steps.metadata.outputs.update-type)
+        run: gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

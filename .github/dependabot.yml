@@ -1,5 +1,6 @@
-# Weekly dependency update pull requests. Nothing is merged automatically: CI (ci.yml) must be
-# green and a human merges. Major CAP upgrades are excluded here; they go through /upgrade-cds
+# Weekly dependency update pull requests. Patch and minor updates merge automatically once CI
+# (ci.yml) is green (workflow dependabot-automerge.yml, main branch protection); majors and red
+# pull requests stay for a human. Major CAP upgrades are excluded here; they go through /upgrade-cds
 # (ADR-0001) because they need the migration guide and a snapshot review.
 version: 2
 updates:

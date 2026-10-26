@@ -4,6 +4,7 @@ Format: date, area, what changed. Maintained by `docs-keeper`, all agents add to
 
 ## 2026-10-26
 
+- docs: **Upstream references for `docs-toolchain` (#27).** The `@cap-js/openapi` 1.7.0 draft defect is already cap-js/openapi#204 with fix PR #207 (not merged), so the pin drop in ADR-0029, `STACK.md`, STATE debt and the SUMMARY is tied to a release containing PR #207; the "Products.import Products" tag is fixed upstream in 1.7.0 (#180) and ends with the pin; the unlocalized Swagger document is chgeo/cds-swagger-ui-express#275. LESSONS: search the tracker for duplicates before drafting an upstream issue.
 - docs: **Documentation of `docs-toolchain` (#27), PLAN step 7.** `docs/architecture/PATTERNS.md` (three new rows), `CONVENTIONS.md`, `TESTING.md`, `STACK.md`, `README.md` and the templates `annotations-semantic.cds`, `service.cds`, `entity.cds` describe the doc-comment mechanism, the generated API documents and the JSDoc gate. ADR-0029 "Known limits" gains the non-localized Swagger document (user decision D7: an upstream issue to `chgeo/cds-swagger-ui-express`, posted by the user) and the yuml.me ER diagram (D6: default kept, `cds.swagger.diagram: false` for confidential projects), and its `/tmp` probe citations became reproducible commands. `VERIFICATION.md` separates the plugin's missing localization from the converter's humanized tag. `docs/STATE.md`, this file's 2026-10-25 section (consolidated per review), `docs/features/docs-toolchain/SUMMARY.md` and `docs/LESSONS.md` updated.
 
 ## 2026-10-25

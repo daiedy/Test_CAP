@@ -8,7 +8,7 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Branch: feature/docs-toolchain (from `spec/products-validations` bebb34c, which carries the approved #10 spec)
 - Feature: none
 - Phase: 7: completion (docs-toolchain #27 closed on GitHub and pruned on 2026-10-26, cost about $88 by transcript, SUMMARY "Cost")
-- Last commit: 5dc70fb docs: docs-toolchain summary and registry
+- Last commit: 3ef0190 docs: docs-toolchain close #27 and prune
 - Next: the user merges feature/docs-toolchain (it also carries the approved #10 spec) into main and pushes on instruction; then `/feature #10`
 
 ## Open debt
@@ -27,7 +27,7 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 | The db-model rule file lacks the ADR-0026 decision 1 exception: `@assert.unique` lives in `db/` (PATTERNS "New entity" has it) | Add one line: "persistence constraints `@assert.unique` live in `db/`" (protected session) | user |
 | `refreshRowsOfNewDraft` in `DetailsForm.js` (B2 re-read after Edit) is probably redundant since `$$ownRequest` (ADR-0027) | Remove it with `refreshedDrafts` after a browser proof on an API-created product | fiori-app-dev |
 | `DetailsForm.js` has an `eslint-disable` for `max-params` and `max-statements` (70 against 40) | Move the pure functions to a sibling module; narrow the directive to `max-params` | fiori-app-dev |
-| `@cap-js/openapi` is pinned to 1.6.0 (1.7.0 answers 500 on the Swagger document of a draft service; ADR-0029 amendment A) | Drop the pin when a fixed release exists; the user posts the upstream issue (D5) | upstream-watcher |
+| `@cap-js/openapi` is pinned to 1.6.0 (1.7.0 answers 500 on the Swagger document of a draft service; ADR-0029 amendment A) | Drop the pin after a release with cap-js/openapi PR #207 (#204) | upstream-watcher |
 | Object Page route shows a double-encoded semantic key, `Products('Notebook%2520Set')` (VERIFICATION docs-toolchain, 2026-10-25) | Check whether it predates the feature and whether FE expects it | fiori-app-dev |
 
 ## What works

@@ -18,9 +18,9 @@ Completion date: 2026-10-26. Commits: `9ee1c32` ... `c89ad4a` (plan, research an
 - D2: SubagentStop runs the app ESLint and blocks on its errors (E).
 - D3: both hook paths run ui5lint and the app ESLint only when installed in the app; a failed run is a failure, not "no findings"; a persistent failure keeps blocking (F).
 - D4: the converter gets its own Dependabot PR through `exclude-patterns` (G).
-- D5: the user posts an issue on the 1.7.0 defect to `cap-js/openapi`; the orchestrator drafts the text.
+- D5: the user posts an issue on the 1.7.0 defect to `cap-js/openapi`; the orchestrator drafts the text. Outcome (2026-10-26): no new issue, the defect is already cap-js/openapi#204 (open since 2026-10-13); the fix is PR #207 (open, not merged).
 - D6 (2026-10-26): the yuml.me ER diagram of the Swagger UI is kept and recorded; a confidential project sets `cds.swagger.diagram: false`.
-- D7 (2026-10-26): the orchestrator prepares an issue text for `chgeo/cds-swagger-ui-express` (served document not localized), and the user posts it.
+- D7 (2026-10-26): the orchestrator prepares an issue text for `chgeo/cds-swagger-ui-express` (served document not localized), and the user posts it. Outcome (2026-10-26): posted as chgeo/cds-swagger-ui-express#275.
 - Plan gate 2026-10-14 (CONTEXT items 1-6) and phase 3 items 6-8 (pin, pretty-printed document, `scarfSettings`) are in `CONTEXT.md` "User decisions".
 
 ## Deviations from the plan
@@ -30,8 +30,8 @@ Completion date: 2026-10-26. Commits: `9ee1c32` ... `c89ad4a` (plan, research an
 - The service file doc comments of three projections were cut to one sentence with `//` developer notes (phase 2 gate, round 2).
 
 ## Known limits
-- The bound action tag reads "Products.import Products": `@cap-js/openapi` 1.6.0 humanizes the `@title` key before localization (D5 covers the upstream report).
-- The served Swagger document is not localized (`cds-swagger-ui-express` compiles with no locale): 7 `{i18n>` strings, SAP's `UserID.Description` and `CurrencyCode.Description` and the tag; the committed `docs/api` document has none (D7).
+- The bound action tag reads "Products.import Products": `@cap-js/openapi` 1.6.0 humanizes the `@title` key before localization. Fixed upstream in 1.7.0 (cap-js/openapi#180, closed 2026-09-22); it ends with the pin.
+- The served Swagger document is not localized (`cds-swagger-ui-express` compiles with no locale): 7 `{i18n>` strings, SAP's `UserID.Description` and `CurrencyCode.Description` and the tag; the committed `docs/api` document has none (D7, chgeo/cds-swagger-ui-express#275).
 - The Swagger page fetches an ER diagram of the model from `yuml.me` (plugin default `openapi:diagram: true`); entity and association names leave the machine (D6).
 - `@cap-js/openapi` stays at 1.6.0 until a release serves a draft-enabled service; a bump arrives as its own Dependabot PR and turns the Swagger test red for that PR only.
 - `docs/api/**` is not a protected path; the byte-comparison test is the guard. Swagger UI renders operations lazily (only some tag sections are in the DOM on load); the OpenAPI contract is intact.
@@ -40,7 +40,7 @@ Completion date: 2026-10-26. Commits: `9ee1c32` ... `c89ad4a` (plan, research an
 ## Follow-ups
 - `scripts/gen-registry.mjs` holds two JSDoc readers (`jsdocOf` and the older `export` regex of the `REUSE-CATALOG.md` block); derive the Purpose column from `jsdocOf(src).symbols` at the next change of that block (`cap-backend-dev`).
 - Check whether the double-encoded Object Page key `Products('Notebook%2520Set')` predates this feature (`fiori-app-dev`, STATE debt).
-- Drop the converter pin when a fixed `@cap-js/openapi` exists (`upstream-watcher`, STATE debt).
+- Drop the converter pin after a `@cap-js/openapi` release that contains PR #207 (cap-js/openapi#204), then check that the Swagger test is green (`upstream-watcher`, STATE debt).
 - Metrics: the D10 feature scope misses a session launched from the main checkout that works in a feature worktree. Its records carry `gitBranch: main`, and its markers are split between two `.pipeline/` directories. See "Cost"; record the history line once the scope covers it (`architect`, user decision).
 - Optional: one service-head line in `srv/catalog-service.cds` pointing to the doc comments in `srv/annotations/<Entity>.cds`, next to the existing UI annotations line.
 

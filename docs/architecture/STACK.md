@@ -1,6 +1,6 @@
 # Stack and versions
 
-State as of 2026-09-29. Versions are updated through `upstream-check` (see `docs/upstream/UPDATES.md`) and the weekly Dependabot pull requests, changes are recorded in `docs/CHANGELOG.md`.
+State as of 2026-10-26. Versions are updated through `upstream-check` (see `docs/upstream/UPDATES.md`) and the weekly Dependabot pull requests, changes are recorded in `docs/CHANGELOG.md`.
 
 ## Environment
 
@@ -8,7 +8,7 @@ State as of 2026-09-29. Versions are updated through `upstream-check` (see `docs
 |---|---|---|
 | Node.js | 22 LTS (22.23.2) | Installed via Homebrew `node@22`. cds 10 and the SAP tools require >= 22 |
 | npm | 10.x | |
-| `@sap/cds-dk` globally | 10.0.7 | `npm i -g @sap/cds-dk@10`, provides the `cds` command; the project's own dev dependency is 10.1.0 and `npx cds` uses that one |
+| `@sap/cds-dk` globally | 10.0.7 | `npm i -g @sap/cds-dk@10`, provides the `cds` command; the project's own dev dependency is 10.1.2 and `npx cds` uses that one |
 | Claude Code | 2.1.x | Plugins `ui5@claude-plugins-official`, `cap-developer@cap` enabled at project level; they are not installed automatically, see "Setup on a new machine" |
 
 ## Backend
@@ -16,17 +16,17 @@ State as of 2026-09-29. Versions are updated through `upstream-check` (see `docs
 | Package | Version | Why |
 |---|---|---|
 | `@sap/cds` | ^10 (10.1.1) | CAP runtime. Yearly major, the previous major is supported for 12 months |
-| `@sap/cds-dk` | ^10 (10.1.0) | CLI: `cds watch`, `cds compile`, `cds add`, `cds lint` |
-| `@cap-js/sqlite` | ^3 (3.1.1) | SQLite for development and tests, `node:sqlite` driver by default |
+| `@sap/cds-dk` | ^10 (10.1.2) | CLI: `cds watch`, `cds compile`, `cds add`, `cds lint` |
+| `@cap-js/sqlite` | ^3 (3.1.2) | SQLite for development and tests, `node:sqlite` driver by default |
 | `@cap-js/cds-test` | ^1 (1.0.2) | `cds.test()` for service tests |
-| `vitest`, `@vitest/coverage-v8` | ^5 (5.0.1) | Main test runner as recommended by capire since April 2026 |
-| `eslint`, `@sap/eslint-plugin-cds` | ^10 (10.11.0), ^4 (4.2.5) | `cds lint`, config `eslint.config.mjs` |
-| `prettier` | ^3 (3.9.8) | JS formatting |
+| `vitest`, `@vitest/coverage-v8` | ^5 (5.0.5) | Main test runner as recommended by capire since April 2026 |
+| `eslint`, `@sap/eslint-plugin-cds` | ^10 (10.13.0), ^4 (4.2.5) | `cds lint`, config `eslint.config.mjs` |
+| `prettier` | ^3 (3.9.10) | JS formatting |
 | `eslint-plugin-jsdoc` | ^65.4.2 | JSDoc rule set of ADR-0029, in the root `eslint.config.mjs` (`srv/**/*.js`) and in `app/products/eslint.config.mjs` (`webapp/ext/**/*.js`); engines `node ^22.22.2 \|\| >=24.15.0`; two installations, one per `package.json` |
 | `cds-swagger-ui-express` | ^0.11.0 | Dev plugin (devDependency, never runtime): Swagger UI at `/$api-docs/odata/v4/catalog/` under `cds watch`, login `alice`; registers itself on `cds.on('bootstrap')` |
 | `@cap-js/openapi` | 1.6.0, exact devDependency | OpenAPI converter for `docs/api/CatalogService.openapi3.json` and for the Swagger UI. Pinned because 1.7.0 answers 500 on the Swagger document of a draft-enabled service (`cds.clone(csn)` on the served model); `cds compile --to openapi` prefers the project-local converter over the copy in `@sap/cds-dk`. The defect is reported upstream as cap-js/openapi#204 (https://github.com/cap-js/openapi/issues/204), the fix is PR #207 (open, not merged on 2026-10-26). Drop the pin after a release that contains PR #207, in the change that regenerates the document, and check that the Swagger test is green. The tag "Products.import Products" of the 1.6.0 output is fixed in 1.7.0 (#180) and ends with the pin. A Dependabot bump comes as its own PR (`exclude-patterns` in the `sap-cap` group), and its red Swagger test in `test/api-docs.test.js` is the intended guard (ADR-0029 amendments A, G) |
 | `@sap/cds-common-content` | ^3 (3.2.0) | ISO code lists for currencies, countries, languages for `sap.common.*`; imported in `db/schema.cds` |
-| `express` | ^5 (5.2.1) | Web server under CAP. `@sap/cds` 10 declares `express ^4.22.1 \|\| ^5`; the project has no custom `server.js` or express middleware, so the major bump (Dependabot #1) needed no code change |
+| `express` | ^5 (5.3.0) | Web server under CAP. `@sap/cds` 10 declares `express ^4.22.1 \|\| ^5`; the project has no custom `server.js` or express middleware, so the major bump (Dependabot #1) needed no code change |
 
 `package.json` sets `"scarfSettings": { "enabled": false }`: the install-time analytics of `@scarf/scarf` (a dependency of `swagger-ui-dist`) stay off for every local `npm install` (ADR-0029 amendment C).
 
@@ -42,14 +42,14 @@ Database in development: SQLite in-memory, CSV deployed on every start (`cds wat
 | Package | Version | Why |
 |---|---|---|
 | SAPUI5 from CDN `https://ui5.sap.com` | current, minUI5Version 1.136.0 | Fiori Elements V4 (`sap.fe.templates`), FLP sandbox |
-| `@ui5/cli` | ^4 (4.0.69) | Build and development server |
+| `@ui5/cli` | ^4 (4.0.71) | Build and development server |
 | `@sap/ux-ui5-tooling` | ^1.33 (1.33.0) | `fiori run`, proxy, appreload |
-| `@sap-ux/ui5-middleware-fe-mockserver` | ^2 (2.4.17) | OData V4 mock without backend, `ui5-mock.yaml` |
-| `@ui5/linter` | ^1 (1.23.6) | `ui5lint`, deprecated APIs, CSP, manifest |
-| `@sap-ux/eslint-plugin-fiori-tools` | ^10 (10.11.0) | ESLint for Fiori applications (wired in phase 3) |
+| `@sap-ux/ui5-middleware-fe-mockserver` | ^2 (2.4.18) | OData V4 mock without backend, `ui5-mock.yaml` |
+| `@ui5/linter` | ^1 (1.23.7) | `ui5lint`, deprecated APIs, CSP, manifest |
+| `@sap-ux/eslint-plugin-fiori-tools` | ^10 (10.17.2) | ESLint for Fiori applications (wired in phase 3) |
 | `@sap/ux-specification` | ^1.144 | Schemas for Fiori tools and the page editor |
-| `@sap-ux/ui5-test-writer` | ^1.15.5 (1.15.5) | Generates OPA5 page objects for Fiori Elements V4 from the app model |
-| `ui5-test-runner` | ^5.14.1 (5.14.1) | Runs QUnit/OPA5 without a browser via `npm run test:ui` (`app/products`) |
+| `@sap-ux/ui5-test-writer` | ^1.18.2 (1.18.2) | Generates OPA5 page objects for Fiori Elements V4 from the app model |
+| `ui5-test-runner` | ^5.14.2 (5.14.2) | Runs QUnit/OPA5 without a browser via `npm run test:ui` (`app/products`) |
 
 ## Agent tools
 

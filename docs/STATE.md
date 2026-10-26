@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-10-26
-- Branch: chore/upstream-check-2026-10-26 (upstream digest 2026-10-26, the Dependabot `ui5-test-runner` major ignore, the `pipeline-config.md` plugin MCP rule; not merged into `main`, not pushed)
+- Branch: chore/upstream-check-2026-10-26 (upstream digest, Dependabot ignore, `pipeline-config.md` rule, `origin/main` merged in; not pushed)
 - Feature: none
-- Phase: 7: completion (docs-toolchain #27 closed on GitHub and pruned on 2026-10-26, cost about $88 by transcript, SUMMARY "Cost")
-- Last commit: 33665d8 chore(pipeline): bundled plugin MCP server follows the plugin release
-- Next: merge this branch into `main` and push before 2026-11-09 (the ignore works only from `main`); merge the Dependabot PRs #31, #33, #34 once their CI is green after the rebase, close #35; then `/feature #10` products-validations (spec approved, ADR-0028), then #26 product-details-dimensions and #28 business-rules-wiki
+- Phase: 7: completion (docs-toolchain #27 closed and pruned on 2026-10-26, about $88, SUMMARY "Cost")
+- Last commit: 2e7abf9 Merge origin/main (Dependabot #30, #31, #32, #33, #34) into chore/upstream-check-2026-10-26
+- Next: fast-forward `main` to this branch and push before 2026-11-09 (the Dependabot ignore acts only from `main`); close #35; then `/feature #10` products-validations (spec approved, ADR-0028), then #26, #28
 
 ## Open debt
 

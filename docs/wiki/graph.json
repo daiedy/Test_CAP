@@ -1,6 +1,25 @@
 {
-  "x-sources": "e14c2adde1446827",
+  "x-sources": "817f5ba6360dc2b7",
   "nodes": [
+    {
+      "path": "docs/wiki/Glossary.md",
+      "folder": "",
+      "id": null,
+      "title": "Glossary",
+      "summary": "Plain-language meaning of the words the Product Catalog wiki uses.",
+      "tags": [
+        "glossary"
+      ],
+      "code": [],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [],
+      "verified": null,
+      "codeHash": null,
+      "aliases": [],
+      "adr": []
+    },
     {
       "path": "docs/wiki/Home.md",
       "folder": "",
@@ -18,6 +37,1772 @@
       "sources": [],
       "verified": null,
       "codeHash": null,
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/decisions/A-custom-filter-field-replaces-the-standard-field-of-its-property.md",
+      "folder": "decisions",
+      "id": null,
+      "title": "A custom filter field replaces the standard field of its property",
+      "summary": "When the standard filter field does not fit, such as a range slider for the rating, a small custom control takes its place and sets the filter (ADR-0020).",
+      "tags": [
+        "filter",
+        "list",
+        "rating"
+      ],
+      "code": [],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [
+        "docs/decisions/ADR-0020-custom-filter-field.md"
+      ],
+      "verified": null,
+      "codeHash": null,
+      "aliases": [],
+      "adr": [
+        "ADR-0020"
+      ]
+    },
+    {
+      "path": "docs/wiki/decisions/A-dependent-field-offers-only-the-values-of-its-parent-field.md",
+      "folder": "decisions",
+      "id": null,
+      "title": "A dependent field offers only the values of its parent field",
+      "summary": "The subcategory list shows only the subcategories of the chosen category, a mismatch is refused, and a changed category clears a foreign subcategory (ADR-0024).",
+      "tags": [
+        "subcategory",
+        "category",
+        "value-help",
+        "validation"
+      ],
+      "code": [],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [
+        "docs/decisions/ADR-0024-dependent-value-help.md"
+      ],
+      "verified": null,
+      "codeHash": null,
+      "aliases": [],
+      "adr": [
+        "ADR-0024"
+      ]
+    },
+    {
+      "path": "docs/wiki/decisions/A-draft-or-locked-product-is-marked-in-the-list.md",
+      "folder": "decisions",
+      "id": null,
+      "title": "A draft or locked product is marked in the list",
+      "summary": "The product list marks a row that has a draft or is locked by another user, through the name column and without any custom code (ADR-0015).",
+      "tags": [
+        "products",
+        "draft",
+        "list"
+      ],
+      "code": [],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [
+        "docs/decisions/ADR-0015-list-report-draft-marker.md"
+      ],
+      "verified": null,
+      "codeHash": null,
+      "aliases": [],
+      "adr": [
+        "ADR-0015"
+      ]
+    },
+    {
+      "path": "docs/wiki/decisions/A-field-is-disabled-until-the-field-it-depends-on-is-filled.md",
+      "folder": "decisions",
+      "id": null,
+      "title": "A field is disabled until the field it depends on is filled",
+      "summary": "A field that makes sense only after another field is filled stays disabled until then, and shows the required marker once it is enabled (ADR-0025).",
+      "tags": [
+        "subcategory",
+        "field-control",
+        "ui"
+      ],
+      "code": [],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [
+        "docs/decisions/ADR-0025-dynamic-field-control.md"
+      ],
+      "verified": null,
+      "codeHash": null,
+      "aliases": [],
+      "adr": [
+        "ADR-0025"
+      ]
+    },
+    {
+      "path": "docs/wiki/decisions/Code-lists-use-stable-upper-case-codes.md",
+      "folder": "decisions",
+      "id": null,
+      "title": "Code lists use stable upper-case codes",
+      "summary": "The lists the catalog keeps itself identify each value by a short stable upper-case code, and the screen shows the name (ADR-0010).",
+      "tags": [
+        "code-list",
+        "category"
+      ],
+      "code": [],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [
+        "docs/decisions/ADR-0010-code-list-codes.md"
+      ],
+      "verified": null,
+      "codeHash": null,
+      "aliases": [],
+      "adr": [
+        "ADR-0010"
+      ]
+    },
+    {
+      "path": "docs/wiki/decisions/Documentation-descriptions-live-in-doc-comments-and-the-API-document-is-generated.md",
+      "folder": "decisions",
+      "id": null,
+      "title": "Documentation descriptions live in doc comments and the API document is generated",
+      "summary": "One kind of doc comment describes every artefact, and the OpenAPI document, the code reference page and the JSDoc lint gate are generated or checked from it (ADR-0029).",
+      "tags": [
+        "documentation",
+        "api",
+        "tooling"
+      ],
+      "code": [],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [
+        "docs/decisions/ADR-0029-docs-toolchain.md"
+      ],
+      "verified": null,
+      "codeHash": null,
+      "aliases": [],
+      "adr": [
+        "ADR-0029"
+      ]
+    },
+    {
+      "path": "docs/wiki/decisions/Fixed-lists-of-values-are-chosen-from-a-dropdown-showing-names.md",
+      "folder": "decisions",
+      "id": null,
+      "title": "Fixed lists of values are chosen from a dropdown showing names",
+      "summary": "A short stable list such as the categories appears as a dropdown with names, while long or growing lists keep a search dialog (ADR-0011).",
+      "tags": [
+        "code-list",
+        "value-help",
+        "category"
+      ],
+      "code": [],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [
+        "docs/decisions/ADR-0011-code-list-value-help.md"
+      ],
+      "verified": null,
+      "codeHash": null,
+      "aliases": [],
+      "adr": [
+        "ADR-0011"
+      ]
+    },
+    {
+      "path": "docs/wiki/decisions/Pipeline-decisions.md",
+      "folder": "decisions",
+      "id": null,
+      "title": "Pipeline decisions",
+      "summary": "The decisions about the tooling, the agents and the documentation that build the catalog, each listed by title with a link to its ADR.",
+      "tags": [
+        "pipeline",
+        "tooling",
+        "decisions"
+      ],
+      "code": [],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [
+        "docs/decisions/ADR-0001-node22-cds10.md",
+        "docs/decisions/ADR-0002-vitest-cds-test.md",
+        "docs/decisions/ADR-0004-annotation-split.md",
+        "docs/decisions/ADR-0005-javascript-esm.md",
+        "docs/decisions/ADR-0006-ui5-version.md",
+        "docs/decisions/ADR-0007-fiori-elements-via-mcp.md",
+        "docs/decisions/ADR-0008-fe-mockserver.md",
+        "docs/decisions/ADR-0009-mcp-first-pinned-tooling.md",
+        "docs/decisions/ADR-0014-mcp-audit-soft-gate.md",
+        "docs/decisions/ADR-0016-bash-write-gate.md",
+        "docs/decisions/ADR-0017-generated-files-gate.md",
+        "docs/decisions/ADR-0018-context-budget.md",
+        "docs/decisions/ADR-0019-backlog-github-issues.md",
+        "docs/decisions/ADR-0022-pipeline-metrics.md",
+        "docs/decisions/ADR-0023-pipeline-state-hygiene.md",
+        "docs/decisions/ADR-0030-business-rules-wiki.md"
+      ],
+      "verified": null,
+      "codeHash": null,
+      "aliases": [],
+      "adr": [
+        "ADR-0001",
+        "ADR-0002",
+        "ADR-0004",
+        "ADR-0005",
+        "ADR-0006",
+        "ADR-0007",
+        "ADR-0008",
+        "ADR-0009",
+        "ADR-0014",
+        "ADR-0016",
+        "ADR-0017",
+        "ADR-0018",
+        "ADR-0019",
+        "ADR-0022",
+        "ADR-0023",
+        "ADR-0030"
+      ]
+    },
+    {
+      "path": "docs/wiki/decisions/Product-details-are-rows-of-reusable-attributes.md",
+      "folder": "decisions",
+      "id": null,
+      "title": "Product details are rows of reusable attributes",
+      "summary": "A product holds detail rows, each pointing to an attribute that the product's subcategory offers, with at most one row per attribute (ADR-0026).",
+      "tags": [
+        "details",
+        "attributes",
+        "subcategory"
+      ],
+      "code": [],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [
+        "docs/decisions/ADR-0026-product-details-composition.md"
+      ],
+      "verified": null,
+      "codeHash": null,
+      "aliases": [],
+      "adr": [
+        "ADR-0026"
+      ]
+    },
+    {
+      "path": "docs/wiki/decisions/Product-details-are-typed-and-shown-as-a-generated-form.md",
+      "folder": "decisions",
+      "id": null,
+      "title": "Product details are typed and shown as a generated form",
+      "summary": "Each attribute has a value type, the draft creates one empty row per attribute of the subcategory, and one generic form shows them (ADR-0027).",
+      "tags": [
+        "details",
+        "attributes",
+        "form",
+        "value-type"
+      ],
+      "code": [],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [
+        "docs/decisions/ADR-0027-typed-product-details-form.md"
+      ],
+      "verified": null,
+      "codeHash": null,
+      "aliases": [],
+      "adr": [
+        "ADR-0027"
+      ]
+    },
+    {
+      "path": "docs/wiki/decisions/Products-are-edited-through-drafts.md",
+      "folder": "decisions",
+      "id": null,
+      "title": "Products are edited through drafts",
+      "summary": "A product is created and changed in a private draft that becomes the product only on Save, with the standard Edit, Save and Cancel buttons (ADR-0012).",
+      "tags": [
+        "products",
+        "draft",
+        "editing"
+      ],
+      "code": [],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [
+        "docs/decisions/ADR-0012-products-draft-editing.md"
+      ],
+      "verified": null,
+      "codeHash": null,
+      "aliases": [],
+      "adr": [
+        "ADR-0012"
+      ]
+    },
+    {
+      "path": "docs/wiki/decisions/Products-are-imported-from-an-Excel-workbook.md",
+      "folder": "decisions",
+      "id": null,
+      "title": "Products are imported from an Excel workbook",
+      "summary": "An editor uploads an .xlsx file from the product list; every row is checked like a normal product and either all rows are created or none (ADR-0021).",
+      "tags": [
+        "products",
+        "import",
+        "excel"
+      ],
+      "code": [],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [
+        "docs/decisions/ADR-0021-products-excel-import.md"
+      ],
+      "verified": null,
+      "codeHash": null,
+      "aliases": [],
+      "adr": [
+        "ADR-0021"
+      ]
+    },
+    {
+      "path": "docs/wiki/decisions/The-catalog-data-follows-one-set-of-modeling-rules.md",
+      "folder": "decisions",
+      "id": null,
+      "title": "The catalog data follows one set of modeling rules",
+      "summary": "Every record has a generated identity and change tracking, lists of values are code lists, money and text have fixed shapes (ADR-0003).",
+      "tags": [
+        "modeling",
+        "code-list",
+        "price"
+      ],
+      "code": [],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [
+        "docs/decisions/ADR-0003-cds-modeling-rules.md"
+      ],
+      "verified": null,
+      "codeHash": null,
+      "aliases": [],
+      "adr": [
+        "ADR-0003"
+      ]
+    },
+    {
+      "path": "docs/wiki/decisions/The-catalog-is-open-to-signed-in-users-with-a-viewer-or-editor-role.md",
+      "folder": "decisions",
+      "id": null,
+      "title": "The catalog is open to signed-in users with a viewer or editor role",
+      "summary": "Every request needs a signed-in user, a viewer only reads, an editor does everything, and the screen hides the buttons a viewer cannot use (ADR-0013).",
+      "tags": [
+        "access",
+        "roles",
+        "authorization"
+      ],
+      "code": [],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [
+        "docs/decisions/ADR-0013-catalog-authorization.md"
+      ],
+      "verified": null,
+      "codeHash": null,
+      "aliases": [],
+      "adr": [
+        "ADR-0013"
+      ]
+    },
+    {
+      "path": "docs/wiki/decisions/Validation-rules-follow-one-toolkit-and-prevent-before-they-refuse.md",
+      "folder": "decisions",
+      "id": null,
+      "title": "Validation rules follow one toolkit and prevent before they refuse",
+      "summary": "The validation rules of issue 10 use declarative constraints with custom texts, two-field messages and a control that prevents the error first, and three proposed rules were not taken (ADR-0028).",
+      "tags": [
+        "validation",
+        "products",
+        "details"
+      ],
+      "code": [],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [
+        "docs/decisions/ADR-0028-validation-toolkit.md"
+      ],
+      "verified": null,
+      "codeHash": null,
+      "aliases": [],
+      "adr": [
+        "ADR-0028"
+      ]
+    },
+    {
+      "path": "docs/wiki/domain/Categories.md",
+      "folder": "domain",
+      "id": null,
+      "title": "Categories",
+      "summary": "A category is the broad group a product belongs to, kept in a read-only list.",
+      "tags": [
+        "category",
+        "domain",
+        "code-list"
+      ],
+      "code": [
+        "db/schema.cds",
+        "srv/annotations/Categories.cds"
+      ],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [],
+      "verified": "aed00709548302f9",
+      "codeHash": "aed00709548302f9",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/domain/Detail-attributes.md",
+      "folder": "domain",
+      "id": null,
+      "title": "Detail attributes",
+      "summary": "An attribute is a kind of fact a product can carry, with its value type, unit and limits.",
+      "tags": [
+        "details",
+        "attributes",
+        "domain",
+        "code-list"
+      ],
+      "code": [
+        "db/schema.cds",
+        "srv/annotations/DetailAttributes.cds"
+      ],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [],
+      "verified": "cf17b555eda7e9d6",
+      "codeHash": "cf17b555eda7e9d6",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/domain/Detail-list-values.md",
+      "folder": "domain",
+      "id": null,
+      "title": "Detail list values",
+      "summary": "A list value is one allowed choice of an attribute that offers a list, with its display order.",
+      "tags": [
+        "details",
+        "list-values",
+        "domain",
+        "code-list"
+      ],
+      "code": [
+        "db/schema.cds",
+        "srv/annotations/DetailListValues.cds"
+      ],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [],
+      "verified": "f862332b051ef747",
+      "codeHash": "f862332b051ef747",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/domain/Detail-value-types.md",
+      "folder": "domain",
+      "id": null,
+      "title": "Detail value types",
+      "summary": "A value type says what kind of value an attribute takes: text, whole number, decimal, one choice or several choices.",
+      "tags": [
+        "details",
+        "value-types",
+        "domain",
+        "code-list"
+      ],
+      "code": [
+        "db/schema.cds",
+        "srv/annotations/DetailValueTypes.cds"
+      ],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [],
+      "verified": "71d8a751eaa9d04e",
+      "codeHash": "71d8a751eaa9d04e",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/domain/Product-detail-selections.md",
+      "folder": "domain",
+      "id": null,
+      "title": "Product detail selections",
+      "summary": "A selection is one chosen value of a detail row whose attribute allows several choices.",
+      "tags": [
+        "details",
+        "selections",
+        "domain"
+      ],
+      "code": [
+        "db/schema.cds",
+        "srv/annotations/ProductDetails.cds"
+      ],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [],
+      "verified": "1df104c6439638cc",
+      "codeHash": "1df104c6439638cc",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/domain/Product-details.md",
+      "folder": "domain",
+      "id": null,
+      "title": "Product details",
+      "summary": "A detail row holds one attribute of a product and its typed value, such as the colour Black.",
+      "tags": [
+        "details",
+        "products",
+        "domain"
+      ],
+      "code": [
+        "db/schema.cds",
+        "srv/annotations/ProductDetails.cds"
+      ],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [],
+      "verified": "1df104c6439638cc",
+      "codeHash": "1df104c6439638cc",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/domain/Products.md",
+      "folder": "domain",
+      "id": null,
+      "title": "Products",
+      "summary": "A product is the one thing the catalog holds, with a name, a price in a currency, a stock, a category, a subcategory and its details.",
+      "tags": [
+        "products",
+        "domain"
+      ],
+      "code": [
+        "db/schema.cds",
+        "srv/annotations/Products.cds"
+      ],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [],
+      "verified": "5d108315b067bf1e",
+      "codeHash": "5d108315b067bf1e",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/domain/Subcategories.md",
+      "folder": "domain",
+      "id": null,
+      "title": "Subcategories",
+      "summary": "A subcategory refines one category and decides which details a product offers.",
+      "tags": [
+        "subcategory",
+        "category",
+        "domain",
+        "code-list"
+      ],
+      "code": [
+        "db/schema.cds",
+        "srv/annotations/Subcategories.cds"
+      ],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [],
+      "verified": "d97c40c842ed3b79",
+      "codeHash": "d97c40c842ed3b79",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/domain/Subcategory-attributes.md",
+      "folder": "domain",
+      "id": null,
+      "title": "Subcategory attributes",
+      "summary": "An assignment says which attribute a subcategory offers and in which position its field appears.",
+      "tags": [
+        "details",
+        "subcategory",
+        "attributes",
+        "domain"
+      ],
+      "code": [
+        "db/schema.cds",
+        "srv/annotations/SubcategoryAttributes.cds"
+      ],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [],
+      "verified": "0dc4e525061a5e32",
+      "codeHash": "0dc4e525061a5e32",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "folder": "how-to",
+      "id": null,
+      "title": "Choose a category and subcategory",
+      "summary": "Pick the category first, then a subcategory that belongs to it.",
+      "tags": [
+        "products",
+        "category",
+        "subcategory"
+      ],
+      "code": [
+        "app/products/annotations/Products.cds",
+        "app/products/annotations/Subcategories.cds",
+        "srv/catalog-service.js"
+      ],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [],
+      "verified": "2876d3919dbf53ec",
+      "codeHash": "2876d3919dbf53ec",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/how-to/Create-a-product-through-a-draft.md",
+      "folder": "how-to",
+      "id": null,
+      "title": "Create a product through a draft",
+      "summary": "Create a product by filling a private draft and saving it, so it appears in the catalog only when complete.",
+      "tags": [
+        "products",
+        "draft",
+        "create"
+      ],
+      "code": [
+        "srv/annotations/Products.cds",
+        "app/products/annotations/Products.cds"
+      ],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [],
+      "verified": "cd17f8f8027a7ad1",
+      "codeHash": "cd17f8f8027a7ad1",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/how-to/Edit-save-keep-or-discard-a-draft.md",
+      "folder": "how-to",
+      "id": null,
+      "title": "Edit, save, keep or discard a draft",
+      "summary": "Change an existing product through a draft, then save it, leave it for later or discard it.",
+      "tags": [
+        "products",
+        "draft",
+        "edit"
+      ],
+      "code": [
+        "srv/catalog-service.cds",
+        "app/products/annotations/Products.cds"
+      ],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [],
+      "verified": "1d1f813ca4b00860",
+      "codeHash": "1d1f813ca4b00860",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "folder": "how-to",
+      "id": null,
+      "title": "Fill the details of a product",
+      "summary": "Enter the typed details that the product's subcategory asks for, such as colour or weight.",
+      "tags": [
+        "products",
+        "details",
+        "attributes"
+      ],
+      "code": [
+        "app/products/webapp/ext/fragment/DetailsForm.fragment.xml",
+        "app/products/webapp/ext/fragment/DetailsForm.js",
+        "srv/annotations/ProductDetails.cds"
+      ],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [],
+      "verified": "8d05d526116df7e7",
+      "codeHash": "8d05d526116df7e7",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/how-to/Find-a-product.md",
+      "folder": "how-to",
+      "id": null,
+      "title": "Find a product",
+      "summary": "Narrow the list of products by name, category, price or rating, and read the draft markers in the list.",
+      "tags": [
+        "products",
+        "list",
+        "filter"
+      ],
+      "code": [
+        "app/products/annotations/Products.cds",
+        "app/products/webapp/ext/fragment/RatingRangeFilter.fragment.xml"
+      ],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [],
+      "verified": "5ff37f05d760e0d3",
+      "codeHash": "5ff37f05d760e0d3",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/how-to/Import-products-from-Excel.md",
+      "folder": "how-to",
+      "id": null,
+      "title": "Import products from Excel",
+      "summary": "Create many products at once from an .xlsx workbook, all or nothing, with every bad row reported.",
+      "tags": [
+        "products",
+        "import",
+        "excel"
+      ],
+      "code": [
+        "srv/catalog-service.js",
+        "srv/annotations/Products.cds"
+      ],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [],
+      "verified": "dfab20cb0972ed9f",
+      "codeHash": "dfab20cb0972ed9f",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/how-to/Who-may-do-what.md",
+      "folder": "how-to",
+      "id": null,
+      "title": "Who may do what",
+      "summary": "Which actions each of the two catalog roles may use, and what an unsigned user gets.",
+      "tags": [
+        "access",
+        "roles",
+        "authorization"
+      ],
+      "code": [
+        "srv/catalog-service.cds",
+        "app/products/annotations/Products.cds"
+      ],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [],
+      "verified": "1d1f813ca4b00860",
+      "codeHash": "1d1f813ca4b00860",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/A-detail-number-stays-within-the-bounds-of-its-subcategory.md",
+      "folder": "rules",
+      "id": "BR-DETAILS-008",
+      "title": "A detail number stays within the bounds of its subcategory",
+      "summary": "A subcategory will be able to narrow the bounds of a number attribute for its own products.",
+      "tags": [
+        "products",
+        "details",
+        "number",
+        "range",
+        "subcategory"
+      ],
+      "code": [
+        "srv/annotations/ProductDetails.cds",
+        "db/schema.cds",
+        "app/products/webapp/ext/fragment/DetailsForm.js",
+        "_i18n/messages.properties",
+        "_i18n/messages_ru.properties"
+      ],
+      "messages": [
+        "PRODUCTS_DETAIL_VALUE_OUT_OF_SUBCATEGORY_RANGE"
+      ],
+      "elements": [
+        "ProductDetails.numberValue"
+      ],
+      "status": "planned",
+      "sources": [
+        "docs/decisions/ADR-0028-validation-toolkit.md"
+      ],
+      "verified": "19aaf72ce352aa0d",
+      "codeHash": "19aaf72ce352aa0d",
+      "aliases": [
+        "R10"
+      ],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/A-detail-that-the-subcategory-requires-must-be-filled.md",
+      "folder": "rules",
+      "id": "BR-DETAILS-007",
+      "title": "A detail that the subcategory requires must be filled",
+      "summary": "A subcategory will be able to mark an attribute as required, and a product of that subcategory will need a value for it.",
+      "tags": [
+        "products",
+        "details",
+        "required",
+        "subcategory"
+      ],
+      "code": [
+        "srv/annotations/ProductDetails.cds",
+        "db/schema.cds",
+        "app/products/webapp/ext/fragment/DetailsForm.js",
+        "_i18n/messages.properties",
+        "_i18n/messages_ru.properties"
+      ],
+      "messages": [
+        "PRODUCTS_DETAIL_VALUE_REQUIRED"
+      ],
+      "elements": [
+        "ProductDetails.textValue",
+        "ProductDetails.numberValue",
+        "ProductDetails.listValue",
+        "ProductDetails.attribute"
+      ],
+      "status": "planned",
+      "sources": [
+        "docs/decisions/ADR-0028-validation-toolkit.md"
+      ],
+      "verified": "19aaf72ce352aa0d",
+      "codeHash": "19aaf72ce352aa0d",
+      "aliases": [
+        "R8"
+      ],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/A-detail-value-matches-the-value-type-of-its-attribute.md",
+      "folder": "rules",
+      "id": "BR-DETAILS-003",
+      "title": "A detail value matches the value type of its attribute",
+      "summary": "A value goes only in the place its attribute's value type allows: text for TEXT, a number for INTEGER and DECIMAL, one list value for LIST, selections for MULTI_LIST.",
+      "tags": [
+        "products",
+        "details",
+        "value-type"
+      ],
+      "code": [
+        "srv/annotations/ProductDetails.cds"
+      ],
+      "messages": [
+        "PRODUCTS_DETAIL_VALUE_TYPE_MISMATCH"
+      ],
+      "elements": [
+        "ProductDetails.textValue"
+      ],
+      "status": "active",
+      "sources": [
+        "docs/decisions/ADR-0027-typed-product-details-form.md",
+        "docs/features/products-details-section/SUMMARY.md"
+      ],
+      "verified": "67cd0aade310debd",
+      "codeHash": "67cd0aade310debd",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/A-list-detail-value-belongs-to-the-list-of-its-attribute.md",
+      "folder": "rules",
+      "id": "BR-DETAILS-005",
+      "title": "A list detail value belongs to the list of its attribute",
+      "summary": "The value of a LIST attribute must be one of the values defined for that attribute and no other.",
+      "tags": [
+        "products",
+        "details",
+        "list"
+      ],
+      "code": [
+        "srv/annotations/ProductDetails.cds"
+      ],
+      "messages": [
+        "PRODUCTS_DETAIL_VALUE_NOT_IN_LIST"
+      ],
+      "elements": [
+        "ProductDetails.listValue"
+      ],
+      "status": "active",
+      "sources": [
+        "docs/decisions/ADR-0026-product-details-composition.md",
+        "docs/decisions/ADR-0027-typed-product-details-form.md",
+        "docs/features/products-details-section/SUMMARY.md"
+      ],
+      "verified": "67cd0aade310debd",
+      "codeHash": "67cd0aade310debd",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/A-number-detail-stays-within-its-bounds-and-is-whole-when-required.md",
+      "folder": "rules",
+      "id": "BR-DETAILS-004",
+      "title": "A number detail stays within its bounds and is whole when required",
+      "summary": "A number value respects the minimum and maximum of its attribute, and an INTEGER attribute takes a whole number.",
+      "tags": [
+        "products",
+        "details",
+        "number",
+        "range"
+      ],
+      "code": [
+        "srv/annotations/ProductDetails.cds"
+      ],
+      "messages": [
+        "PRODUCTS_DETAIL_VALUE_OUT_OF_RANGE",
+        "PRODUCTS_DETAIL_VALUE_NOT_INTEGER"
+      ],
+      "elements": [
+        "ProductDetails.numberValue"
+      ],
+      "status": "active",
+      "sources": [
+        "docs/decisions/ADR-0027-typed-product-details-form.md",
+        "docs/features/products-details-section/SUMMARY.md"
+      ],
+      "verified": "67cd0aade310debd",
+      "codeHash": "67cd0aade310debd",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/A-price-in-a-currency-without-minor-units-has-no-decimals.md",
+      "folder": "rules",
+      "id": "BR-PRODUCTS-012",
+      "title": "A price in a currency without minor units has no decimals",
+      "summary": "A price in a currency without minor units, such as JPY or KRW, will have to be a whole amount.",
+      "tags": [
+        "products",
+        "price",
+        "currency"
+      ],
+      "code": [
+        "srv/annotations/Products.cds",
+        "app/products/annotations/Products.cds",
+        "srv/lib/products-import.js",
+        "_i18n/messages.properties",
+        "_i18n/messages_ru.properties"
+      ],
+      "messages": [
+        "PRODUCTS_PRICE_MINOR_UNIT"
+      ],
+      "elements": [
+        "Products.price",
+        "Products.currency"
+      ],
+      "status": "planned",
+      "sources": [
+        "docs/decisions/ADR-0028-validation-toolkit.md"
+      ],
+      "verified": "e5c192f21561f408",
+      "codeHash": "e5c192f21561f408",
+      "aliases": [
+        "R4"
+      ],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/A-price-is-above-zero.md",
+      "folder": "rules",
+      "id": "BR-PRODUCTS-011",
+      "title": "A price is above zero",
+      "summary": "A price will have to be above zero, so a free product is refused.",
+      "tags": [
+        "products",
+        "price",
+        "range"
+      ],
+      "code": [
+        "srv/annotations/Products.cds",
+        "_i18n/messages.properties",
+        "_i18n/messages_ru.properties"
+      ],
+      "messages": [
+        "PRODUCTS_PRICE_POSITIVE"
+      ],
+      "elements": [
+        "Products.price"
+      ],
+      "status": "planned",
+      "sources": [
+        "docs/decisions/ADR-0028-validation-toolkit.md"
+      ],
+      "verified": "e0d6b58590ac81a7",
+      "codeHash": "e0d6b58590ac81a7",
+      "aliases": [
+        "R3"
+      ],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/A-product-in-stock-needs-a-description.md",
+      "folder": "rules",
+      "id": "BR-PRODUCTS-014",
+      "title": "A product in stock needs a description",
+      "summary": "A product with stock above zero will need a description.",
+      "tags": [
+        "products",
+        "description",
+        "stock"
+      ],
+      "code": [
+        "srv/annotations/Products.cds",
+        "app/products/annotations/Products.cds",
+        "srv/lib/products-import.js",
+        "_i18n/messages.properties",
+        "_i18n/messages_ru.properties"
+      ],
+      "messages": [
+        "PRODUCTS_DESCRIPTION_REQUIRED_IN_STOCK"
+      ],
+      "elements": [
+        "Products.description",
+        "Products.stock"
+      ],
+      "status": "planned",
+      "sources": [
+        "docs/decisions/ADR-0028-validation-toolkit.md"
+      ],
+      "verified": "e5c192f21561f408",
+      "codeHash": "e5c192f21561f408",
+      "aliases": [
+        "R6"
+      ],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/A-product-is-created-and-changed-through-a-draft.md",
+      "folder": "rules",
+      "id": "BR-PRODUCTS-002",
+      "title": "A product is created and changed through a draft",
+      "summary": "New and changed products are first kept as a private draft that is checked at Save, and a draft locks its product for other users and is marked in the list.",
+      "tags": [
+        "products",
+        "draft",
+        "locking"
+      ],
+      "code": [
+        "srv/catalog-service.cds",
+        "app/products/annotations/Products.cds"
+      ],
+      "messages": [],
+      "elements": [],
+      "status": "active",
+      "sources": [
+        "docs/decisions/ADR-0012-products-draft-editing.md",
+        "docs/features/products-draft-edit/SUMMARY.md",
+        "docs/decisions/ADR-0015-list-report-draft-marker.md",
+        "docs/features/products-draft-marker/SUMMARY.md"
+      ],
+      "verified": "1d1f813ca4b00860",
+      "codeHash": "1d1f813ca4b00860",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/A-product-name-has-at-least-three-characters.md",
+      "folder": "rules",
+      "id": "BR-PRODUCTS-009",
+      "title": "A product name has at least three characters",
+      "summary": "A product name will need at least three characters once leading and trailing spaces are removed.",
+      "tags": [
+        "products",
+        "name",
+        "format"
+      ],
+      "code": [
+        "srv/annotations/Products.cds",
+        "_i18n/messages.properties",
+        "_i18n/messages_ru.properties"
+      ],
+      "messages": [
+        "PRODUCTS_NAME_TOO_SHORT"
+      ],
+      "elements": [
+        "Products.name"
+      ],
+      "status": "planned",
+      "sources": [
+        "docs/decisions/ADR-0028-validation-toolkit.md"
+      ],
+      "verified": "e0d6b58590ac81a7",
+      "codeHash": "e0d6b58590ac81a7",
+      "aliases": [
+        "R1"
+      ],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/A-product-name-is-unique-in-the-catalog.md",
+      "folder": "rules",
+      "id": "BR-PRODUCTS-010",
+      "title": "A product name is unique in the catalog",
+      "summary": "A product name will have to be new in the catalog, ignoring capital letters and spaces at both ends.",
+      "tags": [
+        "products",
+        "name",
+        "unique"
+      ],
+      "code": [
+        "srv/annotations/Products.cds",
+        "db/schema.cds",
+        "_i18n/messages.properties",
+        "_i18n/messages_ru.properties"
+      ],
+      "messages": [
+        "PRODUCTS_NAME_DUPLICATE"
+      ],
+      "elements": [
+        "Products.name"
+      ],
+      "status": "planned",
+      "sources": [
+        "docs/decisions/ADR-0028-validation-toolkit.md"
+      ],
+      "verified": "c45d03ff2a141221",
+      "codeHash": "c45d03ff2a141221",
+      "aliases": [
+        "R2"
+      ],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/A-product-needs-a-name-price-currency-stock-category-and-subcategory.md",
+      "folder": "rules",
+      "id": "BR-PRODUCTS-003",
+      "title": "A product needs a name, price, currency, stock, category and subcategory",
+      "summary": "A product cannot be saved while its name, price, currency, stock, category or subcategory is empty.",
+      "tags": [
+        "products",
+        "mandatory"
+      ],
+      "code": [
+        "srv/annotations/Products.cds"
+      ],
+      "messages": [],
+      "elements": [
+        "Products.name",
+        "Products.price",
+        "Products.currency",
+        "Products.stock",
+        "Products.category",
+        "Products.subcategory"
+      ],
+      "status": "active",
+      "sources": [
+        "docs/decisions/ADR-0004-annotation-split.md",
+        "docs/features/products-subcategory-cascade/SUMMARY.md"
+      ],
+      "verified": "dbca884ae8598da1",
+      "codeHash": "dbca884ae8598da1",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/A-subcategory-change-must-not-leave-details-that-do-not-fit.md",
+      "folder": "rules",
+      "id": "BR-PRODUCTS-008",
+      "title": "A subcategory change must not leave details that do not fit",
+      "summary": "A product is never stored with detail rows for attributes its subcategory does not offer; a draft drops them with a warning and a direct write is refused.",
+      "tags": [
+        "products",
+        "subcategory",
+        "details"
+      ],
+      "code": [
+        "srv/annotations/Products.cds",
+        "srv/catalog-service.js"
+      ],
+      "messages": [
+        "PRODUCTS_SUBCATEGORY_HAS_FOREIGN_DETAILS"
+      ],
+      "elements": [
+        "Products.subcategory"
+      ],
+      "status": "active",
+      "sources": [
+        "docs/decisions/ADR-0026-product-details-composition.md",
+        "docs/decisions/ADR-0027-typed-product-details-form.md",
+        "docs/features/products-details-section/SUMMARY.md"
+      ],
+      "verified": "dfab20cb0972ed9f",
+      "codeHash": "dfab20cb0972ed9f",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/A-value-of-a-multi-choice-detail-is-selected-once-and-belongs-to-its-list.md",
+      "folder": "rules",
+      "id": "BR-DETAILS-006",
+      "title": "A value of a multi-choice detail is selected once and belongs to its list",
+      "summary": "A several-choice row holds each chosen value once, every chosen value is required and belongs to the attribute's list.",
+      "tags": [
+        "products",
+        "details",
+        "selections",
+        "list"
+      ],
+      "code": [
+        "srv/annotations/ProductDetails.cds"
+      ],
+      "messages": [
+        "PRODUCTS_DETAIL_SELECTION_DUPLICATE"
+      ],
+      "elements": [
+        "ProductDetailSelections.value"
+      ],
+      "status": "active",
+      "sources": [
+        "docs/decisions/ADR-0027-typed-product-details-form.md",
+        "docs/features/products-details-section/SUMMARY.md"
+      ],
+      "verified": "67cd0aade310debd",
+      "codeHash": "67cd0aade310debd",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/An-attribute-is-used-once-per-product-and-belongs-to-the-subcategory.md",
+      "folder": "rules",
+      "id": "BR-DETAILS-002",
+      "title": "An attribute is used once per product and belongs to the subcategory",
+      "summary": "A detail row names an attribute that its product's subcategory offers, and a product has at most one row per attribute.",
+      "tags": [
+        "products",
+        "details",
+        "attributes",
+        "mandatory"
+      ],
+      "code": [
+        "srv/annotations/ProductDetails.cds"
+      ],
+      "messages": [
+        "PRODUCTS_DETAIL_ATTRIBUTE_NOT_ASSIGNED",
+        "PRODUCTS_DETAIL_ATTRIBUTE_DUPLICATE"
+      ],
+      "elements": [
+        "ProductDetails.attribute"
+      ],
+      "status": "active",
+      "sources": [
+        "docs/decisions/ADR-0026-product-details-composition.md",
+        "docs/features/products-details-section/SUMMARY.md"
+      ],
+      "verified": "67cd0aade310debd",
+      "codeHash": "67cd0aade310debd",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/An-image-address-uses-https-and-has-no-spaces.md",
+      "folder": "rules",
+      "id": "BR-PRODUCTS-013",
+      "title": "An image address uses https and has no spaces",
+      "summary": "The image address of a product will have to start with https and contain no spaces.",
+      "tags": [
+        "products",
+        "image",
+        "format"
+      ],
+      "code": [
+        "srv/annotations/Products.cds",
+        "_i18n/messages.properties",
+        "_i18n/messages_ru.properties"
+      ],
+      "messages": [
+        "PRODUCTS_IMAGE_URL_HTTPS"
+      ],
+      "elements": [
+        "Products.imageUrl"
+      ],
+      "status": "planned",
+      "sources": [
+        "docs/decisions/ADR-0028-validation-toolkit.md"
+      ],
+      "verified": "e0d6b58590ac81a7",
+      "codeHash": "e0d6b58590ac81a7",
+      "aliases": [
+        "R5"
+      ],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/An-import-creates-all-products-or-none.md",
+      "folder": "rules",
+      "id": "BR-IMPORT-001",
+      "title": "An import creates all products or none",
+      "summary": "An Excel import writes every row as an active product, or writes nothing and lists every problem of the file at once.",
+      "tags": [
+        "import",
+        "excel",
+        "products"
+      ],
+      "code": [
+        "srv/catalog-service.js",
+        "srv/lib/products-import.js"
+      ],
+      "messages": [
+        "PRODUCTS_IMPORT_NOTHING_IMPORTED",
+        "PRODUCTS_IMPORT_DONE"
+      ],
+      "elements": [],
+      "status": "active",
+      "sources": [
+        "docs/decisions/ADR-0021-products-excel-import.md",
+        "docs/features/products-excel-upload/SUMMARY.md"
+      ],
+      "verified": "5ac44903751a96d7",
+      "codeHash": "5ac44903751a96d7",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/An-imported-product-name-must-be-new.md",
+      "folder": "rules",
+      "id": "BR-IMPORT-004",
+      "title": "An imported product name must be new",
+      "summary": "A row is refused when its name equals the name of an active product or of an earlier row of the same file.",
+      "tags": [
+        "import",
+        "excel",
+        "name",
+        "duplicates"
+      ],
+      "code": [
+        "srv/catalog-service.js"
+      ],
+      "messages": [
+        "PRODUCTS_IMPORT_DUPLICATE_NAME"
+      ],
+      "elements": [],
+      "status": "active",
+      "sources": [
+        "docs/decisions/ADR-0021-products-excel-import.md",
+        "docs/features/products-excel-upload/SUMMARY.md"
+      ],
+      "verified": "55aea3974a21e469",
+      "codeHash": "55aea3974a21e469",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/Battery-life-is-available-only-for-a-wireless-device.md",
+      "folder": "rules",
+      "id": "BR-DETAILS-010",
+      "title": "Battery life is available only for a wireless device",
+      "summary": "The battery life of a product will be enabled only while the product has a wireless connection value selected.",
+      "tags": [
+        "products",
+        "details",
+        "dependent",
+        "control"
+      ],
+      "code": [
+        "srv/annotations/ProductDetails.cds",
+        "db/schema.cds",
+        "app/products/webapp/ext/fragment/DetailsForm.js",
+        "_i18n/messages.properties",
+        "_i18n/messages_ru.properties"
+      ],
+      "messages": [
+        "PRODUCTS_DETAIL_VALUE_NOT_ENABLED"
+      ],
+      "elements": [
+        "ProductDetails.numberValue"
+      ],
+      "status": "planned",
+      "sources": [
+        "docs/decisions/ADR-0028-validation-toolkit.md"
+      ],
+      "verified": "19aaf72ce352aa0d",
+      "codeHash": "19aaf72ce352aa0d",
+      "aliases": [
+        "R12"
+      ],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/Category-subcategory-and-currency-must-exist.md",
+      "folder": "rules",
+      "id": "BR-PRODUCTS-005",
+      "title": "Category, subcategory and currency must exist",
+      "summary": "A product can only name a category, a subcategory and a currency that exist in the catalog's lists.",
+      "tags": [
+        "products",
+        "category",
+        "subcategory",
+        "currency",
+        "code-list"
+      ],
+      "code": [
+        "srv/annotations/Products.cds"
+      ],
+      "messages": [],
+      "elements": [
+        "Products.category",
+        "Products.subcategory",
+        "Products.currency"
+      ],
+      "status": "active",
+      "sources": [
+        "docs/features/categories-code-list/SUMMARY.md",
+        "docs/decisions/ADR-0010-code-list-codes.md",
+        "docs/features/products-subcategories/SUMMARY.md",
+        "docs/features/catalog-hygiene/SUMMARY.md"
+      ],
+      "verified": "dbca884ae8598da1",
+      "codeHash": "dbca884ae8598da1",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/Changing-the-category-clears-a-subcategory-that-no-longer-fits.md",
+      "folder": "rules",
+      "id": "BR-PRODUCTS-007",
+      "title": "Changing the category clears a subcategory that no longer fits",
+      "summary": "When the category of a draft changes, a subcategory that belongs to the old category is cleared at once and without a message.",
+      "tags": [
+        "products",
+        "category",
+        "subcategory",
+        "draft"
+      ],
+      "code": [
+        "srv/catalog-service.js",
+        "app/products/annotations/Products.cds"
+      ],
+      "messages": [],
+      "elements": [
+        "Products.category",
+        "Products.subcategory"
+      ],
+      "status": "active",
+      "sources": [
+        "docs/decisions/ADR-0024-dependent-value-help.md",
+        "docs/features/products-subcategories/SUMMARY.md",
+        "docs/features/products-subcategory-cascade/SUMMARY.md"
+      ],
+      "verified": "f73bc4bb84eb2fde",
+      "codeHash": "f73bc4bb84eb2fde",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/Code-lists-are-readable-by-every-signed-in-user.md",
+      "folder": "rules",
+      "id": "BR-ACCESS-003",
+      "title": "Code lists are readable by every signed-in user",
+      "summary": "Categories, subcategories, currencies and the other fixed lists are open to reading for any signed-in user, and no role changes them.",
+      "tags": [
+        "access",
+        "code-list",
+        "read-only"
+      ],
+      "code": [
+        "srv/catalog-service.cds"
+      ],
+      "messages": [],
+      "elements": [],
+      "status": "active",
+      "sources": [
+        "docs/decisions/ADR-0013-catalog-authorization.md",
+        "docs/features/catalog-authorization/SUMMARY.md",
+        "docs/decisions/ADR-0010-code-list-codes.md"
+      ],
+      "verified": "83c836a73a96ffd3",
+      "codeHash": "83c836a73a96ffd3",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/Detail-rows-follow-the-attributes-of-the-subcategory.md",
+      "folder": "rules",
+      "id": "BR-DETAILS-001",
+      "title": "Detail rows follow the attributes of the subcategory",
+      "summary": "A draft keeps one detail row per attribute of the product's subcategory and tells the user which filled values were dropped when the subcategory changes.",
+      "tags": [
+        "products",
+        "details",
+        "subcategory",
+        "draft"
+      ],
+      "code": [
+        "srv/catalog-service.js",
+        "srv/annotations/ProductDetails.cds"
+      ],
+      "messages": [
+        "PRODUCTS_DETAILS_VALUES_REMOVED"
+      ],
+      "elements": [],
+      "status": "active",
+      "sources": [
+        "docs/decisions/ADR-0027-typed-product-details-form.md",
+        "docs/features/products-details-section/SUMMARY.md"
+      ],
+      "verified": "2e2567da9094caa2",
+      "codeHash": "2e2567da9094caa2",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/Every-imported-row-follows-the-rules-of-a-product.md",
+      "folder": "rules",
+      "id": "BR-IMPORT-005",
+      "title": "Every imported row follows the rules of a product",
+      "summary": "Each row is written through the same checks as any product, and a row that breaks one is reported with its row number, column and reason.",
+      "tags": [
+        "import",
+        "excel",
+        "validation",
+        "products"
+      ],
+      "code": [
+        "srv/catalog-service.js",
+        "srv/lib/products-import.js"
+      ],
+      "messages": [
+        "PRODUCTS_IMPORT_ROW_INVALID"
+      ],
+      "elements": [],
+      "status": "active",
+      "sources": [
+        "docs/decisions/ADR-0021-products-excel-import.md",
+        "docs/features/products-excel-upload/SUMMARY.md",
+        "docs/features/products-subcategory-cascade/SUMMARY.md"
+      ],
+      "verified": "5ac44903751a96d7",
+      "codeHash": "5ac44903751a96d7",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/Memory-is-a-power-of-two.md",
+      "folder": "rules",
+      "id": "BR-DETAILS-011",
+      "title": "Memory is a power of two",
+      "summary": "The memory of a laptop will have to be a power of two.",
+      "tags": [
+        "products",
+        "details",
+        "number",
+        "laptops"
+      ],
+      "code": [
+        "srv/annotations/ProductDetails.cds",
+        "_i18n/messages.properties",
+        "_i18n/messages_ru.properties"
+      ],
+      "messages": [
+        "PRODUCTS_DETAIL_VALUE_NOT_POWER_OF_TWO"
+      ],
+      "elements": [
+        "ProductDetails.numberValue"
+      ],
+      "status": "planned",
+      "sources": [
+        "docs/decisions/ADR-0028-validation-toolkit.md"
+      ],
+      "verified": "622516bc0195056f",
+      "codeHash": "622516bc0195056f",
+      "aliases": [
+        "R13"
+      ],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/Only-signed-in-users-reach-the-catalog.md",
+      "folder": "rules",
+      "id": "BR-ACCESS-001",
+      "title": "Only signed-in users reach the catalog",
+      "summary": "Every request to the catalog, including reading and the service description, needs a signed-in user.",
+      "tags": [
+        "access",
+        "authentication"
+      ],
+      "code": [
+        "srv/catalog-service.cds"
+      ],
+      "messages": [],
+      "elements": [],
+      "status": "active",
+      "sources": [
+        "docs/decisions/ADR-0013-catalog-authorization.md",
+        "docs/features/catalog-authorization/SUMMARY.md"
+      ],
+      "verified": "83c836a73a96ffd3",
+      "codeHash": "83c836a73a96ffd3",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/Price-stock-and-rating-stay-within-their-bounds.md",
+      "folder": "rules",
+      "id": "BR-PRODUCTS-004",
+      "title": "Price, stock and rating stay within their bounds",
+      "summary": "The price is from 0 to 99,999,999.99, the stock from 0 to 1,000,000 and the rating from 0 to 5.",
+      "tags": [
+        "products",
+        "price",
+        "stock",
+        "rating",
+        "range"
+      ],
+      "code": [
+        "srv/annotations/Products.cds"
+      ],
+      "messages": [],
+      "elements": [
+        "Products.price",
+        "Products.stock",
+        "Products.rating"
+      ],
+      "status": "active",
+      "sources": [
+        "docs/decisions/ADR-0004-annotation-split.md",
+        "docs/features/products-rating-column/SUMMARY.md",
+        "docs/features/catalog-hygiene/SUMMARY.md"
+      ],
+      "verified": "dbca884ae8598da1",
+      "codeHash": "dbca884ae8598da1",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/Storage-is-not-below-memory.md",
+      "folder": "rules",
+      "id": "BR-DETAILS-009",
+      "title": "Storage is not below memory",
+      "summary": "The storage of a laptop will not be allowed to be below its memory.",
+      "tags": [
+        "products",
+        "details",
+        "number",
+        "laptops"
+      ],
+      "code": [
+        "srv/annotations/ProductDetails.cds",
+        "db/schema.cds",
+        "_i18n/messages.properties",
+        "_i18n/messages_ru.properties"
+      ],
+      "messages": [
+        "PRODUCTS_DETAIL_VALUE_BELOW_OTHER"
+      ],
+      "elements": [
+        "ProductDetails.numberValue"
+      ],
+      "status": "planned",
+      "sources": [
+        "docs/decisions/ADR-0028-validation-toolkit.md"
+      ],
+      "verified": "13880a0e9e127e07",
+      "codeHash": "13880a0e9e127e07",
+      "aliases": [
+        "R11"
+      ],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/The-header-row-names-known-columns-once-and-includes-the-mandatory-ones.md",
+      "folder": "rules",
+      "id": "BR-IMPORT-002",
+      "title": "The header row names known columns once and includes the mandatory ones",
+      "summary": "The first row of the workbook may name only the supported columns, each once, and must include name, price, currency, stock, category and subcategory.",
+      "tags": [
+        "import",
+        "excel",
+        "columns"
+      ],
+      "code": [
+        "srv/lib/products-import.js",
+        "_i18n/messages.properties"
+      ],
+      "messages": [
+        "PRODUCTS_IMPORT_UNKNOWN_COLUMN",
+        "PRODUCTS_IMPORT_DUPLICATE_COLUMN",
+        "PRODUCTS_IMPORT_MISSING_COLUMN"
+      ],
+      "elements": [],
+      "status": "active",
+      "sources": [
+        "docs/decisions/ADR-0021-products-excel-import.md",
+        "docs/features/products-excel-upload/SUMMARY.md",
+        "docs/features/products-subcategory-cascade/SUMMARY.md"
+      ],
+      "verified": "9de3a1665a6a7215",
+      "codeHash": "9de3a1665a6a7215",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/The-import-file-is-an-xlsx-workbook-with-product-rows-within-the-size-limits.md",
+      "folder": "rules",
+      "id": "BR-IMPORT-003",
+      "title": "The import file is an xlsx workbook with product rows within the size limits",
+      "summary": "The file must be a readable .xlsx workbook with at least one product row, at most 1,000 rows, and not more than 10 MB of unpacked data.",
+      "tags": [
+        "import",
+        "excel",
+        "limits"
+      ],
+      "code": [
+        "srv/lib/products-import.js",
+        "srv/catalog-service.js"
+      ],
+      "messages": [
+        "PRODUCTS_IMPORT_NOT_XLSX",
+        "PRODUCTS_IMPORT_EMPTY",
+        "PRODUCTS_IMPORT_TOO_MANY_ROWS",
+        "PRODUCTS_IMPORT_TOO_LARGE"
+      ],
+      "elements": [],
+      "status": "active",
+      "sources": [
+        "docs/decisions/ADR-0021-products-excel-import.md",
+        "docs/features/products-excel-upload/SUMMARY.md"
+      ],
+      "verified": "5ac44903751a96d7",
+      "codeHash": "5ac44903751a96d7",
       "aliases": [],
       "adr": []
     },
@@ -54,12 +1839,2152 @@
       "codeHash": "5ff680ee203a3f24",
       "aliases": [],
       "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/The-subcategory-field-stays-disabled-until-a-category-is-chosen.md",
+      "folder": "rules",
+      "id": "BR-PRODUCTS-006",
+      "title": "The subcategory field stays disabled until a category is chosen",
+      "summary": "On the product form the Subcategory field cannot be used until a category is chosen, and it is marked required from then on.",
+      "tags": [
+        "products",
+        "subcategory",
+        "category",
+        "field-control"
+      ],
+      "code": [
+        "app/products/annotations/Products.cds"
+      ],
+      "messages": [],
+      "elements": [
+        "Products.subcategory"
+      ],
+      "status": "active",
+      "sources": [
+        "docs/decisions/ADR-0025-dynamic-field-control.md",
+        "docs/features/products-subcategory-cascade/SUMMARY.md"
+      ],
+      "verified": "d2045634c236e2ab",
+      "codeHash": "d2045634c236e2ab",
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/Viewers-read-editors-change.md",
+      "folder": "rules",
+      "id": "BR-ACCESS-002",
+      "title": "Viewers read, editors change",
+      "summary": "A viewer only reads products, an editor also creates, changes, deletes and imports them, and the screen hides the buttons a viewer cannot use.",
+      "tags": [
+        "access",
+        "roles",
+        "authorization"
+      ],
+      "code": [
+        "srv/catalog-service.cds",
+        "srv/catalog-service.js",
+        "app/products/annotations/Products.cds"
+      ],
+      "messages": [],
+      "elements": [],
+      "status": "active",
+      "sources": [
+        "docs/decisions/ADR-0013-catalog-authorization.md",
+        "docs/features/catalog-authorization/SUMMARY.md",
+        "docs/features/catalog-hygiene/SUMMARY.md",
+        "docs/decisions/ADR-0021-products-excel-import.md",
+        "docs/features/products-excel-upload/SUMMARY.md"
+      ],
+      "verified": "6b8ba77912379e2b",
+      "codeHash": "6b8ba77912379e2b",
+      "aliases": [],
+      "adr": []
     }
   ],
   "edges": [
     {
+      "from": "docs/wiki/Glossary.md",
+      "to": "docs/wiki/how-to/Edit-save-keep-or-discard-a-draft.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Glossary.md",
+      "to": "docs/wiki/domain/Detail-attributes.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Glossary.md",
+      "to": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Glossary.md",
+      "to": "docs/wiki/domain/Categories.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Glossary.md",
+      "to": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Glossary.md",
+      "to": "docs/wiki/how-to/Who-may-do-what.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Glossary.md",
+      "to": "docs/wiki/domain/Product-details.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Glossary.md",
+      "to": "docs/wiki/domain/Detail-value-types.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Glossary.md",
+      "to": "docs/wiki/domain/Detail-list-values.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Glossary.md",
+      "to": "docs/wiki/domain/Product-detail-selections.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Glossary.md",
+      "to": "docs/wiki/how-to/Create-a-product-through-a-draft.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Glossary.md",
+      "to": "docs/wiki/domain/Products.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Glossary.md",
+      "to": "docs/wiki/rules/The-subcategory-belongs-to-the-products-category.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/Glossary.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/how-to/Find-a-product.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/how-to/Create-a-product-through-a-draft.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/how-to/Edit-save-keep-or-discard-a-draft.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/how-to/Import-products-from-Excel.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/how-to/Who-may-do-what.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/decisions/Pipeline-decisions.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/decisions/The-catalog-data-follows-one-set-of-modeling-rules.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/decisions/Code-lists-use-stable-upper-case-codes.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/decisions/Fixed-lists-of-values-are-chosen-from-a-dropdown-showing-names.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/decisions/Products-are-edited-through-drafts.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/decisions/The-catalog-is-open-to-signed-in-users-with-a-viewer-or-editor-role.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/decisions/A-draft-or-locked-product-is-marked-in-the-list.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/decisions/A-custom-filter-field-replaces-the-standard-field-of-its-property.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/decisions/Products-are-imported-from-an-Excel-workbook.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/decisions/A-dependent-field-offers-only-the-values-of-its-parent-field.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/decisions/A-field-is-disabled-until-the-field-it-depends-on-is-filled.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/decisions/Product-details-are-rows-of-reusable-attributes.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/decisions/Product-details-are-typed-and-shown-as-a-generated-form.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/decisions/Validation-rules-follow-one-toolkit-and-prevent-before-they-refuse.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/decisions/Documentation-descriptions-live-in-doc-comments-and-the-API-document-is-generated.md",
+      "type": "link"
+    },
+    {
       "from": "docs/wiki/Home.md",
       "to": "docs/wiki/rules/The-subcategory-belongs-to-the-products-category.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/Only-signed-in-users-reach-the-catalog.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/Viewers-read-editors-change.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/Code-lists-are-readable-by-every-signed-in-user.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/A-product-is-created-and-changed-through-a-draft.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/A-product-needs-a-name-price-currency-stock-category-and-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/Price-stock-and-rating-stay-within-their-bounds.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/Category-subcategory-and-currency-must-exist.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/The-subcategory-field-stays-disabled-until-a-category-is-chosen.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/Changing-the-category-clears-a-subcategory-that-no-longer-fits.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/A-subcategory-change-must-not-leave-details-that-do-not-fit.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/Detail-rows-follow-the-attributes-of-the-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/An-attribute-is-used-once-per-product-and-belongs-to-the-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/A-detail-value-matches-the-value-type-of-its-attribute.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/A-number-detail-stays-within-its-bounds-and-is-whole-when-required.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/A-list-detail-value-belongs-to-the-list-of-its-attribute.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/A-value-of-a-multi-choice-detail-is-selected-once-and-belongs-to-its-list.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/An-import-creates-all-products-or-none.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/The-header-row-names-known-columns-once-and-includes-the-mandatory-ones.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/The-import-file-is-an-xlsx-workbook-with-product-rows-within-the-size-limits.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/An-imported-product-name-must-be-new.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/Every-imported-row-follows-the-rules-of-a-product.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/A-product-name-has-at-least-three-characters.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/A-product-name-is-unique-in-the-catalog.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/A-price-is-above-zero.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/A-price-in-a-currency-without-minor-units-has-no-decimals.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/An-image-address-uses-https-and-has-no-spaces.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/A-product-in-stock-needs-a-description.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/A-detail-that-the-subcategory-requires-must-be-filled.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/A-detail-number-stays-within-the-bounds-of-its-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/Storage-is-not-below-memory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/Battery-life-is-available-only-for-a-wireless-device.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/Memory-is-a-power-of-two.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/A-custom-filter-field-replaces-the-standard-field-of-its-property.md",
+      "to": "docs/wiki/how-to/Find-a-product.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/A-dependent-field-offers-only-the-values-of-its-parent-field.md",
+      "to": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/A-dependent-field-offers-only-the-values-of-its-parent-field.md",
+      "to": "docs/wiki/rules/The-subcategory-belongs-to-the-products-category.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/A-dependent-field-offers-only-the-values-of-its-parent-field.md",
+      "to": "docs/wiki/rules/Changing-the-category-clears-a-subcategory-that-no-longer-fits.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/A-dependent-field-offers-only-the-values-of-its-parent-field.md",
+      "to": "docs/wiki/decisions/A-field-is-disabled-until-the-field-it-depends-on-is-filled.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/A-dependent-field-offers-only-the-values-of-its-parent-field.md",
+      "to": "docs/wiki/domain/Categories.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/A-dependent-field-offers-only-the-values-of-its-parent-field.md",
+      "to": "docs/wiki/domain/Subcategories.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/A-draft-or-locked-product-is-marked-in-the-list.md",
+      "to": "docs/wiki/how-to/Edit-save-keep-or-discard-a-draft.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/A-draft-or-locked-product-is-marked-in-the-list.md",
+      "to": "docs/wiki/rules/A-product-name-is-unique-in-the-catalog.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/A-draft-or-locked-product-is-marked-in-the-list.md",
+      "to": "docs/wiki/decisions/Products-are-edited-through-drafts.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/A-draft-or-locked-product-is-marked-in-the-list.md",
+      "to": "docs/wiki/rules/A-product-is-created-and-changed-through-a-draft.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/A-field-is-disabled-until-the-field-it-depends-on-is-filled.md",
+      "to": "docs/wiki/rules/The-subcategory-field-stays-disabled-until-a-category-is-chosen.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/A-field-is-disabled-until-the-field-it-depends-on-is-filled.md",
+      "to": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/A-field-is-disabled-until-the-field-it-depends-on-is-filled.md",
+      "to": "docs/wiki/rules/A-product-needs-a-name-price-currency-stock-category-and-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/A-field-is-disabled-until-the-field-it-depends-on-is-filled.md",
+      "to": "docs/wiki/decisions/A-dependent-field-offers-only-the-values-of-its-parent-field.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Code-lists-use-stable-upper-case-codes.md",
+      "to": "docs/wiki/how-to/Import-products-from-Excel.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Code-lists-use-stable-upper-case-codes.md",
+      "to": "docs/wiki/domain/Categories.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Code-lists-use-stable-upper-case-codes.md",
+      "to": "docs/wiki/rules/Category-subcategory-and-currency-must-exist.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Documentation-descriptions-live-in-doc-comments-and-the-API-document-is-generated.md",
+      "to": "docs/wiki/decisions/Pipeline-decisions.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Fixed-lists-of-values-are-chosen-from-a-dropdown-showing-names.md",
+      "to": "docs/wiki/domain/Categories.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Fixed-lists-of-values-are-chosen-from-a-dropdown-showing-names.md",
+      "to": "docs/wiki/decisions/A-dependent-field-offers-only-the-values-of-its-parent-field.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Fixed-lists-of-values-are-chosen-from-a-dropdown-showing-names.md",
+      "to": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Pipeline-decisions.md",
+      "to": "docs/wiki/Home.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Product-details-are-rows-of-reusable-attributes.md",
+      "to": "docs/wiki/decisions/Products-are-edited-through-drafts.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Product-details-are-rows-of-reusable-attributes.md",
+      "to": "docs/wiki/decisions/Product-details-are-typed-and-shown-as-a-generated-form.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Product-details-are-rows-of-reusable-attributes.md",
+      "to": "docs/wiki/rules/An-attribute-is-used-once-per-product-and-belongs-to-the-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Product-details-are-rows-of-reusable-attributes.md",
+      "to": "docs/wiki/rules/A-subcategory-change-must-not-leave-details-that-do-not-fit.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Product-details-are-rows-of-reusable-attributes.md",
+      "to": "docs/wiki/rules/A-list-detail-value-belongs-to-the-list-of-its-attribute.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Product-details-are-rows-of-reusable-attributes.md",
+      "to": "docs/wiki/domain/Product-details.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Product-details-are-rows-of-reusable-attributes.md",
+      "to": "docs/wiki/domain/Detail-attributes.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Product-details-are-rows-of-reusable-attributes.md",
+      "to": "docs/wiki/domain/Subcategory-attributes.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Product-details-are-rows-of-reusable-attributes.md",
+      "to": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Product-details-are-typed-and-shown-as-a-generated-form.md",
+      "to": "docs/wiki/rules/Detail-rows-follow-the-attributes-of-the-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Product-details-are-typed-and-shown-as-a-generated-form.md",
+      "to": "docs/wiki/rules/A-subcategory-change-must-not-leave-details-that-do-not-fit.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Product-details-are-typed-and-shown-as-a-generated-form.md",
+      "to": "docs/wiki/rules/A-detail-value-matches-the-value-type-of-its-attribute.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Product-details-are-typed-and-shown-as-a-generated-form.md",
+      "to": "docs/wiki/rules/A-number-detail-stays-within-its-bounds-and-is-whole-when-required.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Product-details-are-typed-and-shown-as-a-generated-form.md",
+      "to": "docs/wiki/rules/A-list-detail-value-belongs-to-the-list-of-its-attribute.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Product-details-are-typed-and-shown-as-a-generated-form.md",
+      "to": "docs/wiki/rules/A-value-of-a-multi-choice-detail-is-selected-once-and-belongs-to-its-list.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Product-details-are-typed-and-shown-as-a-generated-form.md",
+      "to": "docs/wiki/domain/Detail-value-types.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Product-details-are-typed-and-shown-as-a-generated-form.md",
+      "to": "docs/wiki/domain/Detail-list-values.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Product-details-are-typed-and-shown-as-a-generated-form.md",
+      "to": "docs/wiki/domain/Product-detail-selections.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Product-details-are-typed-and-shown-as-a-generated-form.md",
+      "to": "docs/wiki/domain/Product-details.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Product-details-are-typed-and-shown-as-a-generated-form.md",
+      "to": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Product-details-are-typed-and-shown-as-a-generated-form.md",
+      "to": "docs/wiki/decisions/Product-details-are-rows-of-reusable-attributes.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Products-are-edited-through-drafts.md",
+      "to": "docs/wiki/rules/A-product-is-created-and-changed-through-a-draft.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Products-are-edited-through-drafts.md",
+      "to": "docs/wiki/decisions/A-draft-or-locked-product-is-marked-in-the-list.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Products-are-edited-through-drafts.md",
+      "to": "docs/wiki/how-to/Create-a-product-through-a-draft.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Products-are-edited-through-drafts.md",
+      "to": "docs/wiki/how-to/Edit-save-keep-or-discard-a-draft.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Products-are-imported-from-an-Excel-workbook.md",
+      "to": "docs/wiki/how-to/Import-products-from-Excel.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Products-are-imported-from-an-Excel-workbook.md",
+      "to": "docs/wiki/rules/An-import-creates-all-products-or-none.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Products-are-imported-from-an-Excel-workbook.md",
+      "to": "docs/wiki/rules/The-header-row-names-known-columns-once-and-includes-the-mandatory-ones.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Products-are-imported-from-an-Excel-workbook.md",
+      "to": "docs/wiki/rules/The-import-file-is-an-xlsx-workbook-with-product-rows-within-the-size-limits.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Products-are-imported-from-an-Excel-workbook.md",
+      "to": "docs/wiki/rules/Every-imported-row-follows-the-rules-of-a-product.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Products-are-imported-from-an-Excel-workbook.md",
+      "to": "docs/wiki/rules/An-imported-product-name-must-be-new.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Products-are-imported-from-an-Excel-workbook.md",
+      "to": "docs/wiki/rules/Viewers-read-editors-change.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/The-catalog-data-follows-one-set-of-modeling-rules.md",
+      "to": "docs/wiki/domain/Categories.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/The-catalog-data-follows-one-set-of-modeling-rules.md",
+      "to": "docs/wiki/domain/Subcategories.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/The-catalog-data-follows-one-set-of-modeling-rules.md",
+      "to": "docs/wiki/domain/Products.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/The-catalog-is-open-to-signed-in-users-with-a-viewer-or-editor-role.md",
+      "to": "docs/wiki/rules/Only-signed-in-users-reach-the-catalog.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/The-catalog-is-open-to-signed-in-users-with-a-viewer-or-editor-role.md",
+      "to": "docs/wiki/rules/Viewers-read-editors-change.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/The-catalog-is-open-to-signed-in-users-with-a-viewer-or-editor-role.md",
+      "to": "docs/wiki/rules/Code-lists-are-readable-by-every-signed-in-user.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/The-catalog-is-open-to-signed-in-users-with-a-viewer-or-editor-role.md",
+      "to": "docs/wiki/how-to/Who-may-do-what.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Validation-rules-follow-one-toolkit-and-prevent-before-they-refuse.md",
+      "to": "docs/wiki/rules/A-product-name-has-at-least-three-characters.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Validation-rules-follow-one-toolkit-and-prevent-before-they-refuse.md",
+      "to": "docs/wiki/rules/A-product-name-is-unique-in-the-catalog.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Validation-rules-follow-one-toolkit-and-prevent-before-they-refuse.md",
+      "to": "docs/wiki/rules/A-price-is-above-zero.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Validation-rules-follow-one-toolkit-and-prevent-before-they-refuse.md",
+      "to": "docs/wiki/rules/A-price-in-a-currency-without-minor-units-has-no-decimals.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Validation-rules-follow-one-toolkit-and-prevent-before-they-refuse.md",
+      "to": "docs/wiki/rules/An-image-address-uses-https-and-has-no-spaces.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Validation-rules-follow-one-toolkit-and-prevent-before-they-refuse.md",
+      "to": "docs/wiki/rules/A-product-in-stock-needs-a-description.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Validation-rules-follow-one-toolkit-and-prevent-before-they-refuse.md",
+      "to": "docs/wiki/rules/A-detail-that-the-subcategory-requires-must-be-filled.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Validation-rules-follow-one-toolkit-and-prevent-before-they-refuse.md",
+      "to": "docs/wiki/rules/A-detail-number-stays-within-the-bounds-of-its-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Validation-rules-follow-one-toolkit-and-prevent-before-they-refuse.md",
+      "to": "docs/wiki/rules/Storage-is-not-below-memory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Validation-rules-follow-one-toolkit-and-prevent-before-they-refuse.md",
+      "to": "docs/wiki/rules/Battery-life-is-available-only-for-a-wireless-device.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/decisions/Validation-rules-follow-one-toolkit-and-prevent-before-they-refuse.md",
+      "to": "docs/wiki/rules/Memory-is-a-power-of-two.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Categories.md",
+      "to": "docs/wiki/rules/The-subcategory-belongs-to-the-products-category.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Categories.md",
+      "to": "docs/wiki/rules/Code-lists-are-readable-by-every-signed-in-user.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Categories.md",
+      "to": "docs/wiki/rules/Category-subcategory-and-currency-must-exist.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Categories.md",
+      "to": "docs/wiki/domain/Subcategories.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Categories.md",
+      "to": "docs/wiki/domain/Products.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Categories.md",
+      "to": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Categories.md",
+      "to": "docs/wiki/decisions/Code-lists-use-stable-upper-case-codes.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Categories.md",
+      "to": "docs/wiki/decisions/Fixed-lists-of-values-are-chosen-from-a-dropdown-showing-names.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Detail-attributes.md",
+      "to": "docs/wiki/domain/Detail-value-types.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Detail-attributes.md",
+      "to": "docs/wiki/domain/Subcategory-attributes.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Detail-attributes.md",
+      "to": "docs/wiki/domain/Detail-list-values.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Detail-attributes.md",
+      "to": "docs/wiki/rules/Code-lists-are-readable-by-every-signed-in-user.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Detail-attributes.md",
+      "to": "docs/wiki/rules/A-number-detail-stays-within-its-bounds-and-is-whole-when-required.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Detail-attributes.md",
+      "to": "docs/wiki/rules/Storage-is-not-below-memory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Detail-attributes.md",
+      "to": "docs/wiki/rules/Battery-life-is-available-only-for-a-wireless-device.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Detail-attributes.md",
+      "to": "docs/wiki/rules/Memory-is-a-power-of-two.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Detail-attributes.md",
+      "to": "docs/wiki/domain/Product-details.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Detail-attributes.md",
+      "to": "docs/wiki/Glossary.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Detail-list-values.md",
+      "to": "docs/wiki/domain/Detail-attributes.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Detail-list-values.md",
+      "to": "docs/wiki/rules/A-list-detail-value-belongs-to-the-list-of-its-attribute.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Detail-list-values.md",
+      "to": "docs/wiki/rules/A-value-of-a-multi-choice-detail-is-selected-once-and-belongs-to-its-list.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Detail-list-values.md",
+      "to": "docs/wiki/rules/Battery-life-is-available-only-for-a-wireless-device.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Detail-list-values.md",
+      "to": "docs/wiki/domain/Product-details.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Detail-list-values.md",
+      "to": "docs/wiki/domain/Product-detail-selections.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Detail-list-values.md",
+      "to": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Detail-value-types.md",
+      "to": "docs/wiki/rules/A-detail-value-matches-the-value-type-of-its-attribute.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Detail-value-types.md",
+      "to": "docs/wiki/domain/Detail-attributes.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Detail-value-types.md",
+      "to": "docs/wiki/domain/Product-details.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Detail-value-types.md",
+      "to": "docs/wiki/domain/Product-detail-selections.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Detail-value-types.md",
+      "to": "docs/wiki/decisions/Product-details-are-typed-and-shown-as-a-generated-form.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-detail-selections.md",
+      "to": "docs/wiki/domain/Product-details.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-detail-selections.md",
+      "to": "docs/wiki/domain/Detail-list-values.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-detail-selections.md",
+      "to": "docs/wiki/rules/A-value-of-a-multi-choice-detail-is-selected-once-and-belongs-to-its-list.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-detail-selections.md",
+      "to": "docs/wiki/rules/A-detail-value-matches-the-value-type-of-its-attribute.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-detail-selections.md",
+      "to": "docs/wiki/rules/A-list-detail-value-belongs-to-the-list-of-its-attribute.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-detail-selections.md",
+      "to": "docs/wiki/domain/Detail-value-types.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-detail-selections.md",
+      "to": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-details.md",
+      "to": "docs/wiki/domain/Detail-attributes.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-details.md",
+      "to": "docs/wiki/domain/Detail-value-types.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-details.md",
+      "to": "docs/wiki/domain/Product-detail-selections.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-details.md",
+      "to": "docs/wiki/rules/An-attribute-is-used-once-per-product-and-belongs-to-the-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-details.md",
+      "to": "docs/wiki/rules/A-detail-value-matches-the-value-type-of-its-attribute.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-details.md",
+      "to": "docs/wiki/rules/A-number-detail-stays-within-its-bounds-and-is-whole-when-required.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-details.md",
+      "to": "docs/wiki/rules/A-list-detail-value-belongs-to-the-list-of-its-attribute.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-details.md",
+      "to": "docs/wiki/rules/Detail-rows-follow-the-attributes-of-the-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-details.md",
+      "to": "docs/wiki/rules/A-detail-that-the-subcategory-requires-must-be-filled.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-details.md",
+      "to": "docs/wiki/rules/A-detail-number-stays-within-the-bounds-of-its-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-details.md",
+      "to": "docs/wiki/rules/Storage-is-not-below-memory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-details.md",
+      "to": "docs/wiki/rules/Battery-life-is-available-only-for-a-wireless-device.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-details.md",
+      "to": "docs/wiki/rules/Memory-is-a-power-of-two.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-details.md",
+      "to": "docs/wiki/domain/Products.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-details.md",
+      "to": "docs/wiki/domain/Detail-list-values.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-details.md",
+      "to": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-details.md",
+      "to": "docs/wiki/decisions/Product-details-are-rows-of-reusable-attributes.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Product-details.md",
+      "to": "docs/wiki/decisions/Product-details-are-typed-and-shown-as-a-generated-form.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/how-to/Create-a-product-through-a-draft.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/Glossary.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/domain/Categories.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/domain/Subcategories.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/domain/Product-details.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/rules/The-subcategory-belongs-to-the-products-category.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/rules/A-product-is-created-and-changed-through-a-draft.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/rules/A-product-needs-a-name-price-currency-stock-category-and-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/rules/Price-stock-and-rating-stay-within-their-bounds.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/rules/Category-subcategory-and-currency-must-exist.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/rules/The-subcategory-field-stays-disabled-until-a-category-is-chosen.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/rules/Changing-the-category-clears-a-subcategory-that-no-longer-fits.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/rules/A-subcategory-change-must-not-leave-details-that-do-not-fit.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/rules/Viewers-read-editors-change.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/rules/A-product-name-has-at-least-three-characters.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/rules/A-product-name-is-unique-in-the-catalog.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/rules/A-price-is-above-zero.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/rules/A-price-in-a-currency-without-minor-units-has-no-decimals.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/rules/An-image-address-uses-https-and-has-no-spaces.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/rules/A-product-in-stock-needs-a-description.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/how-to/Find-a-product.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/how-to/Import-products-from-Excel.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/how-to/Who-may-do-what.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/decisions/The-catalog-data-follows-one-set-of-modeling-rules.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Products.md",
+      "to": "docs/wiki/decisions/Products-are-edited-through-drafts.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Subcategories.md",
+      "to": "docs/wiki/rules/The-subcategory-belongs-to-the-products-category.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Subcategories.md",
+      "to": "docs/wiki/rules/A-subcategory-change-must-not-leave-details-that-do-not-fit.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Subcategories.md",
+      "to": "docs/wiki/rules/Changing-the-category-clears-a-subcategory-that-no-longer-fits.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Subcategories.md",
+      "to": "docs/wiki/rules/Code-lists-are-readable-by-every-signed-in-user.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Subcategories.md",
+      "to": "docs/wiki/domain/Categories.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Subcategories.md",
+      "to": "docs/wiki/domain/Products.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Subcategories.md",
+      "to": "docs/wiki/domain/Subcategory-attributes.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Subcategories.md",
+      "to": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Subcategories.md",
+      "to": "docs/wiki/decisions/A-dependent-field-offers-only-the-values-of-its-parent-field.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Subcategory-attributes.md",
+      "to": "docs/wiki/domain/Subcategories.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Subcategory-attributes.md",
+      "to": "docs/wiki/domain/Detail-attributes.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Subcategory-attributes.md",
+      "to": "docs/wiki/rules/An-attribute-is-used-once-per-product-and-belongs-to-the-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Subcategory-attributes.md",
+      "to": "docs/wiki/rules/A-detail-that-the-subcategory-requires-must-be-filled.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Subcategory-attributes.md",
+      "to": "docs/wiki/rules/A-detail-number-stays-within-the-bounds-of-its-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Subcategory-attributes.md",
+      "to": "docs/wiki/domain/Product-details.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/domain/Subcategory-attributes.md",
+      "to": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "to": "docs/wiki/how-to/Edit-save-keep-or-discard-a-draft.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "to": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "to": "docs/wiki/Glossary.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "to": "docs/wiki/domain/Categories.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "to": "docs/wiki/domain/Subcategories.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "to": "docs/wiki/rules/The-subcategory-belongs-to-the-products-category.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "to": "docs/wiki/rules/The-subcategory-field-stays-disabled-until-a-category-is-chosen.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "to": "docs/wiki/rules/Changing-the-category-clears-a-subcategory-that-no-longer-fits.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "to": "docs/wiki/rules/Category-subcategory-and-currency-must-exist.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "to": "docs/wiki/rules/A-subcategory-change-must-not-leave-details-that-do-not-fit.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "to": "docs/wiki/decisions/A-dependent-field-offers-only-the-values-of-its-parent-field.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "to": "docs/wiki/decisions/Fixed-lists-of-values-are-chosen-from-a-dropdown-showing-names.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "to": "docs/wiki/decisions/A-field-is-disabled-until-the-field-it-depends-on-is-filled.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Create-a-product-through-a-draft.md",
+      "to": "docs/wiki/how-to/Who-may-do-what.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Create-a-product-through-a-draft.md",
+      "to": "docs/wiki/Glossary.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Create-a-product-through-a-draft.md",
+      "to": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Create-a-product-through-a-draft.md",
+      "to": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Create-a-product-through-a-draft.md",
+      "to": "docs/wiki/how-to/Import-products-from-Excel.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Create-a-product-through-a-draft.md",
+      "to": "docs/wiki/rules/The-subcategory-belongs-to-the-products-category.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Create-a-product-through-a-draft.md",
+      "to": "docs/wiki/rules/A-product-is-created-and-changed-through-a-draft.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Create-a-product-through-a-draft.md",
+      "to": "docs/wiki/rules/A-product-needs-a-name-price-currency-stock-category-and-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Create-a-product-through-a-draft.md",
+      "to": "docs/wiki/rules/Price-stock-and-rating-stay-within-their-bounds.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Create-a-product-through-a-draft.md",
+      "to": "docs/wiki/rules/Category-subcategory-and-currency-must-exist.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Create-a-product-through-a-draft.md",
+      "to": "docs/wiki/rules/A-product-name-has-at-least-three-characters.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Create-a-product-through-a-draft.md",
+      "to": "docs/wiki/rules/A-product-name-is-unique-in-the-catalog.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Create-a-product-through-a-draft.md",
+      "to": "docs/wiki/rules/A-price-is-above-zero.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Create-a-product-through-a-draft.md",
+      "to": "docs/wiki/rules/A-price-in-a-currency-without-minor-units-has-no-decimals.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Create-a-product-through-a-draft.md",
+      "to": "docs/wiki/rules/An-image-address-uses-https-and-has-no-spaces.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Create-a-product-through-a-draft.md",
+      "to": "docs/wiki/rules/A-product-in-stock-needs-a-description.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Create-a-product-through-a-draft.md",
+      "to": "docs/wiki/decisions/Products-are-edited-through-drafts.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Edit-save-keep-or-discard-a-draft.md",
+      "to": "docs/wiki/how-to/Who-may-do-what.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Edit-save-keep-or-discard-a-draft.md",
+      "to": "docs/wiki/Glossary.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Edit-save-keep-or-discard-a-draft.md",
+      "to": "docs/wiki/rules/The-subcategory-belongs-to-the-products-category.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Edit-save-keep-or-discard-a-draft.md",
+      "to": "docs/wiki/rules/A-product-is-created-and-changed-through-a-draft.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Edit-save-keep-or-discard-a-draft.md",
+      "to": "docs/wiki/rules/Viewers-read-editors-change.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "to": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "to": "docs/wiki/Glossary.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "to": "docs/wiki/domain/Subcategory-attributes.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "to": "docs/wiki/rules/The-subcategory-belongs-to-the-products-category.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "to": "docs/wiki/rules/A-detail-value-matches-the-value-type-of-its-attribute.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "to": "docs/wiki/rules/A-number-detail-stays-within-its-bounds-and-is-whole-when-required.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "to": "docs/wiki/rules/A-list-detail-value-belongs-to-the-list-of-its-attribute.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "to": "docs/wiki/rules/A-value-of-a-multi-choice-detail-is-selected-once-and-belongs-to-its-list.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "to": "docs/wiki/rules/An-attribute-is-used-once-per-product-and-belongs-to-the-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "to": "docs/wiki/rules/Detail-rows-follow-the-attributes-of-the-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "to": "docs/wiki/rules/A-detail-that-the-subcategory-requires-must-be-filled.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "to": "docs/wiki/rules/A-detail-number-stays-within-the-bounds-of-its-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "to": "docs/wiki/rules/Storage-is-not-below-memory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "to": "docs/wiki/rules/Battery-life-is-available-only-for-a-wireless-device.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "to": "docs/wiki/rules/Memory-is-a-power-of-two.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Find-a-product.md",
+      "to": "docs/wiki/Glossary.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Find-a-product.md",
+      "to": "docs/wiki/domain/Products.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Find-a-product.md",
+      "to": "docs/wiki/rules/The-subcategory-belongs-to-the-products-category.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Find-a-product.md",
+      "to": "docs/wiki/how-to/Who-may-do-what.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Find-a-product.md",
+      "to": "docs/wiki/decisions/A-custom-filter-field-replaces-the-standard-field-of-its-property.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Find-a-product.md",
+      "to": "docs/wiki/decisions/A-draft-or-locked-product-is-marked-in-the-list.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Import-products-from-Excel.md",
+      "to": "docs/wiki/how-to/Who-may-do-what.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Import-products-from-Excel.md",
+      "to": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Import-products-from-Excel.md",
+      "to": "docs/wiki/domain/Products.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Import-products-from-Excel.md",
+      "to": "docs/wiki/rules/The-subcategory-belongs-to-the-products-category.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Import-products-from-Excel.md",
+      "to": "docs/wiki/rules/An-import-creates-all-products-or-none.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Import-products-from-Excel.md",
+      "to": "docs/wiki/rules/The-import-file-is-an-xlsx-workbook-with-product-rows-within-the-size-limits.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Import-products-from-Excel.md",
+      "to": "docs/wiki/rules/The-header-row-names-known-columns-once-and-includes-the-mandatory-ones.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Import-products-from-Excel.md",
+      "to": "docs/wiki/rules/An-imported-product-name-must-be-new.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Import-products-from-Excel.md",
+      "to": "docs/wiki/rules/Every-imported-row-follows-the-rules-of-a-product.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Import-products-from-Excel.md",
+      "to": "docs/wiki/rules/A-price-in-a-currency-without-minor-units-has-no-decimals.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Import-products-from-Excel.md",
+      "to": "docs/wiki/rules/A-product-in-stock-needs-a-description.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Import-products-from-Excel.md",
+      "to": "docs/wiki/decisions/Products-are-imported-from-an-Excel-workbook.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Who-may-do-what.md",
+      "to": "docs/wiki/Glossary.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Who-may-do-what.md",
+      "to": "docs/wiki/how-to/Create-a-product-through-a-draft.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Who-may-do-what.md",
+      "to": "docs/wiki/how-to/Edit-save-keep-or-discard-a-draft.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Who-may-do-what.md",
+      "to": "docs/wiki/how-to/Import-products-from-Excel.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Who-may-do-what.md",
+      "to": "docs/wiki/rules/Only-signed-in-users-reach-the-catalog.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Who-may-do-what.md",
+      "to": "docs/wiki/rules/Viewers-read-editors-change.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Who-may-do-what.md",
+      "to": "docs/wiki/rules/Code-lists-are-readable-by-every-signed-in-user.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/how-to/Who-may-do-what.md",
+      "to": "docs/wiki/decisions/The-catalog-is-open-to-signed-in-users-with-a-viewer-or-editor-role.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-detail-number-stays-within-the-bounds-of-its-subcategory.md",
+      "to": "docs/wiki/rules/A-number-detail-stays-within-its-bounds-and-is-whole-when-required.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-detail-number-stays-within-the-bounds-of-its-subcategory.md",
+      "to": "docs/wiki/decisions/Validation-rules-follow-one-toolkit-and-prevent-before-they-refuse.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-detail-number-stays-within-the-bounds-of-its-subcategory.md",
+      "to": "docs/wiki/rules/Storage-is-not-below-memory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-detail-number-stays-within-the-bounds-of-its-subcategory.md",
+      "to": "docs/wiki/rules/Memory-is-a-power-of-two.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-detail-that-the-subcategory-requires-must-be-filled.md",
+      "to": "docs/wiki/decisions/Validation-rules-follow-one-toolkit-and-prevent-before-they-refuse.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-detail-that-the-subcategory-requires-must-be-filled.md",
+      "to": "docs/wiki/rules/Detail-rows-follow-the-attributes-of-the-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-detail-that-the-subcategory-requires-must-be-filled.md",
+      "to": "docs/wiki/rules/A-number-detail-stays-within-its-bounds-and-is-whole-when-required.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-detail-value-matches-the-value-type-of-its-attribute.md",
+      "to": "docs/wiki/decisions/Product-details-are-typed-and-shown-as-a-generated-form.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-detail-value-matches-the-value-type-of-its-attribute.md",
+      "to": "docs/wiki/domain/Detail-value-types.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-detail-value-matches-the-value-type-of-its-attribute.md",
+      "to": "docs/wiki/rules/A-number-detail-stays-within-its-bounds-and-is-whole-when-required.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-list-detail-value-belongs-to-the-list-of-its-attribute.md",
+      "to": "docs/wiki/decisions/Product-details-are-rows-of-reusable-attributes.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-list-detail-value-belongs-to-the-list-of-its-attribute.md",
+      "to": "docs/wiki/decisions/Product-details-are-typed-and-shown-as-a-generated-form.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-list-detail-value-belongs-to-the-list-of-its-attribute.md",
+      "to": "docs/wiki/rules/A-value-of-a-multi-choice-detail-is-selected-once-and-belongs-to-its-list.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-list-detail-value-belongs-to-the-list-of-its-attribute.md",
+      "to": "docs/wiki/domain/Detail-list-values.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-number-detail-stays-within-its-bounds-and-is-whole-when-required.md",
+      "to": "docs/wiki/decisions/Product-details-are-typed-and-shown-as-a-generated-form.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-number-detail-stays-within-its-bounds-and-is-whole-when-required.md",
+      "to": "docs/wiki/rules/A-detail-number-stays-within-the-bounds-of-its-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-number-detail-stays-within-its-bounds-and-is-whole-when-required.md",
+      "to": "docs/wiki/rules/A-detail-value-matches-the-value-type-of-its-attribute.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-price-in-a-currency-without-minor-units-has-no-decimals.md",
+      "to": "docs/wiki/decisions/Validation-rules-follow-one-toolkit-and-prevent-before-they-refuse.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-price-in-a-currency-without-minor-units-has-no-decimals.md",
+      "to": "docs/wiki/rules/Every-imported-row-follows-the-rules-of-a-product.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-price-in-a-currency-without-minor-units-has-no-decimals.md",
+      "to": "docs/wiki/rules/A-price-is-above-zero.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-price-in-a-currency-without-minor-units-has-no-decimals.md",
+      "to": "docs/wiki/rules/Category-subcategory-and-currency-must-exist.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-price-is-above-zero.md",
+      "to": "docs/wiki/rules/Price-stock-and-rating-stay-within-their-bounds.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-price-is-above-zero.md",
+      "to": "docs/wiki/decisions/Validation-rules-follow-one-toolkit-and-prevent-before-they-refuse.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-price-is-above-zero.md",
+      "to": "docs/wiki/rules/Every-imported-row-follows-the-rules-of-a-product.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-price-is-above-zero.md",
+      "to": "docs/wiki/rules/A-price-in-a-currency-without-minor-units-has-no-decimals.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-product-in-stock-needs-a-description.md",
+      "to": "docs/wiki/decisions/Validation-rules-follow-one-toolkit-and-prevent-before-they-refuse.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-product-in-stock-needs-a-description.md",
+      "to": "docs/wiki/rules/Every-imported-row-follows-the-rules-of-a-product.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-product-in-stock-needs-a-description.md",
+      "to": "docs/wiki/rules/A-product-needs-a-name-price-currency-stock-category-and-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-product-is-created-and-changed-through-a-draft.md",
+      "to": "docs/wiki/decisions/Products-are-edited-through-drafts.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-product-is-created-and-changed-through-a-draft.md",
+      "to": "docs/wiki/decisions/A-draft-or-locked-product-is-marked-in-the-list.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-product-name-has-at-least-three-characters.md",
+      "to": "docs/wiki/decisions/Validation-rules-follow-one-toolkit-and-prevent-before-they-refuse.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-product-name-has-at-least-three-characters.md",
+      "to": "docs/wiki/rules/Every-imported-row-follows-the-rules-of-a-product.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-product-name-has-at-least-three-characters.md",
+      "to": "docs/wiki/rules/A-product-needs-a-name-price-currency-stock-category-and-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-product-name-has-at-least-three-characters.md",
+      "to": "docs/wiki/rules/A-product-name-is-unique-in-the-catalog.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-product-name-is-unique-in-the-catalog.md",
+      "to": "docs/wiki/decisions/Validation-rules-follow-one-toolkit-and-prevent-before-they-refuse.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-product-name-is-unique-in-the-catalog.md",
+      "to": "docs/wiki/rules/An-imported-product-name-must-be-new.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-product-name-is-unique-in-the-catalog.md",
+      "to": "docs/wiki/rules/A-product-name-has-at-least-three-characters.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-product-needs-a-name-price-currency-stock-category-and-subcategory.md",
+      "to": "docs/wiki/rules/The-subcategory-field-stays-disabled-until-a-category-is-chosen.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-subcategory-change-must-not-leave-details-that-do-not-fit.md",
+      "to": "docs/wiki/decisions/Product-details-are-rows-of-reusable-attributes.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-subcategory-change-must-not-leave-details-that-do-not-fit.md",
+      "to": "docs/wiki/decisions/Product-details-are-typed-and-shown-as-a-generated-form.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-subcategory-change-must-not-leave-details-that-do-not-fit.md",
+      "to": "docs/wiki/rules/An-attribute-is-used-once-per-product-and-belongs-to-the-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-subcategory-change-must-not-leave-details-that-do-not-fit.md",
+      "to": "docs/wiki/rules/Detail-rows-follow-the-attributes-of-the-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-value-of-a-multi-choice-detail-is-selected-once-and-belongs-to-its-list.md",
+      "to": "docs/wiki/decisions/Product-details-are-typed-and-shown-as-a-generated-form.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-value-of-a-multi-choice-detail-is-selected-once-and-belongs-to-its-list.md",
+      "to": "docs/wiki/rules/A-detail-value-matches-the-value-type-of-its-attribute.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-value-of-a-multi-choice-detail-is-selected-once-and-belongs-to-its-list.md",
+      "to": "docs/wiki/rules/A-list-detail-value-belongs-to-the-list-of-its-attribute.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/A-value-of-a-multi-choice-detail-is-selected-once-and-belongs-to-its-list.md",
+      "to": "docs/wiki/domain/Product-detail-selections.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/An-attribute-is-used-once-per-product-and-belongs-to-the-subcategory.md",
+      "to": "docs/wiki/decisions/Product-details-are-rows-of-reusable-attributes.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/An-attribute-is-used-once-per-product-and-belongs-to-the-subcategory.md",
+      "to": "docs/wiki/rules/Detail-rows-follow-the-attributes-of-the-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/An-attribute-is-used-once-per-product-and-belongs-to-the-subcategory.md",
+      "to": "docs/wiki/domain/Detail-attributes.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/An-image-address-uses-https-and-has-no-spaces.md",
+      "to": "docs/wiki/decisions/Validation-rules-follow-one-toolkit-and-prevent-before-they-refuse.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/An-image-address-uses-https-and-has-no-spaces.md",
+      "to": "docs/wiki/rules/Every-imported-row-follows-the-rules-of-a-product.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/An-import-creates-all-products-or-none.md",
+      "to": "docs/wiki/decisions/Products-are-imported-from-an-Excel-workbook.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/An-import-creates-all-products-or-none.md",
+      "to": "docs/wiki/rules/The-header-row-names-known-columns-once-and-includes-the-mandatory-ones.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/An-import-creates-all-products-or-none.md",
+      "to": "docs/wiki/rules/The-import-file-is-an-xlsx-workbook-with-product-rows-within-the-size-limits.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/An-import-creates-all-products-or-none.md",
+      "to": "docs/wiki/rules/An-imported-product-name-must-be-new.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/An-import-creates-all-products-or-none.md",
+      "to": "docs/wiki/rules/Every-imported-row-follows-the-rules-of-a-product.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/An-import-creates-all-products-or-none.md",
+      "to": "docs/wiki/rules/Viewers-read-editors-change.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/An-import-creates-all-products-or-none.md",
+      "to": "docs/wiki/rules/Detail-rows-follow-the-attributes-of-the-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/An-imported-product-name-must-be-new.md",
+      "to": "docs/wiki/decisions/Products-are-imported-from-an-Excel-workbook.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/An-imported-product-name-must-be-new.md",
+      "to": "docs/wiki/rules/An-import-creates-all-products-or-none.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Battery-life-is-available-only-for-a-wireless-device.md",
+      "to": "docs/wiki/decisions/Validation-rules-follow-one-toolkit-and-prevent-before-they-refuse.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Battery-life-is-available-only-for-a-wireless-device.md",
+      "to": "docs/wiki/rules/Detail-rows-follow-the-attributes-of-the-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Battery-life-is-available-only-for-a-wireless-device.md",
+      "to": "docs/wiki/how-to/Fill-the-details-of-a-product.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Category-subcategory-and-currency-must-exist.md",
+      "to": "docs/wiki/decisions/Code-lists-use-stable-upper-case-codes.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Category-subcategory-and-currency-must-exist.md",
+      "to": "docs/wiki/how-to/Choose-a-category-and-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Category-subcategory-and-currency-must-exist.md",
+      "to": "docs/wiki/rules/The-subcategory-belongs-to-the-products-category.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Changing-the-category-clears-a-subcategory-that-no-longer-fits.md",
+      "to": "docs/wiki/decisions/A-dependent-field-offers-only-the-values-of-its-parent-field.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Changing-the-category-clears-a-subcategory-that-no-longer-fits.md",
+      "to": "docs/wiki/rules/The-subcategory-belongs-to-the-products-category.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Changing-the-category-clears-a-subcategory-that-no-longer-fits.md",
+      "to": "docs/wiki/rules/A-product-needs-a-name-price-currency-stock-category-and-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Code-lists-are-readable-by-every-signed-in-user.md",
+      "to": "docs/wiki/decisions/The-catalog-is-open-to-signed-in-users-with-a-viewer-or-editor-role.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Code-lists-are-readable-by-every-signed-in-user.md",
+      "to": "docs/wiki/decisions/Code-lists-use-stable-upper-case-codes.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Code-lists-are-readable-by-every-signed-in-user.md",
+      "to": "docs/wiki/rules/Only-signed-in-users-reach-the-catalog.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Detail-rows-follow-the-attributes-of-the-subcategory.md",
+      "to": "docs/wiki/decisions/Product-details-are-typed-and-shown-as-a-generated-form.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Detail-rows-follow-the-attributes-of-the-subcategory.md",
+      "to": "docs/wiki/rules/Changing-the-category-clears-a-subcategory-that-no-longer-fits.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Detail-rows-follow-the-attributes-of-the-subcategory.md",
+      "to": "docs/wiki/rules/A-subcategory-change-must-not-leave-details-that-do-not-fit.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Every-imported-row-follows-the-rules-of-a-product.md",
+      "to": "docs/wiki/decisions/Products-are-imported-from-an-Excel-workbook.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Every-imported-row-follows-the-rules-of-a-product.md",
+      "to": "docs/wiki/rules/A-product-needs-a-name-price-currency-stock-category-and-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Every-imported-row-follows-the-rules-of-a-product.md",
+      "to": "docs/wiki/rules/Price-stock-and-rating-stay-within-their-bounds.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Every-imported-row-follows-the-rules-of-a-product.md",
+      "to": "docs/wiki/rules/Category-subcategory-and-currency-must-exist.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Every-imported-row-follows-the-rules-of-a-product.md",
+      "to": "docs/wiki/rules/The-subcategory-belongs-to-the-products-category.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Every-imported-row-follows-the-rules-of-a-product.md",
+      "to": "docs/wiki/rules/An-import-creates-all-products-or-none.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Memory-is-a-power-of-two.md",
+      "to": "docs/wiki/decisions/Validation-rules-follow-one-toolkit-and-prevent-before-they-refuse.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Memory-is-a-power-of-two.md",
+      "to": "docs/wiki/rules/Storage-is-not-below-memory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Memory-is-a-power-of-two.md",
+      "to": "docs/wiki/rules/A-detail-number-stays-within-the-bounds-of-its-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Only-signed-in-users-reach-the-catalog.md",
+      "to": "docs/wiki/decisions/The-catalog-is-open-to-signed-in-users-with-a-viewer-or-editor-role.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Only-signed-in-users-reach-the-catalog.md",
+      "to": "docs/wiki/rules/Viewers-read-editors-change.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Price-stock-and-rating-stay-within-their-bounds.md",
+      "to": "docs/wiki/rules/A-price-is-above-zero.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Storage-is-not-below-memory.md",
+      "to": "docs/wiki/decisions/Validation-rules-follow-one-toolkit-and-prevent-before-they-refuse.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Storage-is-not-below-memory.md",
+      "to": "docs/wiki/rules/Memory-is-a-power-of-two.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Storage-is-not-below-memory.md",
+      "to": "docs/wiki/rules/A-detail-number-stays-within-the-bounds-of-its-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/The-header-row-names-known-columns-once-and-includes-the-mandatory-ones.md",
+      "to": "docs/wiki/decisions/Products-are-imported-from-an-Excel-workbook.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/The-header-row-names-known-columns-once-and-includes-the-mandatory-ones.md",
+      "to": "docs/wiki/rules/An-import-creates-all-products-or-none.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/The-header-row-names-known-columns-once-and-includes-the-mandatory-ones.md",
+      "to": "docs/wiki/how-to/Import-products-from-Excel.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/The-import-file-is-an-xlsx-workbook-with-product-rows-within-the-size-limits.md",
+      "to": "docs/wiki/decisions/Products-are-imported-from-an-Excel-workbook.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/The-import-file-is-an-xlsx-workbook-with-product-rows-within-the-size-limits.md",
+      "to": "docs/wiki/rules/An-import-creates-all-products-or-none.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/The-subcategory-belongs-to-the-products-category.md",
+      "to": "docs/wiki/decisions/A-dependent-field-offers-only-the-values-of-its-parent-field.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/The-subcategory-belongs-to-the-products-category.md",
+      "to": "docs/wiki/decisions/A-field-is-disabled-until-the-field-it-depends-on-is-filled.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/The-subcategory-field-stays-disabled-until-a-category-is-chosen.md",
+      "to": "docs/wiki/decisions/A-field-is-disabled-until-the-field-it-depends-on-is-filled.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/The-subcategory-field-stays-disabled-until-a-category-is-chosen.md",
+      "to": "docs/wiki/rules/A-product-needs-a-name-price-currency-stock-category-and-subcategory.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/The-subcategory-field-stays-disabled-until-a-category-is-chosen.md",
+      "to": "docs/wiki/rules/The-subcategory-belongs-to-the-products-category.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Viewers-read-editors-change.md",
+      "to": "docs/wiki/decisions/The-catalog-is-open-to-signed-in-users-with-a-viewer-or-editor-role.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Viewers-read-editors-change.md",
+      "to": "docs/wiki/decisions/Products-are-imported-from-an-Excel-workbook.md",
       "type": "link"
     }
   ]

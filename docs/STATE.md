@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-26
 - Branch: feature/business-rules-wiki (from main 40748e9)
 - Feature: business-rules-wiki (#28)
-- Phase: 2 done: tooling (generator, lookup CLI with `export`, checks; `npm test` 241 in 15 files)
-- Last commit: 7c42fab docs(spec): business-rules-wiki plan approved, ADR-0030 accepted
-- Next: phase 3 content in six `docs-keeper` launches (3a-3f), `wiki audit: clean`, `test-backend` tightens the `// phase 3:` assertions; then `/feature #10` (ADR-0028), then #26; the cds 10.2 Dependabot PR (about 2026-11-02) needs the re-tests listed in `docs/upstream/UPDATES.md` 2026-10-26
+- Phase: 3 done: backfill 74 pages, audit clean, `npm test` 243 in 15 files
+- Last commit: d0274a7 feat(tooling): business-rules-wiki generator, lookup CLI and checks
+- Next: launches 3d-3f, `wiki audit: clean`, tighten the `// phase 3:` tests, commit; then `/feature #10`, #26; cds 10.2 Dependabot PR (~2026-11-02): re-tests in `docs/upstream/UPDATES.md`
 
 ## Open debt
 
@@ -29,6 +29,7 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 | `DetailsForm.js` has an `eslint-disable` for `max-params` and `max-statements` (70 against 40) | Move the pure functions to a sibling module; narrow the directive to `max-params` | fiori-app-dev |
 | `@cap-js/openapi` is pinned to 1.6.0 (1.7.0 answers 500 on the Swagger document of a draft service; ADR-0029 amendment A) | Drop the pin after a release with cap-js/openapi PR #207 (#204) | upstream-watcher |
 | Object Page route shows a double-encoded semantic key, `Products('Notebook%2520Set')` (VERIFICATION docs-toolchain, 2026-10-25) | Check whether it predates the feature and whether FE expects it | fiori-app-dev |
+| `PRODUCTS_IMPORT_UNKNOWN_COLUMN` (`en`, `ru`) omits `subcategory` from the allowed columns (wiki backfill, 2026-10-26) | Add it via `/feature`, then `wiki.mjs confirm` the IMPORT page | cap-backend-dev |
 
 ## What works
 

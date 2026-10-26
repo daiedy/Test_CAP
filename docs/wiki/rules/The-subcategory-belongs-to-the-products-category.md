@@ -27,7 +27,7 @@ Every subcategory belongs to exactly one category: Laptops, Mice and Audio, for 
 
 ## Why
 
-The subcategory refines the category. A pair from two categories would place a product in two branches of the catalog at once, and the lists, the filters and the details of the product, which come from its subcategory, would contradict each other.
+The subcategory refines the category. A pair from two categories would place a product in two branches of the catalog at once, and the lists, the filters and the details of the product, which come from its subcategory, would contradict each other. The decisions behind it are [A dependent field offers only the values of its parent field](../decisions/A-dependent-field-offers-only-the-values-of-its-parent-field.md) and [A field is disabled until the field it depends on is filled](../decisions/A-field-is-disabled-until-the-field-it-depends-on-is-filled.md).
 
 ## Where it fires
 

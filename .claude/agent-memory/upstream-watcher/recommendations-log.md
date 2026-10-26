@@ -5,14 +5,17 @@ metadata:
   type: project
 ---
 
-Digest 2026-10-07 (heading `## 2026-10-07` in docs/upstream/UPDATES.md). All status: not yet carried out as of that date.
+Digest 2026-10-26 (heading `## 2026-10-26` in docs/upstream/UPDATES.md). All status: not yet carried out as of that date.
 
-- Bump `.mcp.json` `@ui5/mcp-server` 0.2.18 to 0.3.2 (fixes draft-06 defect, issue UI5/mcp-server#447): given; done 2026-10-07 by the user, `run_manifest_validation` returns `isValid: true`, STATE debt row and LESSONS entry removed.
-- Re-test cds 10.1.1 LESSONS entries (positional `req.error` code, `sap-messages` Accept-Language): given; done 2026-10-07, both still present on 10.1.1, LESSONS entries say "re-check on the next minor".
-- `npm test` plus `npm run lint` against installed cds 10.1.1 / sqlite 3.1.1; global cds-dk still 10.0.7: given; done 2026-10-07, 139 tests green, lint 0 errors; global cds-dk alignment left to the user.
-- fiori-mcp 1.15.6: do not bump for filterFields/liveMode (not covered through 1.15.6); optional bump: given; deferred by the user 2026-10-07, re-evaluate at the next run (mention in one line only).
-- UI5 CDN now 1.153.0; TypeError (`_Helper.aggregateExpandSelect`) not mentioned in 1.153.0 notes; check in running app: given; done 2026-10-07, TypeError unchanged (fires once when the Object Page opens), OPA5 42/42; new deprecation on 1.153: boolean `initialLoad` in manifest (STATE debt row, `fiori-app-dev`).
-- Optional bumps `@cap-js/mcp-server` 0.0.6, `chrome-devtools-mcp` 1.10.1: given; deferred by the user 2026-10-07, re-evaluate at the next run (mention in one line only).
+- Rebase Dependabot PRs #31, #33, #34 (their CI failed before the CI fix PR #36), merge when green; close #35 (`@cap-js/openapi` 1.7.0, pin stays while cap-js/openapi PR #207 is open): given.
+- Add a semver-major ignore for `ui5-test-runner` in `.github/dependabot.yml` before 2026-11-09 (v6 needs Node >= 24.11.1, project and CI on Node 22); Node 24 migration as a `/backlog` item: given.
+- cds 10.2.1 / cds-dk 10.2.0 (Dependabot after the cooldown, expected 2026-11-02): `npm test`, review a `$metadata` snapshot diff (cds-compiler 7.2 TypeDefinition change; root compiler is 7.0.3), re-measure the two LESSONS entries of 2026-09-29 (positional `req.error` code, `sap-messages` language): given.
+- Optional MCP pin bumps (`@cap-js/mcp-server` 0.0.8, `chrome-devtools-mcp` 1.12.0, `fiori-mcp` 1.15.15): deferred by the user on 2026-10-07, repeated once in one line on 2026-10-26.
+- Optional plugin updates `ui5` 0.1.9 (bundled server now pinned 0.3.2) and `cap-developer` (router restructure, no content change): given.
+
+Digest 2026-10-07, outcomes: `@ui5/mcp-server` 0.3.2 bump done; cds 10.1.1 LESSONS re-test done (both still open); test run on 10.1.1 done; UI5 1.153.0 check done (new debt: boolean `initialLoad`); fiori-mcp and cds-mcp/chrome-devtools optional bumps deferred.
+
+Recurring checks: the fiori-mcp changelog for `filterFields`/`liveMode` (not covered through 1.15.15); `@cap-js/openapi` releases for PR #207 (not merged on 2026-10-26; the script does not track this package, check by hand with `gh pr view 207 -R cap-js/openapi`).
 
 **Why:** avoid repeating the same advice weekly.
-**How to apply:** next run, check `.mcp.json` pins and STATE open debt to see which were done; mark done ones, mention still-open ones in one line instead of the full text. Re-check fiori-mcp changelog for `filterFields`/`liveMode` on each new version (debt row owner is upstream-watcher).
+**How to apply:** next run, check `.mcp.json` pins, `gh pr list` and STATE open debt to see which were done; mark done ones, mention still-open ones in one line instead of the full text.

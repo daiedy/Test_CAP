@@ -1,35 +1,35 @@
 {
-  "updatedAt": "2026-10-07T14:53:14.974Z",
+  "updatedAt": "2026-10-26T00:49:03.007Z",
   "sources": {
     "npm:@sap/cds": {
-      "hash": "75f5d8bd9e03cc719706b6cd4238d962351a6c94a1dd7b110e73f11e79a5475f",
-      "latest": "10.1.1",
+      "hash": "f8dc9a2d7d7fc367b296c6f1f0d79fe104baa4a51bd9bd779c8ecbd0130957da",
+      "latest": "10.2.1",
       "tags": {
-        "latest": "10.1.1"
+        "latest": "10.2.1"
       },
       "url": "https://registry.npmjs.org/-/package/%40sap%2Fcds/dist-tags",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "npm"
     },
     "npm:@sap/cds-dk": {
-      "hash": "001d83782e65f6eddb300fca4e67898d2f6266a3161f753e40320324180d74c2",
-      "latest": "10.1.0",
+      "hash": "72408d7d7ac5e4a6de2dca3c9e3e753fd86ecd7329e0a3c6cb2412ef885683b2",
+      "latest": "10.2.0",
       "tags": {
-        "latest": "10.1.0"
+        "latest": "10.2.0"
       },
       "url": "https://registry.npmjs.org/-/package/%40sap%2Fcds-dk/dist-tags",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "npm"
     },
     "npm:@sap/cds-compiler": {
-      "hash": "3f84a82cf7b238b4a46202d2ba2933038df2beb29cade29472d57667842538f6",
-      "latest": "7.1.1",
+      "hash": "093ae9d33727a21b2ba84c3856ee885bdfef27aa972ff8a3d79bff743198ee7e",
+      "latest": "7.2.1",
       "tags": {
-        "latest": "7.1.1",
-        "maintenance": "6.9.5"
+        "latest": "7.2.1",
+        "maintenance": "6.9.6"
       },
       "url": "https://registry.npmjs.org/-/package/%40sap%2Fcds-compiler/dist-tags",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "npm"
     },
     "npm:@cap-js/cds-test": {
@@ -39,30 +39,30 @@
         "latest": "1.0.2"
       },
       "url": "https://registry.npmjs.org/-/package/%40cap-js%2Fcds-test/dist-tags",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "npm"
     },
     "npm:@cap-js/sqlite": {
-      "hash": "d19cd70a4a3b469e8ebf0c007715122a2e0ca47688819f698321b2a4fc9e010b",
-      "latest": "3.1.1",
+      "hash": "6de1fc910e39d0178d181d2952dfc4ab414f45e3c082153635030bfe00dc7c55",
+      "latest": "3.1.2",
       "tags": {
         "beta": "0.2.0",
-        "latest": "3.1.1",
+        "latest": "3.1.2",
         "maintenance": "2.4.3",
         "next": "3.0.0"
       },
       "url": "https://registry.npmjs.org/-/package/%40cap-js%2Fsqlite/dist-tags",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "npm"
     },
     "npm:@cap-js/mcp-server": {
-      "hash": "0242ea156fa8fd87cf773f773e8fdb407acc5ae4e361aa873df9818304301d95",
-      "latest": "0.0.6",
+      "hash": "20e617580c276028b3a0fa1d89c81bbee296ce2906b16a98c686815408a80b18",
+      "latest": "0.0.8",
       "tags": {
-        "latest": "0.0.6"
+        "latest": "0.0.8"
       },
       "url": "https://registry.npmjs.org/-/package/%40cap-js%2Fmcp-server/dist-tags",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "npm"
     },
     "npm:@ui5/linter": {
@@ -72,7 +72,7 @@
         "latest": "1.23.7"
       },
       "url": "https://registry.npmjs.org/-/package/%40ui5%2Flinter/dist-tags",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "npm"
     },
     "npm:@ui5/mcp-server": {
@@ -82,27 +82,27 @@
         "latest": "0.3.2"
       },
       "url": "https://registry.npmjs.org/-/package/%40ui5%2Fmcp-server/dist-tags",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "npm"
     },
     "npm:@sap-ux/fiori-mcp-server": {
-      "hash": "f5febb254e872aaee0a907a06c5ba5d24cb34a2511930884c1cc2e066762abf1",
-      "latest": "1.15.6",
+      "hash": "9afb23d12b8cf669e791aa5e8b6a8d8be13b84987097a7787678b4adbab6fce9",
+      "latest": "1.15.15",
       "tags": {
-        "latest": "1.15.6"
+        "latest": "1.15.15"
       },
       "url": "https://registry.npmjs.org/-/package/%40sap-ux%2Ffiori-mcp-server/dist-tags",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "npm"
     },
     "npm:@sap-ux/ui5-test-writer": {
-      "hash": "f5febb254e872aaee0a907a06c5ba5d24cb34a2511930884c1cc2e066762abf1",
-      "latest": "1.15.6",
+      "hash": "5454daa3015e4c4741e44a3d49f8931d5fa029cf26bd8c1301165a642895c5ee",
+      "latest": "1.19.1",
       "tags": {
-        "latest": "1.15.6"
+        "latest": "1.19.1"
       },
       "url": "https://registry.npmjs.org/-/package/%40sap-ux%2Fui5-test-writer/dist-tags",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "npm"
     },
     "npm:@sap/ux-ui5-tooling": {
@@ -112,7 +112,7 @@
         "latest": "1.33.0"
       },
       "url": "https://registry.npmjs.org/-/package/%40sap%2Fux-ui5-tooling/dist-tags",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "npm"
     },
     "npm:wdio-ui5-service": {
@@ -125,67 +125,72 @@
         "rc": "3.0.0-rc.0"
       },
       "url": "https://registry.npmjs.org/-/package/wdio-ui5-service/dist-tags",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "npm"
     },
     "npm:ui5-test-runner": {
-      "hash": "0f1c1b15aa441a681e12f85700f19b880bf3c50e56362bd2ca55eb2d0386161a",
-      "latest": "5.14.1",
+      "hash": "bc0cc387f4cdf793d7ccfc01facb483f5ec5d1109b51e08303d2bcc852a15a58",
+      "latest": "6.0.1",
       "tags": {
         "beta": "6.0.0-beta.5",
-        "latest": "5.14.1"
+        "latest": "6.0.1"
       },
       "url": "https://registry.npmjs.org/-/package/ui5-test-runner/dist-tags",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "npm"
     },
     "npm:@ui5/cli": {
-      "hash": "07072963788f7ee1709307f4448e7ba6a5f96e9e058284d73d4c872bfe02190a",
-      "latest": "4.0.70",
+      "hash": "139ee7deb9bb02b4834bf729064c1c070f791623471f08143384894379d4cc21",
+      "latest": "4.0.71",
       "tags": {
-        "latest": "4.0.70",
+        "latest": "4.0.71",
         "latest-2": "2.14.20",
         "latest-3": "3.11.14",
         "next": "5.0.0-alpha.13"
       },
       "url": "https://registry.npmjs.org/-/package/%40ui5%2Fcli/dist-tags",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "npm"
     },
     "npm:@sap-ux/ui5-middleware-fe-mockserver": {
-      "hash": "5f356581977b77a3037bc9a258d0ce3270ea488cd3c2c912c3ca54a4338315ef",
-      "latest": "2.4.17",
+      "hash": "da03d4740147a4d2ef07b65f0cc58f309efff7a61fcf1a52c392b34619c48b29",
+      "latest": "2.4.19",
       "tags": {
-        "latest": "2.4.17"
+        "latest": "2.4.19"
       },
       "url": "https://registry.npmjs.org/-/package/%40sap-ux%2Fui5-middleware-fe-mockserver/dist-tags",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "npm"
     },
     "npm:chrome-devtools-mcp": {
-      "hash": "feff1f5a47b17a29b807b1969d373f449a32d0f2bce6e5f2db7c2f1f5272cbcf",
-      "latest": "1.10.1",
+      "hash": "5f39b37187a76349a7e137b196698f63188417e0236fc404d38ef675cdc744c7",
+      "latest": "1.12.0",
       "tags": {
-        "latest": "1.10.1"
+        "latest": "1.12.0"
       },
       "url": "https://registry.npmjs.org/-/package/chrome-devtools-mcp/dist-tags",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "npm"
     },
     "cap:releases-index": {
-      "hash": "9596f0210bbe0c94e2fa1a2e7534d6dc72759735f7cd94cf9289cf95cbe8c447",
+      "hash": "4e92d46f184b5cc04ab0703beb1fcf9b45de2ff3466aaaff397016dd056500e4",
       "headings": [
         "## Release Schedule",
         "## Status Badges",
         "## See Also"
       ],
       "url": "https://cap.cloud.sap/docs/releases/index.md",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "cap-md"
     },
     "cap:changelog": {
-      "hash": "39141c763528a4fc63e06475efe0ba0cb169ea098b81fb4c95260e29a33b2fec",
+      "hash": "a459efbc2fee9d71451c1201e5388c84696f5af3dbe369bbe58d94c5d7a5c1b9",
       "headings": [
+        "## October 2026",
+        "### Added",
+        "### Changed",
+        "### Fixed",
+        "### Removed",
         "## September 2026",
         "### Added",
         "### Changed",
@@ -229,12 +234,36 @@
         "### Removed"
       ],
       "url": "https://cap.cloud.sap/docs/releases/2026/changelog.md",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "cap-md"
     },
     "feed:cap-js/cds-dbs releases": {
-      "hash": "a7c6e065838495ce706e8ee0ede9876db5acade35d81ee8fa744a57e3ff0d855",
+      "hash": "000926be647dc002d9876cb3053ca04d6b2f3790c6756283b196faabf7788944",
       "entries": [
+        {
+          "id": "tag:github.com,2008:Repository/639043217/sqlite-v3.1.2",
+          "title": "sqlite: v3.1.2",
+          "link": "https://github.com/cap-js/cds-dbs/releases/tag/sqlite-v3.1.2",
+          "updated": "2026-10-12T09:00:38Z"
+        },
+        {
+          "id": "tag:github.com,2008:Repository/639043217/postgres-v3.1.2",
+          "title": "postgres: v3.1.2",
+          "link": "https://github.com/cap-js/cds-dbs/releases/tag/postgres-v3.1.2",
+          "updated": "2026-10-12T09:00:39Z"
+        },
+        {
+          "id": "tag:github.com,2008:Repository/639043217/hana-v3.1.2",
+          "title": "hana: v3.1.2",
+          "link": "https://github.com/cap-js/cds-dbs/releases/tag/hana-v3.1.2",
+          "updated": "2026-10-12T09:00:41Z"
+        },
+        {
+          "id": "tag:github.com,2008:Repository/639043217/db-service-v3.1.2",
+          "title": "db-service: v3.1.2",
+          "link": "https://github.com/cap-js/cds-dbs/releases/tag/db-service-v3.1.2",
+          "updated": "2026-10-12T09:00:37Z"
+        },
         {
           "id": "tag:github.com,2008:Repository/639043217/sqlite-v2.4.3",
           "title": "sqlite: v2.4.3",
@@ -270,34 +299,10 @@
           "title": "sqlite: v2.4.2",
           "link": "https://github.com/cap-js/cds-dbs/releases/tag/sqlite-v2.4.2",
           "updated": "2026-09-15T14:38:14Z"
-        },
-        {
-          "id": "tag:github.com,2008:Repository/639043217/postgres-v3.1.1",
-          "title": "postgres: v3.1.1",
-          "link": "https://github.com/cap-js/cds-dbs/releases/tag/postgres-v3.1.1",
-          "updated": "2026-09-15T14:39:29Z"
-        },
-        {
-          "id": "tag:github.com,2008:Repository/639043217/postgres-v2.3.2",
-          "title": "postgres: v2.3.2",
-          "link": "https://github.com/cap-js/cds-dbs/releases/tag/postgres-v2.3.2",
-          "updated": "2026-09-15T14:38:15Z"
-        },
-        {
-          "id": "tag:github.com,2008:Repository/639043217/hana-v3.1.1",
-          "title": "hana: v3.1.1",
-          "link": "https://github.com/cap-js/cds-dbs/releases/tag/hana-v3.1.1",
-          "updated": "2026-09-15T14:39:30Z"
-        },
-        {
-          "id": "tag:github.com,2008:Repository/639043217/hana-v2.8.2",
-          "title": "hana: v2.8.2",
-          "link": "https://github.com/cap-js/cds-dbs/releases/tag/hana-v2.8.2",
-          "updated": "2026-09-15T14:38:16Z"
         }
       ],
       "url": "https://github.com/cap-js/cds-dbs/releases.atom",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "atom"
     },
     "feed:cap-js/cds-test releases": {
@@ -359,12 +364,24 @@
         }
       ],
       "url": "https://github.com/cap-js/cds-test/releases.atom",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "atom"
     },
     "feed:cap-js/mcp-server releases": {
-      "hash": "2569e8904e28152c52b55e964419082d2ee37f02ea9ea7a4d9d32a6c92698eff",
+      "hash": "1e84d6c31160f1de417d816c6dbae8576110d4ebf92fb97b25fb60855531669b",
       "entries": [
+        {
+          "id": "tag:github.com,2008:Repository/961105832/v0.0.8",
+          "title": "v0.0.8",
+          "link": "https://github.com/cap-js/mcp-server/releases/tag/v0.0.8",
+          "updated": "2026-10-14T16:03:32Z"
+        },
+        {
+          "id": "tag:github.com,2008:Repository/961105832/v0.0.7",
+          "title": "v0.0.7",
+          "link": "https://github.com/cap-js/mcp-server/releases/tag/v0.0.7",
+          "updated": "2026-10-09T12:09:33Z"
+        },
         {
           "id": "tag:github.com,2008:Repository/961105832/v0.0.6",
           "title": "v0.0.6",
@@ -403,75 +420,75 @@
         }
       ],
       "url": "https://github.com/cap-js/mcp-server/releases.atom",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "atom"
     },
     "feed:SAP/open-ux-tools releases": {
-      "hash": "e8a7356bb2b5a943af31955ffece8ce79a55b2b702c22e1df63e307709630c9b",
+      "hash": "12134869962619a1ab92c0a4cd4d444ee83069937902e3aa4d05eb820500158a",
       "entries": [
         {
-          "id": "tag:github.com,2008:Repository/371620664/@sap-ux/repo-app-import-sub-generator@1.2.74",
-          "title": "@sap-ux/repo-app-import-sub-generator@1.2.74",
-          "link": "https://github.com/SAP/open-ux-tools/releases/tag/%40sap-ux%2Frepo-app-import-sub-generator%401.2.74",
-          "updated": "2026-10-07T11:23:30Z"
+          "id": "tag:github.com,2008:Repository/371620664/sap-ux-sap-systems-ext@1.0.44",
+          "title": "sap-ux-sap-systems-ext v1.0.44",
+          "link": "https://github.com/SAP/open-ux-tools/releases/tag/sap-ux-sap-systems-ext%401.0.44",
+          "updated": "2026-10-23T22:05:24Z"
         },
         {
-          "id": "tag:github.com,2008:Repository/371620664/@sap-ux/fiori-mcp-server@1.15.6",
-          "title": "@sap-ux/fiori-mcp-server@1.15.6",
-          "link": "https://github.com/SAP/open-ux-tools/releases/tag/%40sap-ux%2Ffiori-mcp-server%401.15.6",
-          "updated": "2026-10-07T13:20:13Z"
+          "id": "tag:github.com,2008:Repository/371620664/sap-ux-sap-systems-ext@1.0.43",
+          "title": "sap-ux-sap-systems-ext v1.0.43",
+          "link": "https://github.com/SAP/open-ux-tools/releases/tag/sap-ux-sap-systems-ext%401.0.43",
+          "updated": "2026-10-23T07:22:12Z"
         },
         {
-          "id": "tag:github.com,2008:Repository/371620664/@sap-ux/fiori-mcp-server@1.15.5",
-          "title": "@sap-ux/fiori-mcp-server@1.15.5",
-          "link": "https://github.com/SAP/open-ux-tools/releases/tag/%40sap-ux%2Ffiori-mcp-server%401.15.5",
-          "updated": "2026-10-07T12:38:38Z"
+          "id": "tag:github.com,2008:Repository/371620664/@sap-ux/ui-service-sub-generator@1.0.59",
+          "title": "@sap-ux/ui-service-sub-generator@1.0.59",
+          "link": "https://github.com/SAP/open-ux-tools/releases/tag/%40sap-ux%2Fui-service-sub-generator%401.0.59",
+          "updated": "2026-10-23T17:24:04Z"
         },
         {
-          "id": "tag:github.com,2008:Repository/371620664/sap-ux-sap-systems-ext@1.0.38",
-          "title": "sap-ux-sap-systems-ext v1.0.38",
-          "link": "https://github.com/SAP/open-ux-tools/releases/tag/sap-ux-sap-systems-ext%401.0.38",
-          "updated": "2026-10-07T14:39:59Z"
+          "id": "tag:github.com,2008:Repository/371620664/@sap-ux/ui-service-inquirer@1.0.59",
+          "title": "@sap-ux/ui-service-inquirer@1.0.59",
+          "link": "https://github.com/SAP/open-ux-tools/releases/tag/%40sap-ux%2Fui-service-inquirer%401.0.59",
+          "updated": "2026-10-23T17:24:34Z"
         },
         {
-          "id": "tag:github.com,2008:Repository/371620664/@sap-ux/ui-service-sub-generator@1.0.55",
-          "title": "@sap-ux/ui-service-sub-generator@1.0.55",
-          "link": "https://github.com/SAP/open-ux-tools/releases/tag/%40sap-ux%2Fui-service-sub-generator%401.0.55",
-          "updated": "2026-10-06T14:25:51Z"
+          "id": "tag:github.com,2008:Repository/371620664/@sap-ux/ui-prompting@1.0.19",
+          "title": "@sap-ux/ui-prompting@1.0.19",
+          "link": "https://github.com/SAP/open-ux-tools/releases/tag/%40sap-ux%2Fui-prompting%401.0.19",
+          "updated": "2026-10-23T07:21:24Z"
         },
         {
-          "id": "tag:github.com,2008:Repository/371620664/@sap-ux/ui-service-inquirer@1.0.55",
-          "title": "@sap-ux/ui-service-inquirer@1.0.55",
-          "link": "https://github.com/SAP/open-ux-tools/releases/tag/%40sap-ux%2Fui-service-inquirer%401.0.55",
-          "updated": "2026-10-06T14:26:27Z"
+          "id": "tag:github.com,2008:Repository/371620664/@sap-ux/ui-components@3.0.18",
+          "title": "@sap-ux/ui-components@3.0.18",
+          "link": "https://github.com/SAP/open-ux-tools/releases/tag/%40sap-ux%2Fui-components%403.0.18",
+          "updated": "2026-10-23T07:21:48Z"
         },
         {
-          "id": "tag:github.com,2008:Repository/371620664/@sap-ux/ui5-test-writer@1.15.6",
-          "title": "@sap-ux/ui5-test-writer@1.15.6",
-          "link": "https://github.com/SAP/open-ux-tools/releases/tag/%40sap-ux%2Fui5-test-writer%401.15.6",
-          "updated": "2026-10-06T14:26:51Z"
+          "id": "tag:github.com,2008:Repository/371620664/@sap-ux/ui5-test-writer@1.19.1",
+          "title": "@sap-ux/ui5-test-writer@1.19.1",
+          "link": "https://github.com/SAP/open-ux-tools/releases/tag/%40sap-ux%2Fui5-test-writer%401.19.1",
+          "updated": "2026-10-23T17:23:49Z"
         },
         {
-          "id": "tag:github.com,2008:Repository/371620664/@sap-ux/ui5-library-writer@1.0.22",
-          "title": "@sap-ux/ui5-library-writer@1.0.22",
-          "link": "https://github.com/SAP/open-ux-tools/releases/tag/%40sap-ux%2Fui5-library-writer%401.0.22",
-          "updated": "2026-10-06T14:26:30Z"
+          "id": "tag:github.com,2008:Repository/371620664/@sap-ux/ui5-test-writer@1.19.0",
+          "title": "@sap-ux/ui5-test-writer@1.19.0",
+          "link": "https://github.com/SAP/open-ux-tools/releases/tag/%40sap-ux%2Fui5-test-writer%401.19.0",
+          "updated": "2026-10-23T07:21:39Z"
         },
         {
-          "id": "tag:github.com,2008:Repository/371620664/@sap-ux/ui5-library-sub-generator@1.0.47",
-          "title": "@sap-ux/ui5-library-sub-generator@1.0.47",
-          "link": "https://github.com/SAP/open-ux-tools/releases/tag/%40sap-ux%2Fui5-library-sub-generator%401.0.47",
-          "updated": "2026-10-06T14:24:57Z"
+          "id": "tag:github.com,2008:Repository/371620664/@sap-ux/ui5-proxy-middleware@2.0.14",
+          "title": "@sap-ux/ui5-proxy-middleware@2.0.14",
+          "link": "https://github.com/SAP/open-ux-tools/releases/tag/%40sap-ux%2Fui5-proxy-middleware%402.0.14",
+          "updated": "2026-10-23T17:23:43Z"
         },
         {
-          "id": "tag:github.com,2008:Repository/371620664/@sap-ux/ui5-library-reference-writer@1.0.21",
-          "title": "@sap-ux/ui5-library-reference-writer@1.0.21",
-          "link": "https://github.com/SAP/open-ux-tools/releases/tag/%40sap-ux%2Fui5-library-reference-writer%401.0.21",
-          "updated": "2026-10-06T14:25:00Z"
+          "id": "tag:github.com,2008:Repository/371620664/@sap-ux/ui5-library-sub-generator@1.0.51",
+          "title": "@sap-ux/ui5-library-sub-generator@1.0.51",
+          "link": "https://github.com/SAP/open-ux-tools/releases/tag/%40sap-ux%2Fui5-library-sub-generator%401.0.51",
+          "updated": "2026-10-23T17:24:31Z"
         }
       ],
       "url": "https://github.com/SAP/open-ux-tools/releases.atom",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "atom"
     },
     "feed:UI5/linter releases": {
@@ -539,7 +556,7 @@
         }
       ],
       "url": "https://github.com/UI5/linter/releases.atom",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "atom"
     },
     "feed:UI5/mcp-server releases": {
@@ -607,12 +624,54 @@
         }
       ],
       "url": "https://github.com/UI5/mcp-server/releases.atom",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "atom"
     },
     "feed:UI5/openui5 releases": {
-      "hash": "d4dd3567799ffe2c3b9443e060ab205be762f60a2cb62167ffe8927461af2335",
+      "hash": "508dc13bcea961cc2d2aa70213452a599162a3a547b05f46cbada7d9551bc5c8",
       "entries": [
+        {
+          "id": "tag:github.com,2008:Repository/15085215/1.148.10",
+          "title": "v1.148.10",
+          "link": "https://github.com/UI5/openui5/releases/tag/1.148.10",
+          "updated": "2026-10-19T18:35:12Z"
+        },
+        {
+          "id": "tag:github.com,2008:Repository/15085215/1.136.22",
+          "title": "v1.136.22",
+          "link": "https://github.com/UI5/openui5/releases/tag/1.136.22",
+          "updated": "2026-10-19T14:12:54Z"
+        },
+        {
+          "id": "tag:github.com,2008:Repository/15085215/1.108.55",
+          "title": "v1.108.55",
+          "link": "https://github.com/UI5/openui5/releases/tag/1.108.55",
+          "updated": "2026-10-19T18:33:43Z"
+        },
+        {
+          "id": "tag:github.com,2008:Repository/15085215/1.154-codesplit",
+          "title": "1.154-codesplit",
+          "link": "https://github.com/UI5/openui5/releases/tag/1.154-codesplit",
+          "updated": "2026-10-14T09:16:10Z"
+        },
+        {
+          "id": "tag:github.com,2008:Repository/15085215/1.152.1",
+          "title": "v1.152.1",
+          "link": "https://github.com/UI5/openui5/releases/tag/1.152.1",
+          "updated": "2026-10-14T17:46:47Z"
+        },
+        {
+          "id": "tag:github.com,2008:Repository/15085215/1.96.49",
+          "title": "v1.96.49",
+          "link": "https://github.com/UI5/openui5/releases/tag/1.96.49",
+          "updated": "2026-10-13T05:41:35Z"
+        },
+        {
+          "id": "tag:github.com,2008:Repository/15085215/xmake/stage-1.96.49-1",
+          "title": "xmake/stage-1.96.49-1",
+          "link": "https://github.com/UI5/openui5/releases/tag/xmake%2Fstage-1.96.49-1",
+          "updated": "2026-10-12T09:17:50Z"
+        },
         {
           "id": "tag:github.com,2008:Repository/15085215/1.153.0",
           "title": "v1.153.0",
@@ -630,52 +689,10 @@
           "title": "v1.136.21",
           "link": "https://github.com/UI5/openui5/releases/tag/1.136.21",
           "updated": "2026-09-23T13:41:08Z"
-        },
-        {
-          "id": "tag:github.com,2008:Repository/15085215/1.84.59",
-          "title": "v1.84.59",
-          "link": "https://github.com/UI5/openui5/releases/tag/1.84.59",
-          "updated": "2026-09-23T13:30:24Z"
-        },
-        {
-          "id": "tag:github.com,2008:Repository/15085215/1.153-codesplit",
-          "title": "1.153-codesplit",
-          "link": "https://github.com/UI5/openui5/releases/tag/1.153-codesplit",
-          "updated": "2026-09-16T10:00:10Z"
-        },
-        {
-          "id": "tag:github.com,2008:Repository/15085215/1.151.1",
-          "title": "v1.151.1",
-          "link": "https://github.com/UI5/openui5/releases/tag/1.151.1",
-          "updated": "2026-09-15T10:49:14Z"
-        },
-        {
-          "id": "tag:github.com,2008:Repository/15085215/1.120.50",
-          "title": "v1.120.50",
-          "link": "https://github.com/UI5/openui5/releases/tag/1.120.50",
-          "updated": "2026-09-14T14:19:11Z"
-        },
-        {
-          "id": "tag:github.com,2008:Repository/15085215/1.148.8",
-          "title": "v1.148.8",
-          "link": "https://github.com/UI5/openui5/releases/tag/1.148.8",
-          "updated": "2026-09-11T05:41:33Z"
-        },
-        {
-          "id": "tag:github.com,2008:Repository/15085215/1.108.54",
-          "title": "v1.108.54",
-          "link": "https://github.com/UI5/openui5/releases/tag/1.108.54",
-          "updated": "2026-09-08T14:16:21Z"
-        },
-        {
-          "id": "tag:github.com,2008:Repository/15085215/1.38.70",
-          "title": "v1.38.70",
-          "link": "https://github.com/UI5/openui5/releases/tag/1.38.70",
-          "updated": "2026-09-09T12:42:30Z"
         }
       ],
       "url": "https://github.com/UI5/openui5/releases.atom",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "atom"
     },
     "feed:ui5-community/wdi5 releases": {
@@ -743,12 +760,18 @@
         }
       ],
       "url": "https://github.com/ui5-community/wdi5/releases.atom",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "atom"
     },
     "feed:UI5/plugins-coding-agents releases": {
-      "hash": "c9c17a5c4c9a30c25958d06fd9e4c2551473a4defba8a5fe59e11c7d7ac5002c",
+      "hash": "752e976ad1c33fde176aad36def313e5e630e99133f0fd1929c7fd7eccb8dfb8",
       "entries": [
+        {
+          "id": "tag:github.com,2008:Repository/1184343602/v0.1.9",
+          "title": "v0.1.9",
+          "link": "https://github.com/UI5/plugins-coding-agents/releases/tag/v0.1.9",
+          "updated": "2026-10-16T12:39:34Z"
+        },
         {
           "id": "tag:github.com,2008:Repository/1184343602/v0.1.8",
           "title": "v0.1.8",
@@ -805,12 +828,24 @@
         }
       ],
       "url": "https://github.com/UI5/plugins-coding-agents/releases.atom",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "atom"
     },
     "feed:capire/skills commits": {
-      "hash": "d9ac40b1fbdfbf89c12500a2eb03a578c98222e26d56d9be78352e810b4091bf",
+      "hash": "50b2c637b8dff50ade5f1c2992277342d4a77627e9070adf13f1a1fab8b9f705",
       "entries": [
+        {
+          "id": "tag:github.com,2008:Grit::Commit/1c266d93b6d5efeb7822e21250840d4e541f1e07",
+          "title": "Create .gitattributes",
+          "link": "https://github.com/capire/skills/commit/1c266d93b6d5efeb7822e21250840d4e541f1e07",
+          "updated": "2026-10-24T06:59:51Z"
+        },
+        {
+          "id": "tag:github.com,2008:Grit::Commit/b6866e873d28c3fce4e1a2bdea6b919ad6340dc1",
+          "title": "refactor(cap-developer): adopt router pattern (#12)",
+          "link": "https://github.com/capire/skills/commit/b6866e873d28c3fce4e1a2bdea6b919ad6340dc1",
+          "updated": "2026-10-09T14:47:17Z"
+        },
         {
           "id": "tag:github.com,2008:Grit::Commit/00dc7aab1ec0e52e12cb3ced08b41564ba5b81cf",
           "title": "docs(cap-developer): recommend cds add data --keys-only workflow (#11)",
@@ -897,7 +932,7 @@
         }
       ],
       "url": "https://github.com/capire/skills/commits/main.atom",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "atom"
     },
     "feed:SAP-docs/sapui5 What's New commits": {
@@ -1025,11 +1060,11 @@
         }
       ],
       "url": "https://github.com/SAP-docs/sapui5/commits/main/docs/01_Whats-New.atom",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "atom"
     },
     "ui5:versionoverview": {
-      "hash": "dac264d4316b8e8eed4788979bc5d7eb4392a821b2534fd56c5da5eaac5956b8",
+      "hash": "791fc5771fd09d9c4a1c31234b0ea957a3639e4b91783c13e9a83a45aaec0838",
       "activeVersion": "1.153.*",
       "lts": [
         "1.148.*",
@@ -1159,7 +1194,7 @@
         "*"
       ],
       "url": "https://ui5.sap.com/versionoverview.json",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "ui5-json"
     },
     "ui5:cdn-version": {
@@ -1167,7 +1202,7 @@
       "version": "1.153.0",
       "buildTimestamp": "202609301105",
       "url": "https://ui5.sap.com/resources/sap-ui-version.json",
-      "lastChecked": "2026-10-07T14:53:14.974Z",
+      "lastChecked": "2026-10-26T00:49:03.007Z",
       "kind": "ui5-json"
     }
   }

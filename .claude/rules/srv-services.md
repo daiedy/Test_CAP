@@ -15,13 +15,15 @@ File `srv/<name>-service.cds`: projections, actions, functions, authorization. F
 - One projection per entity, expose only the needed fields.
 - Bound action is preferred over unbound. Action names are camelCase verbs: `reorder`, `publish`.
 - `@requires` on the service, `@restrict` on projections. Mock users in `package.json` → `cds.requires.auth.users`.
-- UI annotations are forbidden in this file. Nothing but `using`, `service`, projections, actions, `@requires`, `@restrict`, `@readonly`, `@odata.draft.enabled`.
+- UI annotations are forbidden in this file. Nothing but `using`, `service`, projections, actions, `@requires`, `@restrict`, `@readonly`, `@odata.draft.enabled`, the service header and doc comments.
+- Service header (ADR-0029 decision 3): a doc comment, `@protocol: 'odata-v4'`, `@title: '<English API name>'`, `@Core.SchemaVersion: '<package.json version>'`. Actions, types, their elements and singletons carry their one-sentence doc comment at the definition; developer notes are `//` lines.
 - Import of semantics: `using from './annotations/<Entity>';` at the end of the file.
 - Template: `templates/service.cds`.
 
 ## Semantics (`srv/annotations/<Entity>.cds`)
 - Titles live on the projection, so tools reading `my.catalog.*` directly do not see them; the registry generator takes them from the first projection.
-- `annotate CatalogService.<Entity> with { ... }`, only `@title: '{i18n>Entity.element}'`, `@mandatory`, `@assert.format`, `@assert.range`, `@assert.target`, `@readonly`, `@Measures.ISOCurrency`, `@Core.Description`.
+- `annotate CatalogService.<Entity> with { ... }`, only `@title: '{i18n>Entity.element}'`, `@mandatory`, `@assert.format`, `@assert.range`, `@assert.target`, `@readonly`, `@Measures.ISOCurrency`.
+- Descriptions are one-sentence English doc comments `/** ... */` above the `annotate` statement (the projection) and above each own element; never `@description` or `@Core.Description` (ADR-0029 decision 2).
 - i18n keys are added to `_i18n/i18n.properties` and `_i18n/i18n_ru.properties` in the same change.
 - Template: `templates/annotations-semantic.cds`.
 

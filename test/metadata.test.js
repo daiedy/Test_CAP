@@ -406,4 +406,75 @@ describe('OData contract of CatalogService', () => {
     );
     expect(compact).not.toContain('PropertyPath="product/subcategory_code"');
   });
+
+  // docs-toolchain, ADR-0029 decisions 1 and 2: cds.cdsc.docs in package.json is the single switch
+  // that keeps CDS doc comments in the compiled model, and the EDMX turns each doc comment into
+  // Core.Description. A doc comment on a db/ entity is not propagated to the projection, so the
+  // expected texts are read from the CatalogService definitions of the CSN, not written twice here.
+  it('carries the descriptions of the service, its entities, elements, action and type in the contract', async () => {
+    const pkg = JSON.parse(readFileSync(import.meta.dirname + '/../package.json', 'utf8'));
+    expect(pkg.cds.cdsc.docs).toBe(true);
+    expect(cds.env.cdsc.docs).toBe(true);
+
+    const csn = await cds.load('*');
+    const products = csn.definitions['CatalogService.Products'];
+    const importFile = csn.definitions['CatalogService.ProductsImportFile'];
+    const descriptions = {
+      'CatalogService.EntityContainer': csn.definitions.CatalogService.doc,
+      'CatalogService.Products': products.doc,
+      'CatalogService.Products/name': products.elements.name.doc,
+      'CatalogService.importProducts(Collection(CatalogService.Products))':
+        products.actions.importProducts.doc,
+      'CatalogService.ProductsImportFile': importFile.doc,
+      'CatalogService.ProductsImportFile/content': importFile.elements.content.doc,
+    };
+
+    const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
+      headers: { 'Accept-Language': 'en' },
+    });
+    expect(status).toBe(200);
+    // The EDMX is pretty-printed, so compare without the whitespace between the tags.
+    const compact = data.replace(/>\s+</g, '><');
+    // The EDMX writer escapes &, < and " in an attribute value (measured with cds 10.1).
+    const xmlAttribute = (text) =>
+      text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+    for (const [target, doc] of Object.entries(descriptions)) {
+      expect(doc, `doc comment of ${target}`).toMatch(/\S/);
+      expect(annotationsOf(compact, target), target).toContain(
+        `<Annotation Term="Core.Description" String="${xmlAttribute(doc)}"/>`
+      );
+    }
+  });
+
+  // docs-toolchain, ADR-0029 decision 3: @title on the service becomes Common.Label on the entity
+  // container (and info.title of the OpenAPI export), @Core.SchemaVersion a schema-level annotation
+  // (info.version). @protocol: 'odata-v4' only names the protocol the service already had, for the
+  // OpenAPI server URL; no @protocol value changes the EDMX of cds 10.1 (measured), so this guards a
+  // future compiler that would.
+  it('names and versions the service for API consumers', async () => {
+    const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
+      headers: { 'Accept-Language': 'en' },
+    });
+    expect(status).toBe(200);
+    // The EDMX is pretty-printed, so compare without the whitespace between the tags.
+    const compact = data.replace(/>\s+</g, '><');
+    expect(annotationsOf(compact, 'CatalogService.EntityContainer')).toContain(
+      '<Annotation Term="Common.Label" String="Product Catalog API"/>'
+    );
+    // On the schema itself: a direct child of <Schema>, outside every <Annotations> block.
+    const schema = compact.match(/<Schema Namespace="CatalogService"[^>]*>.*<\/Schema>/)[0];
+    const schemaLevel = schema.replace(/<Annotations Target="[^"]*">.*?<\/Annotations>/g, '');
+    expect(schemaLevel.match(/<Annotation Term="Core\.SchemaVersion"[^>]*>/g)).toEqual([
+      '<Annotation Term="Core.SchemaVersion" String="1.0.0"/>',
+    ]);
+
+    const options = { service: 'CatalogService', version: 'v4' };
+    const withProtocol = await cds.load('*');
+    expect(withProtocol.definitions.CatalogService['@protocol']).toBe('odata-v4');
+    const withoutProtocol = await cds.load('*');
+    delete withoutProtocol.definitions.CatalogService['@protocol'];
+    expect(cds.compile.to.edmx(withoutProtocol, options)).toBe(
+      cds.compile.to.edmx(withProtocol, options)
+    );
+  });
 });

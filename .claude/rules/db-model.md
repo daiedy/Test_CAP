@@ -16,6 +16,7 @@ Applies to `db/schema.cds`, `db/common.cds`, `db/<module>.cds`. For CSV data see
 - Code lists for the user: `sap.common.CodeList`, not `enum` (PATTERNS: "Code list with selection from a list").
 - Money: `Decimal(15, 2)` + `currency : Currency`.
 - No `@UI.*`, `@Common.*`, `@title`, `@mandatory` annotations in `db/`. Semantics in `srv/annotations/<Entity>.cds`, presentation in `app/<app>/annotations/`.
+- A doc comment in `db/` is a developer note: it is not propagated to projections, so it never reaches the contract; the consumer description goes into `srv/annotations/<Entity>.cds` (ADR-0029 decision 2).
 - New domain module: a separate file `db/<module>.cds` with `namespace my.catalog.<module>;`.
 - Template: `templates/entity.cds`.
 

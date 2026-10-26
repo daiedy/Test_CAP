@@ -76,6 +76,26 @@ Phase 3 repeat (products-details-section step 6, 2026-10-12): the same copy plus
 worktree guard also refused a plain `for p in ...; do ... $(grep -c ...) ...; done` (no git in
 it): put substring counts in a node script too.
 
+Model-scan variant (docs-toolchain step 2, 2026-10-14): a scratch dir under `/tmp` written with the
+Write tool and run as `node /tmp/.../run.mjs` passed the worktree guard, as did one multi-source
+`cp -R` and `ln -s`. One labeled runner did baseline, 13 source mutations, a "must stay green"
+mutation and a final restored run in ~2 min. The green mutation (a `//` comment naming
+`@description`) proves a "never written" scan is precise: scan with `cds.parse.cdl(text)` per file,
+not a regex, because the parsed CSN flattens `@(description: ..)` and `@Core: { Description: .. }`
+into dotted keys and drops comments. A clause no source change can turn red (cds 10.1 emits the same
+EDMX for every `@protocol` value) is reported as a guard for a future compiler, not as proven.
+
+Dependency-mutation variant (docs-toolchain step 3, 2026-10-25): to mutate a package (here the
+`@cap-js/openapi` converter, to simulate the 1.7.0 Swagger 500 with `csn = cds.clone(csn)`), make the
+scratch `node_modules` a real folder of per-entry symlinks to the repo's, with real copies of the
+mutated package AND of every package that requires it (`cds-swagger-ui-express`): Node resolves from
+the realpath, so a symlinked requirer would load the repo's unmutated copy. `@sap/cds` stays one
+instance through the symlinks. `node setup.mjs` + `node run.mjs <regex>` with expected red sets per
+mutation (37 mutations, about 10 s each). Watch for equivalent mutants: an ESLint rule option object
+merges with the rule's defaults (`require-jsdoc` `require` without `FunctionDeclaration` still
+requires it), so mutate to `false`. A test on a committed generated file cannot see a model change by
+itself; that is the sync test's job, so do not expect it red.
+
 **How to apply:** whenever a plan asks for a contract test that "must fail on main", or a new `it`
 could pass vacuously. Count the asserted substring in the pre-feature EDMX; if the count is not 0,
 say so in the report instead of claiming the test proves the change. See

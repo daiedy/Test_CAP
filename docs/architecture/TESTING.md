@@ -4,7 +4,9 @@
 
 | Level | Tool | Where | When it runs |
 |---|---|---|---|
-| Static | `cds lint`, `ui5lint`, `prettier --check` | root, `app/products` | PostToolUse hook on every changed file, CI |
+| Static | `cds lint`, ESLint for JavaScript (root `npm run lint:js`, incl. JSDoc; `app/products` `npm run lint:js`), `ui5lint`, `prettier --check` | root, `app/products` | PostToolUse hook on every changed file, SubagentStop (errors block), CI, `/test-all` |
+| Generated docs freshness | `node scripts/check-docs-fresh.mjs` (registry hash, OpenAPI stamp), `test/api-docs.test.js` (byte comparison of `docs/api/CatalogService.openapi3.json` with a fresh compile, Swagger UI in development) | `scripts/`, `test/` | Stop hook, `npm test`, CI step "Registry freshness" |
+| Hook lint gates | Vitest, `test/hooks-file-checks.test.js` (glob matcher, install check, failure rule of `file-checks.mjs`) and `test/hooks-subagent-stop.test.js` (the hook run from a `createSandbox()` copy) | `test/` | `npm test`, CI |
 | OData contract | Vitest snapshot of `cds compile '*' --to edmx-v4 -s CatalogService -l en` | `test/metadata.test.js` | `npm test`, Stop hook, CI |
 | Service | `@cap-js/cds-test` + Vitest, SQLite in-memory | `test/<service>.test.js` | `npm test`, Stop hook, CI |
 | UI unit | QUnit | `app/products/webapp/test/unit/` | `ui5-test-runner`, CI (phase 3) |
@@ -28,8 +30,14 @@ npm test                  # all backend tests, quiet output
 npm run test:watch        # during development
 npm run test:coverage     # v8 coverage in coverage/
 npm run lint              # cds lint
+npm run lint:js           # ESLint for JavaScript, incl. JSDoc
 cd app/products && npm run lint   # ui5lint
+cd app/products && npm run lint:js   # ESLint for the app, incl. JSDoc of ext/
 ```
+
+## Hook lint gates
+
+`test/hooks-file-checks.test.js` and `test/hooks-subagent-stop.test.js` prove that the hooks run a linter only when it is installed (`<app>/node_modules/.bin/<tool>`) and that a failed run is a failure (ADR-0029 amendments D-F). Every hook run gets a fresh empty npm cache with `npm_config_offline=true` and `npm_config_update_notifier=false`: npm writes `_logs` into the cache on every `npx` call, so a cache still empty afterwards proves that no npx ran and no linter was fetched.
 
 ## cds 10 specifics
 

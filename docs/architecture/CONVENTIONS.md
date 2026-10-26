@@ -40,6 +40,7 @@ test/__snapshots__/               $metadata snapshots
 templates/                        reference files of every type
 scripts/                          pipeline scripts (ESM, Node 22)
 docs/                             documentation, see ARCHITECTURE.md
+docs/api/                         generated OpenAPI document of the service (`CatalogService.openapi3.json`), never edited by hand
 ```
 
 Annotation split rule: everything that describes the meaning of data and validation (labels, mandatory, assert, readonly) lives in `srv/annotations/`. `@requires` and `@restrict` are service annotations and live inline in `srv/<name>-service.cds` next to the projection they govern (ADR-0013), not in `srv/annotations/`. Everything that describes presentation (LineItem, Facets, FieldGroups, HeaderInfo, SelectionFields, ValueList, Text) lives in `app/<app>/annotations/`. Service files and `db/schema.cds` contain no UI annotations.
@@ -58,6 +59,8 @@ A read-only permission singleton (e.g. `CatalogService.Permissions`, ADR-0013) i
 - Money: `Decimal(15, 2)` plus `currency : Currency` and `@Measures.ISOCurrency: currency_code` in the annotations.
 - Strings always with a length: `String(100)`. Localizable texts: `localized String(255)`.
 - Every element has `@title: '{i18n>Entity.element}'` in `srv/annotations/<Entity>.cds`, not in the schema.
+- A description is a doc comment (`/** ... */`), one English sentence for the API consumer, never `@description`, `@Core.Description` or `@Core.LongDescription` (ADR-0029). A projection and its elements: in `srv/annotations/<Entity>.cds`, above `annotate <Service>.<Entity> with {` and above each element next to its `@title`. The service, an action and its parameters, a service-level type and its elements, a singleton: at their definition in `srv/<name>-service.cds`. A `db/` entity may carry a developer-note doc comment, its elements none. A developer note in `srv/*.cds` that is not an API description is a `//` comment.
+- The service header carries `@protocol: 'odata-v4'`, `@title` and `@Core.SchemaVersion` (the same value as `package.json` `version`, bumped together).
 - Service: `service CatalogService @(path: '/catalog')` is not set, the default path is `/odata/v4/<service>`. One projection per entity; expose only the needed fields via `excluding` or an explicit list.
 - No `cds add sample`. Data only via `cds add data --records <N>` followed by editing the values.
 
@@ -69,7 +72,7 @@ A read-only permission singleton (e.g. `CatalogService.Permissions`, ADR-0013) i
 - Errors: `req.reject(400, 'PRODUCT_STOCK_NEGATIVE', [args])` for a single error; when a handler collects several messages into one response, use the object form `req.error({ status, code: 'KEY', args })` per message instead (cds 10 leaves the status in `details[].code` for the positional form once more than one message is collected, PATTERNS "Business logic error"). The message key is in `_i18n/messages.properties`. No strings in code.
 - Logging: `const LOG = cds.log('catalog')` at module level. `console.*` is forbidden.
 - Database queries through `cds.ql` (`SELECT`, `INSERT`, `UPDATE`, `DELETE`), no raw SQL and no manual transactions.
-- Shared code in `srv/lib/<topic>.js` with named exports and JSDoc on every exported function.
+- Shared code in `srv/lib/<topic>.js` with named exports and JSDoc on every exported function. "JSDoc on every exported function" is defined by the `eslint-plugin-jsdoc` rule set in the root `eslint.config.mjs` (`srv/**/*.js`): `require-jsdoc` with `publicOnly: true` (also exported classes and methods), `require-param`, `require-returns` and their descriptions, `check-param-names`, all errors; `npm run lint:js` runs it (ADR-0029).
 - Formatting: Prettier, config `.prettierrc` in the root. Style: 2 spaces, single quotes, semicolons, width 100.
 
 ## 5. UI
@@ -80,6 +83,7 @@ A read-only permission singleton (e.g. `CatalogService.Permissions`, ADR-0013) i
 - XML views only. Modules via `sap.ui.define`, no global access (`sap.ui.getCore()`, `jQuery.sap.*` are forbidden). Asynchronous loading.
 - FE controller extension: file `ext/controller/<Page>Ext.js`, without the `.controller.` infix, otherwise the module does not load.
 - Formatters in `model/formatter.js`, wired in XML via `core:require`.
+- JSDoc on every function of `webapp/ext/**` (the rule set of `app/products/eslint.config.mjs`, `npm run lint:js` in `app/products`); `Component.js` and tests are out of scope.
 - All texts through `i18n`. Keys: `<page>.<element>.<property>` for the UI, `<Entity>.<element>` for model labels.
 - `ui5lint` without errors for every changed file. Known debt (CSP inline scripts in the test html files) is recorded in `docs/STATE.md`.
 - Recorded exception: the keyboard handler for the Explore button in `app/products/webapp/Component.js` (a `setTimeout` and an internal ushell id) stays by the author's decision. Nobody touches it without an explicit request; the operational rule is in `.claude/rules/ui5-webapp.md`.
@@ -102,4 +106,5 @@ A read-only permission singleton (e.g. `CatalogService.Permissions`, ADR-0013) i
 
 - Every code change is accompanied by: an updated registry (`npm run docs:registry`), an entry in `docs/CHANGELOG.md`, an up-to-date `docs/STATE.md`.
 - A new pattern or a deviation from an existing one: an ADR by the template `docs/decisions/ADR-0000-template.md`.
+- Generated API documentation: `docs/api/CatalogService.openapi3.json` and `docs/registry/JSDOC.md` come from `npm run docs:registry` (`npm run docs:api` writes the OpenAPI file alone); never edited by hand (ADR-0029).
 - A lesson learned (an agent mistake or non-obvious framework behavior): an entry in `docs/LESSONS.md` with a date and a link to the source.

@@ -21,6 +21,8 @@ updates:
     groups:
       sap-cap:
         patterns: ["@sap/cds*", "@cap-js/*", "@sap/eslint-plugin-cds", "@sap/cds-common-content"]
+        # Pinned (ADR-0029 amendment A, G): its bumps come alone, a red Swagger test holds no CAP patch.
+        exclude-patterns: ["@cap-js/openapi"]
       sap-ui5-fiori:
         patterns: ["@ui5/*", "@sap/ux-*", "@sap-ux/*", "ui5-test-runner", "wdio-ui5-service"]
       tooling:

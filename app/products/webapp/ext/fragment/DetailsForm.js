@@ -664,6 +664,9 @@ sap.ui.define(
             removeListMessage(comboBox);
             const row = comboBox.getBindingContext();
             if (row && isDifferentKey(row.getProperty(LIST_VALUE), commit.key)) {
+                /**
+                 * Recomputes the counter once the model has taken the new key.
+                 */
                 const update = function () {
                     updateCounterFrom(comboBox);
                 };
@@ -913,6 +916,9 @@ sap.ui.define(
         function createMultiListBox(id, values) {
             // the binding events below fire after construction, when holder.control is set
             const holder = {};
+            /**
+             * `change` of the selections binding: aligns the control once it exists.
+             */
             const sync = function () {
                 if (holder.control) {
                     syncSelections(holder.control);
@@ -950,6 +956,12 @@ sap.ui.define(
                         edit: createTextInput(id, unit),
                         display: createDisplay(id, {
                             path: "textValue",
+                            /**
+                             * Display text of a TEXT row.
+                             *
+                             * @param {string|null} value the row's text value
+                             * @returns {string} the value with the attribute's unit, "" for no value
+                             */
                             formatter: function (value) {
                                 return joinValueAndUnit(value, unit);
                             }
@@ -963,6 +975,12 @@ sap.ui.define(
                         display: createDisplay(id, {
                             path: "numberValue",
                             type: new Decimal(settings.formatOptions, settings.constraints),
+                            /**
+                             * Display text of an INTEGER or DECIMAL row.
+                             *
+                             * @param {string|null} value the number as formatted by the Decimal type
+                             * @returns {string} the number with the attribute's unit, "" for no value
+                             */
                             formatter: function (value) {
                                 return joinValueAndUnit(value, unit);
                             }

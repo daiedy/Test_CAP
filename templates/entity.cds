@@ -10,7 +10,7 @@ entity Categories : CodeList {
   key code : String(20);
 }
 
-/** Root business object. */
+/** Developer note: root business object table; API descriptions go to srv/annotations, not here. */
 entity Orders : cuid, managed {
   orderNo     : String(20);
   customer    : String(100);

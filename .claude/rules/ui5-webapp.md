@@ -19,6 +19,7 @@ paths:
 - FE controller extension: file `ext/controller/<Page>Ext.js`, without `.controller.` in the name. The module path in the manifest must match the file.
 - Fragments: `ext/fragment/<Name>.fragment.xml`. Formatters: `model/formatter.js`, in XML through `core:require`.
 - Texts only through `i18n`. Keys `<page>.<element>.<property>`.
+- Every function of `webapp/ext/**` carries a JSDoc block with described `@param` and `@returns` (jsdoc rules of `app/<app>/eslint.config.mjs`, ADR-0029 decision 7); the PostToolUse hook runs the app ESLint on the edited file.
 - Bootstrap parameters in html in dashed notation (`data-sap-ui-compat-version`), `data-sap-ui-async="true"`.
 - `Component.js`: inherits from `sap/fe/core/AppComponent`; it contains a deliberate keyboard handler for the shell button, do not remove it without a request from the user.
 - FLP sandbox: tiles and intents live in `webapp/appconfig/fioriSandboxConfig.json` (merged last by `sandbox.js`, overrides the SAP demo tiles from the CDN); `test/flpSandboxConfig.js` carries only renderer and plugin settings. Arrays in the sandbox config replace, they do not merge.
@@ -28,6 +29,7 @@ paths:
 
 ## After editing
 - `mcp__ui5-mcp-server__run_ui5_linter` or `npx ui5lint <file>` in `app/<app>`: zero errors in the changed files.
+- `npm run lint:js` in `app/<app>`: zero errors.
 - After editing `manifest.json`: `mcp__ui5-mcp-server__run_manifest_validation`; `npx ui5lint` in the application directory checks the manifest with its own rules as well and is the fallback when the server is down.
 - Test: QUnit for the formatter or extension (`tests-ui.md`).
 - `npm run docs:registry`.

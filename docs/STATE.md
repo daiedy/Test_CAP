@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-10-26
-- Branch: main (fix/ci-app-deps merged, PR #36: the CI backend job installs the app dependencies)
+- Branch: chore/upstream-check-2026-10-26 (upstream digest 2026-10-26 and the Dependabot `ui5-test-runner` major ignore; not merged into `main`, not pushed)
 - Feature: none
 - Phase: 7: completion (docs-toolchain #27 closed on GitHub and pruned on 2026-10-26, cost about $88 by transcript, SUMMARY "Cost")
-- Last commit: 98a64cf Merge branch 'fix/ci-app-deps' (PR #36)
-- Next: `/feature #10` products-validations (spec approved, ADR-0028), then #26 product-details-dimensions and #28 business-rules-wiki
+- Last commit: e6e3265 chore(ci): Dependabot skips ui5-test-runner majors
+- Next: merge this branch into `main` and push before 2026-11-09 (the ignore works only from `main`); merge the Dependabot PRs #31, #33, #34 once their CI is green after the rebase, close #35; then `/feature #10` products-validations (spec approved, ADR-0028), then #26 product-details-dimensions and #28 business-rules-wiki
 
 ## Open debt
 

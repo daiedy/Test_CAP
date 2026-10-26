@@ -2,7 +2,9 @@
 /**
  * Lookup CLI of the business-rules wiki (ADR-0030 decisions 5-7). The lookups read the committed
  * docs/wiki/graph.json (npm run docs:wiki); next-id, confirm, audit and export read the pages.
- * Run from the project root, one command per call:
+ * Runs from the project root or any folder below it: the root is the nearest folder, from the
+ * working directory up to the top of its git checkout, that holds docs/wiki/; without one every
+ * command exits 1 instead of answering as for an empty wiki. One command per call:
  *   find <term>         pages whose frontmatter names the term (id, alias, status, tag, message key,
  *                       element, ADR, code entry, source) or whose title or summary contains it
  *   related <page>      the pages it links to and the pages that link to it
@@ -13,10 +15,12 @@
  *   export <dir>        the wiki for the GitHub Wiki mirror: each page's frontmatter as a key table
  *                       under its H1, generated files and _*.md as they are, no graph.json
  * A <page> is a repository path (docs/wiki/rules/X.md), a path inside docs/wiki, a file name with
- * or without .md, or a rule id. Exit 0 with an answer, 1 on a usage error, an unknown page or an
- * audit finding.
+ * or without .md, or a rule id. A <file> or <page> path is relative to the project root wherever
+ * the CLI runs (an absolute one is made relative; one outside the root is refused); the <dir> of
+ * export is relative to the working directory. Exit 0 with an answer, 1 on a usage error, a missing
+ * wiki, an unknown page or an audit finding.
  */
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, posix, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isUnder } from './lib/hook-utils.mjs';
@@ -42,6 +46,16 @@ const USAGE = `usage: node scripts/wiki.mjs <command>
   confirm <page>...   stamp verified with the current hash of the page's code files
   audit               stale pages, uncovered message keys and constrained elements
   export <dir>        the wiki for the GitHub Wiki mirror into a new or empty folder`;
+/** The commands and the number of arguments each needs at least. */
+const ARITY = {
+  find: 1,
+  related: 1,
+  'for-path': 1,
+  'next-id': 1,
+  confirm: 1,
+  audit: 0,
+  export: 1,
+};
 const LABELS = {
   summary: 'Summary',
   tags: 'Tags',
@@ -61,9 +75,58 @@ const AS_CODE = new Set(['id', 'code', 'messages', 'elements', 'adr', 'aliases']
 const isUrl = (s) => /^[a-z][a-z0-9+.-]*:/i.test(s);
 const asList = (value) => (Array.isArray(value) ? value : value ? [value] : []);
 
-/** A path argument as a repository path: absolute paths made relative, `./` dropped. */
-const repoPath = (root, p) =>
-  isAbsolute(p) ? relative(root, p).split(sep).join('/') : posix.normalize(p).replace(/^\.\//, '');
+const isDir = (path) => existsSync(path) && statSync(path).isDirectory();
+
+/**
+ * The project root of the wiki: the nearest folder holding docs/wiki/, from `start` upwards. The
+ * walk ends at the top of the git checkout (a folder holding `.git`, a directory or a worktree's
+ * file), so a checkout or worktree without a wiki never answers from the wiki of a folder around
+ * it; a project without git (a temp copy) is searched up to the file system root.
+ * @param {string} start folder to start from, usually the working directory
+ * @returns {string} the absolute root
+ * @throws {Error} when no folder up to the end of the walk holds docs/wiki/
+ */
+export function wikiRoot(start) {
+  let dir = resolve(start);
+  for (;;) {
+    if (isDir(join(dir, WIKI_DIR))) return dir;
+    const parent = dirname(dir);
+    if (existsSync(join(dir, '.git')) || parent === dir)
+      throw new Error(
+        `no ${WIKI_DIR}/ in ${resolve(start)} or a folder above it up to ${dir}; run inside a project with a wiki`
+      );
+    dir = parent;
+  }
+}
+
+/**
+ * Refuses a root without docs/wiki/, so no command answers as for an empty wiki.
+ * @param {string} root project root
+ * @throws {Error} when `root` holds no docs/wiki/
+ */
+export function requireWiki(root) {
+  if (!isDir(join(root, WIKI_DIR)))
+    throw new Error(`${resolve(root)} holds no ${WIKI_DIR}/; run inside a project with a wiki`);
+}
+
+/**
+ * A path argument as a repository path: relative to the root wherever the CLI runs, absolute paths
+ * made relative, `./` dropped. A path outside the root is refused, because it can name no page and
+ * no code file, and answering "no page" for it would hide a wrong working directory.
+ * @param {string} root project root
+ * @param {string} p the argument
+ * @returns {string} the repository path
+ */
+function repoPath(root, p) {
+  const rel = isAbsolute(p)
+    ? relative(root, p).split(sep).join('/')
+    : posix.normalize(p).replace(/^\.\//, '');
+  if (rel === '..' || rel.startsWith('../') || isAbsolute(rel))
+    throw new Error(
+      `${p} is outside the project root ${root}; give a path relative to the project root`
+    );
+  return rel;
+}
 
 /**
  * The committed link graph.
@@ -71,6 +134,7 @@ const repoPath = (root, p) =>
  * @returns {{nodes: Array<object>, edges: Array<object>}} docs/wiki/graph.json
  */
 export function readGraph(root) {
+  requireWiki(root);
   const file = join(root, GRAPH);
   if (!existsSync(file)) throw new Error(`${GRAPH} is missing: run npm run docs:wiki`);
   return JSON.parse(readFileSync(file, 'utf8'));
@@ -161,6 +225,8 @@ export function nextId(root, area) {
   const a = String(area).toUpperCase();
   if (!WIKI_RULE_AREAS.includes(a))
     throw new Error(`unknown area ${area}; areas: ${WIKI_RULE_AREAS.join(', ')}`);
+  // Without the pages every id looks free: never answer for a root without a wiki.
+  requireWiki(root);
   const pattern = new RegExp(`^BR-${a}-(\\d{3})$`);
   let max = 0;
   for (const f of readWikiFiles(root)) {
@@ -189,6 +255,7 @@ function withVerified(text, hash) {
  * @returns {Array<{path: string, hash: string}>} the stamped pages
  */
 export function confirmPages(root, refs) {
+  requireWiki(root);
   const pages = readPages(root);
   const nodes = buildGraph(pages).nodes;
   const stamped = [];
@@ -259,6 +326,7 @@ export async function serviceElements(root) {
  * @returns {Promise<Array<string>>} findings; empty when the wiki is current
  */
 export async function auditWiki(root) {
+  requireWiki(root);
   const pages = readPages(root);
   const findings = [];
   for (const p of pages) {
@@ -344,6 +412,7 @@ function rebaseLinks(text, fromPath, root, target) {
  * @returns {Array<string>} the written files, relative to the target folder
  */
 export function exportWiki(root, dir) {
+  requireWiki(root);
   const out = resolve(root, dir);
   const wiki = resolve(root, WIKI_DIR);
   if (out === wiki || out.startsWith(wiki + sep) || wiki.startsWith(out + sep))
@@ -365,13 +434,12 @@ export function exportWiki(root, dir) {
 const describe = (n) =>
   `- ${n.path} (${[n.id, n.status].filter(Boolean).join(', ') || n.folder || 'top'}): ${n.summary ?? ''}`;
 
-async function main(root, [command, ...args]) {
-  const need = (n) => {
-    if (args.length < n) throw Object.assign(new Error(USAGE), { usage: true });
-  };
+async function main(cwd, [command, ...args]) {
+  if (!Object.hasOwn(ARITY, command) || args.length < ARITY[command])
+    throw Object.assign(new Error(USAGE), { usage: true });
+  const root = wikiRoot(cwd);
   switch (command) {
     case 'find': {
-      need(1);
       const hits = findPages(readGraph(root), args.join(' '));
       console.log(
         hits.length ? hits.map(describe).join('\n') : `No page matches "${args.join(' ')}".`
@@ -379,7 +447,6 @@ async function main(root, [command, ...args]) {
       return 0;
     }
     case 'related': {
-      need(1);
       const graph = readGraph(root);
       const node = findPage(graph.nodes, repoPath(root, args[0]));
       if (!node) throw new Error(`no wiki page ${args[0]}`);
@@ -391,7 +458,6 @@ async function main(root, [command, ...args]) {
       return 0;
     }
     case 'for-path': {
-      need(1);
       const file = repoPath(root, args[0]);
       const hits = pagesForPath(readGraph(root), file);
       console.log(
@@ -402,11 +468,9 @@ async function main(root, [command, ...args]) {
       return 0;
     }
     case 'next-id':
-      need(1);
       console.log(nextId(root, args[0]));
       return 0;
     case 'confirm': {
-      need(1);
       for (const { path, hash } of confirmPages(root, args))
         console.log(`${path}: verified ${hash}`);
       console.log(`${WIKI_DIR} regenerated.`);
@@ -421,8 +485,7 @@ async function main(root, [command, ...args]) {
       return findings.length ? 1 : 0;
     }
     case 'export': {
-      need(1);
-      const files = exportWiki(root, args[0]);
+      const files = exportWiki(root, resolve(cwd, args[0]));
       console.log(`Exported ${files.length} files of ${WIKI_DIR} to ${args[0]}.`);
       return 0;
     }

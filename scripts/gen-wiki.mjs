@@ -76,7 +76,9 @@ const DRAFT_ACTIONS = new Set(['draftActivate', 'draftEdit', 'draftPrepare']);
 // The range of the language hook (CYRILLIC_SCOPE in scripts/lib/file-checks.mjs), built from code
 // points so this file stays English.
 const CYRILLIC = new RegExp(`[${String.fromCodePoint(0x400)}-${String.fromCodePoint(0x4ff)}]`);
-const LINK = /(!?\[[^\]]*\]\()(\s*)(<[^>]*>|[^)\s]+)((?:\s+"[^"]*")?\s*\))/g;
+// What follows the `](` of an inline link or image: the target, `<...>` or without spaces and `)`,
+// an optional "title" and the closing `)`. Sticky: matched at the position after `](` only.
+const DESTINATION = /(\s*)(<[^>]*>|[^)\s]+)((?:\s+"[^"]*")?\s*\))/y;
 const REFERENCE = /^(\s{0,3}\[[^\]]+\]:\s*)(<[^>]*>|\S+)(.*)$/;
 
 const posixRel = (root, file) => relative(root, file).split(sep).join('/');
@@ -121,18 +123,74 @@ export function readWikiFiles(root) {
     .sort((a, b) => byText(a.path, b.path));
 }
 
-/** Calls `visit(prefix, target, suffix)` for each link of a line outside code spans. */
+/**
+ * The end (exclusive) of the backtick run at `at`: past the code span it opens when a run of the
+ * same length closes it later on the line, else past the run itself, which is then plain text
+ * (CommonMark code spans; a backslash inside a span escapes nothing).
+ */
+function backtickEnd(line, at) {
+  let n = 0;
+  while (line[at + n] === '`') n++;
+  for (let j = at + n; j < line.length;) {
+    let m = 0;
+    while (line[j + m] === '`') m++;
+    if (m === n) return j + m;
+    j += m || 1;
+  }
+  return at + n;
+}
+
+/** The index of the `]` closing the `[` at `open`, over nested brackets, code spans and escapes. */
+function closingBracket(line, open) {
+  let depth = 0;
+  for (let j = open; j < line.length; j++) {
+    const c = line[j];
+    if (c === '\\') j++;
+    else if (c === '`') j = backtickEnd(line, j) - 1;
+    else if (c === '[') depth++;
+    else if (c === ']' && --depth === 0) return j;
+  }
+  return -1;
+}
+
+/**
+ * Applies `visit` to the target of each inline link and image of a line, left to right: a code
+ * span outside a link text is copied as it is, a link text may hold code spans, brackets and
+ * images (visited before the target of the link around them), a backslash-escaped `[` opens none.
+ */
+function mapInline(line, visit) {
+  let out = '';
+  let i = 0;
+  while (i < line.length) {
+    const c = line[i];
+    if (c === '\\' || c === '`') {
+      const end = c === '\\' ? i + 2 : backtickEnd(line, i);
+      out += line.slice(i, end);
+      i = end;
+      continue;
+    }
+    const open = c === '[' ? i : c === '!' && line[i + 1] === '[' ? i + 1 : -1;
+    const close = open < 0 ? -1 : closingBracket(line, open);
+    DESTINATION.lastIndex = close + 2;
+    const dest = close >= 0 && line[close + 1] === '(' ? DESTINATION.exec(line) : null;
+    if (!dest) {
+      out += c;
+      i++;
+      continue;
+    }
+    const [all, ws, target, rest] = dest;
+    const text = mapInline(line.slice(open + 1, close), visit);
+    out += `${line.slice(i, open + 1)}${text}](${ws}${visit(target)}${rest}`;
+    i = close + 2 + all.length;
+  }
+  return out;
+}
+
+/** Calls `visit(target)` for each link of a line: a reference definition or the inline links. */
 function mapLinks(line, visit) {
   const ref = line.match(REFERENCE);
   if (ref) return `${ref[1]}${visit(ref[2])}${ref[3]}`;
-  return line
-    .split(/(`[^`]*`)/)
-    .map((part, i) =>
-      i % 2
-        ? part
-        : part.replace(LINK, (all, open, ws, target, close) => open + ws + visit(target) + close)
-    )
-    .join('');
+  return mapInline(line, visit);
 }
 
 /** Applies `visit` to the lines of a Markdown text outside fenced code blocks. */
@@ -150,7 +208,8 @@ function mapLines(text, visit) {
 
 /**
  * Rewrites the link targets of a Markdown text: inline links, images and reference definitions,
- * outside code spans and fenced blocks. The one link reader of the wiki tooling.
+ * outside code spans and fenced blocks; a link whose text holds a code span counts like any other.
+ * The one link reader of the wiki tooling: wikiStatus(), the graph edges and the export use it.
  * @param {string} text Markdown
  * @param {function(string, number): string} visit gets a target as written (`<...>` included) and
  *   its 0-based line index, returns the target to write

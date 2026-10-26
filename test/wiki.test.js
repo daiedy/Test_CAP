@@ -2,8 +2,8 @@
 // (wikiStatus of scripts/gen-wiki.mjs, run by scripts/check-docs-fresh.mjs) and the lookup CLI
 // scripts/wiki.mjs. Tests on the committed wiki only read the repository; every test that writes
 // (status findings, audit and confirm, check-docs-fresh --fix, next-id, export) works in a folder
-// under the OS temp dir and runs the CLI and check-docs-fresh.mjs with that folder as cwd, which
-// both take as the project root. The workflow test of PLAN step 4 joins this file in phase 4.
+// under the OS temp dir and runs the CLI, `npm run docs:wiki` and check-docs-fresh.mjs with that
+// folder or a subfolder as cwd. The workflow test of PLAN step 4 joins this file in phase 4.
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -24,12 +24,17 @@ import {
 } from '../scripts/gen-wiki.mjs';
 import { WIKI_GENERATED_MARK, WIKI_RULE_AREAS } from '../scripts/lib/doc-shapes.mjs';
 import { recordedHash, sourcesHash } from '../scripts/lib/registry-sources.mjs';
-import { exportWiki, nextId, pagesForPath, readGraph } from '../scripts/wiki.mjs';
+import { exportWiki, nextId, pagesForPath, readGraph, wikiRoot } from '../scripts/wiki.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const CLI = path.join(root, 'scripts/wiki.mjs');
 const HOME = `${WIKI_DIR}/Home.md`;
 const SUBCATEGORY_RULE = `${WIKI_DIR}/rules/The-subcategory-belongs-to-the-products-category.md`;
+// The pages PLAN acceptance criteria 5 and 6 name around SUBCATEGORY_RULE.
+const MANDATORY_RULE = `${WIKI_DIR}/rules/A-product-needs-a-name-price-currency-stock-category-and-subcategory.md`;
+const PRODUCTS_DOMAIN = `${WIKI_DIR}/domain/Products.md`;
+const CASCADE_HOW_TO = `${WIKI_DIR}/how-to/Choose-a-category-and-subcategory.md`;
+const ADR_0024_DIGEST = `${WIKI_DIR}/decisions/A-dependent-field-offers-only-the-values-of-its-parent-field.md`;
 // The keys of a graph node (PLAN acceptance criterion 5).
 const NODE_KEYS = [
   'path',
@@ -66,6 +71,13 @@ const REGISTRY_FILES = [
 const CYRILLIC_WORD = String.fromCodePoint(0x442, 0x43e, 0x432, 0x430, 0x440);
 
 const readRepo = (rel) => fs.readFileSync(path.join(root, rel), 'utf8');
+/** Every file under `dir`/docs/wiki, relative to `dir`, sorted. */
+const wikiTree = (dir) =>
+  fs
+    .readdirSync(path.join(dir, WIKI_DIR), { recursive: true, withFileTypes: true })
+    .filter((e) => e.isFile())
+    .map((e) => path.relative(dir, path.join(e.parentPath, e.name)).split(path.sep).join('/'))
+    .sort();
 const asList = (value) => (Array.isArray(value) ? value : value ? [value] : []);
 /** The `- ` lines of a CLI answer. */
 const listed = (stdout) => stdout.split('\n').filter((line) => line.startsWith('- '));
@@ -231,7 +243,7 @@ describe('Generated wiki files (ADR-0030 decision 4)', () => {
     expect([...renderWiki(root).files.keys()].sort()).toEqual(GENERATED);
 
     // A fresh writeWiki() from the inputs alone: the hand-written files, the OpenAPI documents and
-    // the code files the pages name.
+    // the code files the pages name, copied as bytes (a page may name a binary file, an .xlsx).
     const p = tempProject('wiki-sync');
     try {
       const inputs = [
@@ -247,18 +259,34 @@ describe('Generated wiki files (ADR-0030 decision 4)', () => {
           readPages(root).flatMap((pg) => asList(pg.meta.code))
         ),
       ];
-      p.put(Object.fromEntries(inputs.map((file) => [file, readRepo(file)])));
+      p.put(
+        Object.fromEntries(inputs.map((file) => [file, fs.readFileSync(path.join(root, file))]))
+      );
       expect(wikiSourcesHash(p.dir)).toBe(hash);
       expect(writeWiki(p.dir).sort()).toEqual(GENERATED);
       for (const file of GENERATED) expect(p.read(file), file).toBe(readRepo(file));
-      // A second run writes the same bytes.
-      writeWiki(p.dir);
-      for (const file of GENERATED) expect(p.read(file), file).toBe(readRepo(file));
+
+      // A second run, through `npm run docs:wiki` of a copy of package.json and scripts/, leaves
+      // every file of docs/wiki byte for byte as committed: the copy stands in for the working
+      // tree, so `git status docs/wiki` stays empty without the test writing the repository.
+      fs.symlinkSync(path.join(root, 'node_modules'), path.join(p.dir, 'node_modules'), 'dir');
+      fs.cpSync(path.join(root, 'scripts'), path.join(p.dir, 'scripts'), { recursive: true });
+      fs.copyFileSync(path.join(root, 'package.json'), path.join(p.dir, 'package.json'));
+      const second = spawnSync('npm', ['run', '--silent', 'docs:wiki'], {
+        cwd: p.dir,
+        encoding: 'utf8',
+        env: { ...process.env, npm_config_update_notifier: 'false' },
+      });
+      expect(second.status, second.stderr).toBe(0);
+      expect(wikiTree(p.dir)).toEqual(wikiTree(root));
+      for (const file of wikiTree(root))
+        expect(
+          fs.readFileSync(path.join(p.dir, file)).equals(fs.readFileSync(path.join(root, file))),
+          file
+        ).toBe(true);
     } finally {
       p.remove();
     }
-    // phase 3: the gate also records a second `npm run docs:wiki` with `git diff --stat docs/wiki`
-    // empty (PLAN acceptance criterion 4).
   });
 
   it('builds one node per page and one edge per page link', () => {
@@ -312,8 +340,10 @@ describe('Generated wiki files (ADR-0030 decision 4)', () => {
     expect(synthetic.edges).toEqual([
       { from: `${WIKI_DIR}/A.md`, to: `${WIKI_DIR}/B.md`, type: 'link' },
     ]);
-    // phase 3: the backlinks of SUBCATEGORY_RULE include its domain page (domain/Products.md) and a
-    // how-to page (how-to/Choose-category-and-subcategory.md or the page the backfill names).
+
+    // The backlinks of the subcategory rule include its domain page and a how-to page.
+    const backlinks = graph.edges.filter((e) => e.to === SUBCATEGORY_RULE).map((e) => e.from);
+    expect(backlinks).toEqual(expect.arrayContaining([PRODUCTS_DOMAIN, CASCADE_HOW_TO]));
   });
 });
 
@@ -324,9 +354,24 @@ describe('Wiki lookup CLI (ADR-0030 decision 5)', () => {
     expect(rule).toMatchObject({ id: 'BR-PRODUCTS-001', status: 'active' });
     const ruleLine = `- ${SUBCATEGORY_RULE} (BR-PRODUCTS-001, active): ${rule.summary}`;
 
+    const mandatory = graph.nodes.find(
+      (n) => n.title === 'A product needs a name, price, currency, stock, category and subcategory'
+    );
+    expect(mandatory).toMatchObject({
+      path: MANDATORY_RULE,
+      id: 'BR-PRODUCTS-003',
+      status: 'active',
+    });
+    expect(mandatory.summary).toMatch(/^\S.*\.$/);
+
     const forPath = wiki(root, 'for-path', 'srv/annotations/Products.cds');
     expect(forPath.status, forPath.stderr).toBe(0);
-    expect(listed(forPath.stdout)).toContain(ruleLine);
+    expect(listed(forPath.stdout)).toEqual(
+      expect.arrayContaining([
+        ruleLine,
+        `- ${MANDATORY_RULE} (BR-PRODUCTS-003, active): ${mandatory.summary}`,
+      ])
+    );
     expect(listed(forPath.stdout).filter((l) => l.includes(`${WIKI_DIR}/decisions/`))).toEqual([]);
     // A decision digest never answers for-path, even when its code names the file.
     const digest = { path: `${WIKI_DIR}/decisions/D.md`, folder: 'decisions', code: ['srv/**'] };
@@ -344,19 +389,88 @@ describe('Wiki lookup CLI (ADR-0030 decision 5)', () => {
     const related = wiki(root, 'related', SUBCATEGORY_RULE);
     expect(related.status, related.stderr).toBe(0);
     const [, linksTo = '', linkedFrom = ''] = related.stdout.split(/^Links to:$|^Linked from:$/m);
-    expect(listed(linkedFrom).some((l) => l.startsWith(`- ${HOME} `))).toBe(true);
-    expect(
-      listed(linksTo)
+    const pathsOf = (section) =>
+      listed(section)
         .filter((l) => l !== '- none')
-        .every((l) => l.startsWith(`- ${WIKI_DIR}/`))
-    ).toBe(true);
+        .map((l) => l.slice(2, l.indexOf(' (')));
+    expect(pathsOf(linksTo).every((p) => p.startsWith(`${WIKI_DIR}/`))).toBe(true);
+    // The rule links the ADR-0024 digest; its domain page and the how-to link the rule, so they
+    // are listed under "Linked from" together with Home.
+    expect(pathsOf(linksTo)).toContain(ADR_0024_DIGEST);
+    expect(listed(linksTo).find((l) => l.startsWith(`- ${ADR_0024_DIGEST} `))).toMatch(
+      /\(ADR-0024\)\.$/
+    );
+    expect(pathsOf(linkedFrom)).toEqual(
+      expect.arrayContaining([HOME, PRODUCTS_DOMAIN, CASCADE_HOW_TO])
+    );
     // The id names the same page.
     expect(wiki(root, 'related', 'BR-PRODUCTS-001').stdout).toBe(related.stdout);
+  });
 
-    // phase 3, against the backfilled wiki:
-    // - for-path srv/annotations/Products.cds also lists the mandatory-fields rule page with its id,
-    //   status and summary, and still nothing from decisions/;
-    // - related SUBCATEGORY_RULE lists its domain page, the ADR-0024 digest and the how-to it links.
+  it('resolves the project root from a subfolder and refuses a folder without a wiki', () => {
+    const p = tempProject('wiki-root');
+    const empty = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'wiki-no-root-')));
+    const A = `${WIKI_DIR}/rules/A.md`;
+    const B = `${WIKI_DIR}/rules/B.md`;
+    try {
+      p.put({
+        [HOME]: page({
+          title: 'Home',
+          summary: 'Entry page.',
+          body: `- [A](rules/A.md)\n- [B](rules/B.md)`,
+        }),
+        [A]: rulePage({
+          title: 'A',
+          id: 'BR-PRODUCTS-001',
+          summary: 'Rule A.',
+          code: ['srv/service.cds'],
+        }),
+        [B]: rulePage({
+          title: 'B',
+          id: 'BR-PRODUCTS-003',
+          summary: 'Rule B.',
+          code: ['srv/*.cds'],
+        }),
+        'srv/service.cds': 'service S {}\n',
+        'app/products/webapp/index.html': '<!doctype html>\n',
+        // A checkout nested in the project: the walk stops at its .git and never answers from
+        // the wiki of the folder around it.
+        'nested/.git/HEAD': 'ref: refs/heads/main\n',
+      });
+      writeWiki(p.dir);
+
+      for (const sub of ['docs', 'app/products']) {
+        const r = wiki(path.join(p.dir, sub), 'next-id', 'PRODUCTS');
+        expect(r.status, `${sub}: ${r.stderr}`).toBe(0);
+        expect(r.stdout, sub).toBe('BR-PRODUCTS-004\n');
+      }
+      const atRoot = wiki(p.dir, 'for-path', 'srv/service.cds');
+      expect(atRoot.status, atRoot.stderr).toBe(0);
+      expect(listed(atRoot.stdout).sort()).toEqual([
+        `- ${A} (BR-PRODUCTS-001, active): Rule A.`,
+        `- ${B} (BR-PRODUCTS-003, active): Rule B.`,
+      ]);
+      const fromSub = wiki(path.join(p.dir, 'app/products'), 'for-path', 'srv/service.cds');
+      expect(fromSub.status, fromSub.stderr).toBe(0);
+      expect(fromSub.stdout).toBe(atRoot.stdout);
+      expect(wikiRoot(path.join(p.dir, WIKI_DIR, 'rules'))).toBe(p.dir);
+
+      const outside = wiki(path.join(p.dir, 'docs'), 'for-path', '../x.cds');
+      expect(outside.status).toBe(1);
+      expect(outside.stderr).toMatch(/outside the project root/);
+      expect(outside.stdout).toBe('');
+
+      for (const cwd of [empty, path.join(p.dir, 'nested')]) {
+        const r = wiki(cwd, 'next-id', 'PRODUCTS');
+        expect(r.status, cwd).toBe(1);
+        expect(r.stderr, cwd).toMatch(/no docs\/wiki\/ in /);
+        expect(r.stdout, cwd).toBe('');
+      }
+      expect(() => nextId(empty, 'PRODUCTS')).toThrow(/no docs\/wiki\//);
+    } finally {
+      p.remove();
+      fs.rmSync(empty, { recursive: true, force: true });
+    }
   });
 
   it('next-id skips every id in use', () => {
@@ -599,6 +713,32 @@ describe('Wiki lookup CLI (ADR-0030 decision 5)', () => {
       expect(() => exportWiki(root, `${WIKI_DIR}/out`)).toThrow(/neither is nor contains/);
     } finally {
       fs.rmSync(out, { recursive: true, force: true });
+    }
+  });
+
+  it('export rebases a repository link whose text holds inline code', () => {
+    const p = tempProject('wiki-export-code');
+    const ADR = 'docs/decisions/ADR-0001-x.md';
+    try {
+      p.put({
+        [ADR]: '# ADR-0001 X\n',
+        [HOME]: page({ title: 'Home', summary: 'Entry page.', body: '- [R](rules/R.md)' }),
+        [`${WIKI_DIR}/rules/R.md`]: page({
+          title: 'R',
+          summary: 'A page with two links to one ADR.',
+          body: '- [ADR `X`](../../decisions/ADR-0001-x.md)\n- [ADR X](../../decisions/ADR-0001-x.md)',
+        }),
+      });
+      const r = wiki(p.dir, 'export', 'out');
+      expect(r.status, r.stderr).toBe(0);
+      const exported = p.read('out/rules/R.md');
+      const targets = linkTargets(exported);
+      expect(targets).toHaveLength(2);
+      for (const target of targets)
+        expect(path.resolve(p.dir, 'out/rules', target), target).toBe(path.join(p.dir, ADR));
+      expect(exported).toContain('- [ADR `X`](../../docs/decisions/ADR-0001-x.md)');
+    } finally {
+      p.remove();
     }
   });
 });

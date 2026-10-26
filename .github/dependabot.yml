@@ -27,6 +27,14 @@ updates:
         patterns: ["@ui5/*", "@sap/ux-*", "@sap-ux/*", "ui5-test-runner", "wdio-ui5-service"]
       tooling:
         patterns: ["vitest", "@vitest/*", "eslint", "prettier"]
+      # Security updates (Dependabot alerts): one PR per directory instead of one per package.
+      # They ignore schedule and cooldown and open when an alert appears; the ignore list below
+      # applies to them too, so no CAP or ui5-test-runner major comes this way.
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
+        # The pinned converter keeps its own PR, as in sap-cap (ADR-0029 amendments A, G).
+        exclude-patterns: ["@cap-js/openapi"]
     ignore:
       - dependency-name: "@sap/cds"
         update-types: ["version-update:semver-major"]

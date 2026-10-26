@@ -5,10 +5,10 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-10-26
-- Branch: main (upstream digest 2026-10-26, Dependabot #30-#34 and #37 merged, #35 closed, ESLint worktree ignore; pushed)
+- Branch: main (Dependabot auto-merge, strict protection, first auto-merged PR #42; pushed)
 - Feature: none
 - Phase: 7: completion (docs-toolchain #27 closed and pruned on 2026-10-26, about $88, SUMMARY "Cost")
-- Last commit: 1cc8e35 Merge pull request #39 from daiedy/dependabot/npm_and_yarn/app/products/follow-redirects-1.16.2
+- Last commit: e3c7180 Merge pull request #42 from daiedy/dependabot/npm_and_yarn/app/products/security-cb24140fdc
 - Next: `/feature #10` products-validations (spec approved, ADR-0028), then #26, #28; the cds 10.2 Dependabot PR (about 2026-11-02) needs the re-tests listed in `docs/upstream/UPDATES.md` 2026-10-26
 
 ## Open debt

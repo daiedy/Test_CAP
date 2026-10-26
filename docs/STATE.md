@@ -8,8 +8,8 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Branch: chore/upstream-check-2026-10-26 (upstream digest, Dependabot ignore, `pipeline-config.md` rule, `origin/main` merged in; not pushed)
 - Feature: none
 - Phase: 7: completion (docs-toolchain #27 closed and pruned on 2026-10-26, about $88, SUMMARY "Cost")
-- Last commit: 2e7abf9 Merge origin/main (Dependabot #30, #31, #32, #33, #34) into chore/upstream-check-2026-10-26
-- Next: fast-forward `main` to this branch and push before 2026-11-09 (the Dependabot ignore acts only from `main`); close #35; then `/feature #10` products-validations (spec approved, ADR-0028), then #26, #28
+- Last commit: 0e48711 docs: STATE, CHANGELOG and STACK after the Dependabot merge
+- Next: fast-forward `main` to this branch and push before 2026-11-09 (the Dependabot ignore acts only from `main`); then `/feature #10` products-validations (spec approved, ADR-0028), then #26, #28
 
 ## Open debt
 

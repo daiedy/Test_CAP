@@ -7,7 +7,8 @@ metadata:
 
 Digest 2026-10-26 (heading `## 2026-10-26` in docs/upstream/UPDATES.md). All status: not yet carried out as of that date.
 
-- Rebase Dependabot PRs #31, #33, #34 (their CI failed before the CI fix PR #36), merge when green; close #35 (`@cap-js/openapi` 1.7.0, pin stays while cap-js/openapi PR #207 is open): given.
+- Rebase Dependabot PRs #31, #33, #34 (their CI failed before the CI fix PR #36), merge when green; close #35 (`@cap-js/openapi` 1.7.0, pin stays while cap-js/openapi PR #207 is open): given; done 2026-10-26 (#30-#34 merged, main e89adb5 green; #35 closed).
+- `ui5-test-runner` major ignore in `.github/dependabot.yml`: committed 2026-10-26 on `chore/upstream-check-2026-10-26`, effective only after the user pushes it to `main`.
 - Add a semver-major ignore for `ui5-test-runner` in `.github/dependabot.yml` before 2026-11-09 (v6 needs Node >= 24.11.1, project and CI on Node 22); Node 24 migration as a `/backlog` item: given.
 - cds 10.2.1 / cds-dk 10.2.0 (Dependabot after the cooldown, expected 2026-11-02): `npm test`, review a `$metadata` snapshot diff (cds-compiler 7.2 TypeDefinition change; root compiler is 7.0.3), re-measure the two LESSONS entries of 2026-09-29 (positional `req.error` code, `sap-messages` language): given.
 - Optional MCP pin bumps (`@cap-js/mcp-server` 0.0.8, `chrome-devtools-mcp` 1.12.0, `fiori-mcp` 1.15.15): deferred by the user on 2026-10-07, repeated once in one line on 2026-10-26.

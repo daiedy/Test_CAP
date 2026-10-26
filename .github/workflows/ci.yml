@@ -1,6 +1,8 @@
 # Continuous integration: the same gates the Claude Code hooks run locally.
 # Backend: cds lint, ESLint with the JSDoc gate, Vitest (incl. the OData contract snapshot), Prettier,
-# registry and OpenAPI freshness.
+# registry and OpenAPI freshness. It installs the app dependencies too: the Vitest suites of the
+# app lint gates (api-docs, hooks-file-checks, hooks-subagent-stop) run the app ESLint and ui5lint
+# from app/products/node_modules.
 # UI: ui5lint and the Fiori ESLint rules. OPA5 journeys need a browser and a live stack; they
 # run in the separate `ui-tests` job against `cds serve` on :4004 with ui5-test-runner.
 name: ci
@@ -31,8 +33,10 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             app/products/package-lock.json
-      - name: Install root dependencies
-        run: npm ci --ignore-scripts
+      - name: Install dependencies
+        run: |
+          npm ci --ignore-scripts
+          npm ci --ignore-scripts --prefix app/products
       - name: cds lint
         run: npm run lint
       - name: ESLint (JavaScript, JSDoc)

@@ -34,6 +34,9 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "@sap/cds-compiler"
         update-types: ["version-update:semver-major"]
+      # v6 needs Node.js >= 24.11.1, local and CI run Node 22; the major comes with the Node 24 move.
+      - dependency-name: "ui5-test-runner"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: "/"
     schedule:

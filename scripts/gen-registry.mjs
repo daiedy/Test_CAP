@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-// Generates docs/registry/*.md from the effective CDS model and project sources, and the OpenAPI
-// documents of docs/api through scripts/gen-api-docs.mjs (ADR-0029 decision 4).
+// Generates docs/registry/*.md from the effective CDS model and project sources, the OpenAPI
+// documents of docs/api through scripts/gen-api-docs.mjs (ADR-0029 decision 4) and the generated
+// files of docs/wiki through scripts/gen-wiki.mjs (ADR-0030 decision 4).
 // Output files are overwritten; never edit them by hand. Run: npm run docs:registry
 import cds from '@sap/cds';
 import {
@@ -16,6 +17,7 @@ import { join, relative, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { sourcesHash } from './lib/registry-sources.mjs';
 import { writeOpenApi } from './gen-api-docs.mjs';
+import { writeWiki } from './gen-wiki.mjs';
 
 const ROOT = process.cwd();
 cds.root = ROOT;
@@ -586,5 +588,7 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
 }
 
 writeOpenApi(ROOT, HASH);
+// The wiki's API page reads the OpenAPI documents, so the wiki follows the export (ADR-0030 decision 4).
+writeWiki(ROOT);
 rmSync(join(OUT, '.stale'), { force: true });
-console.log(`docs/registry and docs/api updated (sources ${HASH}).`);
+console.log(`docs/registry, docs/api and docs/wiki updated (sources ${HASH}).`);

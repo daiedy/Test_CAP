@@ -68,6 +68,4 @@ Contract rule: a step that changes the OData model (`db/*.cds`, `srv/**/*.cds`, 
 - `npm run docs:registry` now runs three generators (registry, OpenAPI, wiki): the Stop gate grows by the wiki run (about 0.2 seconds for 67 pages, measured at the phase 2 gate).
 
 ## Open questions
-The plan gate (2026-10-26) settled questions 1-10 by the recommendations (CONTEXT "User decisions"). Open are only the user items of step 0, which are actions, not decisions:
-- The first wiki page, made by hand with the probe content of `research/wiki-mechanics.md` section 4 before step 4, and its rendering result (frontmatter as a table or raw), which decides whether step 2 adds `export` and step 4 runs it.
-- The implementation session started with `PIPELINE_ALLOW_PROTECTED=1` (steps 2 and 4).
+None. The plan gate (2026-10-26) settled questions 1-10 by the recommendations, and the step 0 user items are done (CONTEXT "User decisions", step 0): the first wiki page exists and measured raw frontmatter, so step 2 adds `export <dir>` and step 4 runs it; the session runs with `PIPELINE_ALLOW_PROTECTED=1`.

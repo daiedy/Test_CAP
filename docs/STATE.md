@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-26
 - Branch: feature/business-rules-wiki (from main 40748e9)
 - Feature: business-rules-wiki (#28)
-- Phase: 1 done: plan approved, ADR-0030 accepted, gate mode autonomous; waiting for the step 0 wiki probe
-- Last commit: 40748e9 docs: record strict main protection after the first Dependabot auto-merge
-- Next: phase 2 tooling (`cap-backend-dev`, then `test-backend`) after the user reports the step 0 probe; then `/feature #10` (ADR-0028), then #26; the cds 10.2 Dependabot PR (about 2026-11-02) needs the re-tests listed in `docs/upstream/UPDATES.md` 2026-10-26
+- Phase: 2 done: tooling (generator, lookup CLI with `export`, checks; `npm test` 241 in 15 files)
+- Last commit: 7c42fab docs(spec): business-rules-wiki plan approved, ADR-0030 accepted
+- Next: phase 3 content in six `docs-keeper` launches (3a-3f), `wiki audit: clean`, `test-backend` tightens the `// phase 3:` assertions; then `/feature #10` (ADR-0028), then #26; the cds 10.2 Dependabot PR (about 2026-11-02) needs the re-tests listed in `docs/upstream/UPDATES.md` 2026-10-26
 
 ## Open debt
 

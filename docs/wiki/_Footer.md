@@ -1,0 +1,1 @@
+This wiki is a read-only mirror of the folder [`docs/wiki/`](https://github.com/daiedy/Test_CAP/tree/main/docs/wiki) of the repository `daiedy/Test_CAP`. Edit the pages there, through a pull request; a change made here in the wiki is overwritten at the next sync.

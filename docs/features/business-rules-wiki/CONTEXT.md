@@ -19,6 +19,7 @@ From the issue (2026-10-14): the structure above; one language, no bilingual mir
 - Plan gate 2026-10-26, Q8: `node scripts/wiki.mjs audit` blocks in the CI backend job, in `/test-all` and at the `/feature` phase 6 gate; not in the Stop gate, not in `npm test`; no Stop advisory in this feature.
 - Plan gate 2026-10-26, Q9: `.github/workflows/wiki.yml` reaches `main` through a one-file pull request as soon as step 4 writes it; `gh workflow run wiki.yml --ref feature/business-rules-wiki` mirrors the branch for the phase 5 verification.
 - Plan gate 2026-10-26, Q10: the user steps stand: the implementation session runs with `PIPELINE_ALLOW_PROTECTED=1`, and the user makes the first wiki page by hand with the probe content and reports its rendering before step 4; ADR-0030 is accepted (its `Status:` sentence replaced on 2026-10-26).
+- Step 0, 2026-10-26: the user created `Home` in the wiki UI (`Test_CAP.wiki.git` exists, 3 commits, `Home.md` starts with the probe's `---` line). The wiki renders frontmatter raw: the opening `---` is a horizontal rule, and the key lines with the closing `---` become one setext H2 heading that also shows in the page outline of the Pages sidebar. So step 2 adds `node scripts/wiki.mjs export <dir>` (ADR-0030 decision 7: each page's YAML block becomes a small key table under its H1, `graph.json` left out) and step 4 runs it before the action and mirrors that folder.
 
 ## Affected entities and services
 Result of `mcp__cds-mcp__search_model` (`CatalogService`, 20 entity definitions incl. texts, drafts and the `Permissions` singleton; `CatalogService.Products` with `@odata.draft.enabled`, `@restrict`, the `@assert` constraint as a CSN `xpr`) and `docs/registry/DOMAIN-MODEL.md`, `SERVICES.md`, `HANDLERS.md`. The feature changes no CDS, no handler, no UI annotation and no i18n text: the model, the contract (`metadata.xml` 1674 lines) and `npm run test:ui` are untouched, so the contract rule of the plan does not apply.
@@ -70,6 +71,4 @@ From `docs/LESSONS.md`:
 - 2026-10-09 (`cds add data` touches `mta.yaml`): no data generation here; the risk list still asks the implementer to read `git status` for unexpected files after `npm run docs:registry`.
 
 ## Open questions
-Questions 1-10 were decided at the plan gate on 2026-10-26 ("User decisions"). Still open are the two step 0 user items; they are actions, not design decisions:
-- The first wiki page, made by hand in the web UI with the probe content of `research/wiki-mechanics.md` section 4 before step 4, and its rendering result: frontmatter as a table (the folder is mirrored as is) or raw (step 2 adds `node scripts/wiki.mjs export` and step 4 runs it before the action). The orchestrator records the result here and in "User decisions".
-- The implementation session started with `PIPELINE_ALLOW_PROTECTED=1`, needed by steps 2 and 4.
+None. Questions 1-10 were decided at the plan gate on 2026-10-26, and the two step 0 user items are done ("User decisions"): the first wiki page exists and measured raw frontmatter, and the implementation session runs with `PIPELINE_ALLOW_PROTECTED=1`.

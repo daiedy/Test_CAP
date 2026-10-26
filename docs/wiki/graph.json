@@ -1,0 +1,66 @@
+{
+  "x-sources": "e14c2adde1446827",
+  "nodes": [
+    {
+      "path": "docs/wiki/Home.md",
+      "folder": "",
+      "id": null,
+      "title": "Home",
+      "summary": "Entry page of the Product Catalog business-rules wiki, with its folders and how to read them.",
+      "tags": [
+        "home",
+        "index"
+      ],
+      "code": [],
+      "messages": [],
+      "elements": [],
+      "status": null,
+      "sources": [],
+      "verified": null,
+      "codeHash": null,
+      "aliases": [],
+      "adr": []
+    },
+    {
+      "path": "docs/wiki/rules/The-subcategory-belongs-to-the-products-category.md",
+      "folder": "rules",
+      "id": "BR-PRODUCTS-001",
+      "title": "The subcategory belongs to the product's category",
+      "summary": "A product carries only a subcategory of its own category, so a pair from two categories is never stored.",
+      "tags": [
+        "products",
+        "subcategory",
+        "category"
+      ],
+      "code": [
+        "srv/annotations/Products.cds",
+        "app/products/annotations/Products.cds",
+        "srv/catalog-service.js"
+      ],
+      "messages": [
+        "PRODUCTS_SUBCATEGORY_MISMATCH"
+      ],
+      "elements": [
+        "Products.subcategory"
+      ],
+      "status": "active",
+      "sources": [
+        "docs/decisions/ADR-0024-dependent-value-help.md",
+        "docs/features/products-subcategories/SUMMARY.md",
+        "docs/decisions/ADR-0025-dynamic-field-control.md",
+        "docs/features/products-subcategory-cascade/SUMMARY.md"
+      ],
+      "verified": "5ff680ee203a3f24",
+      "codeHash": "5ff680ee203a3f24",
+      "aliases": [],
+      "adr": []
+    }
+  ],
+  "edges": [
+    {
+      "from": "docs/wiki/Home.md",
+      "to": "docs/wiki/rules/The-subcategory-belongs-to-the-products-category.md",
+      "type": "link"
+    }
+  ]
+}

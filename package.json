@@ -13,7 +13,7 @@
     "@sap/cds": "^10",
     "@sap/cds-common-content": "^3.2.0",
     "express": "^5",
-    "read-excel-file": "^9.3.10"
+    "read-excel-file": "^9.3.12"
   },
   "devDependencies": {
     "@cap-js/cds-test": "^1",

@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-10-26
-- Branch: main (Dependabot auto-merge, strict protection, first auto-merged PR #42; pushed)
-- Feature: none
-- Phase: 7: completion (docs-toolchain #27 closed and pruned on 2026-10-26, about $88, SUMMARY "Cost")
-- Last commit: e3c7180 Merge pull request #42 from daiedy/dependabot/npm_and_yarn/app/products/security-cb24140fdc
-- Next: `/feature #10` products-validations (spec approved, ADR-0028), then #26, #28; the cds 10.2 Dependabot PR (about 2026-11-02) needs the re-tests listed in `docs/upstream/UPDATES.md` 2026-10-26
+- Branch: feature/business-rules-wiki (from main 40748e9)
+- Feature: business-rules-wiki (#28)
+- Phase: 1 done: plan approved, ADR-0030 accepted, gate mode autonomous; waiting for the step 0 wiki probe
+- Last commit: 40748e9 docs: record strict main protection after the first Dependabot auto-merge
+- Next: phase 2 tooling (`cap-backend-dev`, then `test-backend`) after the user reports the step 0 probe; then `/feature #10` (ADR-0028), then #26; the cds 10.2 Dependabot PR (about 2026-11-02) needs the re-tests listed in `docs/upstream/UPDATES.md` 2026-10-26
 
 ## Open debt
 

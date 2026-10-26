@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-10-26
-- Branch: main (feature/docs-toolchain merged, with the approved #10 spec)
+- Branch: fix/ci-app-deps (from main 1473d1e: CI backend job lacks `app/products` dependencies, 6 tests red)
 - Feature: none
 - Phase: 7: completion (docs-toolchain #27 closed on GitHub and pruned on 2026-10-26, cost about $88 by transcript, SUMMARY "Cost")
-- Last commit: f5a6367 Merge branch 'feature/docs-toolchain'
-- Next: `/feature #10` products-validations (spec approved, ADR-0028), then #26 product-details-dimensions and #28 business-rules-wiki
+- Last commit: 1473d1e docs: STATE after the docs-toolchain merge
+- Next: PR for fix/ci-app-deps with CI green, merge on the user's word; then `/feature #10` products-validations (spec approved, ADR-0028), then #26 product-details-dimensions and #28 business-rules-wiki
 
 ## Open debt
 

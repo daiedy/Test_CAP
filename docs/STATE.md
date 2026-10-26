@@ -5,10 +5,10 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-10-26
-- Branch: chore/upstream-check-2026-10-26 (upstream digest, Dependabot ignore, `pipeline-config.md` rule, `origin/main` merged in; not pushed)
+- Branch: chore/upstream-check-2026-10-26 (upstream digest, Dependabot ignore, `pipeline-config.md` rule, ESLint worktree ignore, `origin/main` merged in; not pushed)
 - Feature: none
 - Phase: 7: completion (docs-toolchain #27 closed and pruned on 2026-10-26, about $88, SUMMARY "Cost")
-- Last commit: 0e48711 docs: STATE, CHANGELOG and STACK after the Dependabot merge
+- Last commit: 8b1ab5f docs: Dependabot PR #35 closed (openapi pin stays)
 - Next: fast-forward `main` to this branch and push before 2026-11-09 (the Dependabot ignore acts only from `main`); then `/feature #10` products-validations (spec approved, ADR-0028), then #26, #28
 
 ## Open debt

@@ -6,7 +6,9 @@ const jsdocRecommended = jsdoc.configs['flat/recommended'];
 
 export default [
   // The UI app has its own ESLint config (app/products/eslint.config.mjs) and its own node_modules.
-  { ignores: ['app/**'] },
+  // Git worktrees under .claude/worktrees/ are separate checkouts with their own config and plugin
+  // copies; `cds lint` adds the root plugin on top and fails with "Cannot redefine plugin".
+  { ignores: ['app/**', '.claude/worktrees/**'] },
   ...cds.recommended,
   cdsPlugin.configs.recommended,
   {

@@ -41,16 +41,27 @@ Completion date: 2026-10-26. Commits: `9ee1c32` ... `c89ad4a` (plan, research an
 - `scripts/gen-registry.mjs` holds two JSDoc readers (`jsdocOf` and the older `export` regex of the `REUSE-CATALOG.md` block); derive the Purpose column from `jsdocOf(src).symbols` at the next change of that block (`cap-backend-dev`).
 - Check whether the double-encoded Object Page key `Products('Notebook%2520Set')` predates this feature (`fiori-app-dev`, STATE debt).
 - Drop the converter pin when a fixed `@cap-js/openapi` exists (`upstream-watcher`, STATE debt).
+- Metrics: the D10 feature scope misses a session launched from the main checkout that works in a feature worktree. Its records carry `gitBranch: main`, and its markers are split between two `.pipeline/` directories. See "Cost"; record the history line once the scope covers it (`architect`, user decision).
 - Optional: one service-head line in `srv/catalog-service.cds` pointing to the doc comments in `srv/annotations/<Entity>.cds`, next to the existing UI annotations line.
 
 ## New items for the registry
 `docs/api/CatalogService.openapi3.json`, `docs/registry/JSDOC.md`, `scripts/gen-api-docs.mjs` (`writeOpenApi`, `stampOpenApi`, `openapiRecordedHash`, `apiDocsStatus`), `file-checks.mjs` exports (`UI5_SCOPE`, `APP_ESLINT_SCOPE`, `APP_ESLINT_EXCLUDE`, `appHasTool`, `notInstalledNote`, `readLintReport`); the registry is regenerated.
 
 ## Cost
-(filled by the orchestrator from `node scripts/metrics.mjs feature docs-toolchain` after the prune)
+Two cards, measured at the close on 2026-10-26. `metrics feature` misses session `ef481b20` (2026-10-24 .. 2026-10-26, phase 2 round 2 to phase 7). That session was launched from the main checkout, so its transcript records carry `gitBranch: main` in the main project directory. Its `/feature #27` prompt marker sits in the main checkout's `.pipeline/` and its phase markers in the worktree's, so the D10 join finds neither. No `history.jsonl` line is recorded until the scope covers it.
+- `metrics feature docs-toolchain`: 4 sessions, 2026-10-14 .. 2026-10-24 (plan, research, phase 2 round 1). Cost $29.49 by transcript (cost-state $48.94, recovered 60%), active 1h 40m, agent-minutes 2h 6m.
+- `metrics session ef481b20`: phase 2 round 2 to phase 7. Cost $58.78 by transcript (no cost-state record), active 3h 26m, agent-minutes 5h 18m.
+  - Per phase: 2 $1.86, 3 $45.17, 4 $2.86, 5 $3.93, 6 $3.62.
+  - Rework flagged $36.47, all in phase 3: `cap-backend-dev` 4 launches $17.82, `test-backend` 3 $12.03, `architect` 2 $6.61. These are the step 3 and 4 relaunches after turn limits and the amendment A-G rounds.
+  - Turn-limit stops: `cap-backend-dev` 2, `test-backend` 1, `reviewer` 1.
+- Together about $88 by transcript (about $108 with the earlier sessions' cost-state reference), active about 5h 6m.
 
 ## Lessons
 Entries in `docs/LESSONS.md` dated 2026-10-26: plugin cost measured directly, `require-jsdoc` option merge, the npx ancestor lookup, a glob matcher tested against every promised syntax, "no report" versus "empty report", ui5lint XML scope, the `libc` lockfile strip, the served versus exported Swagger document, a reviewer on a large branch writes its file first.
 
 ## Open debt
 STATE "Open debt" rows: the `@cap-js/openapi` pin (`upstream-watcher`) and the double-encoded Object Page key (`fiori-app-dev`).
+
+## Full record
+
+Pruned to this file (ADR-0019). CONTEXT.md, PLAN.md, REVIEW.md, VERIFICATION.md, research, screenshots of this feature stay in git history at https://github.com/daiedy/Test_CAP/tree/5dc70fb5acbcbf20586d1361e45bb7eb33eb0f46/docs/features/docs-toolchain (commit `5dc70fb`).

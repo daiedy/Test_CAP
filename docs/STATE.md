@@ -6,10 +6,10 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 - Date: 2026-10-26
 - Branch: feature/docs-toolchain (from `spec/products-validations` bebb34c, which carries the approved #10 spec)
-- Feature: docs-toolchain (#27)
-- Phase: 6: documentation done (registry fresh, `npm test` 231/231); gate waits for the user before phase 7 close; semi-autonomous gates
-- Last commit: c89ad4a fix(pipeline): docs-toolchain brace globs, SubagentStop app ESLint, linter guards
-- Next: phase 7 (close #27 with SUMMARY, prune, metrics card); `/feature #10` after this feature
+- Feature: none
+- Phase: 7: completion (docs-toolchain #27 closed on GitHub and pruned on 2026-10-26, cost about $88 by transcript, SUMMARY "Cost")
+- Last commit: 5dc70fb docs: docs-toolchain summary and registry
+- Next: the user merges feature/docs-toolchain (it also carries the approved #10 spec) into main and pushes on instruction; then `/feature #10`
 
 ## Open debt
 

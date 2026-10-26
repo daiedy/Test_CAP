@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-10-26
-- Branch: feature/docs-toolchain (from `spec/products-validations` bebb34c, which carries the approved #10 spec)
+- Branch: main (feature/docs-toolchain merged, with the approved #10 spec)
 - Feature: none
 - Phase: 7: completion (docs-toolchain #27 closed on GitHub and pruned on 2026-10-26, cost about $88 by transcript, SUMMARY "Cost")
-- Last commit: 3ef0190 docs: docs-toolchain close #27 and prune
-- Next: the user merges feature/docs-toolchain (it also carries the approved #10 spec) into main and pushes on instruction; then `/feature #10`
+- Last commit: f5a6367 Merge branch 'feature/docs-toolchain'
+- Next: `/feature #10` products-validations (spec approved, ADR-0028), then #26 product-details-dimensions and #28 business-rules-wiki
 
 ## Open debt
 

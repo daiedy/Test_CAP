@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-10-27
 - Branch: feature/business-rules-wiki (from main 40748e9)
 - Feature: business-rules-wiki (#28)
-- Phase: 4: integration done (`npm test` 244); waiting for the `wiki.yml` PR and dispatch
-- Last commit: d26bd5a fix(tooling): business-rules-wiki root lookup and inline-code links
-- Next: user merges the one-file `wiki.yml` PR, dispatch the mirror, verification, review, docs; then `/feature #10`, #26; cds 10.2 Dependabot PR (~2026-11-02): re-tests in `docs/upstream/UPDATES.md`
+- Phase: 6 done: review 0 blocking, fixes re-reviewed; waiting for PR #43 merge to verify the mirror
+- Last commit: 6ed24b7 chore(pipeline): business-rules-wiki lookup in the pipeline and the wiki mirror
+- Next: user merges PR #43, dispatch the mirror, verification, docs; then `/feature #10`, #26; cds 10.2 Dependabot PR (~2026-11-02): re-tests in `docs/upstream/UPDATES.md`
 
 ## Open debt
 

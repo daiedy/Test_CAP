@@ -5,6 +5,8 @@ tags: [products, import, excel]
 adr: ADR-0021
 sources:
   - docs/decisions/ADR-0021-products-excel-import.md
+  - docs/features/products-excel-upload/SUMMARY.md
+  - docs/features/products-subcategory-cascade/SUMMARY.md
 ---
 
 # Products are imported from an Excel workbook
@@ -13,7 +15,7 @@ sources:
 
 The workbook is read on the server with a small read-only library for `.xlsx` files, and the reading and the column mapping live in a separate, unit-tested module. The import is one action on the product list that receives the uploaded file; it has the same access rights as the products, so only an editor may run it. Each row is created as an active product, one insert per row inside the one transaction of the action, so that the generic checks of the catalog run for every row and an error is tied to its row number. No draft is created. The import itself checks only what no annotation can say: the structure of the workbook, the row limit and duplicate names.
 
-The import is all or nothing with a complete report: every row is checked, and if anything fails, one error lists every failure and nothing is written. A clean file creates all rows and reports how many products were created. A name that repeats inside the file, or equals the name of an existing active product (ignoring case and surrounding spaces), is a row error. The upload is shown by the platform's own action dialog with a button "Import from Excel" that is hidden for a viewer. The workbook contract: the first sheet, a header row naming `name`, `description`, `price`, `currency`, `stock`, `category`, `rating` and `imageUrl` in any order and letter case; the mandatory columns are `name`, `price`, `currency`, `stock` and `category`; currency and category hold codes, never names; empty rows are skipped; at most 1,000 data rows; only `.xlsx` is accepted; the format hint appears only in the field label and the README.
+The import is all or nothing with a complete report: every row is checked, and if anything fails, one error lists every failure and nothing is written. A clean file creates all rows and reports how many products were created. A name that repeats inside the file, or equals the name of an existing active product (ignoring case and surrounding spaces), is a row error. The upload is shown by the platform's own action dialog with a button "Import from Excel" that is hidden for a viewer. The workbook contract, as amended on 2026-09-28 (a repeated column and an unpacked-size guard) and on 2026-10-10 (the `subcategory` column): the first sheet, a header row naming `name`, `description`, `price`, `currency`, `stock`, `category`, `subcategory`, `rating` and `imageUrl` in any order and letter case, each at most once; the mandatory columns are `name`, `price`, `currency`, `stock`, `category` and `subcategory`; currency, category and subcategory hold codes, never names; empty rows are skipped; at most 1,000 data rows and at most 10 MB of unpacked workbook, checked before the file is read; only `.xlsx` is accepted; the format hint appears only in the field label and the README. Because the catalog's rule that a subcategory belongs to the product's category is checked only when the transaction commits and names no row, the import also checks that pair for every row before the inserts, so a mismatch is reported with its row number; the catalog rule itself stays as the guard.
 
 ## Why
 

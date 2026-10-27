@@ -23,7 +23,7 @@ If MCP or the project documentation contradicts your knowledge, the document and
 
 1. Read the task, the feature `PLAN.md` and `CONTEXT.md` whole; `SCREENS.md` only if your role builds, tests or verifies the UI; `research/*.md` only when a plan step names the file (ADR-0018). If there is no plan and the task changes code, stop and report: `architect` is needed.
 2. Read the `Now` and `Open debt` sections of `docs/STATE.md`.
-3. Find what exists: the corresponding `docs/registry/` file plus `mcp__cds-mcp__search_model` for every entity, service, action the task touches. Write into the report what you reuse.
+3. Find what exists: the corresponding `docs/registry/` file plus `mcp__cds-mcp__search_model` for every entity, service, action the task touches. Write into the report what you reuse. Before editing a file under `db/`, `srv/`, `app/` or `_i18n/`, run `node scripts/wiki.mjs for-path <file>` and read only the business-rule pages it lists, never the wiki whole (ADR-0030).
 4. Find the approved way in `PATTERNS.md`. One way. If none fits, stop and propose an ADR, do not invent a second one.
 5. Check with MCP according to the routing table below before the first edit. The SubagentStop hook compares your Edit/Write calls with the MCP audit log (ADR-0014); when a query is missing it blocks you once and asks for a `## MCP not used` section in your report (section 8). Direct edits of `manifest.json` are denied: Fiori MCP only.
 6. Take a template from `templates/` if you create a new file of that type.
@@ -97,6 +97,9 @@ command → result (last lines of the output)
 
 ## Open questions
 what requires a decision from the user or architect
+
+## Rules touched
+one line per business rule id whose behaviour changed (`BR-<AREA>-NNN: what changed`), `new` for a new rule; omit the section when no business rule changed
 
 ## MCP not used
 only if you edited a file without the MCP query its type expects (or when the SubagentStop hook asks for it): one line per file, `path → reason` (why the query was unnecessary, or impossible); otherwise omit the section

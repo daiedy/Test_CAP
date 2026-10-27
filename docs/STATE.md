@@ -4,12 +4,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## Now
 
-- Date: 2026-10-26
+- Date: 2026-10-27
 - Branch: feature/business-rules-wiki (from main 40748e9)
 - Feature: business-rules-wiki (#28)
-- Phase: 3 done: backfill 74 pages, audit clean, `npm test` 243 in 15 files
-- Last commit: d0274a7 feat(tooling): business-rules-wiki generator, lookup CLI and checks
-- Next: launches 3d-3f, `wiki audit: clean`, tighten the `// phase 3:` tests, commit; then `/feature #10`, #26; cds 10.2 Dependabot PR (~2026-11-02): re-tests in `docs/upstream/UPDATES.md`
+- Phase: 4: integration done (`npm test` 244); waiting for the `wiki.yml` PR and dispatch
+- Last commit: d26bd5a fix(tooling): business-rules-wiki root lookup and inline-code links
+- Next: user merges the one-file `wiki.yml` PR, dispatch the mirror, verification, review, docs; then `/feature #10`, #26; cds 10.2 Dependabot PR (~2026-11-02): re-tests in `docs/upstream/UPDATES.md`
 
 ## Open debt
 

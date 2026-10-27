@@ -1,6 +1,6 @@
 # Continuous integration: the same gates the Claude Code hooks run locally.
 # Backend: cds lint, ESLint with the JSDoc gate, Vitest (incl. the OData contract snapshot), Prettier,
-# registry and OpenAPI freshness. It installs the app dependencies too: the Vitest suites of the
+# registry, OpenAPI and wiki freshness, the wiki audit. It installs the app dependencies too: the Vitest suites of the
 # app lint gates (api-docs, hooks-file-checks, hooks-subagent-stop) run the app ESLint and ui5lint
 # from app/products/node_modules.
 # UI: ui5lint and the Fiori ESLint rules. OPA5 journeys need a browser and a live stack; they
@@ -47,6 +47,10 @@ jobs:
         run: npm test
       - name: Registry freshness
         run: node scripts/check-docs-fresh.mjs
+      # ADR-0030 decision 6: stale wiki pages, message keys and constrained elements without a
+      # rule page block the merge here, not in npm test or the Stop gate.
+      - name: Wiki audit
+        run: node scripts/wiki.mjs audit
       - name: Model incl. templates compiles
         run: npx cds compile db srv app templates --to json > /dev/null
 

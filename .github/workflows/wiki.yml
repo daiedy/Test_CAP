@@ -1,0 +1,64 @@
+# One-way mirror of docs/wiki to the GitHub Wiki of this repository (ADR-0030 decision 7 and its
+# amendment A-F of 2026-10-27). The wiki renders YAML frontmatter raw (plan step 0 of
+# business-rules-wiki), and the pinned action v5.0.6 rewrites only the .md links of top-level
+# files, so `node scripts/wiki.mjs export` writes the final mirror: every page flat by basename,
+# its keys as a table under the H1, page links as bare page names, repository links as blob/ URLs
+# pinned to the checked-out commit (GITHUB_SHA, GITHUB_SERVER_URL and GITHUB_REPOSITORY of the
+# Actions environment, so the step passes no option), no graph.json; an unmappable link fails the
+# step before the action runs. preprocess is off (amendment F): no link is left to rewrite, and
+# its remark pass without GFM would re-serialize every page and its tables.
+# strategy: init force-pushes one fresh commit: the wiki equals the export after every run, and a
+# page made or edited in the wiki UI disappears at the next sync.
+# workflow_dispatch runs only from a workflow file on the default branch; with dry-run the action
+# builds the commit, shows it and runs `git push --dry-run` instead of pushing.
+name: wiki
+
+on:
+  push:
+    branches: [main]
+    paths: ['docs/wiki/**']
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Build and show the wiki commit without pushing it
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wiki
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    name: Mirror docs/wiki to the GitHub Wiki
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      # export imports only Node built-ins and scripts/; @sap/cds is loaded by `audit` alone, so
+      # the job installs nothing.
+      - name: Export the pages flat with wiki-ready links and their frontmatter as a table
+        run: node scripts/wiki.mjs export .wiki-out
+      - name: Push to the wiki
+        id: wiki
+        uses: Andrew-Chen-Wang/github-wiki-action@1bbb4280446f9630e8e21a18012cbacf3b0f992e # v5.0.6
+        with:
+          path: .wiki-out
+          strategy: init
+          # The export writes no graph.json; the ignore stays as a guard.
+          ignore: |
+            graph.json
+          # Amendment F: the exported links are final.
+          preprocess: false
+          # A push event has no inputs; the action reads the value as a YAML boolean.
+          dry-run: ${{ inputs.dry-run || false }}
+      - name: Wiki URL
+        env:
+          WIKI_URL: ${{ steps.wiki.outputs.wiki_url }}
+        run: echo "Mirrored to $WIKI_URL"

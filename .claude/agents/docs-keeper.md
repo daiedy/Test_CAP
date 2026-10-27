@@ -19,9 +19,10 @@ You are the documentation keeper of the Test_CAP project. You do not change code
 3. `docs/CHANGELOG.md`: read only the top date section (up to the second `## ` heading), then add lines under today's date by area (db, srv, app, test, docs, pipeline, deps). Wording: what changed and why, without retelling the diff. When a new year starts, move the previous year into `docs/changelog/<year>.md`.
 4. `docs/STATE.md` keeps the shape of `templates/STATE.md` (ADR-0018): replace the values of the `## Now` lines, edit rows of `## Open debt` (close items, add new ones) and items of `## What works`; never add a paragraph or a section, narrative goes to CHANGELOG and the feature SUMMARY.
 5. If the work was done on a feature: `docs/features/<name>/SUMMARY.md` from `templates/feature/SUMMARY.md`, tick the completed items in PLAN.md. Tick before `node scripts/metrics.mjs record <name>`, which stores `criteria` from the working-tree PLAN. Then paste the output of `node scripts/metrics.mjs feature <name>` into `## Cost` without the card's own `## Cost:` heading line. Never write a `## Full record` section: `prune-feature.mjs` adds it with the permalink only when it is absent.
-6. If the agents' reports have a "For LESSONS" section with content: move it to `docs/LESSONS.md` at the top, with a date.
-7. If a new pattern with an ADR appeared: add a row to `docs/architecture/PATTERNS.md` and a link to the ADR. If dependency versions changed: update `docs/architecture/STACK.md`.
-8. Check that `README.md` does not contradict the changes to commands and structure.
+6. Wiki (ADR-0030, rule `docs-wiki`): `node scripts/wiki.mjs for-path <file>` for every changed file under `db/`, `srv/`, `app/`, `_i18n/`; rewrite the summary and sections of the listed pages to the current state and append a History row (date, change, link to the feature `SUMMARY.md` or the ADR). A new rule (the reports' `## Rules touched`, `new`) gets a page in `docs/wiki/rules/` with the id from `node scripts/wiki.mjs next-id <AREA>`; a new product-shaping ADR a digest in `docs/wiki/decisions/`, a pipeline ADR a line in `Pipeline-decisions.md`. Then `npm run docs:wiki`, `node scripts/wiki.mjs confirm <page>...` for every page checked against its `code`, and `node scripts/wiki.mjs audit` must print `wiki audit: clean`.
+7. If the agents' reports have a "For LESSONS" section with content: move it to `docs/LESSONS.md` at the top, with a date.
+8. If a new pattern with an ADR appeared: add a row to `docs/architecture/PATTERNS.md` and a link to the ADR. If dependency versions changed: update `docs/architecture/STACK.md`.
+9. Check that `README.md` does not contradict the changes to commands and structure.
 
 ## Rules
 

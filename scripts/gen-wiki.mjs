@@ -154,9 +154,10 @@ function closingBracket(line, open) {
 }
 
 /**
- * Applies `visit` to the target of each inline link and image of a line, left to right: a code
- * span outside a link text is copied as it is, a link text may hold code spans, brackets and
- * images (visited before the target of the link around them), a backslash-escaped `[` opens none.
+ * Applies `visit(target, image)` to the target of each inline link and image of a line, left to
+ * right: a code span outside a link text is copied as it is, a link text may hold code spans,
+ * brackets and images (visited before the target of the link around them), a backslash-escaped
+ * `[` opens none. `image` is true for the target of `![...](...)`.
  */
 function mapInline(line, visit) {
   let out = '';
@@ -180,16 +181,19 @@ function mapInline(line, visit) {
     }
     const [all, ws, target, rest] = dest;
     const text = mapInline(line.slice(open + 1, close), visit);
-    out += `${line.slice(i, open + 1)}${text}](${ws}${visit(target)}${rest}`;
+    out += `${line.slice(i, open + 1)}${text}](${ws}${visit(target, c === '!')}${rest}`;
     i = close + 2 + all.length;
   }
   return out;
 }
 
-/** Calls `visit(target)` for each link of a line: a reference definition or the inline links. */
+/**
+ * Calls `visit(target, image)` for each link of a line: a reference definition, which counts as a
+ * link (ADR-0030 amendment A), or the inline links and images.
+ */
 function mapLinks(line, visit) {
   const ref = line.match(REFERENCE);
-  if (ref) return `${ref[1]}${visit(ref[2])}${ref[3]}`;
+  if (ref) return `${ref[1]}${visit(ref[2], false)}${ref[3]}`;
   return mapInline(line, visit);
 }
 
@@ -211,12 +215,13 @@ function mapLines(text, visit) {
  * outside code spans and fenced blocks; a link whose text holds a code span counts like any other.
  * The one link reader of the wiki tooling: wikiStatus(), the graph edges and the export use it.
  * @param {string} text Markdown
- * @param {function(string, number): string} visit gets a target as written (`<...>` included) and
- *   its 0-based line index, returns the target to write
+ * @param {function(string, number, boolean): string} visit gets a target as written (`<...>`
+ *   included), its 0-based line index and whether it is the target of an image (`![...](...)`;
+ *   false for a reference definition), returns the target to write
  * @returns {string} the text with the returned targets
  */
 export function mapLinkTargets(text, visit) {
-  return mapLines(text, (line, i) => mapLinks(line, (target) => visit(target, i)));
+  return mapLines(text, (line, i) => mapLinks(line, (target, image) => visit(target, i, image)));
 }
 
 /**

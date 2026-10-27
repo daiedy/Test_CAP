@@ -40,11 +40,11 @@ Delegate to `reviewer`. Gate: zero blocking findings. Send the findings to the c
 
 ## Phase 6. Documentation
 
-Delegate to `docs-keeper`: registry, CHANGELOG, STATE, SUMMARY, LESSONS, and a line in PATTERNS for a new pattern. Gate: `node scripts/check-docs-fresh.mjs` green. Commit `docs: <name> summary and registry`.
+Delegate to `docs-keeper`: registry, CHANGELOG, STATE, SUMMARY, LESSONS, the wiki pages of the changed files (rule pages with History rows, a new rule page, the digest of a new ADR; `docs/wiki/`), and a line in PATTERNS for a new pattern. Gate: `node scripts/check-docs-fresh.mjs` green and `node scripts/wiki.mjs audit` prints `wiki audit: clean`. Commit `docs: <name> summary and registry`.
 
 ## Phase 7. Completion
 
-For an issue: `node scripts/backlog.mjs close N --summary docs/features/<name>/SUMMARY.md` (posts the summary, drops the labels, closes), then `node scripts/prune-feature.mjs <name>` keeps only `SUMMARY.md` with a permalink to the full record (ADR-0019); commit `docs: <name> close #N and prune`; STATE `Feature: none`. After the prune run `node scripts/metrics.mjs feature <name>` and show the card. Show the user: the list of commits, what is closed from the acceptance criteria, what remains in the open debt. Push and pull request only on the user's instruction.
+For an issue: `node scripts/backlog.mjs close N --summary docs/features/<name>/SUMMARY.md` (posts the summary, drops the labels, closes), then `node scripts/prune-feature.mjs <name>` keeps only `SUMMARY.md` with a permalink to the full record (ADR-0019) and never touches `docs/wiki`, whose History rows link that `SUMMARY.md`; commit `docs: <name> close #N and prune`; STATE `Feature: none`. After the prune run `node scripts/metrics.mjs feature <name>` and show the card. Show the user: the list of commits, what is closed from the acceptance criteria, what remains in the open debt. Push and pull request only on the user's instruction.
 
 ## Orchestrator rules
 

@@ -12,13 +12,25 @@
  *   next-id <AREA>      the next free rule id BR-<AREA>-NNN, never one in use
  *   confirm <page>...   stamp `verified` with the hash of the page's code files, then regenerate
  *   audit               stale pages, message keys and constrained elements without a rule page
- *   export <dir>        the wiki for the GitHub Wiki mirror: each page's frontmatter as a key table
- *                       under its H1, generated files and _*.md as they are, no graph.json
+ *   export <dir> [--ref <ref>] [--repo-url <url>]
+ *                       the wiki for the GitHub Wiki mirror (ADR-0030 decision 7, amendment A-F):
+ *                       every Markdown file of docs/wiki flat as <dir>/<basename>, each page's
+ *                       frontmatter as a key table under its H1, no graph.json; links wiki-ready:
+ *                       a page link as the bare page name, another repository path as
+ *                       <url>/blob/<ref>/<path> (tree/ for a folder, raw/ for an image), external
+ *                       and #anchor links as written. The ref and the URL come from the options,
+ *                       else from GITHUB_SHA and GITHUB_SERVER_URL + GITHUB_REPOSITORY (GitHub
+ *                       Actions), else `main` and the repository field of package.json; the base is
+ *                       printed. Every link is mapped before the first write: an unmappable one (a
+ *                       missing target, one outside the repository, a link to _Sidebar.md or
+ *                       _Footer.md, an image of a page or folder) or two files of one basename
+ *                       print `<file>:<line>: <target>` and exit 1 with nothing written
  * A <page> is a repository path (docs/wiki/rules/X.md), a path inside docs/wiki, a file name with
  * or without .md, or a rule id. A <file> or <page> path is relative to the project root wherever
  * the CLI runs (an absolute one is made relative; one outside the root is refused); the <dir> of
- * export is relative to the working directory. Exit 0 with an answer, 1 on a usage error, a missing
- * wiki, an unknown page or an audit finding.
+ * export is relative to the working directory. Exit 0 with an answer, 1 on a usage error (an
+ * invalid ref or repository URL included), a missing wiki, an unknown page, an audit finding or an
+ * unmappable export link.
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, posix, relative, resolve, sep } from 'node:path';
@@ -45,7 +57,16 @@ const USAGE = `usage: node scripts/wiki.mjs <command>
   next-id <AREA>      next free rule id, AREA one of ${WIKI_RULE_AREAS.join(', ')}
   confirm <page>...   stamp verified with the current hash of the page's code files
   audit               stale pages, uncovered message keys and constrained elements
-  export <dir>        the wiki for the GitHub Wiki mirror into a new or empty folder`;
+  export <dir> [--ref <ref>] [--repo-url <url>]
+                      the wiki for the GitHub Wiki mirror into a new or empty folder, flat, page
+                      links as page names, repository links as <url>/blob/<ref>/<path>; defaults:
+                      GITHUB_SHA and GITHUB_SERVER_URL/GITHUB_REPOSITORY, else main and the
+                      repository field of package.json`;
+/** The options of `export` and the key each sets. */
+const EXPORT_OPTIONS = { '--ref': 'ref', '--repo-url': 'repoUrl' };
+// ADR-0030 amendment D: the characters of a ref (and no `..`), and http(s)://<host>/<owner>/<repo>.
+const REF_CHARS = /^[A-Za-z0-9._/-]+$/;
+const REPO_URL = /^https?:\/\/[A-Za-z0-9.-]+(?::\d+)?\/([A-Za-z0-9._-]+)\/([A-Za-z0-9._-]+)$/;
 /** The commands and the number of arguments each needs at least. */
 const ARITY = {
   find: 1,
@@ -74,6 +95,8 @@ const HIDDEN = new Set(['title', 'verified']);
 const AS_CODE = new Set(['id', 'code', 'messages', 'elements', 'adr', 'aliases']);
 const isUrl = (s) => /^[a-z][a-z0-9+.-]*:/i.test(s);
 const asList = (value) => (Array.isArray(value) ? value : value ? [value] : []);
+const usageError = (message) =>
+  Object.assign(new Error(message ? `wiki: ${message}\n${USAGE}` : USAGE), { usage: true });
 
 const isDir = (path) => existsSync(path) && statSync(path).isDirectory();
 
@@ -366,11 +389,123 @@ export async function auditWiki(root) {
   return findings;
 }
 
-function keyTable(meta, pagePath, root) {
+/**
+ * What is wrong with the base of an export's repository links (ADR-0030 amendment D): a missing
+ * value, a ref with a character outside `[A-Za-z0-9._/-]` or with `..`, a URL that is not
+ * `http(s)://<host>/<owner>/<repo>`.
+ * @param {{repoUrl?: string, ref?: string}} base repository URL and ref
+ * @returns {Array<string>} one message per problem; empty when the base is usable
+ */
+export function linkBaseErrors({ repoUrl, ref } = {}) {
+  const errors = [];
+  if (!ref) errors.push('no ref for the repository links (--ref or GITHUB_SHA)');
+  else if (!REF_CHARS.test(ref) || ref.includes('..'))
+    errors.push(`ref ${ref} may hold only A-Z, a-z, 0-9, ".", "_", "/", "-" and no ".."`);
+  const url = repoUrl && String(repoUrl).match(REPO_URL);
+  if (!repoUrl) errors.push('no repository URL for the repository links (--repo-url)');
+  else if (!url || url.slice(1).some((segment) => /^\.+$/.test(segment)))
+    errors.push(`repository URL ${repoUrl} is not of the form http(s)://<host>/<owner>/<repo>`);
+  return errors;
+}
+
+/** The `repository` field of package.json as a URL: a string or `{ url }`, no `git+`, no `.git`. */
+function packageRepository(root) {
+  const file = join(root, 'package.json');
+  const field = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')).repository : undefined;
+  const url = typeof field === 'string' ? field : field?.url;
+  if (!url)
+    throw new Error(
+      'no repository URL: give --repo-url, set GITHUB_SERVER_URL and GITHUB_REPOSITORY, or add a repository field to package.json'
+    );
+  return String(url)
+    .replace(/^git\+/, '')
+    .replace(/\.git$/, '');
+}
+
+/**
+ * The ref and the repository URL of an export's repository links (ADR-0030 amendment D), each
+ * from the first source that has it: the option, then the GitHub Actions environment (`GITHUB_SHA`;
+ * `GITHUB_SERVER_URL` with `GITHUB_REPOSITORY`, both or neither), then `main` and the repository
+ * field of package.json. The values are not checked here: linkBaseErrors() does that.
+ * @param {string} root project root
+ * @param {{ref?: string, repoUrl?: string}} options the values of --ref and --repo-url
+ * @param {object} env the environment, usually process.env
+ * @returns {{ref: string, repoUrl: string}} the base
+ * @throws {Error} when only one of the two URL variables is set, or no source has a URL
+ */
+export function exportBase(root, options, env) {
+  const ref = options.ref ?? (env.GITHUB_SHA || 'main');
+  if (options.repoUrl !== undefined) return { ref, repoUrl: options.repoUrl };
+  const { GITHUB_SERVER_URL: server, GITHUB_REPOSITORY: repository } = env;
+  if (server && repository) return { ref, repoUrl: `${server}/${repository}` };
+  if (server || repository)
+    throw new Error(
+      `${server ? 'GITHUB_SERVER_URL' : 'GITHUB_REPOSITORY'} is set without ${server ? 'GITHUB_REPOSITORY' : 'GITHUB_SERVER_URL'}: set both or neither, or give --repo-url`
+    );
+  return { ref, repoUrl: packageRepository(root) };
+}
+
+/**
+ * The wiki-ready form of one link target of an exported file (ADR-0030 amendment A), in this
+ * order: an external or `#anchor` target as written; a Markdown file of docs/wiki (a page, a
+ * generated index, the API page) as its bare page name with query and anchor; any other existing
+ * repository path as `<repoUrl>/<route>/<ref>/<path>` with each path segment encoded, the route
+ * `tree` for a folder, `raw` for a file in an image and `blob` otherwise. Angle brackets stay.
+ * @param {string} root project root
+ * @param {Map<string, {special: boolean}>} files the Markdown files of docs/wiki by repository path
+ * @param {string} fromPath repository path of the file holding the link
+ * @param {string} raw the target as written, `<...>` included
+ * @param {boolean} image whether the target belongs to an image
+ * @param {{repoUrl: string, ref: string}} base repository URL and ref
+ * @returns {{target: string}|{problem: string}} the target to write, or why it cannot be mapped
+ */
+export function wikiTarget(root, files, fromPath, raw, image, { repoUrl, ref }) {
+  const bracketed = raw.startsWith('<') && raw.endsWith('>');
+  const written = bracketed ? raw.slice(1, -1) : raw;
+  const link = resolveLink(fromPath, written);
+  if (link.kind === 'external' || link.kind === 'anchor') return { target: raw };
+  if (link.path === '..' || link.path.startsWith('../') || posix.isAbsolute(link.path))
+    return { problem: 'the target is outside the repository' };
+  const abs = join(root, link.path);
+  if (!existsSync(abs)) return { problem: 'the target does not exist in the checkout' };
+  const beforeAnchor = written.split('#')[0];
+  const query = beforeAnchor.includes('?') ? beforeAnchor.slice(beforeAnchor.indexOf('?')) : '';
+  const wrap = (target) => ({ target: bracketed ? `<${target}>` : target });
+  const file = files.get(link.path);
+  if (file?.special)
+    return { problem: `${posix.basename(link.path)} frames the wiki pages and is no page` };
+  if (file && image) return { problem: 'an image of a page' };
+  if (file)
+    return wrap(`${encodeURIComponent(posix.basename(link.path, '.md'))}${query}${link.anchor}`);
+  const folder = statSync(abs).isDirectory();
+  if (folder && image) return { problem: 'an image of a folder' };
+  const route = folder ? 'tree' : image ? 'raw' : 'blob';
+  const segments = link.path.split('/').filter((s) => s && s !== '.');
+  return wrap(
+    `${[repoUrl, route, ref, ...segments.map(encodeURIComponent)].join('/')}${query}${link.anchor}`
+  );
+}
+
+/** The 1-based line of a frontmatter key, or of its list item that holds `item`. */
+function frontmatterLine(text, key, item) {
+  const lines = text.split('\n');
+  const end = lines.findIndex((l, i) => i > 0 && l.trimEnd() === '---');
+  const at = lines.findIndex((l, i) => i > 0 && i < end && l.startsWith(`${key}:`));
+  if (at < 0) return 1;
+  for (let i = at + 1; i < end && /^\s*-\s+/.test(lines[i]); i++)
+    if (lines[i].includes(item)) return i + 1;
+  return at + 1;
+}
+
+/** The frontmatter of a page as a key table; `sources` paths of the repository become links. */
+function keyTable(meta, page, root, map) {
   const format = (key, item) => {
     const text = String(item).replace(/\|/g, '\\|');
-    if (key === 'sources' && !isUrl(item) && existsSync(join(root, item)))
-      return `[${text}](${posix.relative(posix.dirname(pagePath), item)})`;
+    if (key === 'sources' && !isUrl(item) && existsSync(join(root, item))) {
+      const relativeTarget = posix.relative(posix.dirname(page.path), item);
+      const line = frontmatterLine(page.text, key, item);
+      return `[${text}](${map(page.path, line, relativeTarget, false, item)})`;
+    }
     return AS_CODE.has(key) ? `\`${text}\`` : text;
   };
   const rows = Object.entries(meta)
@@ -382,61 +517,114 @@ function keyTable(meta, pagePath, root) {
   return ['| Key | Value |', '|---|---|', ...rows].join('\n');
 }
 
-function withKeyTable(text, pagePath, root) {
-  const { meta, body } = parseFrontmatter(text);
-  if (!meta) return text;
-  const lines = body.split('\n');
+/**
+ * The exported text of one wiki file with its links mapped by `map`: a hand-written page loses
+ * its frontmatter, which becomes a key table under the H1; generated files and `_*.md` keep their
+ * text apart from the links. Line numbers given to `map` are those of the source file.
+ */
+function exportText(root, file, map) {
+  const visit = (offset) => (target, i, image) => map(file.path, offset + i + 1, target, image);
+  if (file.generated || file.special) return mapLinkTargets(file.text, visit(0));
+  const { meta, body, bodyLine } = parseFrontmatter(file.text);
+  const mapped = mapLinkTargets(body, visit(bodyLine));
+  if (!meta) return mapped;
+  const lines = mapped.split('\n');
   const h1 = lines.findIndex((l) => /^# /.test(l));
-  lines.splice(h1 + 1, 0, '', keyTable(meta, pagePath, root), '');
+  lines.splice(h1 + 1, 0, '', keyTable(meta, file, root, map), '');
   return lines.join('\n');
 }
 
-/** Rewrites the repository links of a file moved from `fromPath` to the absolute `target`. */
-function rebaseLinks(text, fromPath, root, target) {
-  return mapLinkTargets(text, (raw) => {
-    const link = resolveLink(fromPath, raw.replace(/^<|>$/g, ''));
-    if (link.kind !== 'repo') return raw;
-    const moved = relative(dirname(target), join(root, link.path)).split(sep).join('/');
-    return raw.startsWith('<') ? `<${moved}${link.anchor}>` : `${moved}${link.anchor}`;
-  });
-}
-
 /**
- * Writes the wiki for the GitHub Wiki mirror (ADR-0030 decision 7): the folder structure of
- * docs/wiki, each page's frontmatter as a key table under its H1 (the wiki shows YAML raw),
- * generated Markdown and `_*.md` as they are, no graph.json. Links into the repository are rebased
- * to the new location, so the mirror action can turn them into blob/ URLs; a folder inside the
- * repository keeps them valid.
+ * Writes the wiki for the GitHub Wiki mirror (ADR-0030 decision 7, amendment A-F): every Markdown
+ * file of docs/wiki flat as `<dir>/<basename>`, each hand-written page's frontmatter as a key table
+ * under its H1 (the wiki shows YAML raw), no graph.json, every link wiki-ready (wikiTarget(), the
+ * `sources` links of the key tables included). Every file is mapped before the first write: an
+ * unmappable link or two files of one basename (case-insensitive) throw with one line per finding,
+ * `<file>:<line>: <target> (<why>)` or `<file>: <basename> (<why>)`, and nothing is written.
  * @param {string} root project root
  * @param {string} dir target folder, new or empty, outside docs/wiki
- * @returns {Array<string>} the written files, relative to the target folder
+ * @param {{repoUrl: string, ref: string}} base repository URL and ref of the repository links,
+ *   both required
+ * @returns {Array<string>} the written file names, by source path
+ * @throws {Error} on a missing or invalid base, a target folder in use, or an unmappable link (the
+ *   error's `findings` holds the lines)
  */
-export function exportWiki(root, dir) {
+export function exportWiki(root, dir, { repoUrl, ref } = {}) {
   requireWiki(root);
+  const baseErrors = linkBaseErrors({ repoUrl, ref });
+  if (baseErrors.length) throw new Error(`export needs a valid base: ${baseErrors.join('; ')}`);
   const out = resolve(root, dir);
   const wiki = resolve(root, WIKI_DIR);
   if (out === wiki || out.startsWith(wiki + sep) || wiki.startsWith(out + sep))
     throw new Error('export into a folder that neither is nor contains docs/wiki');
   if (existsSync(out) && readdirSync(out).length)
     throw new Error(`${dir} is not empty; export into a new or empty folder`);
-  const written = [];
-  for (const f of readWikiFiles(root)) {
-    const inner = f.path.slice(WIKI_DIR.length + 1);
-    const target = join(out, inner);
-    const text = f.generated || f.special ? f.text : withKeyTable(f.text, f.path, root);
-    mkdirSync(dirname(target), { recursive: true });
-    writeFileSync(target, rebaseLinks(text, f.path, root, target));
-    written.push(inner);
+  const sourceFiles = readWikiFiles(root);
+  const files = new Map(sourceFiles.map((f) => [f.path, f]));
+  const findings = [];
+  const byName = new Map();
+  for (const f of sourceFiles) {
+    const name = posix.basename(f.path).toLowerCase();
+    byName.set(name, [...(byName.get(name) ?? []), f.path]);
   }
-  return written;
+  for (const paths of byName.values()) {
+    if (paths.length < 2) continue;
+    for (const p of paths)
+      findings.push(
+        `${p}: ${posix.basename(p)} (basename shared with ${paths.filter((o) => o !== p).join(', ')}; the mirror is flat)`
+      );
+  }
+  const map = (fromPath, line, target, image, shown = target) => {
+    const mapped = wikiTarget(root, files, fromPath, target, image, { repoUrl, ref });
+    if (!mapped.problem) return mapped.target;
+    findings.push(`${fromPath}:${line}: ${shown} (${mapped.problem})`);
+    return target;
+  };
+  const exported = sourceFiles.map((f) => ({
+    name: posix.basename(f.path),
+    text: exportText(root, f, map),
+  }));
+  if (findings.length)
+    throw Object.assign(
+      new Error(`${findings.length} findings, nothing exported:\n${findings.join('\n')}`),
+      { findings }
+    );
+  mkdirSync(out, { recursive: true });
+  for (const { name, text } of exported) writeFileSync(join(out, name), text);
+  return exported.map((e) => e.name);
+}
+
+/**
+ * The arguments of `export`: one `<dir>` and the options of EXPORT_OPTIONS, each at most once,
+ * in any order.
+ * @param {Array<string>} args the arguments after `export`
+ * @returns {{dir: string, options: {ref?: string, repoUrl?: string}}} the folder and the options
+ */
+function exportArgs(args) {
+  const options = {};
+  const dirs = [];
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    const key = EXPORT_OPTIONS[arg];
+    if (key) {
+      const value = args[i + 1];
+      if (value === undefined || value.startsWith('--')) throw usageError(`${arg} needs a value`);
+      if (Object.hasOwn(options, key)) throw usageError(`${arg} is given twice`);
+      options[key] = value;
+      i++;
+    } else if (arg.startsWith('--')) throw usageError(`unknown option ${arg}`);
+    else dirs.push(arg);
+  }
+  if (dirs.length !== 1) throw usageError('export takes exactly one <dir>');
+  return { dir: dirs[0], options };
 }
 
 const describe = (n) =>
   `- ${n.path} (${[n.id, n.status].filter(Boolean).join(', ') || n.folder || 'top'}): ${n.summary ?? ''}`;
 
 async function main(cwd, [command, ...args]) {
-  if (!Object.hasOwn(ARITY, command) || args.length < ARITY[command])
-    throw Object.assign(new Error(USAGE), { usage: true });
+  if (!Object.hasOwn(ARITY, command) || args.length < ARITY[command]) throw usageError();
+  const exportCall = command === 'export' ? exportArgs(args) : null;
   const root = wikiRoot(cwd);
   switch (command) {
     case 'find': {
@@ -485,12 +673,23 @@ async function main(cwd, [command, ...args]) {
       return findings.length ? 1 : 0;
     }
     case 'export': {
-      const files = exportWiki(root, resolve(cwd, args[0]));
-      console.log(`Exported ${files.length} files of ${WIKI_DIR} to ${args[0]}.`);
+      const { dir, options } = exportCall;
+      let base;
+      try {
+        base = exportBase(root, options, process.env);
+      } catch (err) {
+        throw usageError(err.message);
+      }
+      const baseErrors = linkBaseErrors(base);
+      if (baseErrors.length) throw usageError(baseErrors.join('\nwiki: '));
+      // Printed before the export, so the run log shows the ref even when a link fails.
+      console.log(`links pinned to ${base.repoUrl}/blob/${base.ref}`);
+      const files = exportWiki(root, resolve(cwd, dir), base);
+      console.log(`Exported ${files.length} files of ${WIKI_DIR} flat to ${dir}.`);
       return 0;
     }
     default:
-      throw Object.assign(new Error(USAGE), { usage: true });
+      throw usageError();
   }
 }
 

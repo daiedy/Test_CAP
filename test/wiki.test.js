@@ -3,7 +3,9 @@
 // scripts/wiki.mjs. Tests on the committed wiki only read the repository; every test that writes
 // (status findings, audit and confirm, check-docs-fresh --fix, next-id, export) works in a folder
 // under the OS temp dir and runs the CLI, `npm run docs:wiki` and check-docs-fresh.mjs with that
-// folder or a subfolder as cwd. The workflow test of PLAN step 4 joins this file in phase 4.
+// folder or a subfolder as cwd; every export spawn passes --ref and --repo-url or an environment
+// without GITHUB_* (CI sets GITHUB_SHA during npm test). The mirror workflow
+// .github/workflows/wiki.yml is parsed with yaml (PLAN step 4, ADR-0030 amendment A-F).
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -25,6 +27,7 @@ import {
 import { WIKI_GENERATED_MARK, WIKI_RULE_AREAS } from '../scripts/lib/doc-shapes.mjs';
 import { recordedHash, sourcesHash } from '../scripts/lib/registry-sources.mjs';
 import { exportWiki, nextId, pagesForPath, readGraph, wikiRoot } from '../scripts/wiki.mjs';
+import { parse as parseYaml } from 'yaml';
 
 const root = path.resolve(import.meta.dirname, '..');
 const CLI = path.join(root, 'scripts/wiki.mjs');
@@ -154,8 +157,8 @@ function committedPages() {
     .sort();
 }
 
-/** The relative link targets of a page body: inline links and reference definitions. */
-function linkTargets(text) {
+/** The link targets of a page body as written: inline links and reference definitions. */
+function writtenTargets(text) {
   const lines = text.split('\n');
   const end = lines[0] === '---' ? lines.indexOf('---', 1) : -1;
   const targets = [];
@@ -169,8 +172,12 @@ function linkTargets(text) {
     for (const m of prose.matchAll(/\]\(\s*<?([^\s)>]+)>?(?:\s+"[^"]*")?\s*\)/g))
       targets.push(m[1]);
   }
-  return targets.filter((t) => !/^[a-z][a-z0-9+.-]*:/i.test(t) && !t.startsWith('#'));
+  return targets;
 }
+
+/** The relative link targets of a page body: no URL, no in-page anchor. */
+const linkTargets = (text) =>
+  writtenTargets(text).filter((t) => !/^[a-z][a-z0-9+.-]*:/i.test(t) && !t.startsWith('#'));
 
 describe('Generated wiki files (ADR-0030 decision 4)', () => {
   it('reports broken links, orphans, duplicate basenames and Cyrillic, and accepts the committed wiki', () => {
@@ -669,17 +676,20 @@ describe('Wiki lookup CLI (ADR-0030 decision 5)', () => {
 
   it('export turns the frontmatter into a key table under the H1 and leaves out graph.json', () => {
     const out = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'wiki-export-')));
+    const base = { repoUrl: 'https://github.com/daiedy/Test_CAP', ref: 'c0ffee1' };
+    const pinned = `${base.repoUrl}/blob/${base.ref}/`;
     try {
-      const written = exportWiki(root, out).sort();
-      const sources = readWikiFiles(root)
-        .map((f) => f.path.slice(WIKI_DIR.length + 1))
-        .sort();
-      expect(written).toEqual(sources);
+      expect(() => exportWiki(root, out)).toThrow(/valid base/);
+      expect(fs.readdirSync(out)).toEqual([]);
+      const written = exportWiki(root, out, base).sort();
+      const sourceOf = new Map(readWikiFiles(root).map((f) => [path.posix.basename(f.path), f]));
+      expect(written).toEqual([...sourceOf.keys()].sort());
+      expect(fs.readdirSync(out).sort()).toEqual(written);
       expect(fs.existsSync(path.join(out, 'graph.json'))).toBe(false);
-      const exported = (inner) => fs.readFileSync(path.join(out, inner), 'utf8');
+      const exported = (name) => fs.readFileSync(path.join(out, name), 'utf8');
 
-      const inner = SUBCATEGORY_RULE.slice(WIKI_DIR.length + 1);
-      const lines = exported(inner).split('\n');
+      const name = path.posix.basename(SUBCATEGORY_RULE);
+      const lines = exported(name).split('\n');
       const node = readGraph(root).nodes.find((n) => n.path === SUBCATEGORY_RULE);
       const h1 = lines.findIndex((l) => /^# /.test(l));
       expect(lines.slice(0, h1).every((l) => l === '')).toBe(true);
@@ -697,48 +707,269 @@ describe('Wiki lookup CLI (ADR-0030 decision 5)', () => {
       expect(table.some((row) => /^\| (title|verified|Title|Verified) /.test(row))).toBe(false);
       expect(lines).not.toContain('---');
       const headings = (text) => text.split('\n').filter((l) => /^##? /.test(l));
-      expect(headings(exported(inner))).toEqual(headings(readRepo(SUBCATEGORY_RULE)));
+      expect(headings(exported(name))).toEqual(headings(readRepo(SUBCATEGORY_RULE)));
+      expect(exported('_Footer.md')).toBe(readRepo(`${WIKI_DIR}/_Footer.md`));
 
-      // Generated files and _*.md keep their text; links into the repository still resolve.
-      for (const file of ['_Footer.md', 'rules/Business-rules.md'])
-        expect(exported(file), file).toBe(readRepo(`${WIKI_DIR}/${file}`));
+      // Every link of the export works in the flat wiki: a relative target is an exported page,
+      // a mapped repository link a pinned blob URL of an existing file, any other URL as written.
+      let pageLinks = 0;
+      let repoLinks = 0;
       for (const file of written) {
-        for (const target of linkTargets(exported(file))) {
-          const abs = path.resolve(path.dirname(path.join(out, file)), target.split('#')[0]);
-          expect(fs.existsSync(abs), `${file}: ${target}`).toBe(true);
+        for (const target of writtenTargets(exported(file))) {
+          const where = `${file}: ${target}`;
+          if (target.startsWith('#')) continue;
+          if (target.startsWith(pinned)) {
+            const rel = decodeURIComponent(target.slice(pinned.length).split(/[?#]/)[0]);
+            const stat = fs.statSync(path.join(root, rel), { throwIfNoEntry: false });
+            expect(stat?.isFile(), where).toBe(true);
+            repoLinks++;
+          } else if (/^[a-z][a-z0-9+.-]*:/i.test(target)) {
+            expect(sourceOf.get(file).text, where).toContain(target);
+          } else {
+            const page = decodeURIComponent(target.split(/[?#]/)[0]);
+            expect(written, where).toContain(`${page}.md`);
+            pageLinks++;
+          }
         }
       }
+      expect(pageLinks).toBeGreaterThan(0);
+      expect(repoLinks).toBeGreaterThan(0);
 
-      expect(() => exportWiki(root, out)).toThrow(/not empty/);
-      expect(() => exportWiki(root, `${WIKI_DIR}/out`)).toThrow(/neither is nor contains/);
+      expect(() => exportWiki(root, out, base)).toThrow(/not empty/);
+      expect(() => exportWiki(root, `${WIKI_DIR}/out`, base)).toThrow(/neither is nor contains/);
     } finally {
       fs.rmSync(out, { recursive: true, force: true });
     }
   });
 
-  it('export rebases a repository link whose text holds inline code', () => {
-    const p = tempProject('wiki-export-code');
+  it('export writes wiki-ready links: page links as bare page names, repository links as blob URLs of the given ref, and fails on an unmappable link', () => {
+    const p = tempProject('wiki-export-links');
+    const REPO = 'https://repo.example/team/shop';
+    const REF = 'v1.2';
     const ADR = 'docs/decisions/ADR-0001-x.md';
+    const R = `${WIKI_DIR}/rules/R.md`;
+    const BAD = `${WIKI_DIR}/rules/Bad.md`;
+    const SHARED = [`${WIKI_DIR}/domain/S.md`, `${WIKI_DIR}/rules/S.md`];
+    // Never the GITHUB_* of the runner: CI sets GITHUB_SHA during npm test.
+    const env = Object.fromEntries(
+      Object.entries(process.env).filter(([key]) => !key.startsWith('GITHUB_'))
+    );
+    const run = (extraEnv, ...args) =>
+      spawnSync(process.execPath, [CLI, 'export', ...args], {
+        cwd: p.dir,
+        encoding: 'utf8',
+        env: { ...env, ...extraEnv },
+      });
+    const exists = (rel) => fs.existsSync(path.join(p.dir, rel));
+    const lineOf = (text, part) => text.split('\n').findIndex((l) => l.includes(part)) + 1;
     try {
       p.put({
-        [ADR]: '# ADR-0001 X\n',
-        [HOME]: page({ title: 'Home', summary: 'Entry page.', body: '- [R](rules/R.md)' }),
-        [`${WIKI_DIR}/rules/R.md`]: page({
-          title: 'R',
-          summary: 'A page with two links to one ADR.',
-          body: '- [ADR `X`](../../decisions/ADR-0001-x.md)\n- [ADR X](../../decisions/ADR-0001-x.md)',
+        'package.json': JSON.stringify({
+          name: 'shop',
+          repository: { type: 'git', url: 'git+https://github.example/acme/shop.git' },
         }),
+        [ADR]: '# ADR-0001 X\n',
+        'docs/images/logo.png': 'png',
+        [`${WIKI_DIR}/graph.json`]: '{}\n',
+        [`${WIKI_DIR}/_Footer.md`]: 'A mirror; edit [Home](Home.md) in the repository.\n',
+        [HOME]: page({
+          title: 'Home',
+          summary: 'Entry page.',
+          body: '- [R](rules/R.md)\n- [D](domain/D.md)\n- [Rules](rules/Business-rules.md)',
+        }),
+        [`${WIKI_DIR}/rules/Business-rules.md`]: `${WIKI_GENERATED_MARK}; do not edit -->\n\n# Business rules\n\n- [R](R.md)\n- [Home](../Home.md)\n`,
+        [SHARED[1]]: page({ title: 'S', summary: 'Same folder.', body: 'Back to [R](R.md).' }),
+        [R]: page({
+          title: 'R',
+          summary: 'A page with every kind of link.',
+          body: [
+            '## Why',
+            '',
+            '- [Home](../Home.md)',
+            '- [S](S.md)',
+            '- [Index](Business-rules.md)',
+            '- [ADR `X`](../../decisions/ADR-0001-x.md)',
+            '- [ADR X](<../../decisions/ADR-0001-x.md> "The ADR")',
+            '- [Decisions](../../decisions)',
+            '- ![Logo](../../images/logo.png)',
+            '- [External](https://example.com/x)',
+            '- [Top](#why)',
+            '- [D][d]',
+            '',
+            '[d]: ../domain/D.md#facts "Facts"',
+          ].join('\n'),
+        }),
+        [`${WIKI_DIR}/domain/D.md`]: [
+          '---',
+          'title: D',
+          'summary: A page with repository sources.',
+          'tags: [test]',
+          `sources: [${ADR}, https://example.com/spec]`,
+          '---',
+          '',
+          '# D',
+          '',
+          '## Facts',
+          '',
+          '- [R](../rules/R.md#why)',
+          '',
+        ].join('\n'),
       });
-      const r = wiki(p.dir, 'export', 'out');
+
+      // Options win over the Actions environment.
+      const actions = { GITHUB_SERVER_URL: 'https://github.com', GITHUB_REPOSITORY: 'o/r' };
+      const r = run(
+        { ...actions, GITHUB_SHA: 'f'.repeat(40) },
+        'out',
+        '--ref',
+        REF,
+        '--repo-url',
+        REPO
+      );
       expect(r.status, r.stderr).toBe(0);
-      const exported = p.read('out/rules/R.md');
-      const targets = linkTargets(exported);
-      expect(targets).toHaveLength(2);
-      for (const target of targets)
-        expect(path.resolve(p.dir, 'out/rules', target), target).toBe(path.join(p.dir, ADR));
-      expect(exported).toContain('- [ADR `X`](../../docs/decisions/ADR-0001-x.md)');
+      expect(r.stdout).toContain(`links pinned to ${REPO}/blob/${REF}`);
+      const names = ['Business-rules.md', 'D.md', 'Home.md', 'R.md', 'S.md', '_Footer.md'];
+      expect(fs.readdirSync(path.join(p.dir, 'out')).sort()).toEqual(names.sort());
+      const out = (name, dir = 'out') => p.read(`${dir}/${name}`);
+      const blob = `${REPO}/blob/${REF}/${ADR}`;
+      expect(out('R.md').split('\n')).toEqual(
+        expect.arrayContaining([
+          '- [Home](Home)',
+          '- [S](S)',
+          '- [Index](Business-rules)',
+          `- [ADR \`X\`](${blob})`,
+          `- [ADR X](<${blob}> "The ADR")`,
+          `- [Decisions](${REPO}/tree/${REF}/docs/decisions)`,
+          `- ![Logo](${REPO}/raw/${REF}/docs/images/logo.png)`,
+          '- [External](https://example.com/x)',
+          '- [Top](#why)',
+          '- [D][d]',
+          '[d]: D#facts "Facts"',
+        ])
+      );
+      expect(out('D.md').split('\n')).toEqual(
+        expect.arrayContaining([
+          `| Sources | [${ADR}](${blob}), https://example.com/spec |`,
+          '- [R](R#why)',
+        ])
+      );
+      expect(out('Business-rules.md')).toContain('\n- [R](R)\n- [Home](Home)\n');
+      expect(out('_Footer.md')).toBe('A mirror; edit [Home](Home) in the repository.\n');
+      for (const name of names)
+        for (const target of linkTargets(out(name)))
+          expect(names, `${name}: ${target}`).toContain(`${target.split('#')[0]}.md`);
+
+      // The environment channel, then the local default: main and the package.json repository.
+      const viaEnv = run({ ...actions, GITHUB_SHA: 'abc123' }, 'out-env');
+      expect(viaEnv.status, viaEnv.stderr).toBe(0);
+      expect(viaEnv.stdout).toContain('links pinned to https://github.com/o/r/blob/abc123');
+      expect(out('R.md', 'out-env')).toContain(
+        `- [ADR \`X\`](https://github.com/o/r/blob/abc123/${ADR})`
+      );
+      const local = run({}, 'out-local');
+      expect(local.status, local.stderr).toBe(0);
+      expect(local.stdout).toContain('links pinned to https://github.example/acme/shop/blob/main');
+      expect(out('D.md', 'out-local')).toContain(
+        `[${ADR}](https://github.example/acme/shop/blob/main/${ADR})`
+      );
+
+      // An invalid base is a usage error before anything is written.
+      for (const [extraEnv, args, why] of [
+        [{}, ['--ref', 'a..b'], /ref a\.\.b/],
+        [{}, ['--repo-url', 'repo.example/team/shop'], /repository URL/],
+        [{ GITHUB_SERVER_URL: 'https://github.com' }, [], /GITHUB_REPOSITORY/],
+        [{ GITHUB_REPOSITORY: 'o/r' }, [], /GITHUB_SERVER_URL/],
+      ]) {
+        const bad = run(extraEnv, 'out-base', ...args);
+        expect(bad.status, args.join(' ')).toBe(1);
+        expect(bad.stderr).toMatch(why);
+        expect(exists('out-base')).toBe(false);
+      }
+
+      // Each unmappable link alone fails the export, named by file, line and target.
+      const base = { repoUrl: REPO, ref: REF };
+      const failure = () => {
+        try {
+          exportWiki(p.dir, path.join(p.dir, 'out-bad'), base);
+        } catch (err) {
+          return err.findings;
+        }
+        return [];
+      };
+      const kinds = [
+        ['Gone.md', /does not exist/, '[Gone]'],
+        ['../../../../outside.md', /outside the repository/, '[Out]'],
+        ['../_Footer.md', /_Footer\.md/, '[Footer]'],
+        ['S.md', /image of a page/, '![Page]'],
+        ['../../decisions', /image of a folder/, '![Folder]'],
+      ];
+      const bodies = kinds.map(([target, , text]) => `- ${text}(${target})`);
+      for (const [i, [target, why]] of kinds.entries()) {
+        const text = page({ title: 'Bad', summary: 'One unmappable link.', body: bodies[i] });
+        p.put({ [BAD]: text });
+        const findings = failure();
+        expect(findings, target).toHaveLength(1);
+        expect(findings[0].startsWith(`${BAD}:${lineOf(text, bodies[i])}: ${target} (`)).toBe(true);
+        expect(findings[0]).toMatch(why);
+        expect(exists('out-bad')).toBe(false);
+      }
+      fs.rmSync(path.join(p.dir, BAD));
+      p.put({
+        [SHARED[0]]: page({ title: 'S', summary: 'Shared name.', body: '- [R](../rules/R.md)' }),
+      });
+      const shared = failure();
+      expect(shared).toHaveLength(2);
+      for (const [i, file] of SHARED.entries())
+        expect(shared[i].startsWith(`${file}: S.md (`), shared[i]).toBe(true);
+      expect(exists('out-bad')).toBe(false);
+
+      // The CLI exits 1 with every finding and writes nothing.
+      const text = page({
+        title: 'Bad',
+        summary: 'Every unmappable link.',
+        body: bodies.join('\n'),
+      });
+      p.put({ [BAD]: text });
+      const all = run({}, 'out-bad', '--ref', REF, '--repo-url', REPO);
+      expect(all.status).toBe(1);
+      for (const [i, [target]] of kinds.entries())
+        expect(all.stderr).toContain(`${BAD}:${lineOf(text, bodies[i])}: ${target} (`);
+      for (const file of SHARED) expect(all.stderr).toContain(`${file}: S.md (`);
+      expect(exists('out-bad')).toBe(false);
     } finally {
       p.remove();
     }
+  });
+});
+
+describe('Wiki mirror workflow (ADR-0030 decision 7, amendment F)', () => {
+  it('the mirror workflow exports the pages, pins the action with preprocess off, filters on docs/wiki and ignores graph.json', () => {
+    const ACTION = 'Andrew-Chen-Wang/github-wiki-action@1bbb4280446f9630e8e21a18012cbacf3b0f992e';
+    const text = readRepo('.github/workflows/wiki.yml');
+    const workflow = parseYaml(text);
+    expect(workflow.on.push.branches).toEqual(['main']);
+    expect(workflow.on.push.paths).toEqual(['docs/wiki/**']);
+    expect(Object.keys(workflow.on)).toContain('workflow_dispatch');
+    expect(workflow.permissions.contents).toBe('write');
+
+    const isAction = (step) => String(step.uses ?? '').startsWith(ACTION.split('@')[0]);
+    const jobs = Object.values(workflow.jobs).filter((job) => job.steps?.some(isAction));
+    expect(jobs).toHaveLength(1);
+    const { steps } = jobs[0];
+    const at = steps.findIndex(isAction);
+    expect(steps[at].uses).toBe(ACTION);
+    const raw = text.split('\n').filter((line) => line.includes(ACTION));
+    expect(raw.map((line) => line.trim())).toEqual([`uses: ${ACTION} # v5.0.6`]);
+    const exportAt = steps.findIndex(
+      (step) => String(step.run ?? '').trim() === 'node scripts/wiki.mjs export .wiki-out'
+    );
+    expect(exportAt).toBeGreaterThanOrEqual(0);
+    expect(exportAt).toBeLessThan(at);
+    expect(steps[at].with).toMatchObject({
+      path: '.wiki-out',
+      strategy: 'init',
+      preprocess: false,
+    });
+    expect(String(steps[at].with.ignore).split(/\s+/)).toContain('graph.json');
   });
 });

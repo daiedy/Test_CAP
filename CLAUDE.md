@@ -17,6 +17,7 @@ Product Catalog: SAP CAP (Node.js 22, `@sap/cds` 10, OData V4, SQLite in-memory 
 | Versions and tools | `docs/architecture/STACK.md` |
 | How to test | `docs/architecture/TESTING.md` |
 | What already exists in the code (generated) | `docs/registry/*.md` |
+| Business rules in plain language | `docs/wiki/`, `node scripts/wiki.mjs for-path <file>` |
 | Why it was decided this way | `docs/decisions/ADR-*.md` |
 | What is planned and in which order | GitHub Issues with the `feature` label, `/backlog` (ADR-0019) |
 | Feature specifications (while in work; `SUMMARY.md` with a permalink after) | `docs/features/<name>/` |

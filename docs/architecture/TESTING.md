@@ -6,6 +6,7 @@
 |---|---|---|---|
 | Static | `cds lint`, ESLint for JavaScript (root `npm run lint:js`, incl. JSDoc; `app/products` `npm run lint:js`), `ui5lint`, `prettier --check` | root, `app/products` | PostToolUse hook on every changed file, SubagentStop (errors block), CI, `/test-all` |
 | Generated docs freshness | `node scripts/check-docs-fresh.mjs` (registry hash, OpenAPI stamp), `test/api-docs.test.js` (byte comparison of `docs/api/CatalogService.openapi3.json` with a fresh compile, Swagger UI in development) | `scripts/`, `test/` | Stop hook, `npm test`, CI step "Registry freshness" |
+| Wiki | `node scripts/wiki.mjs audit` (ids, `messages` and `elements` joins, links, stamps; must print `wiki audit: clean`), `test/wiki.test.js` (`wikiStatus`, generator sync, the lookup CLI, the export links, the mirror workflow), `wikiStatus` in `node scripts/check-docs-fresh.mjs` | `docs/wiki/`, `scripts/`, `test/` | `/feature` phase 6 gate, `/test-all`, CI step "Wiki audit", `npm test` (the tests only) |
 | Hook lint gates | Vitest, `test/hooks-file-checks.test.js` (glob matcher, install check, failure rule of `file-checks.mjs`) and `test/hooks-subagent-stop.test.js` (the hook run from a `createSandbox()` copy) | `test/` | `npm test`, CI |
 | OData contract | Vitest snapshot of `cds compile '*' --to edmx-v4 -s CatalogService -l en` | `test/metadata.test.js` | `npm test`, Stop hook, CI |
 | Service | `@cap-js/cds-test` + Vitest, SQLite in-memory | `test/<service>.test.js` | `npm test`, Stop hook, CI |

@@ -41,6 +41,7 @@ templates/                        reference files of every type
 scripts/                          pipeline scripts (ESM, Node 22)
 docs/                             documentation, see ARCHITECTURE.md
 docs/api/                         generated OpenAPI document of the service (`CatalogService.openapi3.json`), never edited by hand
+docs/wiki/                        business rules and decisions in plain language (ADR-0030): rules/, domain/, how-to/, decisions/, generated indexes and api/; mirrored to the GitHub Wiki
 ```
 
 Annotation split rule: everything that describes the meaning of data and validation (labels, mandatory, assert, readonly) lives in `srv/annotations/`. `@requires` and `@restrict` are service annotations and live inline in `srv/<name>-service.cds` next to the projection they govern (ADR-0013), not in `srv/annotations/`. Everything that describes presentation (LineItem, Facets, FieldGroups, HeaderInfo, SelectionFields, ValueList, Text) lives in `app/<app>/annotations/`. Service files and `db/schema.cds` contain no UI annotations.
@@ -107,4 +108,5 @@ A read-only permission singleton (e.g. `CatalogService.Permissions`, ADR-0013) i
 - Every code change is accompanied by: an updated registry (`npm run docs:registry`), an entry in `docs/CHANGELOG.md`, an up-to-date `docs/STATE.md`.
 - A new pattern or a deviation from an existing one: an ADR by the template `docs/decisions/ADR-0000-template.md`.
 - Generated API documentation: `docs/api/CatalogService.openapi3.json` and `docs/registry/JSDOC.md` come from `npm run docs:registry` (`npm run docs:api` writes the OpenAPI file alone); never edited by hand (ADR-0029).
+- Business rules and decisions: pages in `docs/wiki/` (ADR-0030). The page shape, the rule id `BR-<AREA>-NNN`, the file name from the title, relative Markdown links, an append-only History and the generated files that are never edited are in `.claude/rules/docs-wiki.md`; a changed rule updates its page in the same change.
 - A lesson learned (an agent mistake or non-obvious framework behavior): an entry in `docs/LESSONS.md` with a date and a link to the source.

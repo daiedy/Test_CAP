@@ -136,6 +136,7 @@ With preprocess off, the wiki receives the export byte for byte. Plan acceptance
   - `.github/workflows/wiki.yml` sets `preprocess: false` (F).
   - `test/wiki.test.js` gains the export test of the new plan criterion. Its key-table test follows the flat layout, and the rebase test is folded into the new test, the inline-code link included.
   - `research/wiki-mechanics.md` sections 1-3 and 5 are corrected to the pinned ref.
+- Any commit to a file named in a page's `code` changes the `sources:` stamps, so the generated wiki files are regenerated and a merge of a code change to `main` re-runs the mirror and moves the `blob/<sha>` links of the wiki to that commit (review finding Minor 1, accepted).
 - Amendment A-F: the wiki repository's tree differs from `docs/wiki/`: it is flat and its links are rewritten. A reader of the repository sees relative links; a reader of the wiki sees page names and blob URLs. The phase 5 verification therefore compares a mirrored page with the export of the mirrored commit, not with the file in `docs/wiki/`.
 - Amendment C: a repository link on the wiki shows the file at the mirrored commit, whose SHA shows in the URL. The next mirror run moves the links to its commit.
 - Amendment A, E: new link kinds are covered:

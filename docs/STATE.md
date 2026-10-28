@@ -4,12 +4,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## Now
 
-- Date: 2026-10-27
-- Branch: feature/business-rules-wiki (from main 40748e9)
+- Date: 2026-10-28
+- Branch: feature/business-rules-wiki (from main 40748e9; `wiki.yml` on main via PR #43, 6e008bb)
 - Feature: business-rules-wiki (#28)
-- Phase: 7: docs part 1 done (`npm test` 244); waiting for PR #43 to verify the mirror
-- Last commit: 0f38623 fix(tooling): business-rules-wiki review fixes
-- Next: user merges PR #43, dispatch the mirror, verification, docs; then `/feature #10`, #26; cds 10.2 Dependabot PR (~2026-11-02): re-tests in `docs/upstream/UPDATES.md`
+- Phase: 7: docs part 2 (verification ready for review: run 40719796267, 7 scenarios, no defect)
+- Last commit: 5d31162 docs: business-rules-wiki patterns, conventions and README
+- Next: VERIFICATION.md, docs part 2 (SUMMARY, registry, STATE), close #28; then `/feature #10`, #26; cds 10.2 Dependabot PR (~2026-11-02): re-tests in `docs/upstream/UPDATES.md`
 
 ## Open debt
 

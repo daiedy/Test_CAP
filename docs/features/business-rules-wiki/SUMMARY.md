@@ -56,3 +56,7 @@ Part 1 put the feature's lessons into `docs/LESSONS.md`; nothing is added in par
 - The 6 `@assert` constraints are still absent from `DOMAIN-MODEL.md` (`annots()` in `gen-registry.mjs` prints `@assert.` keys only); the wiki rule pages and `audit` cover them.
 - `graph.json` slimming (132 KB of 335 KB): drop `type`, `folder` and empty arrays (REVIEW size note).
 - A Stop advisory for stale wiki pages was deliberately left out (CONTEXT Q8); `audit` runs in CI, `/test-all` and the phase 6 gate only.
+
+## Full record
+
+Pruned to this file (ADR-0019). CONTEXT.md, PLAN.md, REVIEW.md, VERIFICATION.md, research, screenshots of this feature stay in git history at https://github.com/daiedy/Test_CAP/tree/50ce9ed3f8e9628d7a1331567a4b37a9fcd3dffd/docs/features/business-rules-wiki (commit `50ce9ed`).

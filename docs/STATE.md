@@ -6,10 +6,10 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 - Date: 2026-10-28
 - Branch: feature/business-rules-wiki (from main 40748e9; `wiki.yml` on main via PR #43)
-- Feature: business-rules-wiki (#28)
-- Phase: 7: documentation done
-- Last commit: 5d31162 docs: business-rules-wiki patterns, conventions and README
-- Next: close #28 and prune, then merge the branch into `main` on the user's instruction, then `/feature #10`, #26; cds 10.2 Dependabot PR (~2026-11-02): re-tests in `docs/upstream/UPDATES.md`
+- Feature: none
+- Phase: 7: completion (business-rules-wiki #28 closed and pruned on 2026-10-28, $77.40, SUMMARY "Cost")
+- Last commit: 50ce9ed docs: business-rules-wiki summary and registry
+- Next: merge the branch into `main` on the user's instruction (the push re-mirrors the wiki), then `/feature #10`, #26; cds 10.2 Dependabot PR (~2026-11-02): re-tests in `docs/upstream/UPDATES.md`
 
 ## Open debt
 

@@ -2,6 +2,10 @@
 
 Format: date, area, what changed. Maintained by `docs-keeper`, all agents add to it. New entries on top.
 
+## 2026-10-28
+
+- docs: **Summary and registry of the business-rules wiki, feature `business-rules-wiki` (#28), PLAN step 7 part 2.** `docs/features/business-rules-wiki/SUMMARY.md` records the work, the acceptance evidence, the step 0 probe, ADR-0030 amendment A-F, the defects fixed and the follow-ups (the 6 `@assert` constraints missing from `DOMAIN-MODEL.md`, `graph.json` slimming, a Stop advisory for stale pages, the `PRODUCTS_IMPORT_UNKNOWN_COLUMN` text); the PLAN criteria are ticked, `docs/STATE.md` gains the wiki item and the new test count (244 in 15 files), and the registry is regenerated.
+
 ## 2026-10-27
 
 - docs: **Documentation of the business-rules wiki, feature `business-rules-wiki` (#28), PLAN step 7 part 1.** `PATTERNS.md` gains the rows "Business rule documentation", "Wiki lookup before an edit" and "Generated wiki files and the GitHub Wiki mirror" (the last states that a commit to a file named in a page's `code` changes the stamps, regenerates the wiki files and re-runs the mirror on merge to `main`; ADR-0030 gets the matching consequence line); `CONVENTIONS.md` sections 2 and 8, `TESTING.md` row "Wiki", the `CLAUDE.md` documentation map row, and the `README.md` commands, the "Business rules wiki" paragraph and the CI step are updated; `LESSONS.md` gains the lessons of the feature that have no other home. Prompt budget re-recorded for the CLAUDE.md map row (+93 bytes, PLAN step 7, approved at the plan gate).

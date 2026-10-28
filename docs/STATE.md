@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-10-28
-- Branch: feature/business-rules-wiki (from main 40748e9; `wiki.yml` on main via PR #43, 6e008bb)
+- Branch: feature/business-rules-wiki (from main 40748e9; `wiki.yml` on main via PR #43)
 - Feature: business-rules-wiki (#28)
-- Phase: 7: docs part 2 (verification ready for review: run 40719796267, 7 scenarios, no defect)
+- Phase: 7: documentation done
 - Last commit: 5d31162 docs: business-rules-wiki patterns, conventions and README
-- Next: VERIFICATION.md, docs part 2 (SUMMARY, registry, STATE), close #28; then `/feature #10`, #26; cds 10.2 Dependabot PR (~2026-11-02): re-tests in `docs/upstream/UPDATES.md`
+- Next: close #28 and prune, then merge the branch into `main` on the user's instruction, then `/feature #10`, #26; cds 10.2 Dependabot PR (~2026-11-02): re-tests in `docs/upstream/UPDATES.md`
 
 ## Open debt
 
@@ -33,7 +33,7 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## What works
 
-- Backend on cds 10.1.1, Node 22: `npm run watch` (`cds watch`, port 4004), `npm run lint`, `npm run lint:js` (ESLint with the jsdoc rules), `npm test` (231 tests in 14 files: 109 in `test/catalog-service.test.js`, 20 in `test/products-import.test.js`, 16 in `test/metadata.test.js` incl. the `$metadata` snapshot, 9 in `test/api-docs.test.js`, 11 in `test/backlog.test.js`, 7 in `test/hooks-file-checks.test.js`, 4 in `test/hooks-subagent-stop.test.js`, 7 in `test/hooks-protect-bash.test.js`, 8 in `test/hooks-registry-gate.test.js`, 4 in `test/hooks-state-hygiene.test.js`, 9 in `test/doc-shapes.test.js`, 3 in `test/prompt-budget.test.js`, 15 in `test/metrics.test.js`, 9 in `test/hooks-metrics.test.js`), `npm run docs:registry`
+- Backend on cds 10.1.1, Node 22: `npm run watch` (`cds watch`, port 4004), `npm run lint`, `npm run lint:js` (ESLint with the jsdoc rules), `npm test` (244 tests in 15 files: 109 in `test/catalog-service.test.js`, 20 in `test/products-import.test.js`, 16 in `test/metadata.test.js` incl. the `$metadata` snapshot, 9 in `test/api-docs.test.js`, 11 in `test/backlog.test.js`, 8 in `test/hooks-file-checks.test.js`, 4 in `test/hooks-subagent-stop.test.js`, 7 in `test/hooks-protect-bash.test.js`, 8 in `test/hooks-registry-gate.test.js`, 4 in `test/hooks-state-hygiene.test.js`, 10 in `test/doc-shapes.test.js`, 3 in `test/prompt-budget.test.js`, 15 in `test/metrics.test.js`, 9 in `test/hooks-metrics.test.js`, 11 in `test/wiki.test.js`), `npm run docs:registry`
 - UI: `npm start` (proxy, :8080) and `npm run start-mock` in `app/products` both open the app from the FLP sandbox; `ui5lint` 0 problems; `npm run lint:js` (Fiori tools ESLint) 0 errors
 - Object Page editing of `Products` through drafts (ADR-0012): Edit, Save, Cancel with discard confirmation, Create and Delete on the List Report, Editing Status filter, draft lock across users
 - List Report row shows a draft/lock marker (ADR-0015, feature `products-draft-marker`): `Common.SemanticKey: [ name ]` renders a `sap.m.ObjectMarker` in the `Product Name` cell — text-only `Draft` for an own draft, icon-plus-text `LockedBy`/`UnsavedBy` for another user's draft; verified in `en` and `ru`, keyboard-reachable, with the Editing Status filter narrowing to the marked row
@@ -45,6 +45,7 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Mandatory subcategory that waits for its category (feature `products-subcategory-cascade`, ADR-0025): Category and Subcategory are both `@mandatory`; `Common.FieldControl: (category.code is null ? 0 : 7)` keeps Subcategory disabled until a category is chosen and required after; the Excel workbook has a mandatory `subcategory` column and `subcategoryMismatches` reports a subcategory of another category per row before the inserts (ADR-0021 amendment 4 E, closes the #8 import debt); proved by `test/catalog-service.test.js`, `test/metadata.test.js` and the OPA5 `SubcategoryDependsOnCategoryJourney`; `en`/`ru` verified
 - Typed Details form (feature `products-details-section`, #9, ADR-0026, ADR-0027): the Object Page section "Details" is a form generated from the product's subcategory, one field per assigned attribute with the value type TEXT, INTEGER, DECIMAL, LIST (ComboBox) or MULTI_LIST (MultiComboBox, Connectivity and Material); the server creates the rows on a draft and a subcategory change keeps the common rows and warns when filled values are removed; counter "Filled N of M", `en` and `ru`, `CatalogViewer` read-only; proved by `test/catalog-service.test.js` (109), `test/metadata.test.js` (14), OPA5 `ProductDetailsFormJourney` and `test/unit/DetailsForm.qunit.js`
 - Documentation toolchain (feature `docs-toolchain`, #27, ADR-0029): `cds.cdsc.docs` turns CDS doc comments into `Core.Description` in `$metadata`; `npm run docs:registry` (or `npm run docs:api`) writes `docs/api/CatalogService.openapi3.json` and `docs/registry/JSDOC.md`; Swagger UI at `/$api-docs/odata/v4/catalog` under `cds watch` (development only); `npm run lint:js` gates JSDoc at the root and in `app/products` (CI, `/test-all`); the PostToolUse and SubagentStop hooks run ui5lint and the app ESLint on webapp files, only when installed in the app, and a linter that fails without a report blocks; proved by `test/api-docs.test.js`, `test/hooks-file-checks.test.js`, `test/hooks-subagent-stop.test.js`
+- Business-rules wiki (feature `business-rules-wiki`, #28, ADR-0030): `docs/wiki/` holds 22 active and 11 planned rule pages (`BR-<AREA>-NNN`), 9 domain, 7 how-to, 14 ADR digests and the pipeline list; `node scripts/wiki.mjs find|related|for-path|next-id|confirm|audit` answers the lookups (`audit` prints `wiki audit: clean`, runs in CI, `/test-all` and the phase 6 gate); `npm run docs:registry` writes the generated wiki files; `.github/workflows/wiki.yml` mirrors the pages to https://github.com/daiedy/Test_CAP/wiki on a push to `main` (flat export with wiki-ready links, `preprocess: false`); proved by `test/wiki.test.js` and `VERIFICATION.md` (run 40719796267)
 - UI tests: `npm run test:ui` in `app/products` (`ui5-test-runner` against `npx cds serve --in-memory --port 4004`, credentials from `app/products/ui5-test-runner.json`): 82 passed of 82 (58 `opaTest`s + 24 QUnit, of them 22 in `test/unit/DetailsForm.qunit.js`; feature `products-details-section` counter amendment, 2026-10-12, CHANGELOG)
 - Project-level Claude Code plugins: `ui5`, `cap-developer`; MCP in `.mcp.json`: `cds-mcp`, `fiori-mcp`, `chrome-devtools`, `ui5-mcp-server` (pinned 0.3.2 since 2026-10-07; the plugin's unpinned server `plugin:ui5:ui5-mcp-server` is toggled off in `/mcp` on each machine). Setup on a new machine: `docs/architecture/STACK.md`
 - Pipeline: 11 subagents in `.claude/agents`, 12 skills, 11 path-based rules, 7 hook events in `.claude/settings.json` (incl. the MCP audit on PostToolUse and PostToolUseFailure), the `docs/registry` registry, the release watcher `scripts/watch-releases.mjs` and the `upstream-check.yml` and `ci.yml` workflows, `.github/dependabot.yml`
@@ -52,4 +53,4 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## Decisions
 
-See `docs/decisions/` (ADR-0001 to ADR-0027); the accepted ways are rows in `docs/architecture/PATTERNS.md`.
+See `docs/decisions/` (ADR-0001 to ADR-0030); the accepted ways are rows in `docs/architecture/PATTERNS.md`.

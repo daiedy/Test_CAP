@@ -44,7 +44,7 @@ Delegate to `docs-keeper`: registry, CHANGELOG, STATE, SUMMARY, LESSONS, the wik
 
 ## Phase 7. Completion
 
-For an issue: `node scripts/backlog.mjs close N --summary docs/features/<name>/SUMMARY.md` (posts the summary, drops the labels, closes), then `node scripts/prune-feature.mjs <name>` keeps only `SUMMARY.md` with a permalink to the full record (ADR-0019) and never touches `docs/wiki`, whose History rows link that `SUMMARY.md`; commit `docs: <name> close #N and prune`; STATE `Feature: none`. After the prune run `node scripts/metrics.mjs feature <name>` and show the card. Show the user: the list of commits, what is closed from the acceptance criteria, what remains in the open debt. Push and pull request only on the user's instruction. The merge into `main` waits for a green CI run of the pushed branch (`gh run list --branch feature/<name>`): the local gate has installs CI may lack.
+For an issue: `node scripts/backlog.mjs close N --summary docs/features/<name>/SUMMARY.md` (posts the summary, drops the labels, closes), then `node scripts/prune-feature.mjs <name>` keeps only `SUMMARY.md` with a permalink to the full record (ADR-0019) and never touches `docs/wiki`, whose History rows link that `SUMMARY.md`; commit `docs: <name> close #N and prune`; STATE `Feature: none`. After the prune run `node scripts/metrics.mjs feature <name>` and show the card. Show the user: the list of commits, what is closed from the acceptance criteria, what remains in the open debt. Push and pull request only on the user's instruction. The merge into `main` waits for a green CI run of the branch's pull request (`gh pr checks`; `ci.yml` runs on `pull_request` and `main` only, a branch push starts nothing): the local gate has installs CI may lack.
 
 ## Orchestrator rules
 

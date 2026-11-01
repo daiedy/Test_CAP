@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-11-02
 - Branch: feature/business-rules-wiki (from main 40748e9; `wiki.yml` on main via PR #43)
 - Feature: none
-- Phase: none (retro of #28 applied 2026-11-02, uncommitted)
-- Last commit: bfed915 docs: business-rules-wiki close #28 and prune
-- Next: commit the retro, push, green CI, merge into `main` on the user's instruction (the push re-mirrors the wiki); then `/spec #44` (P1) or `/feature #10`; cds 10.2 Dependabot PR: re-tests in `docs/upstream/UPDATES.md`
+- Phase: none (retro of #28 committed 2026-11-02; a follow-up with the `/feature` CI wording and the prompt-budget record awaits the user's decision on the budget growth)
+- Last commit: 6292c1a chore(pipeline): retro after business-rules-wiki
+- Next: open a pull request for the branch (`ci.yml` runs on `pull_request` and `main` only), merge into `main` after green CI on the user's instruction (the push re-mirrors the wiki); decide the transitive lockfile fixes (`body-parser`, `qs`, `handlebars`; Dependabot cannot, `npx npm@11` keeps `libc`); then `/spec #44` (P1) or `/feature #10`
 
 ## Open debt
 

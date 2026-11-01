@@ -1,11 +1,11 @@
 ---
 name: flp-sandbox-flex-connector
-description: UI5 flexibility connector facts for the FLP sandbox (spec sandbox-flex-connector #11, 2026-10-08): external:false config key, sandbox.js/sandbox2.js overwrite window["sap-ui-config"], OPA journeys launch flpSandbox.html in an iframe, sap.fe.test variant API and the vacuous iSeeVariantModified(false), ui5-test-runner fresh profile per page, preview-middleware precedent; ADR-0024 proposed
+description: UI5 flexibility connector facts for the FLP sandbox (spec sandbox-flex-connector #11, 2026-10-08): external:false config key, sandbox.js/sandbox2.js overwrite window["sap-ui-config"], OPA journeys launch flpSandbox.html in an iframe, sap.fe.test variant API and the vacuous iSeeVariantModified(false), ui5-test-runner fresh profile per page, preview-middleware precedent; ADR draft never numbered (ADR-0024 became the dependent value help; #11 deferred as platform-side work)
 metadata:
   type: project
 ---
 
-Spec `sandbox-flex-connector` (#11) written 2026-10-08; ADR-0024 proposed (connector kind, placement, bounded `tests-ui.md` exception, layers). Facts from UI5 1.153.0 CDN debug sources (fiori-mcp 1.12.2 has nothing on the bootstrap attribute, the connectors or the `sap.fe.test` variant API):
+Spec `sandbox-flex-connector` (#11) written 2026-10-08; ADR draft never numbered (ADR-0024 became the dependent value help; #11 deferred as platform-side work) (connector kind, placement, bounded `tests-ui.md` exception, layers). Facts from UI5 1.153.0 CDN debug sources (fiori-mcp 1.12.2 has nothing on the bootstrap attribute, the connectors or the `sap.fe.test` variant API):
 
 - `sapUiFlexibilityServices` is read by `sap/ui/fl/initial/_internal/FlexConfiguration` with `external: false`: a URL parameter is ignored; default `[{url:'/sap/bc/lrep', connector:'LrepConnector'}]`. Only the bootstrap attribute (`data-sap-ui-flexibility-services`, dashed form measured in #6) or `window["sap-ui-config"]` work.
 - Both `test-resources/sap/ushell/bootstrap/sandbox.js` (legacy) and `sap/ushell/bootstrap/sandbox2.js` end with `window["sap-ui-config"] = { "xx-bootTask": ... }`, so a config placed in `flpSandboxConfig.js` is overwritten: the attribute on the `sap-ui-core.js` tag is the only placement that survives the New Sandbox migration (#21).

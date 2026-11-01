@@ -20,7 +20,7 @@ You are the orchestrator. You do not write code yourself, you delegate to subage
 
 ## Phase 1. Research and plan
 
-Delegate to `architect`: write CONTEXT.md (the implementers' brief), PLAN.md and, for experiments and framework facts, `research/*.md`; a PLAN.md left by `/spec` is reviewed, not rewritten. If the feature has a UI, after architect delegate to `ux-designer` for SCREENS.md. Gate: run `node scripts/check-feature-docs.mjs <name>` and hand a red result back to `architect`; then show the user the plan and the open questions; do not proceed without an explicit "approved" (in all modes). On approval, `architect` sets the ADR status by replacing the whole `Status:` sentence with the accepted form from `templates/adr.md`, never by appending to the proposed one.
+Delegate to `architect`: write CONTEXT.md (the implementers' brief), PLAN.md and, for experiments and framework facts, `research/*.md`; a PLAN.md left by `/spec` is reviewed, not rewritten. If the feature has a UI, after architect delegate to `ux-designer` for SCREENS.md. Gate: run `node scripts/check-feature-docs.mjs <name>` and hand a red result back to `architect`; then show the user the plan, the `## Alternatives` of SCREENS.md for a new screen shape with their mockups, and the open questions; do not proceed without an explicit "approved" (in all modes). On approval, `architect` sets the ADR status by replacing the whole `Status:` sentence with the accepted form from `templates/adr.md`, never by appending to the proposed one.
 
 ## Phase 2. Backend
 
@@ -44,7 +44,7 @@ Delegate to `docs-keeper`: registry, CHANGELOG, STATE, SUMMARY, LESSONS, the wik
 
 ## Phase 7. Completion
 
-For an issue: `node scripts/backlog.mjs close N --summary docs/features/<name>/SUMMARY.md` (posts the summary, drops the labels, closes), then `node scripts/prune-feature.mjs <name>` keeps only `SUMMARY.md` with a permalink to the full record (ADR-0019) and never touches `docs/wiki`, whose History rows link that `SUMMARY.md`; commit `docs: <name> close #N and prune`; STATE `Feature: none`. After the prune run `node scripts/metrics.mjs feature <name>` and show the card. Show the user: the list of commits, what is closed from the acceptance criteria, what remains in the open debt. Push and pull request only on the user's instruction.
+For an issue: `node scripts/backlog.mjs close N --summary docs/features/<name>/SUMMARY.md` (posts the summary, drops the labels, closes), then `node scripts/prune-feature.mjs <name>` keeps only `SUMMARY.md` with a permalink to the full record (ADR-0019) and never touches `docs/wiki`, whose History rows link that `SUMMARY.md`; commit `docs: <name> close #N and prune`; STATE `Feature: none`. After the prune run `node scripts/metrics.mjs feature <name>` and show the card. Show the user: the list of commits, what is closed from the acceptance criteria, what remains in the open debt. Push and pull request only on the user's instruction. The merge into `main` waits for a green CI run of the pushed branch (`gh run list --branch feature/<name>`): the local gate has installs CI may lack.
 
 ## Orchestrator rules
 
@@ -61,6 +61,7 @@ For an issue: `node scripts/backlog.mjs close N --summary docs/features/<name>/S
   | `reviewer` | everything in the feature directory | `docs/ai-pipeline-plan.md` |
   | `docs-keeper` | PLAN.md and the agents' reports | `research/` |
 - Never skip the review and documentation phases, even in autonomous mode.
+- Agents that edit `scripts/` run one at a time, and no suite runs while one of them edits: the hook and wiki tests copy `scripts/` into a sandbox, so a half-edited file is a spurious red; rerun after the edits settle before suspecting the test.
 - If an agent returned "ADR needed" or "no pattern", stop the pipeline and hand the question to the user.
 - Commits only for the files of the phase (`git add <files>`), message in conventional commits style, no `git add -A`.
 - The orchestrator verifies, it does not fix. A defect in an agent's output goes back to the owning agent (or the resumed one) with the evidence, even when the fix looks like one line. If the agent is dead and you must act, run exactly the check the acceptance criterion names: for a UI artifact the browser or the framework's own request shape (`$batch`), not a hand-typed request. A bare `curl GET` once passed a mock fixture that failed on the `$batch` path the application uses (CHANGELOG 2026-09-16).

@@ -22,7 +22,7 @@ File `srv/<name>-service.cds`: projections, actions, functions, authorization. F
 
 ## Semantics (`srv/annotations/<Entity>.cds`)
 - Titles live on the projection, so tools reading `my.catalog.*` directly do not see them; the registry generator takes them from the first projection.
-- `annotate CatalogService.<Entity> with { ... }`, only `@title: '{i18n>Entity.element}'`, `@mandatory`, `@assert.format`, `@assert.range`, `@assert.target`, `@readonly`, `@Measures.ISOCurrency`.
+- `annotate CatalogService.<Entity> with { ... }`, only `@title: '{i18n>Entity.element}'`, `@mandatory`, `@assert.format`, `@assert.range`, `@assert.target`, an `@assert: (case when ... then '<MESSAGE_KEY>' end)` constraint for a rule between fields (ADR-0024 decision 2, PATTERNS "Cross-field consistency check"), `@readonly`, `@Measures.ISOCurrency`.
 - Descriptions are one-sentence English doc comments `/** ... */` above the `annotate` statement (the projection) and above each own element; never `@description` or `@Core.Description` (ADR-0029 decision 2).
 - i18n keys are added to `_i18n/i18n.properties` and `_i18n/i18n_ru.properties` in the same change.
 - Template: `templates/annotations-semantic.cds`.

@@ -4,12 +4,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## Now
 
-- Date: 2026-10-28
+- Date: 2026-11-02
 - Branch: feature/business-rules-wiki (from main 40748e9; `wiki.yml` on main via PR #43)
 - Feature: none
-- Phase: 7: completion (business-rules-wiki #28 closed and pruned on 2026-10-28, $77.40, SUMMARY "Cost")
-- Last commit: 50ce9ed docs: business-rules-wiki summary and registry
-- Next: merge the branch into `main` on the user's instruction (the push re-mirrors the wiki), then `/feature #10`, #26; cds 10.2 Dependabot PR (~2026-11-02): re-tests in `docs/upstream/UPDATES.md`
+- Phase: none (retro of #28 applied 2026-11-02, uncommitted)
+- Last commit: bfed915 docs: business-rules-wiki close #28 and prune
+- Next: commit the retro, push, green CI, merge into `main` on the user's instruction (the push re-mirrors the wiki); then `/spec #44` (P1) or `/feature #10`; cds 10.2 Dependabot PR: re-tests in `docs/upstream/UPDATES.md`
 
 ## Open debt
 
@@ -21,10 +21,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 | FLP sandbox has no `data-sap-ui-flexibility-services`; variant `Save As` 404s and `eraseDirtyChangesOnVariant` erases the change on switch | Add a Session/LocalStorageConnector to `flpSandbox.html` (also for the New Sandbox migration); regress via an OPA5 `VariantManagement` select | user |
 | Root `.prettierrc` (single quotes, es5 commas) contradicts `app/products` ESLint (double quotes, no dangling comma) | ESLint wins today (orchestrator decision); align the configs | user |
 | A forked session's `session` card counts the parent's copied history | Cut the scope at the fork point | architect |
-| `.claude/rules/ui-annotations.md:19` ("never written by hand") and `.claude/rules/srv-services.md:24` (no `@assert: (case ...)`) contradict ADR-0024 (2026-10-09); `ui-annotations.md` also omits `Common.FieldControl` (ADR-0025) | One sentence each naming the ADR-0024 exception and one word for `Common.FieldControl` (`PIPELINE_ALLOW_PROTECTED=1`) | user |
 | `initialLoad: true` in `manifest.json` is a boolean; UI5 1.153.0 logs `DEPRECATED: boolean value not allowed for 'initialLoad'`, supported `Disabled\|Enabled\|Auto` (2026-10-07) | Set `Enabled` through Fiori MCP, confirm the List Report loads on open, OPA5 green | fiori-app-dev |
 | Stop hook backstop flags a `manifest.json` change made through Fiori MCP; it does not consult the MCP audit log (2026-10-12) | The stop gate accepts it when the log shows `execute_functionality` (protected hook file) | user |
-| The db-model rule file lacks the ADR-0026 decision 1 exception: `@assert.unique` lives in `db/` (PATTERNS "New entity" has it) | Add one line: "persistence constraints `@assert.unique` live in `db/`" (protected session) | user |
+| An ADR digest in `docs/wiki/decisions/` has no stamp over its ADR, so an amendment leaves it stale unnoticed (LESSONS) | `wiki.mjs confirm` stamps `sources` like `code`, `audit` reports a stale digest (a `/backlog` wish) | user |
 | `refreshRowsOfNewDraft` in `DetailsForm.js` (B2 re-read after Edit) is probably redundant since `$$ownRequest` (ADR-0027) | Remove it with `refreshedDrafts` after a browser proof on an API-created product | fiori-app-dev |
 | `DetailsForm.js` has an `eslint-disable` for `max-params` and `max-statements` (70 against 40) | Move the pure functions to a sibling module; narrow the directive to `max-params` | fiori-app-dev |
 | `@cap-js/openapi` is pinned to 1.6.0 (1.7.0 answers 500 on the Swagger document of a draft service; ADR-0029 amendment A) | Drop the pin after a release with cap-js/openapi PR #207 (#204) | upstream-watcher |
@@ -33,7 +32,7 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## What works
 
-- Backend on cds 10.1.1, Node 22: `npm run watch` (`cds watch`, port 4004), `npm run lint`, `npm run lint:js` (ESLint with the jsdoc rules), `npm test` (244 tests in 15 files: 109 in `test/catalog-service.test.js`, 20 in `test/products-import.test.js`, 16 in `test/metadata.test.js` incl. the `$metadata` snapshot, 9 in `test/api-docs.test.js`, 11 in `test/backlog.test.js`, 8 in `test/hooks-file-checks.test.js`, 4 in `test/hooks-subagent-stop.test.js`, 7 in `test/hooks-protect-bash.test.js`, 8 in `test/hooks-registry-gate.test.js`, 4 in `test/hooks-state-hygiene.test.js`, 10 in `test/doc-shapes.test.js`, 3 in `test/prompt-budget.test.js`, 15 in `test/metrics.test.js`, 9 in `test/hooks-metrics.test.js`, 11 in `test/wiki.test.js`), `npm run docs:registry`
+- Backend on cds 10.1.1, Node 22: `npm run watch` (`cds watch`, port 4004), `npm run lint`, `npm run lint:js` (ESLint with the jsdoc rules), `npm test` (246 tests in 16 files: 109 in `test/catalog-service.test.js`, 2 in `test/lockfile.test.js`, 20 in `test/products-import.test.js`, 16 in `test/metadata.test.js` incl. the `$metadata` snapshot, 9 in `test/api-docs.test.js`, 11 in `test/backlog.test.js`, 8 in `test/hooks-file-checks.test.js`, 4 in `test/hooks-subagent-stop.test.js`, 7 in `test/hooks-protect-bash.test.js`, 8 in `test/hooks-registry-gate.test.js`, 4 in `test/hooks-state-hygiene.test.js`, 10 in `test/doc-shapes.test.js`, 3 in `test/prompt-budget.test.js`, 15 in `test/metrics.test.js`, 9 in `test/hooks-metrics.test.js`, 11 in `test/wiki.test.js`), `npm run docs:registry`
 - UI: `npm start` (proxy, :8080) and `npm run start-mock` in `app/products` both open the app from the FLP sandbox; `ui5lint` 0 problems; `npm run lint:js` (Fiori tools ESLint) 0 errors
 - Object Page editing of `Products` through drafts (ADR-0012): Edit, Save, Cancel with discard confirmation, Create and Delete on the List Report, Editing Status filter, draft lock across users
 - List Report row shows a draft/lock marker (ADR-0015, feature `products-draft-marker`): `Common.SemanticKey: [ name ]` renders a `sap.m.ObjectMarker` in the `Product Name` cell — text-only `Draft` for an own draft, icon-plus-text `LockedBy`/`UnsavedBy` for another user's draft; verified in `en` and `ru`, keyboard-reachable, with the Editing Status filter narrowing to the marked row

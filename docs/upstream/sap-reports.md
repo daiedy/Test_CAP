@@ -9,6 +9,8 @@ Reports of upstream defects the project found and works around. Channel for the 
 
 ## How to submit
 
+Before drafting a report, search the tracker for a duplicate and read the changelog of the next version: for a GitHub project `gh search issues --repo <owner/repo> <terms>` and `gh issue list --repo <owner/repo> --state all --search "<terms>"`, for `@sap/cds` the CAP changelog. Of the three reports drafted for `docs-toolchain` two already existed or were fixed (cap-js/openapi#204 with fix PR #207, #180 fixed in 1.7.0); only chgeo/cds-swagger-ui-express#275 was new.
+
 1. SAP Support Portal: https://me.sap.com/getsupport ("Get Support" in SAP for Me), with an S-user that holds the "Create Cases" authorization (field details: SAP KBA 1296527). One case per report: component `BC-XS-CDX-NJS`, priority Low (a workaround exists, no productive system affected), subject = the report's **Title**, description = the report section plus the "Shared reproduction" section below; the five reproduction files may go in as a zip attachment.
 2. Without an S-user: SAP Community, product page https://community.sap.com/t5/c-khhcw49343/SAP+Cloud+Application+Programming+Model/pd-p/9f13aee1-834c-4105-8e43-ee442775e5ce, "Ask a Question", tag "SAP Cloud Application Programming Model", same subject and body.
 3. Put the case number or the question URL into the table above and into the matching LESSONS entry.

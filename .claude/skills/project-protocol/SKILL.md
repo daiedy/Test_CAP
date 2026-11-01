@@ -32,6 +32,8 @@ If MCP or the project documentation contradicts your knowledge, the document and
 9. Update the documentation you are responsible for (section 7) and report in the form (section 8).
 10. A deliverable that is a document (CONTEXT, SCREENS, PLAN, VERIFICATION, REVIEW, SUMMARY) exists on disk before the research starts and grows as you go; your report repeats the file. A result that lives only in your transcript is lost at the turn limit or the stream watchdog (CHANGELOG 2026-09-23). Budget your turns; when the budget is nearly spent, stop cleanly and name the last completed item, so the orchestrator can resume you with SendMessage.
 
+In a worktree session (`.claude/worktrees/`) the Bash guard refuses compound commands (`&&` chains, pipes with `git` or `npx`, heredocs) as "too complex to verify": run single commands, or put the steps into a scratch `.mjs` file run as `node <file>`.
+
 ## 3. Routing to MCP
 
 | You change | Ask first |
@@ -46,7 +48,7 @@ If MCP or the project documentation contradicts your knowledge, the document and
 
 If the task touches several layers, ask all the corresponding servers.
 
-If an MCP server is unavailable (timeout, "Search is currently unavailable", embeddings error): retry once, then fall back to the official documentation of the pinned version (capire for CDS; for UI5 and `sap.fe.test` the CDN debug sources `https://ui5.sap.com/resources/<module path>-dbg.js` of the version in `sap-ui-version.json`), mark every such finding "not verified by MCP" in the report, and note the outage once in the report's "For LESSONS" section (the orchestrator records it once per feature, not once per agent).
+If an MCP server is unavailable (timeout, "Search is currently unavailable", embeddings error): retry once, then fall back to the official documentation of the pinned version (capire for CDS; for UI5 and `sap.fe.test` the CDN debug sources `https://ui5.sap.com/resources/<module path>-dbg.js` of the version in `sap-ui-version.json`), mark every such finding "not verified by MCP" in the report, and note the outage once in the report's "For LESSONS" section (the orchestrator records it once per feature, not once per agent). In a worktree session `mcp__cds-mcp__search_model` answers from the pre-feature model and does not see the feature's new entities: read `docs/registry/DOMAIN-MODEL.md` (regenerated) or the CDS files for them and say so in the report.
 
 ## 4. Language
 

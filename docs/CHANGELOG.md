@@ -2,6 +2,11 @@
 
 Format: date, area, what changed. Maintained by `docs-keeper`, all agents add to it. New entries on top.
 
+## 2026-11-03
+
+- srv: **Message texts survive a request without `Accept-Language` on cds 10.2 (`/debug-after-upgrade`, Dependabot PR #46).** With `@sap/cds` 10.2.1 three tests received `sap-messages` texts with raw `{0}` placeholders (`PRODUCTS_DETAILS_VALUES_REMOVED`, `PRODUCTS_IMPORT_DONE`). Cause, found in the source since the changelog is silent: `lib/i18n/locale.js` of 10.2.0 leaves `req.locale` `undefined` for a request without a language header (the old fallback to `i18n.default_language` is behind the new `cds.features.locale_fallback`, marked for removal in cds 11), and `cds.i18n.messages.at(key, locale, args)` reads a non-string locale as its args, dropping the real ones. New helper `messageText(key, locale, args)` in `srv/catalog-service.js` resolves `locale ?? cds.i18n.default_language`; the four lookups (`warnValuesRemoved`, `importProducts`, `subcategoryMismatches`, `validationErrors`) go through it. No behaviour change on 10.1.1. Checked: `npm test` 246 passed on 10.2.1 and on 10.1.1; the 11 wiki pages whose `code` names the handler re-confirmed (no rule changed).
+- docs: PATTERNS "Success message of an action" names `messageText` and the cds 10.2 locale fact; `docs/LESSONS.md` records the undocumented change as `Pending upstream @sap/cds`; registry, OpenAPI and wiki files regenerated.
+
 ## 2026-11-02
 
 - pipeline: **Retro after `business-rules-wiki` (#28): 25 `Pending` LESSONS entries triaged, 19 transferred, 5 removed as already covered, 1 left pending; the 5 upstream entries stay as one-liners.** Facts: rework 37% of $77.40 (phase 4 amendment A-F from the pinned-action assumption, phase 3 CLI root lookup and link reader, phase 6 review fixes), one `state-budget` gate block, turn-limit stops `cap-backend-dev` 1 and `reviewer` 1 (both resumed), MCP audit 41 queries with 0 justified or unjustified skips, `MCP_RULES` unchanged. Transferred:

@@ -4,7 +4,7 @@
     "title": "Product Catalog API",
     "description": "Reads and maintains catalog products with their categories, subcategories and typed details, and imports products from an Excel workbook.",
     "version": "1.0.0",
-    "x-sources": "08e900114137a7b9"
+    "x-sources": "8fe25d39ba100345"
   },
   "x-sap-api-type": "ODATAV4",
   "x-odata-version": "4.01",

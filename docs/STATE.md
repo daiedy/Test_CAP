@@ -4,12 +4,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## Now
 
-- Date: 2026-11-02
-- Branch: feature/business-rules-wiki (from main 40748e9; `wiki.yml` on main via PR #43)
+- Date: 2026-11-03
+- Branch: main
 - Feature: none
-- Phase: none (retro of #28 committed 2026-11-02; a follow-up with the `/feature` CI wording and the prompt-budget record awaits the user's decision on the budget growth)
-- Last commit: 6292c1a chore(pipeline): retro after business-rules-wiki
-- Next: open a pull request for the branch (`ci.yml` runs on `pull_request` and `main` only), merge into `main` after green CI on the user's instruction (the push re-mirrors the wiki); decide the transitive lockfile fixes (`body-parser`, `qs`, `handlebars`; Dependabot cannot, `npx npm@11` keeps `libc`); then `/spec #44` (P1) or `/feature #10`
+- Phase: none (business-rules-wiki #28 and its retro merged via PR #49 on 2026-11-03, wiki mirror run green)
+- Last commit: 78763ef Merge pull request #49 from daiedy/feature/business-rules-wiki
+- Next: decide the transitive lockfile fixes (`body-parser` 2.4.0, `qs` 6.16.1, `handlebars` 4.7.10 are in range; Dependabot's security job updates direct dependencies only; write the lockfile with `npx npm@11`, local npm 10.9.8 strips `libc`); the cds 10.2 Dependabot PR re-tests of `docs/upstream/UPDATES.md`; then `/spec #44` (P1) or `/feature #10`
 
 ## Open debt
 

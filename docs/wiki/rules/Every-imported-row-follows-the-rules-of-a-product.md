@@ -14,7 +14,7 @@ sources:
   - docs/decisions/ADR-0021-products-excel-import.md
   - docs/features/products-excel-upload/SUMMARY.md
   - docs/features/products-subcategory-cascade/SUMMARY.md
-verified: 5ac44903751a96d7
+verified: 731b552dff67dc09
 ---
 
 # Every imported row follows the rules of a product

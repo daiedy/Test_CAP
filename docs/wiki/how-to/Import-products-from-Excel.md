@@ -5,7 +5,7 @@ tags: [products, import, excel]
 code:
   - srv/catalog-service.js
   - srv/annotations/Products.cds
-verified: dfab20cb0972ed9f
+verified: 28732f57355b4bb6
 ---
 
 # Import products from Excel

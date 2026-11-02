@@ -13,7 +13,7 @@ elements: []
 sources:
   - docs/decisions/ADR-0021-products-excel-import.md
   - docs/features/products-excel-upload/SUMMARY.md
-verified: 5ac44903751a96d7
+verified: 731b552dff67dc09
 ---
 
 # An import creates all products or none

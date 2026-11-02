@@ -185,6 +185,21 @@ async function filledRows(srv, rows) {
 }
 
 /**
+ * Message text in the request locale. Since cds 10.2 a request without an Accept-Language header
+ * has no locale (`@sap/cds/lib/i18n/locale.js`: the fallback to the default language is behind
+ * `cds.features.locale_fallback` and slated for removal in cds 11), and `cds.i18n.messages.at`
+ * reads a non-string locale as its args, so the real args would be dropped. The default language
+ * is what the runtime itself would use.
+ * @param {string} key message key in `_i18n/messages.properties`
+ * @param {string|undefined} locale request locale, undefined without an Accept-Language header
+ * @param {Array<unknown>} [args] placeholder values
+ * @returns {string|undefined} the text, undefined for an unknown key
+ */
+function messageText(key, locale, args) {
+  return cds.i18n.messages.at(key, locale ?? cds.i18n.default_language, args);
+}
+
+/**
  * Warning of U3 (PLAN D16, SCREENS "Subcategory change"): {0} the number of removed filled values,
  * {1} their localized attribute names in the old field order, joined by ", ". The warning travels
  * in the sap-messages header only and is not persisted as a draft message (research R7). cds 10
@@ -209,7 +224,7 @@ async function warnValuesRemoved(srv, removed, req) {
   req.warn({
     code: 'PRODUCTS_DETAILS_VALUES_REMOVED',
     target: 'subcategory_code',
-    message: cds.i18n.messages.at('PRODUCTS_DETAILS_VALUES_REMOVED', req.locale, args),
+    message: messageText('PRODUCTS_DETAILS_VALUES_REMOVED', req.locale, args),
     args,
   });
 }
@@ -250,12 +265,12 @@ async function importProducts(srv, Products, req) {
   }
 
   LOG.info('products imported', { count: rows.length });
-  // cds 10.0.6 writes sap-messages in the default language (ODataAdapter.sap_messages4 calls
+  // cds 10 writes sap-messages in the default language (ODataAdapter.sap_messages4 calls
   // normalized() but not localized()), so the text is resolved in the request locale here.
   const args = [rows.length];
   req.info({
     code: 'PRODUCTS_IMPORT_DONE',
-    message: cds.i18n.messages.at('PRODUCTS_IMPORT_DONE', req.locale, args),
+    message: messageText('PRODUCTS_IMPORT_DONE', req.locale, args),
     args,
   });
   return rows.length;
@@ -331,8 +346,7 @@ async function subcategoryMismatches(rows, order, locale) {
     .where`code in ${codes}`;
   const categoryOf = new Map(known.map(({ code, category_code }) => [code, category_code]));
   const reason =
-    cds.i18n.messages.at('PRODUCTS_SUBCATEGORY_MISMATCH', locale) ??
-    'PRODUCTS_SUBCATEGORY_MISMATCH';
+    messageText('PRODUCTS_SUBCATEGORY_MISMATCH', locale) ?? 'PRODUCTS_SUBCATEGORY_MISMATCH';
   return paired
     .filter(({ entry }) => {
       const category = categoryOf.get(entry.subcategory_code);
@@ -364,7 +378,7 @@ function validationErrors(err, row, locale, order) {
   for (const { code, target, args } of details) {
     const column = columnOf(target);
     if (byColumn.has(column)) continue;
-    const reason = cds.i18n.messages.at(code, locale, args) ?? code;
+    const reason = messageText(code, locale, args) ?? code;
     byColumn.set(column, {
       row,
       order: order(column),

@@ -1,5 +1,5 @@
 {
-  "x-sources": "0873ac0aca582d5b",
+  "x-sources": "e615eb5e65892b11",
   "nodes": [
     {
       "path": "docs/wiki/Glossary.md",
@@ -688,8 +688,8 @@
       "elements": [],
       "status": null,
       "sources": [],
-      "verified": "2876d3919dbf53ec",
-      "codeHash": "2876d3919dbf53ec",
+      "verified": "c15310dcf3b59fd3",
+      "codeHash": "c15310dcf3b59fd3",
       "aliases": [],
       "adr": []
     },
@@ -809,8 +809,8 @@
       "elements": [],
       "status": null,
       "sources": [],
-      "verified": "dfab20cb0972ed9f",
-      "codeHash": "dfab20cb0972ed9f",
+      "verified": "28732f57355b4bb6",
+      "codeHash": "28732f57355b4bb6",
       "aliases": [],
       "adr": []
     },
@@ -1267,8 +1267,8 @@
         "docs/decisions/ADR-0027-typed-product-details-form.md",
         "docs/features/products-details-section/SUMMARY.md"
       ],
-      "verified": "dfab20cb0972ed9f",
-      "codeHash": "dfab20cb0972ed9f",
+      "verified": "28732f57355b4bb6",
+      "codeHash": "28732f57355b4bb6",
       "aliases": [],
       "adr": []
     },
@@ -1393,8 +1393,8 @@
         "docs/decisions/ADR-0021-products-excel-import.md",
         "docs/features/products-excel-upload/SUMMARY.md"
       ],
-      "verified": "5ac44903751a96d7",
-      "codeHash": "5ac44903751a96d7",
+      "verified": "731b552dff67dc09",
+      "codeHash": "731b552dff67dc09",
       "aliases": [],
       "adr": []
     },
@@ -1422,8 +1422,8 @@
         "docs/decisions/ADR-0021-products-excel-import.md",
         "docs/features/products-excel-upload/SUMMARY.md"
       ],
-      "verified": "55aea3974a21e469",
-      "codeHash": "55aea3974a21e469",
+      "verified": "1d1391d18bdf4588",
+      "codeHash": "1d1391d18bdf4588",
       "aliases": [],
       "adr": []
     },
@@ -1524,8 +1524,8 @@
         "docs/features/products-subcategories/SUMMARY.md",
         "docs/features/products-subcategory-cascade/SUMMARY.md"
       ],
-      "verified": "f73bc4bb84eb2fde",
-      "codeHash": "f73bc4bb84eb2fde",
+      "verified": "dbefcaaf7ed5f83c",
+      "codeHash": "dbefcaaf7ed5f83c",
       "aliases": [],
       "adr": []
     },
@@ -1581,8 +1581,8 @@
         "docs/decisions/ADR-0027-typed-product-details-form.md",
         "docs/features/products-details-section/SUMMARY.md"
       ],
-      "verified": "2e2567da9094caa2",
-      "codeHash": "2e2567da9094caa2",
+      "verified": "6d885966c2b05733",
+      "codeHash": "6d885966c2b05733",
       "aliases": [],
       "adr": []
     },
@@ -1612,8 +1612,8 @@
         "docs/features/products-excel-upload/SUMMARY.md",
         "docs/features/products-subcategory-cascade/SUMMARY.md"
       ],
-      "verified": "5ac44903751a96d7",
-      "codeHash": "5ac44903751a96d7",
+      "verified": "731b552dff67dc09",
+      "codeHash": "731b552dff67dc09",
       "aliases": [],
       "adr": []
     },
@@ -1803,8 +1803,8 @@
         "docs/decisions/ADR-0021-products-excel-import.md",
         "docs/features/products-excel-upload/SUMMARY.md"
       ],
-      "verified": "5ac44903751a96d7",
-      "codeHash": "5ac44903751a96d7",
+      "verified": "731b552dff67dc09",
+      "codeHash": "731b552dff67dc09",
       "aliases": [],
       "adr": []
     },
@@ -1837,8 +1837,8 @@
         "docs/decisions/ADR-0025-dynamic-field-control.md",
         "docs/features/products-subcategory-cascade/SUMMARY.md"
       ],
-      "verified": "5ff680ee203a3f24",
-      "codeHash": "5ff680ee203a3f24",
+      "verified": "303b97c760587c79",
+      "codeHash": "303b97c760587c79",
       "aliases": [],
       "adr": []
     },
@@ -1897,8 +1897,8 @@
         "docs/decisions/ADR-0021-products-excel-import.md",
         "docs/features/products-excel-upload/SUMMARY.md"
       ],
-      "verified": "6b8ba77912379e2b",
-      "codeHash": "6b8ba77912379e2b",
+      "verified": "cdbf90be0de33e60",
+      "codeHash": "cdbf90be0de33e60",
       "aliases": [],
       "adr": []
     }

@@ -13,7 +13,7 @@ elements: []
 sources:
   - docs/decisions/ADR-0027-typed-product-details-form.md
   - docs/features/products-details-section/SUMMARY.md
-verified: 2e2567da9094caa2
+verified: 6d885966c2b05733
 ---
 
 # Detail rows follow the attributes of the subcategory

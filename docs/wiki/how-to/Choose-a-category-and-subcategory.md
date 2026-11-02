@@ -6,7 +6,7 @@ code:
   - app/products/annotations/Products.cds
   - app/products/annotations/Subcategories.cds
   - srv/catalog-service.js
-verified: 2876d3919dbf53ec
+verified: c15310dcf3b59fd3
 ---
 
 # Choose a category and subcategory

@@ -43,6 +43,7 @@
     "format": "prettier --write --no-error-on-unmatched-pattern \"srv/**/*.js\" \"test/**/*.js\" \"scripts/**/*.mjs\"",
     "docs:registry": "node scripts/gen-registry.mjs",
     "docs:api": "node scripts/gen-api-docs.mjs",
+    "docs:wiki": "node scripts/gen-wiki.mjs",
     "format:check": "prettier --check --no-error-on-unmatched-pattern \"srv/**/*.js\" \"test/**/*.js\" \"scripts/**/*.mjs\""
   },
   "cds": {

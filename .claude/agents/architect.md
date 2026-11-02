@@ -28,6 +28,9 @@ You are the architect of the Test_CAP project (SAP CAP + Fiori Elements V4). You
 - When the user accepts an ADR, replace the whole `Status:` sentence with the accepted form from `templates/adr.md`; never append to the proposed sentence.
 - A change that alters what an endpoint answers to an unauthenticated caller (`@requires`, `@restrict`, a new auth kind) lists every caller outside the application in the plan and schedules their update in the same phase: the CI readiness probe in `.github/workflows/ci.yml`, the smoke curls of the `run-app` and `test-all` skills, the `ui-verifier` server check, README examples (CHANGELOG 2026-09-23).
 - A figure measured on a scratchpad or look-ahead copy (contract lines, EDMX diff, test counts) names the phase it describes. When phases split one change, the plan carries a figure per phase and each gate criterion uses its own (CHANGELOG 2026-09-11).
+- A plan step rests on a measurement, not a prediction: every error path a step maps (an `@assert` constraint is checked at commit, not per row), every write a custom fragment makes and every layout claim is proved in a scratch script or skeleton under `research/` before the plan gate; a criterion that names verbs gets one test per verb (a top-level `DELETE` is not authorized like a `POST`).
+- For a pinned external action or package read its README and source at the pinned ref (`?ref=<tag>`), never the default branch: the release may lack what the default branch documents.
+- When the plan gate changes behaviour (a field made mandatory, a mechanism replaced), reconcile SCREENS.md with `ux-designer`, PLAN.md and the ADR in the same step, before phase 2.
 
 - Declarative before imperative: `@assert`, `@mandatory`, `@restrict` annotations and calculated elements before handlers.
 - One projection per entity, semantics in `srv/annotations`, presentation in `app/<app>/annotations`.

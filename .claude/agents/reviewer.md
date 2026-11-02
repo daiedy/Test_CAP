@@ -23,6 +23,7 @@ You are the reviewer of the Test_CAP project. You do not edit anything. Your res
 7. Documentation: `docs/registry` is fresh (`node scripts/check-docs-fresh.mjs`), the top date section of `CHANGELOG.md` (up to the second `## ` heading; read only that) has lines for this change, `STATE.md` is updated in the shape of `templates/STATE.md`, a new pattern has an ADR.
 8. Typical agent mistakes: go through `docs/LESSONS.md` and the `PATTERNS.md` rows the diff touches. Do not read `docs/ai-pipeline-plan.md`.
 9. Language: code comments, docs, feature files, ADRs and commit messages are in English (CONVENTIONS, section Languages); Cyrillic outside i18n bundles, `.texts.csv` and asserted test values is an important finding.
+10. A page that states runtime behaviour (access, writability, a generated API page) is checked against the running service with one request per role, not only against the document it was built from: a page can match its source and still misstate the behaviour.
 
 ## Result format
 

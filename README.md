@@ -53,6 +53,7 @@ Root:
 | `npm run format` / `npm run format:check` | Prettier for `srv/`, `test/`, `scripts/` |
 | `npm run docs:registry` | Regenerate `docs/registry/*.md` and `docs/api/CatalogService.openapi3.json` from the model and sources |
 | `npm run docs:api` | Regenerate only the OpenAPI document `docs/api/CatalogService.openapi3.json` |
+| `npm run docs:wiki` | Regenerate the generated files of `docs/wiki/` (folder indexes, `_Sidebar.md`, the API page, `graph.json`) |
 | `npm run build` | `cds build --production` |
 
 `app/products`:
@@ -72,6 +73,7 @@ Pipeline scripts (root):
 |---|---|
 | `node scripts/backlog.mjs list` | Backlog queue from GitHub Issues with priorities, blockers and the recommended next command |
 | `node scripts/check-docs-fresh.mjs` | Checks that `docs/registry` matches the model and sources (`--fix` regenerates) |
+| `node scripts/wiki.mjs <find\|related\|for-path\|next-id\|confirm\|audit\|export>` | Business-rules wiki CLI: look up rule pages, check the wiki (`audit` prints `wiki audit: clean`), export it for the mirror |
 | `node scripts/check-feature-docs.mjs <name>` | Checks the shape of a feature's `PLAN.md` and `CONTEXT.md` |
 | `node scripts/prompt-budget.mjs --record` | Re-records the size ceiling of prompts, rules and skills guarded by `test/prompt-budget.test.js` |
 
@@ -83,7 +85,7 @@ Pipeline scripts (root):
 
 ## Continuous integration
 
-- `.github/workflows/ci.yml` on every push to `main` and every pull request: `backend` (cds lint, Prettier check, Vitest, registry freshness, the model with templates compiles), `ui` (ui5lint, ESLint with the Fiori rules) and `ui-tests` (OPA5 journeys against `cds serve`, the report is uploaded as a build artifact).
+- `.github/workflows/ci.yml` on every push to `main` and every pull request: `backend` (cds lint, Prettier check, Vitest, registry freshness, the wiki audit, the model with templates compiles), `ui` (ui5lint, ESLint with the Fiori rules) and `ui-tests` (OPA5 journeys against `cds serve`, the report is uploaded as a build artifact).
 - `.github/workflows/upstream-check.yml` on Mondays: runs the release watcher for SAP CAP, UI5 and the Fiori tools and opens or updates an issue when something changed; the assessment is written locally by the `/upstream-check` skill into `docs/upstream/UPDATES.md`.
 - Dependabot weekly, grouped (`sap-cap`, `sap-ui5-fiori`, `tooling`), CAP majors excluded.
 
@@ -111,6 +113,10 @@ Details in `docs/architecture/`, working rules in `CLAUDE.md`, the current state
 ## Documentation
 
 Descriptions of the entities, elements, actions and types are CDS doc comments (`/** ... */`, English, ADR-0029). `npm run docs:registry` turns them into `docs/api/CatalogService.openapi3.json`, the OpenAPI document of the service, and writes `docs/registry/JSDOC.md`, the page with the JSDoc of `srv/**/*.js` and `app/products/webapp/ext/**/*.js`. Both are generated and never edited by hand; the Stop gate and CI check that they are fresh.
+
+## Business rules wiki
+
+Business rules and decisions are written in plain language in `docs/wiki/` (ADR-0030), and `.github/workflows/wiki.yml` mirrors the folder one-way to the GitHub Wiki at https://github.com/daiedy/Test_CAP/wiki. The wiki is read-only: a page edited there is overwritten at the next mirror run, so change the page in `docs/wiki/`. Look rules up with `node scripts/wiki.mjs for-path <file>`; the page shape is in `.claude/rules/docs-wiki.md`.
 
 ## Deployment
 

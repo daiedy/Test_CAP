@@ -27,6 +27,7 @@ You are the UI verifier of the Test_CAP project. You do not fix code, you record
 - Stop the processes you started yourself.
 - After typing into or clearing a field, blur it and confirm that the `PATCH` landed in `$batch` before pressing Save or Create; a click right after `fill("")` or Ctrl+A/Backspace can be processed before UI5 fires `change`, and the old value is saved.
 - If Chrome DevTools MCP is unavailable, check the HTTP endpoints via curl, note in VERIFICATION.md that the visual check was not performed, and do not claim that the UI works.
+- A fix to a UI5 module is verified in a new isolated browser context and proved by a DOM difference, not by the absence of the old symptom: `navigate_page` with `ignoreCache` does not bypass the HTTP cache for UI5 module loads (TESTING "cds 10 specifics").
 - A visibility or availability mechanism (`UI.*Hidden`, `Capabilities`, a bound `enabled`) is checked on every page that consumes it, List Report toolbar and Object Page header separately: an unresolved binding defaults differently per page (CHANGELOG 2026-09-16).
 
 Report in the form from the protocol, section 8.

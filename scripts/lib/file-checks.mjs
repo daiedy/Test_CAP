@@ -13,7 +13,9 @@ import {
   statePrintedBytes,
   planShapeErrors,
   contextShapeErrors,
+  wikiPageShapeErrors,
   STATE_PRINT_BUDGET,
+  WIKI_GENERATED_MARK,
 } from './doc-shapes.mjs';
 
 const TIMEOUT = 60_000;
@@ -323,6 +325,15 @@ function checkDocShapes(root, r) {
       );
     return errors.length
       ? `docs/STATE.md must keep the shape of templates/STATE.md (ADR-0018); the Stop gate blocks until it does:\n  ${errors.join('\n  ')}`
+      : null;
+  }
+  // ADR-0030 decision 6: a wiki page keeps its folder's shape; generated files and _*.md are no pages.
+  if (isUnder(r, ['docs/wiki/**/*.md'])) {
+    const t = text();
+    if (path.posix.basename(r).startsWith('_') || t.startsWith(WIKI_GENERATED_MARK)) return null;
+    const errors = wikiPageShapeErrors(t, r);
+    return errors.length
+      ? `${r} must keep the page shape of its wiki folder (ADR-0030 decision 1); node scripts/check-docs-fresh.mjs blocks until it does:\n  ${errors.join('\n  ')}`
       : null;
   }
   const m = r.match(/^docs\/features\/[^/]+\/(PLAN|CONTEXT)\.md$/);

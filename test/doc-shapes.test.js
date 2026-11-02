@@ -10,6 +10,8 @@ import {
   contextShapeErrors,
   capped,
   STATE_PRINT_BUDGET,
+  WIKI_GENERATED_MARK,
+  wikiPageShapeErrors,
 } from '../scripts/lib/doc-shapes.mjs';
 import { readSection } from '../scripts/lib/hook-utils.mjs';
 
@@ -78,6 +80,39 @@ describe('feature document shapes', () => {
     const errors = contextShapeErrors(ctx).join('\n');
     expect(errors).toMatch(/SCREENS\.md/);
     expect(errors).toMatch(/research\//);
+  });
+});
+
+describe('wiki page shape (ADR-0030 decision 1)', () => {
+  it("accepts every committed wiki page and rejects a page that breaks its folder's shape", () => {
+    // Hand-written pages only: generated files start with the generator header, _*.md are no pages.
+    const pages = fs
+      .readdirSync(path.join(root, 'docs/wiki'), { recursive: true })
+      .map((f) => `docs/wiki/${f.split(path.sep).join('/')}`)
+      .filter((p) => p.endsWith('.md') && !path.posix.basename(p).startsWith('_'))
+      .filter((p) => !read(p).startsWith(WIKI_GENERATED_MARK));
+    expect(pages).toContain('docs/wiki/Home.md');
+    for (const p of pages) expect(wikiPageShapeErrors(read(p), p), p).toEqual([]);
+
+    const rulePath = 'docs/wiki/rules/The-subcategory-belongs-to-the-products-category.md';
+    const rule = read(rulePath);
+    const errors = (text, at = rulePath) => wikiPageShapeErrors(text, at).join('\n');
+    expect(errors(rule.replace(/^summary: .*\n/m, ''))).toMatch(/missing frontmatter key summary/);
+    expect(errors(rule.slice(0, rule.indexOf('## History')))).toMatch(/missing section ## History/);
+    expect(errors(rule.replace(/^summary: (.*)$/m, 'summary: $1 It is checked on save.'))).toMatch(
+      /summary must be one sentence/
+    );
+    expect(errors(rule.replace(/^id: .*$/m, 'id: BR-PRICE-1'))).toMatch(/id BR-PRICE-1 must be/);
+    expect(errors(rule.replace(/^status: .*$/m, 'status: draft'))).toMatch(/status draft must be/);
+    expect(errors(rule.replace(/^# .*$/m, '# Another title'))).toMatch(/the H1 must be/);
+    expect(errors(rule.replace('## Why', '## Reason'))).toMatch(/missing section ## Why/);
+    expect(errors(rule.replace('| 2026-10-09 |', '| 9 October |'))).toMatch(/starts with its date/);
+    expect(errors(rule.replace(/^---\n/, ''))).toMatch(/no frontmatter/);
+    // The keys are those of the folder, and pages live only in the wiki folders.
+    expect(errors(rule, rulePath.replace('/rules/', '/how-to/'))).toMatch(
+      /frontmatter key id is not used in how-to\//
+    );
+    expect(errors(rule, 'docs/wiki/rules/old/X.md')).toMatch(/^not a wiki folder/);
   });
 });
 

@@ -5,6 +5,9 @@ Written by `ux-designer` from the SAP Fiori guidelines; read by `fiori-app-dev`,
 ## Floorplan and duplication check
 Floorplan (List Report + Object Page by default) with the guideline URL from `mcp__fiori-mcp__search_docs`; what `docs/registry/UI-ARTIFACTS.md` already has for this entity.
 
+## Alternatives
+Only for a new screen shape (a control or section kind the app does not use yet): two or three options, each with a guideline URL and a text mockup, and the recommendation. The user picks one at the plan gate; "none" when the screen reuses a shape the app already has.
+
 ## Screen: <name>
 - Title and subtitle:
 - Filters (no more than 5 by default):

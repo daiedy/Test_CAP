@@ -2,6 +2,11 @@
 
 Format: date, area, what changed. Maintained by `docs-keeper`, all agents add to it. New entries on top.
 
+## 2026-11-09
+
+- deps: **cds 10.2 is on `main`: `@sap/cds` 10.1.1 → 10.2.2, `@sap/cds-dk` 10.1.2 → 10.2.0 (Dependabot PR #46, merge `feb1c43`).** The PR was red until the locale fix of 2026-11-03 landed as PR #50 (`e254b26`); `main` had moved by the auto-merged PR #52 (tooling group) and PR #53 (`read-excel-file` 9.3.14), so the fix branch took `main` in first (strict protection). Two `@dependabot rebase` comments on PR #46 got no reaction and no update run within 35 minutes; `gh pr update-branch 46` brought it up to date, CI went green and the armed auto-merge fired. Checked on `main`: `npm test` 246 passed in 16 files on cds 10.2.2, no `$metadata` snapshot diff, root `@sap/cds-compiler` still 7.0.3. cds-dk 10.2.0 bundles `handlebars` 4.7.10, which closes both critical Dependabot alerts; 38 remain (18 high, 20 medium), the runtime ones are the top-level `body-parser` 2.3.0 and `qs` 6.16.0 under `express`, fixable in range by a lockfile-only update.
+- docs: `STACK.md` versions and the `gh pr update-branch` fallback, STATE, the cds 10.2 action of `docs/upstream/UPDATES.md` (partly done: the two LESSONS re-measurements stay open).
+
 ## 2026-11-03
 
 - srv: **Message texts survive a request without `Accept-Language` on cds 10.2 (`/debug-after-upgrade`, Dependabot PR #46).** With `@sap/cds` 10.2.1 three tests received `sap-messages` texts with raw `{0}` placeholders (`PRODUCTS_DETAILS_VALUES_REMOVED`, `PRODUCTS_IMPORT_DONE`). Cause, found in the source since the changelog is silent: `lib/i18n/locale.js` of 10.2.0 leaves `req.locale` `undefined` for a request without a language header (the old fallback to `i18n.default_language` is behind the new `cds.features.locale_fallback`, marked for removal in cds 11), and `cds.i18n.messages.at(key, locale, args)` reads a non-string locale as its args, dropping the real ones. New helper `messageText(key, locale, args)` in `srv/catalog-service.js` resolves `locale ?? cds.i18n.default_language`; the four lookups (`warnValuesRemoved`, `importProducts`, `subcategoryMismatches`, `validationErrors`) go through it. No behaviour change on 10.1.1. Checked: `npm test` 246 passed on 10.2.1 and on 10.1.1; the 11 wiki pages whose `code` names the handler re-confirmed (no rule changed).

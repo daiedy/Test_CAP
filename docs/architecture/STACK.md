@@ -8,15 +8,15 @@ State as of 2026-10-26. Versions are updated through `upstream-check` (see `docs
 |---|---|---|
 | Node.js | 22 LTS (22.23.2) | Installed via Homebrew `node@22`. cds 10 and the SAP tools require >= 22 |
 | npm | 10.x | |
-| `@sap/cds-dk` globally | 10.0.7 | `npm i -g @sap/cds-dk@10`, provides the `cds` command; the project's own dev dependency is 10.1.2 and `npx cds` uses that one |
+| `@sap/cds-dk` globally | 10.0.7 | `npm i -g @sap/cds-dk@10`, provides the `cds` command; the project's own dev dependency is 10.2.0 and `npx cds` uses that one |
 | Claude Code | 2.1.x | Plugins `ui5@claude-plugins-official`, `cap-developer@cap` enabled at project level; they are not installed automatically, see "Setup on a new machine" |
 
 ## Backend
 
 | Package | Version | Why |
 |---|---|---|
-| `@sap/cds` | ^10 (10.1.1) | CAP runtime. Yearly major, the previous major is supported for 12 months |
-| `@sap/cds-dk` | ^10 (10.1.2) | CLI: `cds watch`, `cds compile`, `cds add`, `cds lint` |
+| `@sap/cds` | ^10 (10.2.2) | CAP runtime. Yearly major, the previous major is supported for 12 months |
+| `@sap/cds-dk` | ^10 (10.2.0) | CLI: `cds watch`, `cds compile`, `cds add`, `cds lint` |
 | `@cap-js/sqlite` | ^3 (3.1.2) | SQLite for development and tests, `node:sqlite` driver by default |
 | `@cap-js/cds-test` | ^1 (1.0.2) | `cds.test()` for service tests |
 | `vitest`, `@vitest/coverage-v8` | ^5 (5.0.5) | Main test runner as recommended by capire since April 2026 |
@@ -67,7 +67,7 @@ MCP versions are pinned in `.mcp.json` and bumped only through `upstream-check` 
 ## CI and dependency updates
 
 - `.github/workflows/ci.yml` runs the backend tests, the UI lint and the OPA5 journeys; green since `8ec176b` (setup history in `docs/CHANGELOG.md`, 2026-09-07).
-- `.github/dependabot.yml` opens weekly, grouped pull requests; patch and minor ones merge automatically once CI is green (`.github/workflows/dependabot-automerge.yml` sets `gh pr merge --auto`; the `main` branch protection requires "Backend lint, tests, docs", "UI lint" and "OPA5 journeys" on a branch level with `main` (`strict`: a merge by `GITHUB_TOKEN` starts no `push` run, and a Dependabot PR left behind by another merge waits for `@dependabot rebase`), admins may still push directly), majors and red ones wait for the user; CAP majors are excluded (they go through `/upgrade-cds`), and so are `ui5-test-runner` majors: v6 needs Node.js >= 24.11.1 and comes with the move to Node 24 (`docs/upstream/UPDATES.md`, 2026-10-26). Dependabot alerts and security updates are enabled in the repository settings; the `security` group (`applies-to: security-updates`) bundles the security pull requests into one per directory, outside the weekly schedule and the cooldown, and the `ignore` list holds for them too.
+- `.github/dependabot.yml` opens weekly, grouped pull requests; patch and minor ones merge automatically once CI is green (`.github/workflows/dependabot-automerge.yml` sets `gh pr merge --auto`; the `main` branch protection requires "Backend lint, tests, docs", "UI lint" and "OPA5 journeys" on a branch level with `main` (`strict`: a merge by `GITHUB_TOKEN` starts no `push` run, and a Dependabot PR left behind by another merge waits for `@dependabot rebase` or, when Dependabot does not react to the comment, for `gh pr update-branch <n>`, which keeps the armed auto-merge), admins may still push directly), majors and red ones wait for the user; CAP majors are excluded (they go through `/upgrade-cds`), and so are `ui5-test-runner` majors: v6 needs Node.js >= 24.11.1 and comes with the move to Node 24 (`docs/upstream/UPDATES.md`, 2026-10-26). Dependabot alerts and security updates are enabled in the repository settings; the `security` group (`applies-to: security-updates`) bundles the security pull requests into one per directory, outside the weekly schedule and the cooldown, and the `ignore` list holds for them too.
 - Routine: the user reviews the Dependabot pull requests weekly (Mondays). After merging them on GitHub, `git fetch` and merge `origin/main` before the next push, keep the lock files as Dependabot wrote them (local npm 10.9.8 only strips `libc` metadata), then `npm install` in the root and in `app/products` and `npm test` (done on 2026-10-07 with pull requests #18 and #19).
 
 ## Setup on a new machine

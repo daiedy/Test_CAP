@@ -4,6 +4,7 @@ This file is an inbox, not an archive. A lesson lives here only until `/retro` t
 
 ## Pending
 
+- 2026-11-03. `@sap/cds` 10.1.1 → 10.2.1 (Dependabot PR #46): `sap-messages` texts arrived with raw `{0}` placeholders in 3 tests without an `Accept-Language` header. Cause: undocumented in the changelog; `@sap/cds/lib/i18n/locale.js` of 10.2.0 returns `req.locale = undefined` for a request without a language header (the fallback to `i18n.default_language` sits behind `cds.features.locale_fallback`, "remove fallback with cds^11"), and `cds.i18n.messages.at(key, locale, args)` treats a non-string locale as its args. Fix: `messageText(key, locale, args)` in `srv/catalog-service.js` passes `locale ?? cds.i18n.default_language` (PATTERNS "Success message of an action"). Check: `npm test` on 10.2.1, 246 passed. Status: Pending upstream `@sap/cds`; the change is not in the changelog or the `req.locale` docs, report it after a duplicate search (`docs/upstream/sap-reports.md`).
 - 2026-10-27. `business-rules-wiki` (#28), ADR digests. A digest in `docs/wiki/decisions/` carries no stamp over its ADR (`verified` covers `code` files only), so an amendment leaves the digest stale unnoticed. Status: Pending `scripts/wiki.mjs` (a `sources` stamp written by `confirm` and checked by `audit`, a `/backlog` wish); until then the `docs-keeper` step 6 line restates the digest by hand.
 
 ## Pending upstream

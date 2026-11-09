@@ -16,7 +16,7 @@ sources:
   - docs/decisions/ADR-0024-dependent-value-help.md
   - docs/features/products-subcategories/SUMMARY.md
   - docs/features/products-subcategory-cascade/SUMMARY.md
-verified: f73bc4bb84eb2fde
+verified: dbefcaaf7ed5f83c
 ---
 
 # Changing the category clears a subcategory that no longer fits

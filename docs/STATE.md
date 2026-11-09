@@ -4,12 +4,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## Now
 
-- Date: 2026-11-03
-- Branch: main
+- Date: 2026-11-09
+- Branch: fix/cds-10-2-request-locale (PR #50; main 6f5f259 merged in; `/debug-after-upgrade` for Dependabot PR #46, cds 10.2.1)
 - Feature: none
-- Phase: none (business-rules-wiki #28 and its retro merged via PR #49 on 2026-11-03, wiki mirror run green)
-- Last commit: 78763ef Merge pull request #49 from daiedy/feature/business-rules-wiki
-- Next: decide the transitive lockfile fixes (`body-parser` 2.4.0, `qs` 6.16.1, `handlebars` 4.7.10 are in range; Dependabot's security job updates direct dependencies only; write the lockfile with `npx npm@11`, local npm 10.9.8 strips `libc`); the cds 10.2 Dependabot PR re-tests of `docs/upstream/UPDATES.md`; then `/spec #44` (P1) or `/feature #10`
+- Phase: none (fix `messageText` in `srv/catalog-service.js`, 246 tests green on cds 10.2.1 and on 10.1.1)
+- Last commit: 4fd4344 Merge remote-tracking branch 'origin/main' into fix/cds-10-2-request-locale
+- Next: merge PR #50 after green CI (the user; strict protection needs the branch up to date), Dependabot then rebases PR #46 and cds 10.2.1 auto-merges; open Dependabot PRs #51 (sap-ui5-fiori) and #48 (msal-node major); decide the transitive lockfile fixes (`body-parser`, `qs` in range, `handlebars` bundled in cds-dk; write the lockfile with `npx npm@11`); then `/spec #44` (P1) or `/feature #10`
 
 ## Open debt
 

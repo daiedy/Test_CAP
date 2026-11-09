@@ -4,12 +4,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## Now
 
-- Date: 2026-11-03
-- Branch: fix/cds-10-2-request-locale (from main f8ea16b; `/debug-after-upgrade` for Dependabot PR #46, cds 10.2.1)
+- Date: 2026-11-09
+- Branch: fix/cds-10-2-request-locale (PR #50; main 6f5f259 merged in; `/debug-after-upgrade` for Dependabot PR #46, cds 10.2.1)
 - Feature: none
-- Phase: none (fix `messageText` in `srv/catalog-service.js` written, 246 tests green on cds 10.2.1; pull request pending)
-- Last commit: f8ea16b docs: STATE after the business-rules-wiki merge
-- Next: pull request for the fix, merge after green CI, then `@dependabot rebase` on PR #46 so cds 10.2.1 auto-merges; decide the transitive lockfile fixes (`body-parser`, `qs` in range, `handlebars` bundled in cds-dk; write the lockfile with `npx npm@11`); then `/spec #44` (P1) or `/feature #10`
+- Phase: none (fix `messageText` in `srv/catalog-service.js`, 246 tests green on cds 10.2.1 and on 10.1.1)
+- Last commit: 4fd4344 Merge remote-tracking branch 'origin/main' into fix/cds-10-2-request-locale
+- Next: merge PR #50 after green CI (the user; strict protection needs the branch up to date), Dependabot then rebases PR #46 and cds 10.2.1 auto-merges; open Dependabot PRs #51 (sap-ui5-fiori) and #48 (msal-node major); decide the transitive lockfile fixes (`body-parser`, `qs` in range, `handlebars` bundled in cds-dk; write the lockfile with `npx npm@11`); then `/spec #44` (P1) or `/feature #10`
 
 ## Open debt
 

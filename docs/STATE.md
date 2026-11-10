@@ -4,12 +4,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## Now
 
-- Date: 2026-11-09
-- Branch: main
-- Feature: none
-- Phase: none (cds 10.2.2 on main via PR #46 after the locale fix PR #50, 2026-11-09)
-- Last commit: feb1c43 Merge pull request #46 from daiedy/dependabot/npm_and_yarn/sap-cap-48bdd19bfc
-- Next: re-measure the two upstream LESSONS defects on cds 10.2 (`docs/upstream/UPDATES.md`); Dependabot PRs #51 (sap-ui5-fiori) and #48 (msal-node major) wait for a human; decide the lockfile-only fix of the runtime alerts (`body-parser`, `qs`, in range; write the lockfile with `npx npm@11`); then `/spec #44` (P1) or `/feature #10`
+- Date: 2026-11-11
+- Branch: feature/context-hygiene
+- Feature: context-hygiene (#44)
+- Phase: 2: probe (plan approved 2026-11-10, gate mode autonomous)
+- Last commit: a7dd97b Merge pull request #51 from daiedy/dependabot/npm_and_yarn/app/products/sap-ui5-fiori-2e7aa6083e
+- Next: step 2 hook probe by `cap-backend-dev`, then steps 3-9 one agent at a time
 
 ## Open debt
 

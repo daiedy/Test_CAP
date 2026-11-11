@@ -8,8 +8,8 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Branch: feature/context-hygiene
 - Feature: context-hygiene (#44)
 - Phase: 2: probe (plan approved 2026-11-10, gate mode autonomous)
-- Last commit: a7dd97b Merge pull request #51 from daiedy/dependabot/npm_and_yarn/app/products/sap-ui5-fiori-2e7aa6083e
-- Next: step 2 hook probe by `cap-backend-dev`, then steps 3-9 one agent at a time
+- Last commit: 4a16c70 docs(spec): context-hygiene hook probe F1-F8 on Claude Code 2.1.322
+- Next: `architect` amends PLAN, CONTEXT and ADR-0031 for the probe decisions Q8 and Q9, then steps 3-9 one agent at a time
 
 ## Open debt
 

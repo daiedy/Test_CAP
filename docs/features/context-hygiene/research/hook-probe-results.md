@@ -123,6 +123,8 @@ In auto mode, which the pipeline uses (agents report through `SubagentHandback`,
 
 Plan amendments for the user and `architect`; PLAN.md and CONTEXT.md are unchanged by this step. Steps 3-8 wait for these decisions. The plan's own rule: a failed fact stops the phase until the fallback is applied.
 
+Decided 2026-11-11: Q8 (question 1, option a) and Q9 (question 2, the checks move into #44), see PLAN.md "Open questions".
+
 1. **F8 failed: where the saved report comes from (criterion "Report on disk", step 6, ADR-0031 decision 7 level 2).** "SubagentStop writes `last_assistant_message` whole" cannot be met in auto mode: the key is absent after a `SubagentHandback`. Options:
    - (a) Proposed: a PostToolUse hook on `SubagentHandback` writes `tool_input.message` to `.pipeline/logs/report-<agent_type>-<agent_id>.md`. The message is whole, equal to the delivered report, and `agent_id` and `agent_type` are in the input. It fires once per delivery, so a resume overwrites the file with the latest report. This needs a new matcher `SubagentHandback` in `.claude/settings.json` (step 5's registration, protected) and a new or extended hook script. In a non-auto session (no handback tool) SubagentStop keeps writing `last_assistant_message`, which run 3 shows is the report there.
    - (b) SubagentStop reads the last `type: assistant` `tool_use:SubagentHandback` `input.message` from `agent_transcript_path`, through `scripts/lib/transcript-usage.mjs` (no second transcript reader). The record is present at stop time (runs 1, 2, 4). Same matcher set as today, but it adds a transcript parse to every stop, and SubagentStop also fires for internal agents (empty `agent_type`).

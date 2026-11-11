@@ -1,6 +1,6 @@
 ---
 name: context-hygiene-design
-description: What fills a pipeline agent's context (measured on the #28 run, 2026-11-09), Claude Code transcript and hook facts found on the way, the ADR-0031 design for #44 context-hygiene and its plan gate of 2026-11-10 (approved; decision 7 rework by fresh launch)
+description: What fills a pipeline agent's context (measured on the #28 run, 2026-11-09), Claude Code transcript and hook facts found on the way, the ADR-0031 design for #44 context-hygiene, its plan gate of 2026-11-10 (decision 7 rework by fresh launch) and the probe gate of 2026-11-11 (decision 8 handback gate, F6/F8 facts)
 metadata:
   type: project
 ---
@@ -8,6 +8,8 @@ metadata:
 Spec for #44 `context-hygiene` written 2026-11-09 (`docs/features/context-hygiene/`). Plan approved 2026-11-10 with the recommended option for Q1-Q7; ADR-0031 and the ADR-0018 amendment accepted at the gate, Status lines flip at step 12 (docs-keeper phase). Depends on ADR-0018, ADR-0022, ADR-0031.
 
 Gate amendments of 2026-11-10: the card counts compactions per launch and shows launches, resumes and compactions apart (D18; the compaction record kind is measured in step 7, not known yet). ADR-0031 decision 7, rework by fresh launch, four levels: rule in the `feature` and `spec` skills, report saved by SubagentStop under `.pipeline/logs/report-<type>-<id>.md`, a PreToolUse gate on `SendMessage` (`resume-gate.mjs`, denies when the addressee's transcript holds a `SubagentHandback` record, no deny-once), and a zero ratchet `resumesAfterReport` in `test/context-budget.json`. Reason: the architect of this spec was resumed at about 380K tokens for a small edit; six narrow `docs-keeper` launches peaked at 43-122K against 280K for one. Probe facts F7 (`SendMessage` hook input, subagent transcript path) and F8 (`last_assistant_message` holds the handback) guard the two hook-dependent levels.
+
+Probe gate 2026-11-11 (Claude Code 2.1.322, `research/hook-probe-results.md`), amendment Q8/Q9: F8 failed in auto mode (no `last_assistant_message` key after a `SubagentHandback`; the key exists only on a plain-text end), so the report file comes from PostToolUse `SubagentHandback` `tool_input.message`. F6 condition: a SubagentStop exit 2 after a handback reaches nobody (3 of 3), so the lint, protected and MCP blocks of `subagent-stop.mjs` were silent in auto mode before #44; ADR-0031 decision 8 moves them to PreToolUse `SubagentHandback` (`handback-gate.mjs`, shared `scripts/lib/handover-checks.mjs`), deny with the whole reason, bounded by `HANDBACK_DENY_MAX` (documented 3 retries, not measured; F9 in step 5), pass recorded as gate `handback-limit`; SubagentStop blocks only when the key is present. A deny reason or stderr of 12,000 characters arrives whole; `HOOK_OUTPUT_MAX` = 10,000 applies to `additionalContext` per string. A resumed agent gets no SubagentStart context at all. Q9 read as all three blocking exits (lint, protected, mcp), flagged to the user.
 
 Measured on the `/feature` run of #28 (session `5fcef594`, 21 launches, Claude Code 2.1.310); the scripts are in the feature's `research/` folder while it exists:
 

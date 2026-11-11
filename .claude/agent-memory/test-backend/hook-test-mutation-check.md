@@ -1,6 +1,6 @@
 ---
 name: hook-test-mutation-check
-description: how to prove hook tests discriminate without touching scripts/ (scratch-root mutation harness), plus linter facts that decide which fixture text proves a skip
+description: how to prove hook tests discriminate without touching scripts/ (scratch-root table harness, deny-mutation for allow-on-error rules), plus linter facts that decide which fixture text proves a skip
 metadata:
   type: project
 ---
@@ -10,6 +10,11 @@ Tests must not change `scripts/**`, so a mutation check runs on a scratch root: 
 Linter facts behind that (app/products config, 2026-10-25):
 - The app ESLint config has no error rule for `webapp/test/**` (`semi` is a warning there, an error elsewhere), and it ignores `webapp/localService/**` itself ("File ignored" warning). A pass at SubagentStop therefore proves nothing unless the text is unparsable: ESLint reports a fatal error (severity 2), while ui5lint reports nothing for a syntax error.
 - npm writes one `_logs` file per npx call into `npm_config_cache`. A fresh empty cache that is still empty after the run proves that no linter ran. Set `npm_config_update_notifier=false`, or npm appends an update notice to stderr on the first call with a fresh cache.
+
+Harness shape that worked (context-hygiene #44, 2026-11-11, 36 mutations in one background run): a `.mjs` written with Write OUTSIDE the repo (the Bash guard matches protected path names in command text), a table `[name, file, from, to, testFile, title]`, `npx vitest run <file> -t <title> --reporter=json --outputFile=...` per mutation, a control run without a mutation first, and a `MISSING` line when `from` is not found (it catches a pattern copied wrong).
+- Simpler copy that also serves tests reading `templates/`, `docs/` or `scripts/i18n` (metrics, hooks-context): every top-level entry except `node_modules`, `.git`, `.pipeline`, `app` (the last symlinked with `node_modules`), `fs.cpSync` with a filter skipping `/.claude/worktrees` and nested `node_modules`; 13 targeted runs took 9 s (2026-11-11). Record each verdict as the `-t` title's status from the JSON report, `NOT RUN` when the title is absent.
+- A safety rule that sits behind an outer `try/catch` that allows ("an unreadable ledger allows") is overdetermined: removing the null guard still allows through the catch. Mutate it to DENY instead (emit a deny where it returns) to prove the test.
+- A cheap `lint` finding in a sandbox without an app: an untracked `scripts/*.mjs` plus `npm_config_offline=true` and an empty cache: root `npx eslint` fails fast without a JSON report, which the hand-over checks count as a lint error.
 
 **Why:** a test that stays green under the mutation it is meant to catch only looks like coverage.
 

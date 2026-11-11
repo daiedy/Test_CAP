@@ -7,15 +7,7 @@
  * from the `## Now` lines `- Feature:` and `- Phase:` (phase = first integer 0-7, else `none`).
  */
 import path from 'node:path';
-import {
-  readStdinJson,
-  repoRoot,
-  rel,
-  insideRepo,
-  emitJson,
-  exists,
-  readSection,
-} from '../lib/hook-utils.mjs';
+import { readStdinJson, repoRoot, rel, insideRepo, emitJson, exists } from '../lib/hook-utils.mjs';
 import { appendAudit, agentKey } from '../lib/mcp-audit.mjs';
 import { appendMetric } from '../lib/metrics-log.mjs';
 import { runFileChecks } from '../lib/file-checks.mjs';
@@ -26,14 +18,10 @@ const MARKER_MAX = 80;
 /** The phase marker of docs/STATE.md; best effort, a failure never reaches the edit. */
 async function recordPhase(root, sessionId) {
   try {
-    // Loaded lazily: only a STATE edit pays for it, and a broken metrics lib cannot break the hook.
-    const { phaseOf } = await import('../lib/pipeline-metrics.mjs');
-    const now = readSection(path.join(root, STATE), '## Now');
-    const value = (label) =>
-      now
-        .match(new RegExp(`^- ${label}:[ \\t]*(.*)$`, 'm'))?.[1]
-        .trim()
-        .slice(0, MARKER_MAX);
+    // Loaded lazily: only a STATE edit pays for it, and a broken state lib cannot break the hook.
+    const { readNow, phaseOf } = await import('../lib/state-now.mjs');
+    const now = readNow(root);
+    const value = (label) => now[label]?.slice(0, MARKER_MAX);
     const raw = value('Phase');
     appendMetric(root, sessionId, {
       event: 'phase',

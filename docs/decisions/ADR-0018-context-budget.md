@@ -29,6 +29,17 @@ Applied as eight links:
 - `readSection()` in `scripts/lib/hook-utils.mjs` replaces `readLines()`; display caps that print a count ("30 of N") stay.
 - The retro skill keeps `docs/LESSONS.md` by shape (one `Pending` line per lesson with a destination), not by a line count.
 
+## Amendment: marked units, commands as writers, the brief instead of the reading list (accepted by the user 2026-11-10, feature `context-hygiene`)
+
+The four principles stay. Three clauses are widened; the mechanisms are ADR-0031.
+
+- A. Principle 1, the unit of a cut. Next to a section and a file, a unit is a marked subsection (`### Phase <N>: <label>`, `### <Readers>: <title>`), a row of a shape-checked table with its header, and an item of a shape-checked list (one criterion per line). A cut by such units names what it left out and where to read it. A line count or a character count is still never a unit.
+- B. Principle 2, the writer. A command that prints and a hook that relays its output are writers: the command decides its short form, the relay prints it whole or a summary by structure with the path of the whole on disk. A reader, a report or a skill never takes "the last lines". The byte cap of principle 3 applies to a relay only as the platform's own limit on hook output, and then with the path.
+- C. The fifth link, "the `/feature` orchestrator passes a reading list per role and a do-not-read list", now reads: the SubagentStart hook hands each role its brief, built from the markers; the brief carries the reading list and the list of what it leaves out; `reviewer`, `architect` and `ux-designer` read whole. Protocol step 1 changes from "read `PLAN.md` and `CONTEXT.md` whole" to "read your brief; open a whole file only for a section the brief lists as not included".
+- D. Principle 4, the ratchet, gains one file: `test/context-budget.json`, the measured bytes of the largest brief per role group, raised only by a retro decision with a line in `docs/CHANGELOG.md`.
+
+Measured basis (2026-11-09, `docs/features/context-hygiene/research/context-measurements.md`): the feature documents and the feature ADR were 19.5% of all tool-result characters in the `/feature` run of #28; the Stop gate, `lintNote()` and SubagentStop cut relayed output at 40 lines, 20 and 30 findings without a marker.
+
 ## Alternatives
 
 | Option | Why rejected |

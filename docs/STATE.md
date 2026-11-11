@@ -4,35 +4,40 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## Now
 
-- Date: 2026-11-09
-- Branch: main
+- Date: 2026-11-12
+- Branch: feature/context-hygiene
 - Feature: none
-- Phase: none (cds 10.2.2 on main via PR #46 after the locale fix PR #50, 2026-11-09)
-- Last commit: feb1c43 Merge pull request #46 from daiedy/dependabot/npm_and_yarn/sap-cap-48bdd19bfc
-- Next: re-measure the two upstream LESSONS defects on cds 10.2 (`docs/upstream/UPDATES.md`); Dependabot PRs #51 (sap-ui5-fiori) and #48 (msal-node major) wait for a human; decide the lockfile-only fix of the runtime alerts (`body-parser`, `qs`, in range; write the lockfile with `npx npm@11`); then `/spec #44` (P1) or `/feature #10`
+- Phase: none (context-hygiene #44 done and closed 2026-11-11, pull request to `main`)
+- Last commit: 932cdd1 docs: STATE after the manual sync
+- Next: merge the `feature/context-hygiene` pull request after a green CI run (user, 2026-11-12); then `/feature #10` with the before/after context card
 
 ## Open debt
 
 | Item | Resolution | Who |
 |---|---|---|
-| FLP sandbox still uses the legacy bootstrap (`sandbox.js`, `Container.createRenderer`, deprecated since 1.120, no successor); calls carry `ui5lint-disable` directives | Migrate to the New Sandbox with the `modernize-flp-sandbox` skill (needs UI5 >= 1.147; CDN is 1.152) | user decides |
-| `mta.yaml`, `xs-security.json` are drafts without productive dependencies | Separate ADR before any deployment work; `cds add xsuaa --for production` generates the role templates and scopes from the CDS role names (ADR-0013) | user |
-| `fiori-mcp` 1.12.2 `list_functionality` has no id for `filterFields` or `liveMode`; both set by hand under the ADR-0020 exception to ADR-0007 | `upstream-watcher` re-checks on each bump; drop the exception once covered | upstream-watcher |
-| FLP sandbox has no `data-sap-ui-flexibility-services`; variant `Save As` 404s and `eraseDirtyChangesOnVariant` erases the change on switch | Add a Session/LocalStorageConnector to `flpSandbox.html` (also for the New Sandbox migration); regress via an OPA5 `VariantManagement` select | user |
-| Root `.prettierrc` (single quotes, es5 commas) contradicts `app/products` ESLint (double quotes, no dangling comma) | ESLint wins today (orchestrator decision); align the configs | user |
-| A forked session's `session` card counts the parent's copied history | Cut the scope at the fork point | architect |
-| `initialLoad: true` in `manifest.json` is a boolean; UI5 1.153.0 logs `DEPRECATED: boolean value not allowed for 'initialLoad'`, supported `Disabled\|Enabled\|Auto` (2026-10-07) | Set `Enabled` through Fiori MCP, confirm the List Report loads on open, OPA5 green | fiori-app-dev |
-| Stop hook backstop flags a `manifest.json` change made through Fiori MCP; it does not consult the MCP audit log (2026-10-12) | The stop gate accepts it when the log shows `execute_functionality` (protected hook file) | user |
-| An ADR digest in `docs/wiki/decisions/` has no stamp over its ADR, so an amendment leaves it stale unnoticed (LESSONS) | `wiki.mjs confirm` stamps `sources` like `code`, `audit` reports a stale digest (a `/backlog` wish) | user |
-| `refreshRowsOfNewDraft` in `DetailsForm.js` (B2 re-read after Edit) is probably redundant since `$$ownRequest` (ADR-0027) | Remove it with `refreshedDrafts` after a browser proof on an API-created product | fiori-app-dev |
-| `DetailsForm.js` has an `eslint-disable` for `max-params` and `max-statements` (70 against 40) | Move the pure functions to a sibling module; narrow the directive to `max-params` | fiori-app-dev |
-| `@cap-js/openapi` is pinned to 1.6.0 (1.7.0 answers 500 on the Swagger document of a draft service; ADR-0029 amendment A) | Drop the pin after a release with cap-js/openapi PR #207 (#204) | upstream-watcher |
-| Object Page route shows a double-encoded semantic key, `Products('Notebook%2520Set')` (VERIFICATION docs-toolchain, 2026-10-25) | Check whether it predates the feature and whether FE expects it | fiori-app-dev |
-| `PRODUCTS_IMPORT_UNKNOWN_COLUMN` (`en`, `ru`) omits `subcategory` from the allowed columns (wiki backfill, 2026-10-26) | Add it via `/feature`, then `wiki.mjs confirm` the IMPORT page | cap-backend-dev |
+| FLP sandbox uses the legacy bootstrap (`Container.createRenderer`, deprecated since 1.120); calls carry `ui5lint-disable` | New Sandbox via the `modernize-flp-sandbox` skill (UI5 >= 1.147; CDN 1.152) | user decides |
+| `mta.yaml`, `xs-security.json` are drafts without productive dependencies | Separate ADR before deployment; `cds add xsuaa --for production` (ADR-0013) | user |
+| `fiori-mcp` 1.12.2 has no id for `filterFields` or `liveMode`; set by hand (ADR-0020 exception) | Re-check on each bump; drop the exception once covered | upstream-watcher |
+| FLP sandbox has no `data-sap-ui-flexibility-services`; variant `Save As` 404s | Session/LocalStorageConnector in `flpSandbox.html`; OPA5 `VariantManagement` regression | user |
+| Root `.prettierrc` (single quotes) contradicts `app/products` ESLint (double quotes) | ESLint wins today; align the configs | user |
+| A forked session's card counts the parent's history | Cut the scope at the fork point | architect |
+| `initialLoad: true` in `manifest.json` is a deprecated boolean (UI5 1.153.0) | Set `Enabled` through Fiori MCP; OPA5 green | fiori-app-dev |
+| Stop hook flags a `manifest.json` change made through Fiori MCP | Accept it when the MCP audit log shows `execute_functionality` | user |
+| An ADR digest in `docs/wiki/decisions/` has no stamp over its ADR; an amendment leaves it stale | `wiki.mjs confirm` stamps `sources`, `audit` reports it (a `/backlog` wish) | user |
+| `refreshRowsOfNewDraft` in `DetailsForm.js` is probably redundant since `$ownRequest` (ADR-0027) | Remove it with `refreshedDrafts` after a browser proof | fiori-app-dev |
+| `DetailsForm.js` has an `eslint-disable` for `max-params` and `max-statements` (70 against 40) | Move the pure functions to a sibling module; narrow the directive | fiori-app-dev |
+| `@cap-js/openapi` pinned to 1.6.0 (1.7.0: 500 on a draft service; ADR-0029 A) | Drop the pin after cap-js/openapi PR #207 | upstream-watcher |
+| Object Page route shows a double-encoded key, `Products('Notebook%2520Set')` | Check whether it predates docs-toolchain and whether FE expects it | fiori-app-dev |
+| `PRODUCTS_IMPORT_UNKNOWN_COLUMN` (`en`, `ru`) omits `subcategory` from the allowed columns | Add it via `/feature`, then `wiki.mjs confirm` the IMPORT page | cap-backend-dev |
+| Read gate records a read at PreToolUse: a failed whole `Read` counts and the next whole attempt is denied once with a false reason | Treat any `Read` key besides `file_path` as non-whole | cap-backend-dev |
+| One `--force` of `metrics.mjs record` bypasses the duplicate and the `resumesAfterReport` refusals alike | Print the ratchet finding on a forced record | cap-backend-dev |
+| `post-edit.mjs` joins notes that together can exceed `HOOK_OUTPUT_MAX`; Claude Code then saves a file with a preview | Pass the joined text through `relay()` | cap-backend-dev |
+| The `brief` record has no current-phase field, so the card cannot tell a fallback brief | Add the field and show it on the card | architect |
+| Brief and gates not measured before/after on a real run (#28: 21 launches, 2,597.4K characters); Q4 `autoCompactWindow` waits | `/feature #10`, `node scripts/metrics.mjs context <feature>` | user |
 
 ## What works
 
-- Backend on cds 10.2.2, Node 22: `npm run watch` (`cds watch`, port 4004), `npm run lint`, `npm run lint:js` (ESLint with the jsdoc rules), `npm test` (246 tests in 16 files: 109 in `test/catalog-service.test.js`, 2 in `test/lockfile.test.js`, 20 in `test/products-import.test.js`, 16 in `test/metadata.test.js` incl. the `$metadata` snapshot, 9 in `test/api-docs.test.js`, 11 in `test/backlog.test.js`, 8 in `test/hooks-file-checks.test.js`, 4 in `test/hooks-subagent-stop.test.js`, 7 in `test/hooks-protect-bash.test.js`, 8 in `test/hooks-registry-gate.test.js`, 4 in `test/hooks-state-hygiene.test.js`, 10 in `test/doc-shapes.test.js`, 3 in `test/prompt-budget.test.js`, 15 in `test/metrics.test.js`, 9 in `test/hooks-metrics.test.js`, 11 in `test/wiki.test.js`), `npm run docs:registry`
+- Backend on cds 10.2.2, Node 22: `npm run watch` (`cds watch`, port 4004), `npm run lint`, `npm run lint:js` (ESLint with the jsdoc rules), `npm test` (281 tests in 18 files: `test/catalog-service.test.js`, `test/metadata.test.js` with the `$metadata` snapshot, `test/products-import.test.js`, `test/api-docs.test.js`, `test/backlog.test.js`, `test/wiki.test.js`, `test/lockfile.test.js`, `test/doc-shapes.test.js`, `test/metrics.test.js`, `test/prompt-budget.test.js`, the hook tests `test/hooks-*.test.js`, and since #44 `test/feature-brief.test.js` and `test/hooks-context.test.js`), `npm run docs:registry`
 - UI: `npm start` (proxy, :8080) and `npm run start-mock` in `app/products` both open the app from the FLP sandbox; `ui5lint` 0 problems; `npm run lint:js` (Fiori tools ESLint) 0 errors
 - Object Page editing of `Products` through drafts (ADR-0012): Edit, Save, Cancel with discard confirmation, Create and Delete on the List Report, Editing Status filter, draft lock across users
 - List Report row shows a draft/lock marker (ADR-0015, feature `products-draft-marker`): `Common.SemanticKey: [ name ]` renders a `sap.m.ObjectMarker` in the `Product Name` cell — text-only `Draft` for an own draft, icon-plus-text `LockedBy`/`UnsavedBy` for another user's draft; verified in `en` and `ru`, keyboard-reachable, with the Editing Status filter narrowing to the marked row
@@ -45,11 +50,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Typed Details form (feature `products-details-section`, #9, ADR-0026, ADR-0027): the Object Page section "Details" is a form generated from the product's subcategory, one field per assigned attribute with the value type TEXT, INTEGER, DECIMAL, LIST (ComboBox) or MULTI_LIST (MultiComboBox, Connectivity and Material); the server creates the rows on a draft and a subcategory change keeps the common rows and warns when filled values are removed; counter "Filled N of M", `en` and `ru`, `CatalogViewer` read-only; proved by `test/catalog-service.test.js` (109), `test/metadata.test.js` (14), OPA5 `ProductDetailsFormJourney` and `test/unit/DetailsForm.qunit.js`
 - Documentation toolchain (feature `docs-toolchain`, #27, ADR-0029): `cds.cdsc.docs` turns CDS doc comments into `Core.Description` in `$metadata`; `npm run docs:registry` (or `npm run docs:api`) writes `docs/api/CatalogService.openapi3.json` and `docs/registry/JSDOC.md`; Swagger UI at `/$api-docs/odata/v4/catalog` under `cds watch` (development only); `npm run lint:js` gates JSDoc at the root and in `app/products` (CI, `/test-all`); the PostToolUse and SubagentStop hooks run ui5lint and the app ESLint on webapp files, only when installed in the app, and a linter that fails without a report blocks; proved by `test/api-docs.test.js`, `test/hooks-file-checks.test.js`, `test/hooks-subagent-stop.test.js`
 - Business-rules wiki (feature `business-rules-wiki`, #28, ADR-0030): `docs/wiki/` holds 22 active and 11 planned rule pages (`BR-<AREA>-NNN`), 9 domain, 7 how-to, 14 ADR digests and the pipeline list; `node scripts/wiki.mjs find|related|for-path|next-id|confirm|audit` answers the lookups (`audit` prints `wiki audit: clean`, runs in CI, `/test-all` and the phase 6 gate); `npm run docs:registry` writes the generated wiki files; `.github/workflows/wiki.yml` mirrors the pages to https://github.com/daiedy/Test_CAP/wiki on a push to `main` (flat export with wiki-ready links, `preprocess: false`); proved by `test/wiki.test.js` and `VERIFICATION.md` (run 40719796267)
+- Context hygiene (feature `context-hygiene`, #44, ADR-0031): SubagentStart hands each worker a role brief of the marked `PLAN.md` and `CONTEXT.md` (`.pipeline/brief/`, ceilings in `test/context-budget.json`, `node scripts/check-feature-docs.mjs <name>`); PreToolUse gates `Read` (a repeated whole read, a whole read of a briefed document: denied once), `SendMessage` (no resume after a delivered report) and `SubagentHandback` (lint, protected writes, `## MCP not used`; the report is kept in `.pipeline/logs/report-*.md`); check output is relayed whole or by log path; `node scripts/metrics.mjs context <feature>` prints the context card and `resumesAfterReport` is pinned at 0; proved by `test/feature-brief.test.js`, `test/hooks-context.test.js`, `test/hooks-subagent-stop.test.js`, `test/metrics.test.js` and `VERIFICATION.md`
 - UI tests: `npm run test:ui` in `app/products` (`ui5-test-runner` against `npx cds serve --in-memory --port 4004`, credentials from `app/products/ui5-test-runner.json`): 82 passed of 82 (58 `opaTest`s + 24 QUnit, of them 22 in `test/unit/DetailsForm.qunit.js`; feature `products-details-section` counter amendment, 2026-10-12, CHANGELOG)
 - Project-level Claude Code plugins: `ui5`, `cap-developer`; MCP in `.mcp.json`: `cds-mcp`, `fiori-mcp`, `chrome-devtools`, `ui5-mcp-server` (pinned 0.3.2 since 2026-10-07; the plugin's unpinned server `plugin:ui5:ui5-mcp-server` is toggled off in `/mcp` on each machine). Setup on a new machine: `docs/architecture/STACK.md`
-- Pipeline: 11 subagents in `.claude/agents`, 12 skills, 11 path-based rules, 7 hook events in `.claude/settings.json` (incl. the MCP audit on PostToolUse and PostToolUseFailure), the `docs/registry` registry, the release watcher `scripts/watch-releases.mjs` and the `upstream-check.yml` and `ci.yml` workflows, `.github/dependabot.yml`
+- Pipeline: 11 subagents in `.claude/agents`, 12 skills, 11 path-based rules, 9 hook events and 13 hook scripts in `.claude/settings.json` (incl. the MCP audit on PostToolUse and PostToolUseFailure), the `docs/registry` registry, the release watcher `scripts/watch-releases.mjs` and the `upstream-check.yml` and `ci.yml` workflows, `.github/dependabot.yml`
 - `CatalogService` requires authentication (ADR-0013): logging in as `alice` or `bob` (`CatalogEditor`, browser Basic prompt, empty password) shows Create, Delete and Edit as before; logging in as `viewer` (`CatalogViewer`) shows the same 15-row List Report and Object Page but without those four actions - the read-only singleton `CatalogService.Permissions` drives `UI.CreateHidden`/`UpdateHidden`/`DeleteHidden` in `app/products/annotations/Products.cds` through the short singleton path `/Permissions/isEditor`, which opens the Object Page without the UI5 `$select` TypeError (ADR-0013 amendment).
 
 ## Decisions
 
-See `docs/decisions/` (ADR-0001 to ADR-0030); the accepted ways are rows in `docs/architecture/PATTERNS.md`.
+See `docs/decisions/` (ADR-0001 to ADR-0031); the accepted ways are rows in `docs/architecture/PATTERNS.md`.

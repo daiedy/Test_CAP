@@ -21,6 +21,10 @@ The only sanction either layer honours is `PIPELINE_ALLOW_PROTECTED=1`, read fro
 
 The decision table of the guardrail is pinned by `test/hooks-protect-bash.test.js` (6 tests, 23 assertions) rather than by a manual smoke run.
 
+## Amendment: layer 1 blocks before the handback (accepted by the user 2026-11-11, feature `context-hygiene`)
+
+In auto mode the lint of the changed files and the protected-path block of layer 1 run on PreToolUse `SubagentHandback`, SubagentStop keeps them for a plain-text end together with the per-file checks; the rule (the git state is the boundary, files without an `edit` record are checked, `PIPELINE_ALLOW_PROTECTED=1` is the only sanction) is unchanged (ADR-0031 decision 8).
+
 ## Alternatives
 
 | Option | Why rejected |

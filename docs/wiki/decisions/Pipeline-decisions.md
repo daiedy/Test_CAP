@@ -19,6 +19,7 @@ adr:
   - ADR-0022
   - ADR-0023
   - ADR-0030
+  - ADR-0031
 sources:
   - docs/decisions/ADR-0001-node22-cds10.md
   - docs/decisions/ADR-0002-vitest-cds-test.md
@@ -36,6 +37,7 @@ sources:
   - docs/decisions/ADR-0022-pipeline-metrics.md
   - docs/decisions/ADR-0023-pipeline-state-hygiene.md
   - docs/decisions/ADR-0030-business-rules-wiki.md
+  - docs/decisions/ADR-0031-context-hygiene.md
 ---
 
 # Pipeline decisions
@@ -54,10 +56,11 @@ These decisions do not change what a user of the catalog sees. They fix how the 
 ## Agents and gates
 
 - ADR-0009: [MCP-first protocol and pinned versions of agent tools](../../decisions/ADR-0009-mcp-first-pinned-tooling.md)
-- ADR-0014: [MCP audit with a written reason instead of a hard requirement](../../decisions/ADR-0014-mcp-audit-soft-gate.md)
-- ADR-0016: [Shell writes are gated by the git state, not by trusting the write route](../../decisions/ADR-0016-bash-write-gate.md)
+- ADR-0014: [MCP audit with a written reason instead of a hard requirement; the check runs before the worker's report is delivered, and at a plain-text stop](../../decisions/ADR-0014-mcp-audit-soft-gate.md)
+- ADR-0016: [Shell writes are gated by the git state, not by trusting the write route; the lint and protected-path check run before the report is delivered](../../decisions/ADR-0016-bash-write-gate.md)
 - ADR-0017: [Generated files are sanctioned by their content, not by the write route](../../decisions/ADR-0017-generated-files-gate.md)
-- ADR-0018: [Context budget by structure, not by line counts](../../decisions/ADR-0018-context-budget.md)
+- ADR-0018: [Context budget by structure, not by line counts; marked units, commands as writers and a brief instead of a reading list since ADR-0031](../../decisions/ADR-0018-context-budget.md)
+- ADR-0031: [Context hygiene: a role brief from marked feature documents, a soft gate on repeated reads, no resume after a report, check output relayed whole or by log path, a context card](../../decisions/ADR-0031-context-hygiene.md)
 
 ## Backlog, metrics and state
 

@@ -166,3 +166,107 @@ export function createSandbox({ prefix, session, files = {} }) {
 
   return { root: dir, ghDir, git, put, rev, commit, resetTree, hook, log, appended, remove };
 }
+
+/**
+ * Writes the transcript of a subagent the resume gate looks up (ADR-0031 decision 7, probe fact
+ * F7): `<dir>/<sessionId>/subagents/agent-<agentId>.jsonl` with its `.meta.json`, in the record
+ * shapes of a real agent file. Each attempt is a `SubagentHandback` tool use, repeated by an
+ * `api-request-blob` record (the reader skips it), and its `tool_result`: `delivered` a result
+ * without an error, `denied` an error result (a PreToolUse deny of the handback gate, F9). No
+ * attempt at all is an agent stopped at its turn limit without a report.
+ * @param {string} dir the directory of the main session transcript
+ * @param {string} sessionId the main session id
+ * @param {string} agentId the bare agent id
+ * @param {{agentType?: string, attempts?: ('delivered'|'denied')[]}} [options]
+ * @returns {string} the main transcript path, the `transcript_path` of a `SendMessage` hook input
+ */
+export function writeAddressee(
+  dir,
+  sessionId,
+  agentId,
+  { agentType = 'cap-backend-dev', attempts = [] } = {}
+) {
+  const sub = path.join(dir, sessionId, 'subagents');
+  fs.mkdirSync(sub, { recursive: true });
+  const main = path.join(dir, `${sessionId}.jsonl`);
+  if (!fs.existsSync(main)) fs.writeFileSync(main, '');
+  let n = 0;
+  const stamp = () => new Date(Date.UTC(2026, 10, 11, 10, 0, n++)).toISOString();
+  const usage = { input_tokens: 10, output_tokens: 5 };
+  const assistant = (content) => ({
+    type: 'assistant',
+    timestamp: stamp(),
+    uuid: `${agentId}-a${n}`,
+    requestId: `${agentId}-req${n}`,
+    message: { model: 'claude-fixture', role: 'assistant', content, usage },
+  });
+  const records = [
+    {
+      type: 'user',
+      timestamp: stamp(),
+      uuid: `${agentId}-u0`,
+      message: { role: 'user', content: 'the delegation message' },
+    },
+    assistant([{ type: 'text', text: 'working on it' }]),
+  ];
+  attempts.forEach((kind, i) => {
+    const block = {
+      type: 'tool_use',
+      id: `toolu_${agentId}_${i}`,
+      name: 'SubagentHandback',
+      input: { message: `## Done\nattempt ${i + 1}` },
+    };
+    records.push(assistant([block]), {
+      type: 'api-request-blob',
+      timestamp: stamp(),
+      message: { content: [block] },
+    });
+    const denied = kind === 'denied';
+    records.push({
+      type: 'user',
+      timestamp: stamp(),
+      uuid: `${agentId}-u${n}`,
+      toolUseResult: denied ? 'Error: denied by a hook' : 'Report delivered.',
+      message: {
+        role: 'user',
+        content: [
+          {
+            type: 'tool_result',
+            tool_use_id: block.id,
+            content: denied ? 'Hook PreToolUse:SubagentHandback denied this tool' : 'Delivered.',
+            ...(denied ? { is_error: true } : {}),
+          },
+        ],
+      },
+    });
+  });
+  fs.writeFileSync(
+    path.join(sub, `agent-${agentId}.jsonl`),
+    records.map((r) => JSON.stringify(r)).join('\n') + '\n'
+  );
+  fs.writeFileSync(path.join(sub, `agent-${agentId}.meta.json`), JSON.stringify({ agentType }));
+  return main;
+}
+
+/**
+ * The hook input of a `SubagentHandback` call in a subagent (measured keys, ADR-0031 decision 8):
+ * PreToolUse runs the hand-over checks, PostToolUse also carries `tool_response` and saves the
+ * report. An `agentId` left out is the main thread, which has no handback.
+ * @param {'PreToolUse'|'PostToolUse'} event the hook event
+ * @param {{agentId?: string, agentType?: string, message?: string}} [options]
+ * @returns {object} the payload for `hook('handback-gate.mjs', ...)`
+ */
+export function handbackInput(
+  event,
+  { agentId, agentType = 'cap-backend-dev', message = '## Done\n' } = {}
+) {
+  const input = {
+    hook_event_name: event,
+    tool_name: 'SubagentHandback',
+    tool_input: { message },
+    agent_id: agentId,
+    agent_type: agentType,
+  };
+  if (event === 'PostToolUse') input.tool_response = 'Delivered.';
+  return input;
+}

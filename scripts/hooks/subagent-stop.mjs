@@ -1,43 +1,29 @@
 /**
- * SubagentStop hook: a subagent may not finish while changed files have lint ERRORS: the root
- * ESLint, and per app ui5lint plus the app ESLint (the JSDoc gate of webapp/ext, ADR-0029
- * decision 7 and amendment D-F). Warnings pass; a linter run without a JSON report blocks like an
- * error; a tool the app has not installed is not run and only advised. Exit 2 blocks with a
- * summary on stderr.
- * MCP audit (ADR-0014): if the agent edited files that expect an MCP query and made no attempt,
- * it is blocked once and asked for a "## MCP not used" section in its report; the reason is logged for /retro.
- * Write route (ADR-0016): changed files with no `edit` audit record were written outside Edit/Write,
- * so post-edit.mjs never saw them; their per-file-type checks run here and a protected path blocks.
+ * SubagentStop hook: the hand-over gate of a plain-text end, the write-route advisories and the
+ * `agent-stop` record.
+ * Blocking (exit 2, block text on stderr) only when the input has `last_assistant_message`, i.e. the
+ * agent ended in plain text (a non-auto session, or a turn before any report). After a report
+ * through `SubagentHandback` the key is absent (probe fact F8) and an exit 2 reaches nobody (F6), so
+ * the same checks run earlier, in the handback gate (scripts/hooks/handback-gate.mjs, ADR-0031
+ * decision 8). The checks live once, in scripts/lib/handover-checks.mjs: lint errors in the agent's
+ * changed files (ADR-0029 decision 7, amendment D-F), a protected path written outside Edit/Write
+ * (ADR-0016) and an MCP gap without a "## MCP not used" section (ADR-0014; blocked once, the stop
+ * after it passes through `stop_hook_active`). The block text is blockText() of the same library,
+ * relayed by relay(): every finding up to HOOK_OUTPUT_MAX, else the counts per rule and file with
+ * the path of the whole under .pipeline/logs/ (ADR-0031 decision 4).
+ * Report (ADR-0031 decision 7 level 2, Q8): `last_assistant_message` is written whole to
+ * `.pipeline/logs/report-<agent_type>-<agent_id>.md` when the key exists, on a pass and a block alike.
+ * Write route (ADR-0016): the per-file-type checks of scripts/lib/file-checks.mjs run over the
+ * changed files with no `edit` audit record (up to CHECK_LIMIT) and are printed as `systemMessage`.
  * Generated files (docs/registry/**) are not audited as protected writes; their gate is freshness (ADR-0017).
  * Metrics (ADR-0022): before any check, the agent's transcript aggregate is appended as `agent-stop`
  * (so a blocked stop still records); every exit 2 appends `{ event: 'gate', reason }`. A Claude Code
  * internal agent (`internalAgent`: an `agent_transcript_path` is given but no file exists there, or
  * neither an `agent_type` nor a transcript file exists; pipeline-metrics docs/metrics/data-flow.md
- * section 2) records no `agent-stop` and no `gate`; its checks and exit codes are unchanged.
+ * section 2) records no `agent-stop`, no `gate` and no report; its checks and exit codes are unchanged.
  */
-import path from 'node:path';
-import fs from 'node:fs';
-import {
-  repoRoot,
-  changedFiles,
-  isUnder,
-  truncate,
-  findUp,
-  readStdinJson,
-  exists,
-  emitJson,
-} from '../lib/hook-utils.mjs';
-import { agentKey, readAudit, appendAudit, mcpGaps } from '../lib/mcp-audit.mjs';
-import { protectedWriteHit, reasonFor } from '../lib/protected-paths.mjs';
-import {
-  runFileChecks,
-  runLinter,
-  appHasTool,
-  notInstalledNote,
-  UI5_SCOPE,
-  APP_ESLINT_SCOPE,
-  APP_ESLINT_EXCLUDE,
-} from '../lib/file-checks.mjs';
+import { readStdinJson, repoRoot, emitJson } from '../lib/hook-utils.mjs';
+import { runFileChecks } from '../lib/file-checks.mjs';
 import {
   appendMetric,
   recordGate,
@@ -45,9 +31,10 @@ import {
   metricsAgent,
   agentTranscriptPath,
 } from '../lib/metrics-log.mjs';
+import { handoverFindings, blockText, writeRoute, saveReport } from '../lib/handover-checks.mjs';
 
-const TIMEOUT = 150_000;
 const HOOK = 'subagent-stop';
+const CHECK_LIMIT = 12;
 
 /**
  * The `agent-stop` record (docs/metrics/data-flow.md section 2 of pipeline-metrics): the subagent's own
@@ -98,167 +85,47 @@ async function recordAgentStop(root, input) {
   }
 }
 
-/** The blocking lines of one `runLinter` result: errors (severity 2) and a failed run. */
-function errorLines(root, label, result) {
-  if (result.failure) return [`${label}: ${result.failure}`];
-  return result.messages
-    .filter((m) => m.severity === 2)
-    .map(
-      (m) =>
-        `${path.relative(root, m.file)}:${m.line ?? '?'}:${m.column ?? '?'} ${m.message} (${m.ruleId || 'parse'})`
-    );
-}
-
-function eslintErrors(root, files) {
-  if (!files.length) return [];
-  return errorLines(root, 'eslint', runLinter('eslint', root, files, TIMEOUT));
-}
-
-/**
- * Per app: ui5lint on the changed UI5 files and one app ESLint pass on the changed JavaScript of
- * `APP_ESLINT_SCOPE` (ADR-0029 amendment E). A tool the app has not installed is not run; it is
- * an advisory, because an agent may not install dependencies (amendment F).
- */
-function appErrors(root, files) {
-  const byApp = new Map();
-  for (const f of files) {
-    const appDir = findUp(path.dirname(path.resolve(root, f)), 'ui5.yaml', root);
-    if (!appDir) continue;
-    if (!byApp.has(appDir)) byApp.set(appDir, []);
-    byApp.get(appDir).push(path.relative(appDir, path.resolve(root, f)).split(path.sep).join('/'));
-  }
-  const errors = [];
-  const notes = [];
-  for (const [appDir, rels] of byApp) {
-    const app = path.relative(root, appDir);
-    const js = rels.filter((r) => isUnder(r, APP_ESLINT_SCOPE) && !isUnder(r, APP_ESLINT_EXCLUDE));
-    for (const [tool, targets] of [
-      ['ui5lint', rels],
-      ['eslint', js],
-    ]) {
-      if (!targets.length) continue;
-      if (!appHasTool(appDir, tool)) notes.push(notInstalledNote(root, appDir, tool));
-      else
-        errors.push(
-          ...errorLines(root, `${tool} (${app})`, runLinter(tool, appDir, targets, TIMEOUT))
-        );
-    }
-  }
-  return { errors, notes };
-}
-
 try {
   const input = readStdinJson();
   const root = repoRoot();
   // Metrics for pipeline agents only; an internal agent passes the same checks without records.
   const metered = !internalAgent(input);
-  const gate = (reason) => metered && recordGate(input, HOOK, reason, root);
   if (metered) await recordAgentStop(root, input);
-  const changed = changedFiles(root)
-    .filter((c) => c.status !== 'D' && !c.status.startsWith('D'))
-    .map((c) => c.path)
-    .filter((p) => exists(path.resolve(root, p)) && fs.statSync(path.resolve(root, p)).isFile());
-
-  const cdsAndSrv = changed.filter(
-    (p) =>
-      p.endsWith('.cds') ||
-      isUnder(p, ['srv/**/*.js', 'test/**/*.js', 'scripts/**/*.mjs', 'scripts/**/*.js'])
-  );
-  const ui5 = changed.filter((p) => isUnder(p, UI5_SCOPE));
-
-  const app = appErrors(root, ui5);
-  const errors = [...eslintErrors(root, cdsAndSrv), ...app.errors];
-  if (errors.length) {
-    gate('lint');
-    process.stderr.write(
-      `The subagent cannot finish: ${errors.length} linter errors in changed files. Fix them and finish again.\n` +
-        errors.slice(0, 30).join('\n') +
-        '\n'
-    );
-    process.exit(2);
+  const plainEnd = typeof input.last_assistant_message === 'string';
+  if (metered && plainEnd) {
+    try {
+      saveReport(root, input, input.last_assistant_message);
+    } catch {
+      // the report file is best effort, the checks below are not
+    }
   }
 
-  // ADR-0016: a file written through Bash (redirection, heredoc, a script) has no `edit` record,
-  // so it skipped protect-files.mjs and post-edit.mjs. git shows it anyway; check it here.
-  const auditRecords = readAudit(root, input.session_id);
-  const recorded = new Set(
-    auditRecords.filter((e) => e.event === 'edit' && e.file).map((e) => e.file)
-  );
-  const unrecorded = changed.filter((p) => !recorded.has(p));
-  const advisories = [...app.notes];
-
-  const protectedWrites = unrecorded
-    .map((p) => ({ p, hit: protectedWriteHit(root, p) }))
-    .filter((x) => x.hit);
-  if (protectedWrites.length) {
-    // Only the environment variable counts as sanction: a branch name is not a boundary,
-    // any agent can create `chore/x` (ADR-0016).
-    const allowedRoute = process.env.PIPELINE_ALLOW_PROTECTED === '1';
-    const list = protectedWrites.map((x) => `  ${x.p} (${reasonFor(x.hit)})`).join('\n');
-    if (!allowedRoute) {
-      gate('protected');
-      process.stderr.write(
-        'Protected files were changed outside Edit/Write, so the PreToolUse guard never saw them ' +
-          '(rule pipeline-config.md, ADR-0016):\n' +
-          list +
-          '\nDo not revert them yourself: the Bash guard denies `git checkout` to a subagent. Stop, list them ' +
-          'in your report under "## Open questions", and let the orchestrator and the user decide. A deliberate ' +
-          'change needs a session started with PIPELINE_ALLOW_PROTECTED=1, which only the user can set.\n'
-      );
+  let route;
+  let notes = [];
+  const advisories = [];
+  if (plainEnd) {
+    const findings = handoverFindings(root, input, input.last_assistant_message);
+    if (findings.reason) {
+      if (metered) recordGate(input, HOOK, findings.reason, root);
+      process.stderr.write(blockText(findings, 'finish again'));
       process.exit(2);
     }
-    advisories.push(`Protected files changed with PIPELINE_ALLOW_PROTECTED=1:\n${list}`);
+    ({ route, notes } = findings);
+    advisories.push(...findings.advisories);
+  } else {
+    // The report went through SubagentHandback and the handback gate checked the same files.
+    route = writeRoute(root, input);
   }
 
-  const CHECK_LIMIT = 12;
-  for (const p of unrecorded.slice(0, CHECK_LIMIT)) {
-    // A "not installed" note of the lint gate above is not repeated per file.
-    const notes = runFileChecks(root, p).filter((n) => !app.notes.includes(n));
-    advisories.push(...notes.map((n) => `${p}: ${n}`));
+  for (const p of route.unrecorded.slice(0, CHECK_LIMIT)) {
+    // A "not installed" note of the lint gate is not repeated per file.
+    const fileNotes = runFileChecks(root, p).filter((n) => !notes.includes(n));
+    advisories.push(...fileNotes.map((n) => `${p}: ${n}`));
   }
-  if (unrecorded.length > CHECK_LIMIT) {
+  if (route.unrecorded.length > CHECK_LIMIT) {
     advisories.push(
-      `${unrecorded.length - CHECK_LIMIT} further files written outside Edit/Write were not checked here (limit ${CHECK_LIMIT}); run the checks by hand if they matter.`
+      `${route.unrecorded.length - CHECK_LIMIT} further files written outside Edit/Write were not checked here (limit ${CHECK_LIMIT}); run the checks by hand if they matter.`
     );
-  }
-
-  // MCP audit (ADR-0014): edits without a prior MCP query need a written reason in the report.
-  const agent = agentKey(input);
-  const agentType = input.agent_type || 'main';
-  const gaps = mcpGaps(auditRecords, agent);
-  if (gaps.length) {
-    const report = input.last_assistant_message || '';
-    const marker = /#{1,4}\s*MCP not used\b/i;
-    const files = gaps.map((g) => g.file);
-    if (marker.test(report)) {
-      const idx = report.search(marker);
-      appendAudit(root, input.session_id, {
-        event: 'justification',
-        agent,
-        agentType,
-        files,
-        text: truncate(report.slice(idx, idx + 800), 800),
-      });
-    } else if (input.stop_hook_active) {
-      appendAudit(root, input.session_id, {
-        event: 'skipped-unjustified',
-        agent,
-        agentType,
-        files,
-      });
-      advisories.push(
-        `MCP audit: ${agentType} finished without an MCP query and without a "## MCP not used" section for ${files.join(', ')}. Recorded for /retro.`
-      );
-    } else {
-      const list = gaps.map((g) => `  ${g.file} (${g.label}) → ${g.needs.join(' or ')}`).join('\n');
-      gate('mcp');
-      process.stderr.write(
-        'MCP check (rule pipeline-config.md, ADR-0014): you edited files that expect an MCP query first, but this agent made no attempt:\n' +
-          list +
-          '\nEither run the query now and re-check your change against the result, or add a section "## MCP not used" to your report with one line per file: `path → reason` (why the query was unnecessary, for example a text fix, or impossible, for example the server was unavailable). Then finish again.\n'
-      );
-      process.exit(2);
-    }
   }
   if (advisories.length) emitJson({ systemMessage: advisories.join('\n\n') });
 } catch (e) {

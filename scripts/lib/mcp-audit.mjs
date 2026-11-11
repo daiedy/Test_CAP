@@ -4,6 +4,8 @@
  *   { ts, event: 'mcp' | 'skill', agent, agentType, tool, ok, subject }
  *   { ts, event: 'edit', agent, agentType, file }
  *   { ts, event: 'justification' | 'skipped-unjustified', agent, agentType, files, text? }
+ *   { ts, event: 'handback-deny', agent, agentType, reason }   the handback gate denied a report
+ *                                                             (scripts/lib/handover-checks.mjs)
  * `agent` is the hook input's agent_id, or 'main' for the main thread.
  */
 import path from 'node:path';
@@ -82,20 +84,38 @@ export function appendSessionLog(file, record) {
   fs.appendFileSync(file, JSON.stringify({ ts: new Date().toISOString(), ...record }) + '\n');
 }
 
-/** Removes `<prefix>-*.jsonl` files older than `maxAgeDays`; called by SessionStart. */
-export function pruneSessionLogs(root, prefix, maxAgeDays) {
-  const dir = path.join(root, AUDIT_DIR);
-  if (!fs.existsSync(dir)) return;
+/**
+ * The one prune of the pipeline's gitignored files: removes the files directly in `dir` whose name
+ * matches `pattern` and whose last change is older than `maxAgeDays`; subdirectories are kept.
+ * Best effort, never throws; called by SessionStart.
+ * @param {string} dir absolute directory (a missing one is nothing to prune)
+ * @param {RegExp} pattern tested against the bare file name
+ * @param {number} maxAgeDays age limit by mtime
+ */
+export function pruneByName(dir, pattern, maxAgeDays) {
+  let names;
+  try {
+    names = fs.readdirSync(dir);
+  } catch {
+    return;
+  }
   const limit = Date.now() - maxAgeDays * 86_400_000;
-  for (const name of fs.readdirSync(dir)) {
-    if (!name.startsWith(`${prefix}-`) || !name.endsWith('.jsonl')) continue;
+  for (const name of names) {
+    if (!pattern.test(name)) continue;
     const file = path.join(dir, name);
     try {
-      if (fs.statSync(file).mtimeMs < limit) fs.unlinkSync(file);
+      const stat = fs.statSync(file);
+      if (stat.isFile() && stat.mtimeMs < limit) fs.unlinkSync(file);
     } catch {
       // best effort
     }
   }
+}
+
+/** Removes `<prefix>-*.jsonl` files older than `maxAgeDays`; called by SessionStart. */
+export function pruneSessionLogs(root, prefix, maxAgeDays) {
+  const escaped = String(prefix).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  pruneByName(path.join(root, AUDIT_DIR), new RegExp(`^${escaped}-.*\\.jsonl$`), maxAgeDays);
 }
 
 export function auditFile(root, sessionId) {

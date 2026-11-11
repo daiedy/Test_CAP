@@ -5,8 +5,14 @@
  *   session [id]              card of one session (default: .pipeline/current-session, else the
  *                             newest transcript of this project)
  *   feature <name|#N>         card over every session that carries the feature (D10)
+ *   context [name|#N|session] context card (D14-D18, ADR-0031 decision 5): one row per launch with
+ *                             the compactions next to the peak, launches, resumes and compactions
+ *                             per agent type, the resumes after a report; a session id when the
+ *                             argument names a transcript, else a feature; none: the session default
  *   record <name> [--force]   append the feature's history line to docs/metrics/history.jsonl
- *                             (refuses a duplicate line or an unknown-model warning without --force)
+ *                             (refuses a duplicate line, an unknown-model warning, or more resumes
+ *                             after a report than `resumesAfterReport` of test/context-budget.json,
+ *                             0 when the file or the key is absent, without --force)
  *   compare [name...]         history lines with deltas against the previous line
  *   reconcile <id>            transcript against cost-state per model and token kind
  * Options: --json (the report object), --idle <min>, --tool <min> (D6 caps), --history <file>.
@@ -36,6 +42,7 @@ import {
   reviewCounts,
   criteriaCounts,
   renderCard,
+  renderContext,
   renderCompare,
   renderReconcile,
   loadPricing,
@@ -45,6 +52,7 @@ import {
   featureNameOf,
   HISTORY_FILE,
 } from './lib/pipeline-metrics.mjs';
+import { readBudget, BUDGET_FILE } from './lib/feature-brief.mjs';
 import { pickLang, readLocalSettings, loadBundle, t } from './lib/i18n.mjs';
 import { fetchIssues, readIssuesCache } from './lib/backlog.mjs';
 
@@ -205,6 +213,7 @@ function featureOf(arg) {
     issue,
     pricing,
     plan: approved.plan,
+    root,
     ...caps,
     extras: {
       review: reviewCounts(featureDoc(name, 'REVIEW.md')),
@@ -252,27 +261,55 @@ function sessionOf(id) {
   return session;
 }
 
+function sessionCard(id) {
+  const session = sessionOf(id);
+  const approved = sessionPlan(session.events);
+  return sessionReport(session, {
+    pricing,
+    plan: approved.plan,
+    related: relatedSessions(session),
+    root,
+    ...caps,
+    extras: {
+      maxTurns: maxTurns(),
+      compactions: compactionsOf(session),
+      planCommit: approved.commit,
+    },
+  });
+}
+
+/** `context`: a session when the argument names a transcript of the project, else a feature. */
+function contextReport(arg) {
+  if (!arg || sessionFiles(projectDir(root), arg).main) return sessionCard(arg);
+  return featureOf(arg);
+}
+
+/**
+ * The ratchet of ADR-0031 decision 7 level 4: `resumesAfterReport` of test/context-budget.json, 0
+ * when the file or the key is absent (the value the plan pins). An unparsable file fails `record`.
+ */
+function resumesCeiling() {
+  const { budget, error } = readBudget(root);
+  if (error) fail('metrics.error.budget', error);
+  const n = budget?.resumesAfterReport;
+  return Number.isFinite(n) ? n : 0;
+}
+
 switch (cmd) {
   case 'session': {
-    const session = sessionOf(args[0]);
-    const approved = sessionPlan(session.events);
-    const report = sessionReport(session, {
-      pricing,
-      plan: approved.plan,
-      related: relatedSessions(session),
-      ...caps,
-      extras: {
-        maxTurns: maxTurns(),
-        compactions: compactionsOf(session),
-        planCommit: approved.commit,
-      },
-    });
+    const report = sessionCard(args[0]);
     print(report, renderCard(report, bundle));
     break;
   }
   case 'feature': {
     const report = featureOf(args[0]);
     print(report, renderCard(report, bundle));
+    break;
+  }
+  case 'context': {
+    const report = contextReport(args[0]);
+    const { scope, feature, issue, sessionIds, context } = report;
+    print({ scope, feature, issue, sessionIds, context }, renderContext(report, bundle));
     break;
   }
   case 'record': {
@@ -284,6 +321,20 @@ switch (cmd) {
         'metrics.record.unknownModel',
         report.feature,
         unpriced.map((w) => w.slice('unknown-model:'.length)).join(', ')
+      );
+    // D18: a resume after a report is a rise the retro decides on (ADR-0031 decision 7 level 4).
+    const after = report.context.resumesAfterReport;
+    const ceiling = resumesCeiling();
+    if (after.length > ceiling && !flags.force)
+      fail(
+        'metrics.record.resumesAfterReport',
+        report.feature,
+        after.length,
+        ceiling,
+        BUDGET_FILE,
+        after
+          .map((x) => `${x.agentType} ${x.agent} (${x.ts ?? '-'}, context ${x.context ?? '-'})`)
+          .join('; ')
       );
     const line = historyLine(report, new Date().toISOString().slice(0, 10));
     const lines = readJsonl(historyFile);

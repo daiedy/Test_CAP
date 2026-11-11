@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1280 610" role="img" aria-label="Lifecycle of one worker in five columns: the lead agent launches it, the start hook hands the brief, the worker reads and edits through the read gate, file protection, the post-edit check and the reference log, hands over its report through the hand-over gate, which saves the report; after the report the resume gate refuses to wake the worker, and a dashed path leads to a fresh worker for the rework" xmlns="http://www.w3.org/2000/svg">
+<style>
+  svg {
+    --bg:#f4f7f8; --surface:#ffffff; --ink:#1c252b; --muted:#5e6a73; --line:#d8dfe4;
+    --accent:#0e7f84; --accent-soft:#d9eff0; --warn:#b26f16; --warn-soft:#f9ead2;
+    --hook:#6d4ec4; --hook-soft:#e9e4f9; --dash:#8a97a2; --code-bg:#e9eef1;
+    color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    svg {
+      --bg:#121a1f; --surface:#1a232a; --ink:#e4eaee; --muted:#9cabb5; --line:#2e3b44;
+      --accent:#4dc4c2; --accent-soft:#163a3b; --warn:#e3aa55; --warn-soft:#3a2c12;
+      --hook:#b39cf3; --hook-soft:#2c2546; --dash:#6f7f8b; --code-bg:#222d36;
+    }
+  }
+</style>
+<rect x="0" y="0" width="1280" height="610" style="fill:var(--bg)"/>
+<defs>
+  <marker id="lar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+  <marker id="larw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--warn)"/></marker>
+  <marker id="larh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--hook)"/></marker>
+</defs>
+<g font-size="12" font-weight="600" fill="currentColor" text-anchor="middle">
+  <text x="134" y="30">1 · The lead agent launches</text>
+  <text x="387" y="30">2 · The worker starts</text>
+  <text x="640" y="30">3 · The worker works</text>
+  <text x="893" y="30">4 · The worker hands over</text>
+  <text x="1146" y="30">5 · After the report</text>
+</g>
+
+<g stroke="currentColor" stroke-width="1" style="fill:var(--surface)">
+  <rect x="20" y="56" width="228" height="68" rx="6"/><rect x="273" y="56" width="228" height="68" rx="6"/><rect x="526" y="56" width="228" height="68" rx="6"/><rect x="779" y="56" width="228" height="68" rx="6"/><rect x="1032" y="56" width="228" height="68" rx="6"/>
+</g>
+<g font-size="12.5" font-weight="600" fill="currentColor">
+  <text x="32" y="78">Lead agent</text><text x="285" y="78">Worker</text><text x="538" y="78">Worker</text><text x="791" y="78">Worker</text><text x="1044" y="78">Lead agent</text>
+</g>
+<g font-size="10.5" style="fill:var(--muted)">
+  <text x="32" y="96">starts a worker with the Agent tool:</text><text x="32" y="111">feature, steps, mode, turn budget</text>
+  <text x="285" y="96">reads its brief first, a whole plan</text><text x="285" y="111">only for a section not included</text>
+  <text x="538" y="96">reads, edits and asks the references,</text><text x="538" y="111">call by call, until the work is done</text>
+  <text x="791" y="96">hands over its report with</text><text x="791" y="111"><tspan font-family="IBM Plex Mono, ui-monospace, monospace" font-size="10">SubagentHandback</tspan>, its last call</text>
+  <text x="1044" y="96">wants more work from this worker</text><text x="1044" y="111">and calls <tspan font-family="IBM Plex Mono, ui-monospace, monospace" font-size="10">SendMessage</tspan></text>
+</g>
+<g stroke="currentColor" stroke-width="1.2" fill="none" marker-end="url(#lar)">
+  <line x1="248" y1="90" x2="273" y2="90"/><line x1="501" y1="90" x2="526" y2="90"/><line x1="754" y1="90" x2="779" y2="90"/><line x1="1007" y1="90" x2="1032" y2="90"/>
+  <line x1="990" y1="124" x2="990" y2="164"/>
+  <line x1="1146" y1="124" x2="1146" y2="164"/>
+  <line x1="893" y1="348" x2="893" y2="372"/>
+  <line x1="1146" y1="268" x2="1146" y2="292"/>
+  <line x1="514" y1="200" x2="526" y2="200"/><line x1="514" y1="320" x2="526" y2="320"/><line x1="514" y1="435" x2="526" y2="435"/>
+</g>
+<path d="M526,112 H514 V435" stroke="currentColor" stroke-width="1.2" fill="none"/>
+<line x1="387" y1="164" x2="387" y2="124" stroke-width="1.5" style="stroke:var(--hook)" marker-end="url(#larh)"/>
+
+<g stroke-width="1.5" style="fill:var(--hook-soft);stroke:var(--hook)">
+  <rect x="273" y="164" width="228" height="132" rx="6"/>
+  <rect x="526" y="164" width="228" height="104" rx="6"/>
+  <rect x="526" y="284" width="228" height="104" rx="6"/>
+  <rect x="526" y="404" width="228" height="62" rx="6"/>
+  <rect x="779" y="164" width="228" height="184" rx="6"/>
+  <rect x="779" y="372" width="228" height="90" rx="6"/>
+  <rect x="779" y="478" width="228" height="62" rx="6" stroke-dasharray="4 3" style="fill:none;stroke:var(--hook)"/>
+  <rect x="1032" y="164" width="228" height="104" rx="6"/>
+</g>
+<g stroke-width="1.5" style="fill:var(--accent-soft);stroke:var(--accent)">
+  <rect x="791" y="219" width="204" height="84" rx="6"/>
+  <rect x="1032" y="292" width="228" height="62" rx="6"/>
+</g>
+<g stroke-width="1.5" stroke-dasharray="4 3" style="fill:var(--warn-soft);stroke:var(--warn)">
+  <rect x="20" y="164" width="228" height="80" rx="6"/>
+</g>
+
+<g font-size="11.5" font-weight="600" fill="currentColor">
+  <text x="285" y="180">At worker start</text>
+  <text x="538" y="180">Before a file read</text>
+  <text x="538" y="300">Before and after a file edit</text>
+  <text x="538" y="420">On a reference call</text>
+  <text x="791" y="180">When a worker hands over</text>
+  <text x="791" y="388">Report delivered</text>
+  <text x="791" y="494">Ends with plain text instead</text>
+  <text x="1044" y="180">Before a message to a worker</text>
+</g>
+<g font-size="11" font-weight="600" fill="currentColor">
+  <text x="799" y="235">Hand-over checks</text>
+  <text x="1044" y="310">May be continued</text>
+</g>
+<text x="32" y="182" font-size="12" font-weight="600" style="fill:var(--warn)">Rework: a fresh worker</text>
+<g font-family="IBM Plex Mono, ui-monospace, monospace" font-size="10" style="fill:var(--hook)">
+  <text x="285" y="195">SubagentStart</text><text x="285" y="209">· subagent-start.mjs</text>
+  <text x="538" y="195">PreToolUse Read · read-gate.mjs</text>
+  <text x="538" y="315">PreToolUse · protect-files*.mjs</text><text x="538" y="329">PostToolUse · post-edit.mjs</text>
+  <text x="538" y="435">PostToolUse · mcp-audit.mjs</text>
+  <text x="791" y="195">PreToolUse SubagentHandback</text><text x="791" y="209">· handback-gate.mjs</text>
+  <text x="791" y="403">PostToolUse SubagentHandback</text>
+  <text x="791" y="433">.pipeline/logs/report-</text><text x="791" y="447">&lt;agent-type&gt;-&lt;agent-id&gt;.md</text>
+  <text x="791" y="509">SubagentStop · subagent-stop.mjs</text>
+  <text x="1044" y="195">PreToolUse SendMessage</text><text x="1044" y="209">· resume-gate.mjs</text>
+</g>
+<g font-size="10.5" style="fill:var(--muted)">
+  <text x="32" y="200">of the same type; the message holds</text><text x="32" y="215">the defect list and the path of the</text><text x="32" y="230">saved report; the hook adds its brief</text>
+  <text x="285" y="225">hands the brief: whole up to</text><text x="285" y="239">10,000 characters, else its path</text><text x="285" y="253">in .pipeline/brief/; none for the</text><text x="285" y="267">architect, screen designer, reviewer</text><text x="285" y="281">or a resumed worker</text>
+  <text x="538" y="211">a repeated whole read of an</text><text x="538" y="225">unchanged file, or the plan or</text><text x="538" y="239">context read whole with a brief:</text><text x="538" y="253">refused once, the retry passes</text>
+  <text x="538" y="345">protected files are refused;</text><text x="538" y="359">compile, linters, i18n pairs;</text><text x="538" y="373">a long output: a summary and its log</text>
+  <text x="538" y="451">logs who asked which reference</text>
+  <text x="799" y="251">linter errors in its own files,</text><text x="799" y="265">files written around the checks,</text><text x="799" y="279">protected files, a missing</text><text x="799" y="293">reference reason</text>
+  <text x="791" y="319">refused with what to fix; after 3</text><text x="791" y="333">refusals the next attempt passes</text>
+  <text x="791" y="419">keeps the report whole in</text>
+  <text x="791" y="525">the same checks run at the stop</text>
+  <text x="1044" y="225">the worker has handed over its</text><text x="1044" y="239">report: the message is refused,</text><text x="1044" y="253">the rework goes to a fresh worker</text>
+  <text x="1044" y="326">a worker stopped at its turn limit</text><text x="1044" y="340">without a report</text>
+  <text x="901" y="366" font-size="10">passes</text>
+  <text x="1154" y="286" font-size="10">no report yet: passes</text>
+</g>
+
+<g stroke-width="1.5" fill="none" stroke-dasharray="5 4" style="stroke:var(--warn)">
+  <line x1="730" y1="164" x2="730" y2="126" marker-end="url(#larw)"/>
+  <path d="M779,326 H766 V112 H756" marker-end="url(#larw)"/>
+  <path d="M1260,230 H1270 V572 H134 V246" marker-end="url(#larw)"/>
+  <line x1="134" y1="164" x2="134" y2="126" marker-end="url(#larw)"/>
+</g>
+<g font-size="10" style="fill:var(--warn)">
+  <text x="722" y="148" text-anchor="end">refused once</text>
+  <text x="791" y="150">refused: fix, then hand over again</text>
+</g>
+<text x="700" y="592" font-size="10.5" text-anchor="middle" style="fill:var(--warn)">refused: the rework goes to a fresh worker of the same type, with the defect list and the path of the saved report</text>
+</svg>

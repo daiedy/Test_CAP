@@ -17,6 +17,7 @@ import {
   scopeThreads,
   usageByModel,
   timelinePoints,
+  deliveredReports,
 } from '../scripts/lib/transcript-usage.mjs';
 import {
   IDLE_MS,
@@ -50,6 +51,7 @@ import {
   renderCard,
   renderCompare,
   renderReconcile,
+  renderContext,
 } from '../scripts/lib/pipeline-metrics.mjs';
 import { loadBundle } from '../scripts/lib/backlog.mjs';
 import {
@@ -70,6 +72,8 @@ import {
   ms,
   iso,
   writeFixture,
+  CONTEXT_ROOT,
+  CONTEXT_EXPECTED,
 } from './fixtures/transcript-fixture.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
@@ -146,6 +150,7 @@ const HISTORY_KEYS = [
   'handbacks',
   'notifications',
   'lines',
+  'context',
   'phases',
   'pricingDate',
   'idleMin',
@@ -192,6 +197,19 @@ const TRANSCRIPT_KEYS = new Set([
   'message.content[].input',
   'message.content[].input.subagent_type',
   'message.content[].input.to',
+  // D14-D18 (context-hygiene step 7): tool-use ids, Read/Edit/Write paths and ranges, the Bash
+  // command (only its program class survives), tool results by id, length and error flag, the
+  // hook context attachment; `compact_boundary` is a `subtype` value.
+  'message.content[].input.file_path',
+  'message.content[].input.offset',
+  'message.content[].input.limit',
+  'message.content[].input.pages',
+  'message.content[].input.command',
+  'message.content[].tool_use_id',
+  'message.content[].content',
+  'message.content[].is_error',
+  'attachment.hookEvent',
+  'attachment.content',
   // D13 (fix round 1): the kind of a turn input, on a `user` and a `queued_command` record.
   'origin',
   'origin.kind',
@@ -1239,9 +1257,190 @@ describe('pipeline metrics (ADR-0022)', () => {
     expect(gone.agents.find((x) => x.agentType === 'cap-backend-dev')).toMatchObject(R.gone);
   });
 
+  describe('context of a launch (D14-D18, ADR-0031 decision 5)', () => {
+    const X = CONTEXT_EXPECTED;
+    const contextReport = () =>
+      featureReport(
+        SESSIONS.map((s) => load(s.id)),
+        'fixture-context',
+        { pricing, root: CONTEXT_ROOT }
+      );
+    const recordsOf = (agent) => load('m-context').agents.find((a) => a.id === agent).records;
+    const byUuid = (agent, uuid) => recordsOf(agent).find((r) => r.uuid === uuid);
+
+    it('context figures of a launch (D14-D18)', () => {
+      // The parser drops the api-request records whole: they repeat the blocks of others.
+      for (const type of ['api-request', 'api-request-blob', 'api-request-shape'])
+        expect(slim({ type, timestamp: iso(8, 0), message: { content: [] } }), type).toBeNull();
+      expect(recordsOf('m1').map((r) => r.uuid)).not.toContain('m-1-x1');
+      // Of a tool use its id, of a Read its path and whether it was partial, of Bash the class.
+      const doc = `${CONTEXT_ROOT}/docs/a.md`;
+      expect(byUuid('m1', 'm-1-a2').tools).toEqual([
+        { name: 'Read', id: 'tu-m1-r2', file: doc, partial: true },
+        { name: 'Read', id: 'tu-m1-r3', file: doc, partial: false },
+        { name: 'Bash', id: 'tu-m1-b2', program: 'search' },
+        {
+          name: 'Read',
+          id: 'tu-m1-r4',
+          file: `${CONTEXT_ROOT}/.pipeline/brief/cap-backend-dev-2.md`,
+          partial: false,
+        },
+      ]);
+      expect(byUuid('m2', 'm-2-a2').tools[1]).toMatchObject({ partial: true });
+      // Of a tool result its tool-use id and length, an error flag; of a hook string its length.
+      expect(byUuid('m2', 'm-2-u3').results).toEqual([
+        { id: 'tu-m2-r2', chars: 30, error: true },
+        { id: 'tu-m2-r3', chars: 10 },
+      ]);
+      expect(byUuid('m1', 'm-1-h1').hookContext).toEqual({ event: 'SubagentStart', chars: 60 });
+      // No text survives: neither a result's text nor a command.
+      const kept = JSON.stringify(load('m-context'));
+      expect(kept).not.toMatch(/xxxxx|vitest|git status/);
+
+      const report = contextReport();
+      const [m1, m2] = report.context.launches;
+      expect(m1).toEqual(X.m1);
+      expect(m2).toEqual(X.m2);
+      expect(report.context.main).toHaveLength(1);
+      expect(report.context.main[0]).toMatchObject(X.main);
+      expect(report.context.totals).toMatchObject({
+        toolResults: 16,
+        toolChars: 445,
+        byTool: {
+          Read: { n: 8, chars: 280 },
+          Bash: { n: 5, chars: 98 },
+          Edit: { n: 1, chars: 5 },
+          SubagentHandback: { n: 2, chars: 62 },
+        },
+        bash: X.m1.bash,
+        repeatReads: 1,
+        repeatChars: 40,
+        briefChars: 130,
+        startupMax: 20500,
+        peakMax: 22500,
+      });
+      // The card: one row per launch, the compactions next to the peak, the five largest results.
+      const text = renderContext(report, bundle);
+      const row = text.split('\n').find((l) => l.startsWith('| cap-backend-dev | m1 |'));
+      expect(row).toMatch(/^\| cap-backend-dev \| m1 \| 20\.5K \| 22\.5K \| 1 \| 7 \| 315 \|/);
+      expect(row).toContain('| 40 (1) | 130 |');
+      expect(row).toContain(
+        'Read .pipeline/brief/cap-backend-dev-2.md 70; Read docs/a.md 40; Read docs/a.md 40; Read docs/a.md 40; Bash check 30 |'
+      );
+      expect(text).toMatch(/^\| test-backend \| m2 \| 15\.4K \| 16\.9K \| 0 \| 4 \| 130 \|/m);
+      expect(text).toContain(
+        'Main thread: startup 31.0K, peak 37.0K tokens, compactions 0, requests 5'
+      );
+    });
+
+    it('launches, resumes and compactions are counted apart', () => {
+      const report = contextReport();
+      expect(report.context.byType).toEqual(X.byType);
+      expect(report.context.totals).toMatchObject({ launches: 2, resumes: 2, compactions: 1 });
+      // D9 counts the SendMessage calls of the main thread; D18 the deliveries in the agent files.
+      expect(report).toMatchObject({ launches: 2, resumes: 2 });
+      const card = renderCard(report, bundle);
+      expect(card).toContain(
+        '- cap-backend-dev: launches 1, resumes 1, compactions 1; startup max 20.5K, peak max 22.5K tokens; tool results 315, brief 130, repeat reads 40'
+      );
+      expect(card).toContain(
+        '- test-backend: launches 1, resumes 1, compactions 0; startup max 15.4K, peak max 16.9K tokens; tool results 130, brief 0, repeat reads 0'
+      );
+      expect(card).toContain('- main: compactions 0, peak 37.0K tokens');
+      const text = renderContext(report, bundle);
+      expect(text).toContain('| cap-backend-dev | 1 | 1 | 1 | 20.5K | 22.5K |');
+      expect(text).toContain('| test-backend | 1 | 1 | 0 | 15.4K | 16.9K |');
+      expect(text).toContain('Launches 2, resumes 2, compactions 1, resumes after a report 1;');
+      // fixture-demo: a1's `coordinator` delivery is a resume of a launch without a compaction.
+      const demo = featureReport([load('a-main'), load('b-resumed')], 'fixture-demo', { pricing });
+      expect(demo.context.byType['cap-backend-dev']).toMatchObject({
+        launches: 1,
+        resumes: 1,
+        compactions: 0,
+      });
+      expect(demo.context.totals).toMatchObject({ launches: 2, resumes: 1, resumesAfterReport: 0 });
+    });
+
+    it('resumes after a report are listed with their context', () => {
+      // A delivered report is a SubagentHandback with a result that is no error; a denied one is not.
+      expect(deliveredReports(recordsOf('m1'))).toEqual([
+        { ts: ms(8, 2.2), name: 'SubagentHandback', id: 'tu-m1-h1' },
+      ]);
+      expect(deliveredReports(recordsOf('m2'))).toEqual([]);
+      const report = contextReport();
+      expect(report.context.resumesAfterReport).toEqual(X.m1.afterReport);
+      expect(report.context.totals.resumesAfterReport).toBe(1);
+      const line =
+        'Resumes after a report (1): cap-backend-dev m1 at 2026-09-09 10:04 UTC, context 13.5K tokens';
+      expect(renderCard(report, bundle)).toContain(line);
+      expect(renderContext(report, bundle)).toContain(line);
+      expect(historyLine(report, '2026-11-11').context).toMatchObject({ resumesAfterReport: 1 });
+    });
+
+    it('a resume after a report fails the ratchet', () => {
+      // The ceiling the plan pins (criterion "Ratchet zero").
+      const budget = JSON.parse(
+        fs.readFileSync(path.join(root, 'test/context-budget.json'), 'utf8')
+      );
+      expect(budget.resumesAfterReport).toBe(0);
+      const file = path.join(home, 'ratchet-history.jsonl');
+      const refused = cli(['record', 'fixture-context', '--history', file]);
+      expect(refused.status, refused.stderr).toBe(1);
+      expect(refused.stderr).toContain(
+        'fixture-context has 1 resumes after a report, above the ceiling 0 of resumesAfterReport in test/context-budget.json: cap-backend-dev m1 (2026-09-09T10:04:48.000Z, context 13500)'
+      );
+      expect(fs.existsSync(file)).toBe(false);
+      // --force records the line with the count, so the rise reaches the retro.
+      const forced = cli(['record', 'fixture-context', '--history', file, '--force']);
+      expect(forced.status, forced.stderr).toBe(0);
+      expect(readJsonl(file)).toEqual([
+        expect.objectContaining({
+          feature: 'fixture-context',
+          context: expect.objectContaining({ resumesAfterReport: 1 }),
+        }),
+      ]);
+    });
+
+    it('history line carries the context figures', () => {
+      const file = path.join(home, 'context-history.jsonl');
+      for (const [name, extra] of [
+        ['fixture-demo', []],
+        ['fixture-context', ['--force']],
+      ]) {
+        const res = cli(['record', name, '--history', file, ...extra]);
+        expect(res.status, res.stderr).toBe(0);
+      }
+      const [demo, ctx] = readJsonl(file);
+      expect(ctx.context).toMatchObject(X.history);
+      expect(Object.keys(ctx.context).sort()).toEqual([...Object.keys(X.history), 'gates'].sort());
+      expect(demo.context).toMatchObject({
+        launches: 2,
+        resumes: 1,
+        compactions: 0,
+        resumesAfterReport: 0,
+      });
+      // compare: the four D18 figures with their deltas against the previous line.
+      const json = cli(['compare', '--history', file, '--json']);
+      expect(json.status, json.stderr).toBe(0);
+      const rows = JSON.parse(json.stdout);
+      expect(rows[0]).toMatchObject({ dContext: null });
+      expect(rows[1]).toMatchObject({
+        context: { launches: 2, resumes: 2, compactions: 1, resumesAfterReport: 1 },
+        dContext: { launches: 0, resumes: 1, compactions: 1, resumesAfterReport: 1 },
+      });
+      const text = cli(['compare', '--history', file]);
+      expect(text.stdout).toContain('| 2 / 2 / 1 / 1 (±0 / +1 / +1 / +1) |');
+      // A line recorded before the figure existed shows no context and no delta.
+      const [legacy, next] = compareLines([{ ...demo, context: undefined }, ctx]);
+      expect(legacy.context).toBeNull();
+      expect(next.dContext).toBeNull();
+    });
+  });
+
   it('the fixture holds only the allowed record keys', () => {
     const files = filesUnder(dir);
     let records = 0;
+    const seen = new Set();
     for (const file of files) {
       const meta = file.endsWith('.meta.json');
       const rows = meta ? [JSON.parse(fs.readFileSync(file, 'utf8'))] : readJsonl(file);
@@ -1249,18 +1448,27 @@ describe('pipeline metrics (ADR-0022)', () => {
         records++;
         const bad = keyPaths(r).filter((k) => !(meta ? META_KEYS : TRANSCRIPT_KEYS).has(k));
         expect(bad, path.relative(dir, file)).toEqual([]);
+        if (!meta) for (const k of keyPaths(r)) seen.add(k);
         if ('toolUseResult' in r) expect(r.toolUseResult).toBe(true);
-        // Only the type of a user prompt's content is read: the empty string, never text.
-        if (r.type === 'user' && r.message) expect(r.message.content).toBe('');
-        if (r.type === 'assistant') expect(Array.isArray(r.message.content)).toBe(true);
-        for (const c of r.type === 'assistant' ? r.message.content : [])
-          if ('id' in c) expect(c.name).toBe('Agent');
+        // Only the type of a user prompt's content is read: the empty string, never text; an
+        // array holds tool results only.
+        const content = r.message?.content;
+        if (r.type === 'user' && r.message && !Array.isArray(content)) expect(content).toBe('');
+        if (r.type === 'assistant') expect(Array.isArray(content)).toBe(true);
+        for (const c of Array.isArray(content) ? content : []) {
+          if (r.type === 'user') expect(c.type).toBe('tool_result');
+          if ('id' in c) expect(c.type).toBe('tool_use');
+          // A result's text is a run of `x`: its length is the figure, there is no content.
+          if (c.type === 'tool_result') expect(c.content).toMatch(/^x*$/);
+        }
         // Only whether hookErrors is empty is read: its entries are empty objects.
         for (const e of r.hookErrors || []) expect(e).toEqual({});
         // D13 enums only: `origin` on a user record, a `queued_command` attachment without text.
         if ('origin' in r) expect(r.type).toBe('user');
         if ('attachment' in r) expect(r).toMatchObject({ type: 'attachment' });
-        if (r.type === 'attachment') expect(r.attachment.type).toBe('queued_command');
+        if (r.type === 'attachment')
+          expect(['queued_command', 'hook_additional_context']).toContain(r.attachment.type);
+        for (const v of r.attachment?.content || []) expect(v).toMatch(/^x*$/);
         for (const v of strings(r)) expect(v.length).toBeLessThanOrEqual(80);
       }
     }
@@ -1270,6 +1478,8 @@ describe('pipeline metrics (ADR-0022)', () => {
       0
     );
     expect(records).toBe(built);
+    // The allowed keys equal the field list of definitions section 1: each is used by the fixture.
+    expect([...TRANSCRIPT_KEYS].filter((k) => !seen.has(k))).toEqual([]);
 
     // The event logs: only the keys of the hook records, a prompt record without any prompt text.
     for (const e of [
@@ -1349,9 +1559,70 @@ describe('pipeline metrics (ADR-0022)', () => {
         timestamp,
         attachment: { type: 'queued_command', prompt: SENTINEL, commandMode: 'task-notification' },
       },
+      // The SubagentStart brief in an agent's transcript (review Minor "Privacy test gap"): its
+      // `content` is the brief text, of which only the length is kept.
+      {
+        type: 'attachment',
+        uuid: 's-h1',
+        timestamp,
+        attachment: {
+          type: 'hook_additional_context',
+          hookEvent: 'SubagentStart',
+          hookName: 'SubagentStart',
+          content: [SENTINEL, `# Brief ${SENTINEL}`],
+        },
+      },
     ];
     const slimmed = raw.map(slim);
     for (const r of slimmed) expect(JSON.stringify(r), r.uuid).not.toContain(SENTINEL);
+    const hookChars = SENTINEL.length + `# Brief ${SENTINEL}`.length;
+    expect(slimmed[5]).toEqual({
+      type: 'attachment',
+      ts: Date.parse(timestamp),
+      uuid: 's-h1',
+      hookContext: { event: 'SubagentStart', chars: hookChars },
+    });
+
+    // The same records on disk as a session, the attachment in the transcript of the launch that
+    // `toolu_s1` started: the sentinel reaches neither the loaded session nor the card, while the
+    // card counts the brief's characters.
+    const project = fs.mkdtempSync(path.join(home, 'sentinel-'));
+    const agentDir = path.join(project, 's-sentinel', 'subagents');
+    fs.mkdirSync(agentDir, { recursive: true });
+    const jsonl = (rows) => rows.map((r) => JSON.stringify(r)).join('\n') + '\n';
+    fs.writeFileSync(path.join(project, 's-sentinel.jsonl'), jsonl(raw.slice(0, 5)));
+    const agentAssistant = {
+      type: 'assistant',
+      uuid: 's-a2',
+      requestId: 's-r2',
+      timestamp,
+      agentId: 'a7',
+      message: {
+        model: OPUS,
+        usage: { input_tokens: 3, output_tokens: 4 },
+        content: [{ type: 'text', text: SENTINEL }],
+      },
+    };
+    fs.writeFileSync(path.join(agentDir, 'agent-a7.jsonl'), jsonl([raw[5], agentAssistant]));
+    fs.writeFileSync(
+      path.join(agentDir, 'agent-a7.meta.json'),
+      JSON.stringify({ agentType: 'test-backend', toolUseId: 'toolu_s1' })
+    );
+    const session = loadSession(project, 's-sentinel');
+    expect(session.agents.map((a) => a.agentType)).toEqual(['test-backend']);
+    expect(JSON.stringify(session)).not.toContain(SENTINEL);
+    const report = sessionReport(session, { pricing });
+    expect(report.context.launches).toHaveLength(1);
+    expect(report.context.launches[0]).toMatchObject({
+      agentType: 'test-backend',
+      briefChars: hookChars,
+    });
+    expect(JSON.stringify(report)).not.toContain(SENTINEL);
+    const card = renderCard(report, bundle);
+    const contextCard = renderContext(report, bundle);
+    expect(contextCard).toContain('| test-backend |');
+    expect(card).not.toContain(SENTINEL);
+    expect(contextCard).not.toContain(SENTINEL);
     // What stays: names, ids and enums only.
     expect(slimmed[0]).toMatchObject({
       type: 'assistant',

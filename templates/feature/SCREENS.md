@@ -1,6 +1,6 @@
 # <Feature name>: screens
 
-Written by `ux-designer` from the SAP Fiori guidelines; read by `fiori-app-dev`, `ui5-freestyle-dev`, `test-ui` and `ui-verifier`. Backend agents do not read this file. One screen, one user task.
+Written by `ux-designer` from the SAP Fiori guidelines; read by `fiori-app-dev`, `ui5-freestyle-dev`, `test-ui` and `ui-verifier` through the reading list of their brief, which selects by these section names (ADR-0031): the plan-gate sections `Floorplan and duplication check`, `Alternatives` and `Open questions for the user` reach no brief, `Verifier scenarios` only `test-ui` and `ui-verifier`. Backend agents do not read this file. One screen, one user task.
 
 ## Floorplan and duplication check
 Floorplan (List Report + Object Page by default) with the guideline URL from `mcp__fiori-mcp__search_docs`; what `docs/registry/UI-ARTIFACTS.md` already has for this entity.

@@ -65,12 +65,71 @@ describe('feature document shapes', () => {
       '- [ ] Behavior 2',
       'Measured on a scratchpad copy: +50 lines.\n- [ ] Behavior 2'
     );
-    expect(planShapeErrors(prose).join('\n')).toMatch(/Acceptance criteria/);
-    const steps = plan.replace(
-      '| 3 | Backend: logic',
-      'Note: step 3 depends on step 2.\n| 3 | Backend: logic'
+    expect(prose).not.toBe(plan);
+    expect(planShapeErrors(prose).join('\n')).toMatch(
+      /Acceptance criteria: one criterion per line .*Measured on a scratchpad/
     );
-    expect(planShapeErrors(steps).join('\n')).toMatch(/Steps/);
+    // Anchored on the table structure (the row of step 3), not on the wording of its Phase cell.
+    const steps = plan.replace(/^\| 3 \|/m, 'Note: step 3 depends on step 2.\n| 3 |');
+    expect(steps).not.toBe(plan);
+    expect(planShapeErrors(steps).join('\n')).toMatch(
+      /Steps: table rows only, found "Note: step 3/
+    );
+  });
+
+  it('reject an unmarked criterion and a Phase cell without its number', () => {
+    const plan = read('templates/feature/PLAN.md');
+    const errors = (text) => {
+      expect(text).not.toBe(plan);
+      return planShapeErrors(text).join('\n');
+    };
+    // A criterion before the first subsection, and one under a heading that is no phase marker.
+    const orphan = plan.replace('### Phase 2: backend', '- [ ] Orphan\n\n### Phase 2: backend');
+    expect(errors(orphan)).toMatch(
+      /1 criteria outside a "### Phase <N>: <label>" or "### Every phase" subsection .*lines 11\b/
+    );
+    const unknown = plan.replace('### Phase 3: UI', '### Backend');
+    expect(errors(unknown)).toMatch(
+      /a subsection is "### Phase <N>: <label>" \(N 2-6\) .*found "### Backend"/
+    );
+    expect(errors(unknown)).toMatch(/1 criteria outside/);
+    // N is the /feature phase that implements and checks the criteria: 2 to 6.
+    expect(errors(plan.replace('### Phase 3: UI', '### Phase 7: UI'))).toMatch(
+      /found "### Phase 7: UI"/
+    );
+    // A phase heading needs a step row of that phase.
+    const noRow = plan.replace('| 8 | 6: documentation |', '| 8 | 7: documentation |');
+    expect(errors(noRow)).toMatch(/"### Phase 6: documentation" has no step row of phase 6/);
+    // Every Phase cell starts with "<N>: ", and the table has a Phase column at all.
+    const unnumbered = plan
+      .replace('| 3 | 2: logic |', '| 3 | Backend: logic |')
+      .replace('| 5 | 3: UI tests |', '| 5 | UI tests |');
+    expect(errors(unnumbered)).toMatch(
+      /Steps: 2 Phase cell\(s\) do not start with "<N>: " .*steps 3, 5$/m
+    );
+    const noColumn = plan.replace('| # | Phase | Agent |', '| # | Stage | Agent |');
+    expect(errors(noColumn)).toMatch(/Steps: the table needs a Phase column/);
+  });
+
+  it('reject a subsection without a known reader', () => {
+    const ctx = read('templates/feature/CONTEXT.md');
+    const errors = (text) => {
+      expect(text).not.toBe(ctx);
+      return contextShapeErrors(text).join('\n');
+    };
+    expect(errors(ctx.replace('### Backend: <topic>', '### Database: <topic>'))).toMatch(
+      /1 subsection\(s\) without known readers: .*All, Backend, UI .*found "### Database: <topic>" \(line 20\)/
+    );
+    // No reader list at all, and a comma list with one unknown reader.
+    expect(errors(ctx.replace('### UI: <topic>', '### Notes'))).toMatch(/found "### Notes"/);
+    expect(errors(ctx.replace('### UI: <topic>', '### UI, QA: contract'))).toMatch(
+      /found "### UI, QA: contract"/
+    );
+    // A comma list of known readers and a subsection in another section are accepted.
+    const shared = ctx
+      .replace('### UI: <topic>', '### Backend, UI: contract')
+      .replace('## Relevant lessons\n', '## Relevant lessons\n\n### All: from the last retro\n');
+    expect(contextShapeErrors(shared)).toEqual([]);
   });
 
   it('reject a Screens or experiment section in CONTEXT.md and name the destination', () => {

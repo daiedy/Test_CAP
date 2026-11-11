@@ -1,18 +1,79 @@
 /**
- * The `## Now` lines of docs/STATE.md against git (ADR-0018, ADR-0023). `projectNow()` reads the
- * project state for the briefing (moved here from backlog.mjs, which re-exports it) together with
+ * The `## Now` lines of docs/STATE.md, read once for the whole pipeline (ADR-0018, ADR-0023,
+ * ADR-0031): `readNow()` is the one reader of a labeled line, `phaseOf()` and `featureNameOf()` read
+ * the `Phase:` and `Feature:` values (pipeline-metrics.mjs re-exports both), `activeFeature()` gives
+ * the feature folder and phase the SubagentStart brief and the read gate follow. `projectNow()` reads
+ * the project state for the briefing (moved here from backlog.mjs, which re-exports it) together with
  * the inputs of the drift rule; `stateDrift()` is the rule itself, a pure function; the drift key in
  * .pipeline/state-drift.json lets the SessionStart briefing and the Stop gate report one drift once.
  * A committed STATE cannot name its own commit, so `Last commit:` one first-parent commit behind
  * HEAD is the normal state after every pipeline commit (ADR-0023, measured over ten commits).
- * Imports only hook-utils.mjs: the Stop gate loads it on every turn end.
+ * Imports only hook-utils.mjs: the Stop gate loads it on every turn end, the read gate on every Read.
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import { run, repoRoot, readSection, currentBranch } from './hook-utils.mjs';
 
+/** The dashboard, repo-relative. */
+export const STATE_FILE = 'docs/STATE.md';
+
 /** The drift key last reported, gitignored with the rest of `.pipeline/`. */
 export const DRIFT_FILE = '.pipeline/state-drift.json';
+
+/** A labeled line of `## Now`: `- <Label>: <value>`; the label ends at the first colon. */
+const NOW_LINE = /^- ([^:\n]+?):[ \t]*(.*)$/;
+
+/**
+ * The labeled lines of `## Now` in docs/STATE.md, the first line of a label winning. The value stops
+ * at its line end: an empty value is '' and never the next line.
+ * @param {string} root repo root
+ * @returns {Record<string, string>} label (`Feature`, `Last commit`) to its trimmed value; empty
+ *   when the file or the section is missing
+ */
+export function readNow(root = repoRoot()) {
+  const out = {};
+  for (const line of readSection(path.join(root, STATE_FILE), '## Now').split('\n')) {
+    const m = line.match(NOW_LINE);
+    if (m && !Object.hasOwn(out, m[1])) out[m[1]] = m[2].trim();
+  }
+  return out;
+}
+
+/**
+ * The `/feature` phase of a `Phase:` value or a Steps `Phase` cell (D11).
+ * @param {string|null|undefined} value the value
+ * @returns {string} its first integer 0-7, else 'none' (`none (#7 done)` is phase 7 by design)
+ */
+export function phaseOf(value) {
+  const m = String(value ?? '').match(/(?<!\d)([0-7])(?!\d)/);
+  return m ? m[1] : 'none';
+}
+
+/**
+ * The feature name of a `Feature:` value.
+ * @param {string|null|undefined} value the value
+ * @returns {string} its first token (`pipeline-metrics (#14)` gives `pipeline-metrics`), 'none'
+ *   for an empty value
+ */
+export function featureNameOf(value) {
+  return (
+    String(value ?? 'none')
+      .trim()
+      .split(/\s+/)[0] || 'none'
+  );
+}
+
+/**
+ * The feature and phase docs/STATE.md names as active.
+ * @param {string} root repo root
+ * @returns {{name: string|null, phase: string}} `name` the folder name under docs/features (null
+ *   for `Feature: none` or a missing line), `phase` as `phaseOf()`
+ */
+export function activeFeature(root = repoRoot()) {
+  const now = readNow(root);
+  const name = featureNameOf(now.Feature);
+  return { name: name === 'none' ? null : name, phase: phaseOf(now.Phase) };
+}
 
 /** `Last commit:` up to this many first-parent commits behind HEAD is not a drift. */
 export const MAX_BEHIND = 1;
@@ -52,8 +113,8 @@ function distance(git, hash) {
 export function projectNow(root = repoRoot()) {
   const git = (args) => run('git', args, { cwd: root, timeoutMs: 5_000 });
   const out = (args) => git(args).stdout.trim();
-  const now = readSection(path.join(root, 'docs', 'STATE.md'), '## Now');
-  const line = (label) => (now.match(new RegExp(`^- ${label}:\\s*(.*)$`, 'm')) || [])[1]?.trim();
+  const now = readNow(root);
+  const line = (label) => now[label];
   const firstToken = (label) => (line(label) || '').split(/\s+/)[0];
   const feature = line('Feature');
   const [head = '', last = ''] = out(['log', '-1', '--format=%H%n%h %s']).split('\n');

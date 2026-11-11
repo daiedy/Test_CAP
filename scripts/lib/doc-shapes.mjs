@@ -1,8 +1,9 @@
 /**
  * Shape rules of the documents every agent reads (ADR-0018): docs/STATE.md, and PLAN.md and
- * CONTEXT.md of a feature; the pages of docs/wiki (ADR-0030). Pure functions on text, shared by
- * the PostToolUse check (file-checks.mjs), the Stop gate, scripts/check-feature-docs.mjs,
- * scripts/gen-wiki.mjs and the tests. A shape is a
+ * CONTEXT.md of a feature with their reader markers (ADR-0031 decision 1); the pages of docs/wiki
+ * (ADR-0030). Pure functions on text, shared by the PostToolUse check (file-checks.mjs), the Stop
+ * gate, scripts/check-feature-docs.mjs, the role brief (feature-brief.mjs), scripts/gen-wiki.mjs
+ * and the tests. A shape is a
  * set of headings plus the kind of line each section may hold; nothing here counts lines.
  */
 
@@ -41,14 +42,48 @@ export const CONTEXT_ALLOWED = [
   '## Open questions',
 ];
 
-/** Splits Markdown into [{ heading, lines }]; the preamble has heading null. */
+/**
+ * Splits Markdown into [{ heading, lines, start }]; the preamble has heading null. `start` is the
+ * 1-based line number of the heading (of line 1 for the preamble).
+ */
 export function sections(text) {
-  const out = [{ heading: null, lines: [] }];
-  for (const line of String(text).split('\n')) {
-    if (/^## /.test(line)) out.push({ heading: line.trim(), lines: [] });
-    else out[out.length - 1].lines.push(line);
-  }
+  const out = [{ heading: null, lines: [], start: 1 }];
+  String(text)
+    .split('\n')
+    .forEach((line, i) => {
+      if (/^## /.test(line)) out.push({ heading: line.trim(), lines: [], start: i + 1 });
+      else out[out.length - 1].lines.push(line);
+    });
   return out;
+}
+
+/**
+ * Splits one section of `sections()` into its `### ` subsections, same shape: the text before the
+ * first subsection has heading null, `start` is the line number of the `###` heading (of the first
+ * line for that leading text).
+ */
+export function subsections(sec) {
+  const first = lineOf(sec, 0);
+  const out = [{ heading: null, lines: [], start: first }];
+  sec.lines.forEach((line, i) => {
+    if (/^### /.test(line)) out.push({ heading: line.trim(), lines: [], start: first + i });
+    else out[out.length - 1].lines.push(line);
+  });
+  return out;
+}
+
+/** 1-based line number of `sec.lines[i]` in the document. */
+export function lineOf(sec, i) {
+  return sec.start + (sec.heading ? 1 : 0) + i;
+}
+
+/** Cells of a Markdown table row, split on unescaped pipes. */
+export function cellsOf(line) {
+  return line
+    .trim()
+    .replace(/^\||\|$/g, '')
+    .split(/(?<!\\)\|/)
+    .map((c) => c.trim());
 }
 
 function section(secs, heading) {
@@ -57,6 +92,103 @@ function section(secs, heading) {
 
 function offending(sec, allowed) {
   return sec.lines.filter((l) => l.trim() && !allowed(l));
+}
+
+/** `10-12, 15` for [10, 11, 12, 15]. */
+function lineRanges(nums) {
+  const out = [];
+  for (const n of nums) {
+    const last = out.at(-1);
+    if (last && n === last[1] + 1) last[1] = n;
+    else out.push([n, n]);
+  }
+  return out.map(([a, b]) => (a === b ? `${a}` : `${a}-${b}`)).join(', ');
+}
+
+// ---------- ADR-0031 decision 1: the reader markers of PLAN.md and CONTEXT.md ----------
+
+/** The subsection of `## Acceptance criteria` whose criteria every phase reads. */
+export const CRITERIA_EVERY = '### Every phase';
+/** `### Phase <N>: <label>`, N the `/feature` phase that implements and checks the criteria. */
+const CRITERIA_PHASE = /^### Phase ([2-6]): \S/;
+/** A Steps `Phase` cell: `<N>: <label>`, N the `/feature` phase 0-7 (`phaseOf()` reads the same N). */
+const STEP_PHASE = /^([0-7]): \S/;
+/** Readers of a `### <Readers>: <title>` subsection of CONTEXT.md; the agent types per reader live in feature-brief.mjs. */
+export const CONTEXT_READERS = ['All', 'Backend', 'UI'];
+
+/**
+ * Phase of a subsection heading of `## Acceptance criteria`.
+ * @param {string} heading the `###` line
+ * @returns {string|null} '2' to '6', 'every' for `### Every phase`, null for any other heading
+ */
+export function criteriaPhaseOf(heading) {
+  const h = String(heading ?? '').trim();
+  if (h === CRITERIA_EVERY) return 'every';
+  return h.match(CRITERIA_PHASE)?.[1] ?? null;
+}
+
+/**
+ * Readers of a CONTEXT.md subsection heading `### <Readers>: <title>`, Readers a comma list.
+ * @param {string} heading the `###` line
+ * @returns {string[]|null} the readers, null when the heading has no reader list or names a reader
+ *   outside CONTEXT_READERS
+ */
+export function readersOf(heading) {
+  const m = String(heading ?? '')
+    .trim()
+    .match(/^### ([^:]+): \S/);
+  if (!m) return null;
+  const readers = m[1].split(',').map((r) => r.trim());
+  return readers.every((r) => CONTEXT_READERS.includes(r)) ? readers : null;
+}
+
+/** Phases of the Steps rows and the marker findings of their `Phase` cells. */
+function stepMarkers(steps) {
+  const phases = new Set();
+  const rows = steps.lines.filter((l) => l.trim().startsWith('|')).map(cellsOf);
+  if (!rows.length) return { phases, errors: [] };
+  const col = rows[0].indexOf('Phase');
+  if (col < 0)
+    return { phases, errors: ['Steps: the table needs a Phase column of "<N>: <label>" cells'] };
+  const bad = [];
+  for (const cells of rows.slice(1)) {
+    if (cells.every((c) => /^:?-+:?$/.test(c))) continue;
+    const m = String(cells[col] ?? '').match(STEP_PHASE);
+    if (m) phases.add(m[1]);
+    else bad.push(cells[0] || '?');
+  }
+  const errors = bad.length
+    ? [
+        `Steps: ${bad.length} Phase cell(s) do not start with "<N>: " (N the /feature phase, ADR-0031), steps ${bad.join(', ')}`,
+      ]
+    : [];
+  return { phases, errors };
+}
+
+/** Marker findings of `## Acceptance criteria` against the phases that have a step row. */
+function criteriaMarkers(criteria, stepPhases) {
+  const errors = [];
+  const outside = [];
+  for (const sub of subsections(criteria)) {
+    const phase = sub.heading ? criteriaPhaseOf(sub.heading) : null;
+    if (sub.heading && !phase)
+      errors.push(
+        `Acceptance criteria: a subsection is "### Phase <N>: <label>" (N 2-6) or "${CRITERIA_EVERY}", found "${sub.heading.slice(0, 80)}"`
+      );
+    else if (phase && phase !== 'every' && !stepPhases.has(phase))
+      errors.push(
+        `Acceptance criteria: "${sub.heading.slice(0, 80)}" has no step row of phase ${phase} under ## Steps`
+      );
+    if (phase) continue;
+    sub.lines.forEach((l, i) => {
+      if (/^- \[[ xX]\] /.test(l)) outside.push(lineOf(sub, i));
+    });
+  }
+  if (outside.length)
+    errors.push(
+      `Acceptance criteria: ${outside.length} criteria outside a "### Phase <N>: <label>" or "${CRITERIA_EVERY}" subsection (ADR-0031), lines ${lineRanges(outside)}`
+    );
+  return errors;
 }
 
 /** @returns {string[]} findings; empty when docs/STATE.md keeps the shape of templates/STATE.md */
@@ -100,14 +232,20 @@ export function statePrintedBytes(text) {
     .reduce((n, s) => n + Buffer.byteLength([s.heading, ...s.lines].join('\n')), 0);
 }
 
-/** @returns {string[]} findings; empty when PLAN.md keeps the shape of templates/feature/PLAN.md */
+/**
+ * Shape of templates/feature/PLAN.md: the required sections, one criterion per line, Steps as table
+ * rows, and the markers of ADR-0031 decision 1 (every criterion under `### Phase <N>: <label>` or
+ * `### Every phase`, a phase heading only with a step row of that phase, every `Phase` cell
+ * starting with `<N>: `). A marker rule gives one finding naming all its lines or steps.
+ * @returns {string[]} findings; empty when PLAN.md keeps the shape
+ */
 export function planShapeErrors(text) {
   const errors = [];
   const secs = sections(text);
   for (const h of PLAN_REQUIRED) if (!section(secs, h)) errors.push(`missing section ${h}`);
   const criteria = section(secs, '## Acceptance criteria');
   if (criteria) {
-    for (const l of offending(criteria, (l) => /^- \[[ xX]\] /.test(l)))
+    for (const l of offending(criteria, (l) => /^- \[[ xX]\] /.test(l) || /^### /.test(l)))
       errors.push(
         `Acceptance criteria: one criterion per line as "- [ ] ...", found "${l.trim().slice(0, 80)}"`
       );
@@ -117,10 +255,17 @@ export function planShapeErrors(text) {
     for (const l of offending(steps, (l) => l.startsWith('|')))
       errors.push(`Steps: table rows only, found "${l.trim().slice(0, 80)}"`);
   }
+  const markers = steps ? stepMarkers(steps) : { phases: new Set(), errors: [] };
+  if (criteria) errors.push(...criteriaMarkers(criteria, markers.phases));
+  errors.push(...markers.errors);
   return errors;
 }
 
-/** @returns {string[]} findings; empty when CONTEXT.md holds only the brief sections */
+/**
+ * Shape of templates/feature/CONTEXT.md: only the brief sections, and every `###` subsection named
+ * `### <Readers>: <title>` with readers from CONTEXT_READERS (ADR-0031 decision 1).
+ * @returns {string[]} findings; empty when CONTEXT.md keeps the shape
+ */
 export function contextShapeErrors(text) {
   const errors = [];
   const secs = sections(text);
@@ -134,6 +279,14 @@ export function contextShapeErrors(text) {
         `${s.heading}: move to research/<topic>.md; CONTEXT.md holds only ${CONTEXT_ALLOWED.join(', ')}`
       );
   }
+  const unknown = secs
+    .flatMap((s) => subsections(s))
+    .filter((sub) => sub.heading && !readersOf(sub.heading))
+    .map((sub) => `"${sub.heading.slice(0, 80)}" (line ${sub.start})`);
+  if (unknown.length)
+    errors.push(
+      `${unknown.length} subsection(s) without known readers: a subsection is "### <Readers>: <title>", Readers a comma list of ${CONTEXT_READERS.join(', ')} (ADR-0031); found ${unknown.join(', ')}`
+    );
   return errors;
 }
 

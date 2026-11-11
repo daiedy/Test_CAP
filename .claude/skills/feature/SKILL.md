@@ -32,7 +32,7 @@ If the plan has a UI: delegate to `fiori-app-dev` (or `ui5-freestyle-dev` if the
 
 ## Phase 4. Verification
 
-Delegate to `ui-verifier` with a per-scenario turn budget and the instruction to write `VERIFICATION.md` incrementally; if it stops at its turn limit, resume it with SendMessage ("continue from scenario N") instead of starting a new agent. Gate: `VERIFICATION.md` with the verdict "ready for review". On defects go back to phase 2 or 3 with an exact list of defects (no more than two rounds, then ask the user).
+Delegate to `ui-verifier` with a per-scenario turn budget and the instruction to write `VERIFICATION.md` incrementally. Gate: `VERIFICATION.md` with the verdict "ready for review". On defects go back to phase 2 or 3 with an exact list of defects (no more than two rounds, then ask the user).
 
 ## Phase 5. Review
 
@@ -51,18 +51,9 @@ For an issue: `node scripts/backlog.mjs close N --summary docs/features/<name>/S
 - After every phase gate, update the `Feature`, `Phase`, `Last commit` and `Next` lines of the `## Now` section of `docs/STATE.md` before starting the next phase; never add a paragraph there (ADR-0018). The `Phase:` value reads `<N>: <label>`; the phase marker parser takes the first integer. Change the `Phase:` line with the Edit or Write tool, never through Bash, and before launching the phase's agents: the phase marker hook fires only on Edit and Write, and a launch before the marker counts in the previous phase. The Stop hook requires STATE to reflect changed code and to keep the template shape, and the orchestrator is the one who knows the phase state.
 - All artifacts of the feature (CONTEXT, PLAN, SUMMARY, VERIFICATION, ADRs, commit messages, code comments) are written in English; the conversation with the user is in `PIPELINE_LANG` (printed by the SessionStart briefing) or, unset, in the user's language.
 
-- Pass to every agent: the feature name, the path to the feature directory, the plan step numbers, the gate mode, the requirement of a report in the protocol format, and its reading list (ADR-0018):
-
-  | Role | Reads | Does not read |
-  |---|---|---|
-  | `cap-backend-dev`, `test-backend` | PLAN.md, CONTEXT.md | SCREENS.md; `research/` unless a step names a file |
-  | `fiori-app-dev`, `ui5-freestyle-dev`, `test-ui` | PLAN.md, CONTEXT.md, SCREENS.md | `research/` unless a step names a file |
-  | `ui-verifier` | PLAN.md, SCREENS.md | CONTEXT.md, `research/` |
-  | `reviewer` | everything in the feature directory | `docs/ai-pipeline-plan.md` |
-  | `docs-keeper` | PLAN.md and the agents' reports | `research/` |
+- Pass to every agent: the feature name, the path to the feature directory, the plan step numbers, the gate mode, its turn budget, what changed since the plan approval, and the requirement of a report in the protocol format. The SubagentStart hook hands each role its brief with the reading list (ADR-0031); paste no plan content or reading list.
 - Never skip the review and documentation phases, even in autonomous mode.
 - Agents that edit `scripts/` run one at a time, and no suite runs while one of them edits: the hook and wiki tests copy `scripts/` into a sandbox, so a half-edited file is a spurious red; rerun after the edits settle before suspecting the test.
 - If an agent returned "ADR needed" or "no pattern", stop the pipeline and hand the question to the user.
 - Commits only for the files of the phase (`git add <files>`), message in conventional commits style, no `git add -A`.
-- The orchestrator verifies, it does not fix. A defect in an agent's output goes back to the owning agent (or the resumed one) with the evidence, even when the fix looks like one line. If the agent is dead and you must act, run exactly the check the acceptance criterion names: for a UI artifact the browser or the framework's own request shape (`$batch`), not a hand-typed request. A bare `curl GET` once passed a mock fixture that failed on the `$batch` path the application uses (CHANGELOG 2026-09-16).
-- Any agent may stop at its turn limit or stall on the stream watchdog. Before relaunching, read `git status` for what it already wrote; resume it with SendMessage ("continue from ..."; for an agent with nothing on disk: "first tool call: write the file"). Relaunch only if it does not answer, and hand the new instance the on-disk state instead of the original brief.
+- The orchestrator verifies, it does not fix. A rework (a defect in an agent's output, even a one-line fix, or a stop at the turn limit or the stream watchdog) goes to a new agent of the owning type, which reads its brief or, without one, the documents (protocol section 2 step 1). Your message carries the defect list with the evidence, what `git status` shows it already wrote, and the path of the previous report, `.pipeline/logs/report-<agent-type>-<agent-id>.md` (ADR-0031 decision 7). Resume with SendMessage only an agent stopped mid-step whose deliverable on disk is behind its progress ("first tool call: write the file"); the resume gate denies a resume after a report. If no agent can act, run exactly the check the acceptance criterion names: for a UI artifact the browser or the framework's own request shape (`$batch`), not a hand-typed request: a bare `curl GET` misses the `$batch` path (CHANGELOG 2026-09-16).

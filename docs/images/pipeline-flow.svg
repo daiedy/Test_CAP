@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg viewBox="0 0 1220 840" role="img" aria-label="Flow diagram of a task through the pipeline: eight phases in rows; the lead agent on the left, worker agents and what they deliver in the middle, further right what is checked before the next phase, in the right column the automatic checks and the moment they fire; a dashed loop returns defects and blocking findings to phases 2 and 3" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 1280 992" role="img" aria-label="Flow diagram of a task through the pipeline: eight phases in rows; the lead agent on the left, worker agents and what they deliver in the middle, further right what is checked before the next phase, in the right column the automatic checks and the moment they fire, including the brief at a worker's start, the read gate, the hand-over gate and the resume gate; a dashed loop returns defects and blocking findings to a fresh worker of phase 2 or 3" xmlns="http://www.w3.org/2000/svg">
 <style>
   svg {
     --bg:#f4f7f8; --surface:#ffffff; --ink:#1c252b; --muted:#5e6a73; --line:#d8dfe4;
@@ -16,7 +16,7 @@
     }
   }
 </style>
-<rect x="0" y="0" width="1220" height="840" style="fill:var(--bg)"/>
+<rect x="0" y="0" width="1280" height="992" style="fill:var(--bg)"/>
 <defs>
   <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
   <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--warn)"/></marker>
@@ -25,7 +25,7 @@
   <text x="130" y="30">Lead agent (the /feature skill)</text>
   <text x="470" y="30">Worker agents and what they deliver</text>
   <text x="810" y="30">What is checked before the next phase</text>
-  <text x="1087" y="30">Automatic checks (hooks)</text>
+  <text x="1117" y="30">Automatic checks (hooks)</text>
 </g>
 
 <g stroke="currentColor" stroke-width="1" style="fill:var(--surface)">
@@ -39,7 +39,7 @@
   <text x="32" y="188">without an approved</text><text x="32" y="203">plan, no code</text>
   <text x="32" y="280">model, service, texts,</text><text x="32" y="295">data; commit</text>
   <text x="32" y="372">if the plan has screens;</text><text x="32" y="387">commit</text>
-  <text x="32" y="464">if a worker runs out of turns,</text><text x="32" y="479">it resumes where it stopped</text>
+  <text x="32" y="464">a rework goes to a fresh worker,</text><text x="32" y="479">never to one that has reported</text>
   <text x="32" y="556">findings go to the author;</text><text x="32" y="571">lead checks, does not fix</text>
   <text x="32" y="648">never skipped;</text><text x="32" y="663">commit</text>
   <text x="32" y="740">after each phase the lead</text><text x="32" y="755">updates the state file</text>
@@ -64,7 +64,7 @@
   <text x="282" y="444">ui-verifier</text><text x="282" y="536">reviewer</text><text x="282" y="628">docs-keeper</text>
 </g>
 <g font-size="10.5" style="fill:var(--muted)">
-  <text x="282" y="183">architect</text><text x="282" y="198">CONTEXT.md (brief), PLAN.md</text><text x="282" y="211">and research/*.md; no code</text>
+  <text x="282" y="183">architect</text><text x="282" y="198">CONTEXT.md, PLAN.md with</text><text x="282" y="211">phase and reader marks</text>
   <text x="492" y="183">screen designer</text><text x="492" y="198">SCREENS.md, if there</text><text x="492" y="211">is a UI</text>
   <text x="282" y="275">backend developer</text><text x="282" y="290">data model, service, texts,</text><text x="282" y="303">test data</text>
   <text x="492" y="275">backend tester</text><text x="492" y="290">service autotests and the</text><text x="492" y="303">OData snapshot</text>
@@ -106,37 +106,66 @@
 <g stroke-width="1.5" fill="none" stroke-dasharray="5 4" style="stroke:var(--warn)">
   <path d="M920,458 H945 V274"/><path d="M920,550 H945"/>
   <line x1="945" y1="274" x2="922" y2="274" marker-end="url(#arw)"/><line x1="945" y1="366" x2="922" y2="366" marker-end="url(#arw)"/>
+  <path d="M945,550 V832 H922" marker-end="url(#arw)"/>
 </g>
-<text transform="rotate(-90 960 412)" x="960" y="412" font-size="10" text-anchor="middle" style="fill:var(--warn)">back for rework: defects from phase 4 and blocking findings from phase 5 go to phase 2 or 3</text>
+<text transform="rotate(-90 960 412)" x="960" y="412" font-size="10" text-anchor="middle" style="fill:var(--warn)">back to a fresh worker: defects from phase 4 and blocking findings from phase 5 go to phase 2 or 3</text>
+
+<g stroke-width="1.5" stroke-dasharray="4 3" style="fill:var(--warn-soft);stroke:var(--warn)">
+  <rect x="20" y="792" width="900" height="80" rx="6"/>
+</g>
+<text x="32" y="810" font-size="11.5" font-weight="600" style="fill:var(--warn)">Rework goes to a fresh worker</text>
+<g font-size="10.5" style="fill:var(--muted)">
+  <text x="32" y="828">When phase 4 finds a defect or phase 5 a blocking finding, the lead agent starts a new worker of the type that owns the code. It gets its brief,</text>
+  <text x="32" y="843">the defect list and the path of the previous report in .pipeline/logs/. A worker that already handed over its report is never woken up again, so its</text>
+  <text x="32" y="858">long history does not come along; only a worker stopped at its turn limit without a report may be continued.</text>
+</g>
 
 <g stroke-width="1.5" style="fill:var(--hook-soft);stroke:var(--hook)">
-  <rect x="975" y="56" width="225" height="68" rx="6"/>
-  <rect x="975" y="148" width="225" height="528" rx="6" stroke-dasharray="4 3" style="fill:none;stroke:var(--hook)"/>
-  <rect x="985" y="178" width="205" height="118" rx="6"/><rect x="985" y="312" width="205" height="150" rx="6"/><rect x="985" y="478" width="205" height="186" rx="6"/>
-  <rect x="975" y="700" width="225" height="68" rx="6"/>
-  <rect x="20" y="792" width="1180" height="40" rx="6" stroke-dasharray="4 3" style="fill:none;stroke:var(--hook)"/>
+  <rect x="975" y="56" width="285" height="68" rx="6"/>
+  <rect x="975" y="148" width="285" height="656" rx="6" stroke-dasharray="4 3" style="fill:none;stroke:var(--hook)"/>
+  <rect x="985" y="178" width="265" height="90" rx="6"/>
+  <rect x="985" y="284" width="265" height="90" rx="6"/>
+  <rect x="985" y="390" width="265" height="90" rx="6"/>
+  <rect x="985" y="496" width="265" height="130" rx="6"/>
+  <rect x="985" y="642" width="265" height="150" rx="6"/>
+  <rect x="975" y="820" width="285" height="68" rx="6"/>
+  <rect x="975" y="904" width="285" height="68" rx="6"/>
+  <rect x="20" y="888" width="900" height="84" rx="6" stroke-dasharray="4 3" style="fill:none;stroke:var(--hook)"/>
 </g>
 <g font-size="11.5" font-weight="600" fill="currentColor">
   <text x="987" y="72">Session start</text>
-  <text x="1087" y="166" text-anchor="middle" style="fill:var(--hook)">Inside every worker</text>
-  <text x="997" y="194">Before a file edit</text><text x="997" y="328">After a file edit</text><text x="997" y="410">On a reference call</text><text x="997" y="494">When a worker finishes</text>
-  <text x="987" y="716">Final gate</text>
+  <text x="1117" y="166" text-anchor="middle" style="fill:var(--hook)">Inside every worker</text>
+  <text x="997" y="194">At worker start</text>
+  <text x="997" y="300">Before a file read</text>
+  <text x="997" y="406">Before a file edit</text>
+  <text x="997" y="512">After a file edit</text><text x="997" y="580">On a reference call</text>
+  <text x="997" y="658">When a worker hands over</text>
+  <text x="987" y="836">Before a message to a worker</text>
+  <text x="987" y="920">Final gate</text>
 </g>
 <g font-family="IBM Plex Mono, ui-monospace, monospace" font-size="10" style="fill:var(--hook)">
   <text x="987" y="87">SessionStart · session-start.mjs</text>
-  <text x="997" y="209">PreToolUse · protect-files*.mjs</text>
-  <text x="997" y="343">PostToolUse · post-edit.mjs</text>
-  <text x="997" y="425">PostToolUse · mcp-audit.mjs</text>
-  <text x="997" y="509">SubagentStop · subagent-stop.mjs</text>
-  <text x="987" y="731">Stop · stop-gate.mjs</text>
+  <text x="997" y="209">SubagentStart · subagent-start.mjs</text>
+  <text x="997" y="315">PreToolUse Read · read-gate.mjs</text>
+  <text x="997" y="421">PreToolUse · protect-files*.mjs</text>
+  <text x="997" y="527">PostToolUse · post-edit.mjs</text>
+  <text x="997" y="595">PostToolUse · mcp-audit.mjs</text>
+  <text x="997" y="673">PreToolUse SubagentHandback</text><text x="997" y="687">· handback-gate.mjs</text>
+  <text x="997" y="761">SubagentStop · subagent-stop.mjs</text>
+  <text x="987" y="851">PreToolUse SendMessage · resume-gate.mjs</text>
+  <text x="987" y="935">Stop · stop-gate.mjs</text>
 </g>
 <g font-size="10.5" style="fill:var(--muted)">
   <text x="987" y="103">briefing: queue, what to do;</text><text x="987" y="117">STATE.md (Now, Open debt), Node, cds</text>
-  <text x="997" y="225">forbids edits to protected</text><text x="997" y="239">files (pipeline settings,</text><text x="997" y="253">manifest, registry, deploy);</text><text x="997" y="267">in terminal: worker denied,</text><text x="997" y="281">human asked (PROTECTED)</text>
-  <text x="997" y="359">cds compile, eslint, ui5lint,</text><text x="997" y="373">i18n pairs, STATE/PLAN shape;</text><text x="997" y="387">edit entry in .pipeline/*.jsonl</text>
-  <text x="997" y="440">mcp entry in the same log:</text><text x="997" y="454">who called which MCP</text>
-  <text x="997" y="525">blocks exit on eslint or</text><text x="997" y="539">ui5lint errors, files with</text><text x="997" y="553">no edit entry (Edit/Write</text><text x="997" y="567">bypassed) and no MCP call per</text><text x="997" y="581">MCP_RULES: exit 2 lists</text><text x="997" y="595">complaints, the agent fixes</text>
-  <text x="987" y="746">STATE valid, registry fresh,</text><text x="987" y="760">CHANGELOG updated, npm test green</text>
-  <text x="32" y="809">Whenever the chat memory overflows and Claude Code compacts the history: PreCompact event, script pre-compact.mjs appends a line "date, branch, number of changed</text><text x="32" y="825">files" to the session log .pipeline/sessions.log. All seven checks, with event and script names, are described below under "Automatic checks".</text>
+  <text x="997" y="225">hands the brief: its steps, criteria and</text><text x="997" y="239">context sections, plus what is left out;</text><text x="997" y="253">whole up to 10,000 characters, else a path</text>
+  <text x="997" y="331">refuses once a repeated whole read of an</text><text x="997" y="345">unchanged file, or the whole plan or context</text><text x="997" y="359">for a worker with a brief; the retry passes</text>
+  <text x="997" y="437">forbids edits to protected files (pipeline</text><text x="997" y="451">settings, manifest, registry, deploy);</text><text x="997" y="465">in terminal: worker denied, human asked</text>
+  <text x="997" y="543">cds compile, eslint, ui5lint, i18n pairs,</text><text x="997" y="557">STATE/PLAN shape; edit entry in the log</text>
+  <text x="997" y="611">the same log: who called which MCP</text>
+  <text x="997" y="703">refuses the report on lint errors, files</text><text x="997" y="717">written around the checks, protected files</text><text x="997" y="731">or a missing MCP query; after 3 refusals</text><text x="997" y="745">it passes; report saved to .pipeline/logs/</text>
+  <text x="997" y="777">the same checks for a plain-text end</text>
+  <text x="987" y="867">refuses to wake a worker that has reported;</text><text x="987" y="881">the rework goes to a fresh worker</text>
+  <text x="987" y="951">STATE valid, registry fresh, CHANGELOG updated,</text><text x="987" y="965">npm test green; a red run names its log</text>
+  <text x="32" y="918">Whenever the chat memory overflows and Claude Code compacts the history: PreCompact event, script pre-compact.mjs appends a line "date, branch, number</text><text x="32" y="934">of changed files" to the session log .pipeline/sessions.log and lets the main chat read its files whole again.</text><text x="32" y="950">All eight checks, with event and script names, are described below under "Automatic checks".</text>
 </g>
 </svg>

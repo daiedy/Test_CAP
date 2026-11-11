@@ -14,6 +14,9 @@
  * docs/LESSONS.md inbox holding more than LESSONS_MAX pending entries, at every full pass.
  * Deferred: while a subagent of the session still works (`runningAgents()`), checks 1-3 wait for
  * the next stop, because the tree is mid-phase; the hash is not recorded, so that stop runs them.
+ * Output of a failed check (the registry fix, `npm test`) is relayed by relay(): whole up to
+ * HOOK_OUTPUT_MAX, else a summary by structure with the path of the whole under .pipeline/logs/
+ * (ADR-0031 decision 4); a red `npm test` is saved there and named by path in either case.
  * Bypass: PIPELINE_SKIP_GATE=1. Loop guard: stop_hook_active.
  * Metrics (ADR-0022): every block appends `{ event: 'gate', hook: 'stop-gate', reason }`, and every
  * run ends with one `{ event: 'turn-end', blocked }`; the drift advice is not a block.
@@ -25,9 +28,8 @@ import {
   repoRoot,
   run,
   sha256,
-  lastLines,
+  relay,
   exists,
-  truncate,
   changedFiles,
   emitJson,
 } from '../lib/hook-utils.mjs';
@@ -66,6 +68,44 @@ function porcelain(root, paths) {
     timeoutMs: 20_000,
   });
   return res.code === 0 ? res.stdout : '';
+}
+
+// ESC of an ANSI colour sequence, built so that no control character sits in a regex literal.
+const ANSI = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, 'g');
+
+/**
+ * The block text of a red `npm test` (ADR-0031 decision 4): the whole output is written to a log
+ * under .pipeline/logs/ on every red run and its path is always printed; the text holds the output
+ * whole when it has at most HOOK_OUTPUT_MAX characters, otherwise every vitest `FAIL` line (one per
+ * failed test or suite) and the `Test Files`, `Tests` and `Errors` totals. Never the last lines.
+ */
+function testFailure(root, code, output) {
+  const head = `npm test failed (exit code ${code}).`;
+  const foot = 'Fix the tests or the code and finish again.';
+  const text = `${head} Output:\n${output.trimEnd()}\n${foot}`;
+  return relay(root, 'npm-test', text, summarizeTests(head, foot, output), { keep: true });
+}
+
+/** The relay() summary of a red `npm test` that does not fit: FAIL lines and totals. */
+function summarizeTests(head, foot, output) {
+  return () => {
+    const lines = output.replace(ANSI, '').split('\n');
+    const failed = [
+      ...new Set(lines.filter((l) => /^\s*FAIL\s/.test(l)).map((l) => `  ${l.trim()}`)),
+    ];
+    const totals = lines
+      .filter((l) => /^\s*(Test Files|Tests|Errors)\s{2,}\d/.test(l))
+      .map((l) => l.trim());
+    return [
+      head,
+      failed.length
+        ? `Failed tests and suites (${failed.length}):`
+        : 'The output has no vitest FAIL line.',
+      ...failed,
+      ...totals,
+      foot,
+    ].join('\n');
+  };
 }
 
 /** Blocks the stop; `reason` is one of GATE_REASONS (scripts/lib/metrics-log.mjs). */
@@ -235,9 +275,16 @@ try {
     if (fresh.code !== 0) {
       const fix = run('node', [checker, '--fix'], { cwd: root, timeoutMs: 180_000 });
       if (fix.code !== 0) {
+        const head = 'The documentation registry is stale and automatic regeneration failed';
+        const foot = 'Run `npm run docs:registry` and fix the error.';
         block(
           'registry',
-          `The documentation registry is stale and automatic regeneration failed:\n${truncate(fix.stderr || fix.stdout, 1200)}\nRun \`npm run docs:registry\` and fix the error.`
+          relay(
+            root,
+            'registry-fix',
+            `${head}:\n${fix.stderr || fix.stdout}\n${foot}`,
+            () => `${head} (exit code ${fix.code}).\n${foot}`
+          )
         );
       }
       notes.push('The docs/registry registry was regenerated automatically.');
@@ -274,12 +321,8 @@ try {
         'tests-timeout',
         'npm test did not finish within 10 minutes. Sort out the hanging tests and finish again.'
       );
-    if (tests.code !== 0) {
-      block(
-        'tests',
-        `npm test failed (exit code ${tests.code}). Last lines of the output:\n${lastLines(tests.stdout + '\n' + tests.stderr, 40)}\nFix the tests or the code and finish again.`
-      );
-    }
+    if (tests.code !== 0)
+      block('tests', testFailure(root, tests.code, `${tests.stdout}\n${tests.stderr}`));
     notes.push('npm test: passed.');
   } else {
     notes.push(

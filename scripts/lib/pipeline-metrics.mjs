@@ -1,28 +1,37 @@
 /**
  * Pipeline metrics (ADR-0022 decision 1): time, tokens, cost, phases and rework of a session or a
- * feature, the committed history line, the comparison and the Markdown card. Definitions D4-D12:
- * docs/metrics/definitions.md. Pure functions over slim transcript
+ * feature, the context of each launch (ADR-0031 decision 5), the committed history line, the
+ * comparison and the Markdown cards. Definitions D4-D18: docs/metrics/definitions.md. Pure
+ * functions over slim transcript
  * records (transcript-usage.mjs) and event-log records (metrics-log.mjs); scripts/metrics.mjs does
  * the I/O, except `loadPricing`, the one reader of the price table. Aggregates only: no text of a
- * prompt, a tool call or a response reaches a report.
+ * prompt, a tool call or a response reaches a report; a file path appears repo-relative.
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import {
   TOKEN_KINDS,
   SYNTHETIC_MODEL,
+  FILE_TOOLS,
+  COMPACT_SUBTYPE,
   scopeThreads,
   requests,
   usageByModel,
   timelinePoints,
   toolUses,
+  deliveredReports,
   costState,
   emptyTokens,
   contextOf,
 } from './transcript-usage.mjs';
-import { sections } from './doc-shapes.mjs';
+import { sections, cellsOf } from './doc-shapes.mjs';
 import { ruleFor, editedFiles, mcpGaps } from './mcp-audit.mjs';
+import { phaseOf, featureNameOf } from './state-now.mjs';
+import { BRIEF_DIR } from './hook-utils.mjs';
 import { t } from './i18n.mjs';
+
+// The readers of a `Phase:` and a `Feature:` value live with the reader of the `## Now` lines.
+export { phaseOf, featureNameOf };
 
 /** D6: a turn gap counts up to 5 min, a tool gap up to 10 min (the Bash tool's maximum timeout). */
 export const IDLE_MS = 5 * 60_000;
@@ -140,21 +149,6 @@ export function sumCost(parts) {
 
 // ---------- D11, D12: phases and rework ----------
 
-/** First integer 0-7 of a `Phase:` value, else 'none' (`none (#7 done)` is phase 7 by design). */
-export function phaseOf(value) {
-  const m = String(value ?? '').match(/(?<!\d)([0-7])(?!\d)/);
-  return m ? m[1] : 'none';
-}
-
-/** Feature name of a `Feature:` value: `pipeline-metrics (#14)` gives `pipeline-metrics`. */
-export function featureNameOf(value) {
-  return (
-    String(value ?? 'none')
-      .trim()
-      .split(/\s+/)[0] || 'none'
-  );
-}
-
 export function homePhase(agentType) {
   const p = HOME_PHASE[agentType];
   return p === undefined ? OTHER : String(p);
@@ -198,36 +192,56 @@ export function phaseAt(markers, t) {
   return phase;
 }
 
-/** Cells of a Markdown table row, split on unescaped pipes. */
-function cellsOf(line) {
-  return line
-    .trim()
-    .replace(/^\||\|$/g, '')
-    .split(/(?<!\\)\|/)
-    .map((c) => c.trim());
+/**
+ * The rows of the `## Steps` table of a PLAN.md text, read once for D12 and for the role brief
+ * (feature-brief.mjs, ADR-0031 decision 2). Phase = D11's first integer 0-7 of the `Phase` cell,
+ * 'none' without one; agent types = the backticked `HOME_PHASE` keys of the `Agent` cell (not
+ * `main`; prose, file names and `orchestrator` are ignored).
+ * @param {string|null} text the PLAN.md text
+ * @returns {{header: string[], rows: {line: string, step: string, phase: string,
+ *   agents: string[]}[]}|null} `header` the header line and the separator line, `step` the first
+ *   token of the `#` cell (`3` of `3 P`); null without text, Steps section, or `Phase` or `Agent`
+ *   header column
+ */
+export function stepRows(text) {
+  if (!text) return null;
+  const steps = sections(text).find((s) => s.heading === '## Steps');
+  const lines = (steps?.lines || []).filter((l) => l.trim().startsWith('|'));
+  const head = lines.length ? cellsOf(lines[0]) : [];
+  const phaseCol = head.indexOf('Phase');
+  const agentCol = head.indexOf('Agent');
+  if (phaseCol < 0 || agentCol < 0) return null;
+  const stepCol = Math.max(head.indexOf('#'), 0);
+  const header = [lines[0]];
+  const rows = [];
+  for (const line of lines.slice(1)) {
+    const cells = cellsOf(line);
+    if (cells.every((c) => /^:?-+:?$/.test(c))) {
+      header.push(line);
+      continue;
+    }
+    const agents = [...String(cells[agentCol] ?? '').matchAll(/`([^`]+)`/g)]
+      .map((m) => m[1])
+      .filter((type) => type !== MAIN && Object.hasOwn(HOME_PHASE, type));
+    const step = String(cells[stepCol] ?? '').split(/\s+/)[0];
+    rows.push({ line, step, phase: phaseOf(cells[phaseCol]), agents });
+  }
+  return { header, rows };
 }
 
 /**
- * D12 plan assignment: the (phase, agent type) pairs of the `## Steps` table of a PLAN.md text, as
- * a Map from agent type to its set of phases. Phase = D11's first integer 0-7 of the `Phase` cell;
- * agent types = the backticked `HOME_PHASE` keys of the `Agent` cell (not `main`; prose, file names
- * and `orchestrator` are ignored). Null, the home-phase fallback, when there is no text, no Steps
- * section, no `Phase` or `Agent` header column, or no row with both.
+ * D12 plan assignment: the (phase, agent type) pairs of the `## Steps` table of a PLAN.md text
+ * (`stepRows()`), as a Map from agent type to its set of phases. Null, the home-phase fallback,
+ * when there is no text, no Steps section, no `Phase` or `Agent` header column, or no row with both.
  * @returns {Map<string, Set<string>>|null}
  */
 export function planAssignments(text) {
-  if (!text) return null;
-  const steps = sections(text).find((s) => s.heading === '## Steps');
-  const rows = (steps?.lines || []).filter((l) => l.trim().startsWith('|')).map(cellsOf);
-  const phaseCol = rows[0]?.indexOf('Phase') ?? -1;
-  const agentCol = rows[0]?.indexOf('Agent') ?? -1;
-  if (phaseCol < 0 || agentCol < 0) return null;
+  const table = stepRows(text);
+  if (!table) return null;
   const plan = new Map();
-  for (const cells of rows.slice(1)) {
-    const phase = phaseOf(cells[phaseCol]);
+  for (const { phase, agents } of table.rows) {
     if (phase === 'none') continue;
-    for (const [, type] of String(cells[agentCol] ?? '').matchAll(/`([^`]+)`/g)) {
-      if (type === MAIN || !Object.hasOwn(HOME_PHASE, type)) continue;
+    for (const type of agents) {
       if (!plan.has(type)) plan.set(type, new Set());
       plan.get(type).add(phase);
     }
@@ -613,12 +627,200 @@ export function mcpCompliance(audit) {
   };
 }
 
+// ---------- D14-D18: the context of a launch ----------
+
+/** D17: how many of a launch's largest tool results the context card lists. */
+export const LARGEST_RESULTS = 5;
+/** The four D18 figures a history line's `context` compares (`compare`). */
+export const CONTEXT_FIGURES = ['launches', 'resumes', 'compactions', 'resumesAfterReport'];
+const WRITE_TOOLS = new Set([...FILE_TOOLS].filter((name) => name !== 'Read'));
+
+const maxOf = (a, b) => (b == null ? a : a == null ? b : Math.max(a, b));
+
+/**
+ * A tool's file path as a card shows it: repo-relative inside `root`, else its base name (an
+ * absolute path outside the repository names the user's home, and a card can reach a SUMMARY.md).
+ */
+function shownPath(file, root) {
+  if (!file) return null;
+  const f = String(file);
+  if (root && f.startsWith(root + path.sep)) return f.slice(root.length + 1).replaceAll('\\', '/');
+  return path.isAbsolute(f) ? `.../${path.basename(f)}` : f;
+}
+
+/** Whether a Read path is a role brief under BRIEF_DIR (ADR-0031 decision 2). */
+function isBrief(file) {
+  return `/${String(file ?? '').replaceAll('\\', '/')}`.includes(`/${BRIEF_DIR}/`);
+}
+
+/** D18: a resume after a report, with D3 of the first request the thread makes after it. */
+function resumeAfter(th, i) {
+  const r = th.records[i];
+  const next = th.records.slice(i + 1).find((x) => x.type === 'assistant' && x.requestId);
+  const q = next && th.reqs.find((x) => x.requestId === next.requestId && x.usage);
+  return {
+    agent: th.agent,
+    agentType: th.agentType,
+    ts: Number.isFinite(r.ts) ? new Date(r.ts).toISOString() : null,
+    context: q ? contextOf(q.usage) : null,
+  };
+}
+
+/**
+ * D14-D18 of one thread (a launch or a main thread), from its slim records and its priced requests:
+ * `startup` D3 of its first request (D14) and `peak` its largest (null without a request);
+ * `compactions` its `compact_boundary` records; `resumes` its `coordinator` deliveries; per tool
+ * result (`toolResults`, `toolChars`) the characters by tool in `byTool` and by Bash program class in
+ * `bash`, each `{ n, chars }` (D15); `repeatReads` and `repeatChars`, the whole-file Reads of a path
+ * the thread already read whole with no Edit or Write of it by the thread in between (D16; an error
+ * result, a deny, reads nothing); `briefChars`, the SubagentStart `additionalContext` plus the Read
+ * results of a brief file; `largest`, the LARGEST_RESULTS largest results as `{ tool, detail, chars }`,
+ * `detail` the path or the program class (D17); `afterReport`, every resume that follows a delivered
+ * report (`deliveredReports()`) in the same file, with D3 of the request after it.
+ * @param {object} th a thread of `threadOf()` or `liveThread()`
+ * @param {string|null} root repo root, for repo-relative paths
+ */
+export function threadContext(th, root = null) {
+  const ctx = th.reqs
+    .filter((q) => q.usage)
+    .sort((a, b) => (a.ts ?? 0) - (b.ts ?? 0))
+    .map((q) => contextOf(q.usage));
+  const out = {
+    agent: th.agent,
+    agentType: th.agentType,
+    startup: ctx.length ? ctx[0] : null,
+    peak: ctx.reduce(maxOf, null),
+    compactions: 0,
+    resumes: 0,
+    requests: ctx.length,
+    toolResults: 0,
+    toolChars: 0,
+    byTool: {},
+    bash: {},
+    repeatReads: 0,
+    repeatChars: 0,
+    briefChars: 0,
+    largest: [],
+    afterReport: [],
+  };
+  const add = (bucket, key, chars) => {
+    const e = (bucket[key] ??= { n: 0, chars: 0 });
+    e.n++;
+    e.chars += chars;
+  };
+  const uses = new Map();
+  const whole = new Map();
+  const results = [];
+  const delivered = new Set(deliveredReports(th.records).map((u) => u.id));
+  let reported = false;
+  th.records.forEach((r, i) => {
+    if (r.type === 'system' && r.subtype === COMPACT_SUBTYPE) out.compactions++;
+    if (r.hookContext?.event === 'SubagentStart') out.briefChars += r.hookContext.chars;
+    if (r.resume) {
+      out.resumes++;
+      if (reported) out.afterReport.push(resumeAfter(th, i));
+    }
+    for (const u of r.tools || []) {
+      if (u.id) uses.set(u.id, u);
+      if (delivered.has(u.id)) reported = true;
+      if (WRITE_TOOLS.has(u.name) && whole.has(u.file)) whole.get(u.file).edited = true;
+    }
+    for (const x of r.results || []) {
+      const u = uses.get(x.id) || { name: 'unknown' };
+      out.toolResults++;
+      out.toolChars += x.chars;
+      add(out.byTool, u.name, x.chars);
+      if (u.name === 'Bash') add(out.bash, u.program || 'other', x.chars);
+      const detail = u.name === 'Bash' ? u.program || 'other' : shownPath(u.file, root);
+      results.push({ tool: u.name, detail, chars: x.chars });
+      if (u.name !== 'Read' || !u.file || x.error) continue;
+      if (isBrief(u.file)) out.briefChars += x.chars;
+      if (u.partial) continue;
+      if (whole.get(u.file)?.edited === false) {
+        out.repeatReads++;
+        out.repeatChars += x.chars;
+      }
+      whole.set(u.file, { edited: false });
+    }
+  });
+  out.largest = results.sort((a, b) => b.chars - a.chars).slice(0, LARGEST_RESULTS);
+  return out;
+}
+
+/** `{ n, chars }` buckets of several threads summed per key. */
+function mergeBuckets(list) {
+  const out = {};
+  for (const b of list)
+    for (const [k, v] of Object.entries(b)) {
+      const e = (out[k] ??= { n: 0, chars: 0 });
+      e.n += v.n;
+      e.chars += v.chars;
+    }
+  return out;
+}
+
+/**
+ * D14-D18 of a report: `main` the figures of each main thread (one per session), `launches` one
+ * entry per launch in launch order, `byType` per agent type its launches, resumes, compactions and
+ * maxima, `resumesAfterReport` every resume of a launch after its delivered report, `totals` over
+ * the launches (the main threads apart from `mainCompactions`).
+ */
+function contextBlock(threads, launches, root) {
+  const main = threads.filter((th) => th.agent === MAIN).map((th) => threadContext(th, root));
+  const per = launches.map((l) => threadContext(l.thread, root));
+  const byType = {};
+  for (const c of per) {
+    const row = (byType[c.agentType] ??= {
+      launches: 0,
+      resumes: 0,
+      compactions: 0,
+      startupMax: null,
+      peakMax: null,
+      toolChars: 0,
+      briefChars: 0,
+      repeatChars: 0,
+    });
+    row.launches++;
+    row.resumes += c.resumes;
+    row.compactions += c.compactions;
+    row.startupMax = maxOf(row.startupMax, c.startup);
+    row.peakMax = maxOf(row.peakMax, c.peak);
+    row.toolChars += c.toolChars;
+    row.briefChars += c.briefChars;
+    row.repeatChars += c.repeatChars;
+  }
+  const after = per.flatMap((c) => c.afterReport);
+  const sum = (key) => per.reduce((s, c) => s + c[key], 0);
+  return {
+    main,
+    launches: per,
+    byType,
+    resumesAfterReport: after,
+    totals: {
+      launches: per.length,
+      resumes: sum('resumes'),
+      compactions: sum('compactions'),
+      mainCompactions: main.reduce((s, c) => s + c.compactions, 0),
+      resumesAfterReport: after.length,
+      startupMax: per.reduce((m, c) => maxOf(m, c.startup), null),
+      peakMax: per.reduce((m, c) => maxOf(m, c.peak), null),
+      toolResults: sum('toolResults'),
+      toolChars: sum('toolChars'),
+      byTool: mergeBuckets(per.map((c) => c.byTool)),
+      bash: mergeBuckets(per.map((c) => c.bash)),
+      repeatReads: sum('repeatReads'),
+      repeatChars: sum('repeatChars'),
+      briefChars: sum('briefChars'),
+    },
+  };
+}
+
 /**
  * A report over sessions already cut to the scope. Each session:
  * `{ sessionId, main, agents: [{ id, agentType, toolUseId, records }], events, audit,
  * specAttributed }`; `processes` from `scopeProcesses`; `plan` from `planAssignments` (D12, null:
  * home-phase fallback). `extras`: `{ review, criteria, lines, maxTurns: { type: n }, compactions,
- * planCommit }`.
+ * planCommit }`. `root`: the repo root, so `context` (D14-D18) names files repo-relative.
  */
 export function buildReport({
   scope,
@@ -631,6 +833,7 @@ export function buildReport({
   idleMs = IDLE_MS,
   toolMs = TOOL_MS,
   extras = {},
+  root = null,
 }) {
   const caps = { idleMs, toolMs };
   const warnings = new Set();
@@ -943,6 +1146,7 @@ export function buildReport({
     compactions: extras.compactions ?? null,
     ...inputs,
     lines,
+    context: contextBlock(threads, launches, root),
     warnings: [...warnings].sort(),
   };
 }
@@ -1046,6 +1250,7 @@ export function historyLine(r, recordedAt) {
     handbacks: r.handbacks,
     notifications: r.notifications,
     lines: r.lines,
+    context: contextHistory(r),
     phases: Object.fromEntries(
       Object.entries(r.phases).map(([k, p]) => [
         k,
@@ -1058,6 +1263,29 @@ export function historyLine(r, recordedAt) {
     phaseSource: r.phaseSource,
     reworkSource: r.reworkSource,
     gateSource: r.gateSource,
+  };
+}
+
+/**
+ * `context` of the history line (D14-D18, data-flow section 4): the totals over the launches, the
+ * main threads' compactions and, from the live `gate` records only, the read and resume gates.
+ */
+function contextHistory(r) {
+  const c = r.context?.totals;
+  if (!c) return null;
+  const g = r.gateSource === 'events' ? r.gateBlocks || {} : null;
+  return {
+    launches: c.launches,
+    resumes: c.resumes,
+    compactions: c.compactions,
+    mainCompactions: c.mainCompactions,
+    resumesAfterReport: c.resumesAfterReport,
+    startupMax: c.startupMax,
+    peakMax: c.peakMax,
+    toolResultChars: c.toolChars,
+    briefChars: c.briefChars,
+    repeatReadChars: c.repeatChars,
+    gates: g && { reread: g.reread || 0, brief: g.brief || 0, resume: g.resume || 0 },
   };
 }
 
@@ -1096,6 +1324,14 @@ export function compareLines(lines) {
       prompts: l.prompts ?? null,
       handbacks: l.handbacks ?? null,
       notifications: l.notifications ?? null,
+      // D18: the four context figures, with deltas when the previous line carries them too.
+      context: l.context ? Object.fromEntries(CONTEXT_FIGURES.map((k) => [k, l.context[k]])) : null,
+      dContext:
+        l.context && prev?.context
+          ? Object.fromEntries(
+              CONTEXT_FIGURES.map((k) => [k, delta(l.context[k], prev.context[k], 0)])
+            )
+          : null,
     };
   });
 }
@@ -1215,6 +1451,21 @@ const fmtCost = (x, partial, bundle) =>
   x == null ? t(bundle, 'metrics.card.na') : `${partial ? '≥' : ''}${fmtUSD(x)}`;
 const fmtPct = (x) => (x == null ? '-' : `${Math.round(x * 100)}%`);
 const fmtInt = (n) => (n == null ? '-' : n.toLocaleString('en-US'));
+/** A token or character count of the context figures: thousands with one decimal (`2,597.4K`). */
+const fmtK = (n) =>
+  n == null
+    ? '-'
+    : n < 1000
+      ? String(n)
+      : `${(n / 1000).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}K`;
+/** `{ n, chars }` buckets as `key chars` items, the largest first. */
+const fmtBuckets = (buckets) =>
+  Object.entries(buckets || {})
+    .sort((a, b) => b[1].chars - a[1].chars || a[0].localeCompare(b[0]))
+    .map(([k, v]) => `${k} ${fmtK(v.chars)}`)
+    .join(', ') || '-';
+/** An ISO stamp as `YYYY-MM-DD HH:MM UTC`. */
+const minuteOf = (iso) => (iso ? `${iso.slice(0, 16).replace('T', ' ')} UTC` : '-');
 const signed = (x, f) => (x == null ? '-' : `${x > 0 ? '+' : x < 0 ? '-' : '±'}${f(Math.abs(x))}`);
 const day = (iso) => (iso ? iso.slice(0, 10) : '-');
 
@@ -1361,10 +1612,125 @@ export function renderCard(r, bundle) {
     '|---|---|---|---|---|---|---|',
     ...agentRows,
     '',
+    ...contextLines(r, bundle),
     summaryLine(r, bundle),
   ];
   if (r.warnings.length) out.push('', t(bundle, 'metrics.card.warnings', r.warnings.join(', ')));
   return out.join('\n');
+}
+
+/** The resumes after a report as one phrase (D18), `none` without one. */
+function afterReportText(list, bundle) {
+  if (!list.length) return t(bundle, 'metrics.context.afterReport.none');
+  return list
+    .map((x) =>
+      t(
+        bundle,
+        'metrics.context.afterReport.item',
+        x.agentType,
+        x.agent,
+        minuteOf(x.ts),
+        fmtK(x.context)
+      )
+    )
+    .join('; ');
+}
+
+/**
+ * The card's context block (ADR-0031 decision 5): one line per agent type with its launches,
+ * resumes and compactions as three figures (D18), the main threads' compactions, and the resumes
+ * after a report with their context; followed by an empty line. Nothing without `r.context`.
+ */
+function contextLines(r, bundle) {
+  const c = r.context;
+  if (!c) return [];
+  const types = Object.entries(c.byType).map(
+    ([type, x]) =>
+      `- ${t(bundle, 'metrics.card.context.type', type, x.launches, x.resumes, x.compactions, fmtK(x.startupMax), fmtK(x.peakMax), fmtK(x.toolChars), fmtK(x.briefChars), fmtK(x.repeatChars))}`
+  );
+  const mainPeak = c.main.reduce((m, x) => maxOf(m, x.peak), null);
+  return [
+    t(bundle, 'metrics.card.context.title'),
+    ...types,
+    `- ${t(bundle, 'metrics.card.context.main', c.totals.mainCompactions, fmtK(mainPeak))}`,
+    t(
+      bundle,
+      'metrics.context.afterReport',
+      c.totals.resumesAfterReport,
+      afterReportText(c.resumesAfterReport, bundle)
+    ),
+    '',
+  ];
+}
+
+/**
+ * The `context` command's card (ADR-0031 decision 5): the totals over the launches, one line per
+ * main thread, one row per launch with the compactions next to the peak (D14-D17), one row per
+ * agent type with launches, resumes and compactions (D18), and the resumes after a report.
+ */
+export function renderContext(r, bundle) {
+  const c = r.context;
+  const x = c.totals;
+  const title =
+    r.scope === 'feature'
+      ? `${r.feature}${r.issue ? ` (#${r.issue})` : ''}`
+      : t(bundle, 'metrics.context.session', r.sessionIds[0]);
+  const largest = (list) =>
+    list.map((e) => `${e.tool}${e.detail ? ` ${e.detail}` : ''} ${fmtK(e.chars)}`).join('; ') ||
+    '-';
+  return [
+    `## ${t(bundle, 'metrics.context.title', title)}`,
+    '',
+    t(
+      bundle,
+      'metrics.context.summary',
+      x.launches,
+      x.resumes,
+      x.compactions,
+      x.resumesAfterReport,
+      fmtK(x.toolChars),
+      x.toolResults,
+      fmtBuckets(x.byTool),
+      fmtBuckets(x.bash),
+      fmtK(x.repeatChars),
+      x.repeatReads,
+      fmtK(x.briefChars),
+      fmtK(x.startupMax),
+      fmtK(x.peakMax)
+    ),
+    ...c.main.map((m) =>
+      t(
+        bundle,
+        'metrics.context.main',
+        fmtK(m.startup),
+        fmtK(m.peak),
+        m.compactions,
+        m.requests,
+        fmtK(m.toolChars)
+      )
+    ),
+    '',
+    t(bundle, 'metrics.context.launchHeader'),
+    '|---|---|---|---|---|---|---|---|---|---|---|---|',
+    ...c.launches.map(
+      (l) =>
+        `| ${l.agentType} | ${l.agent} | ${fmtK(l.startup)} | ${fmtK(l.peak)} | ${l.compactions} | ${l.requests} | ${fmtK(l.toolChars)} | ${fmtBuckets(l.byTool)} | ${fmtBuckets(l.bash)} | ${fmtK(l.repeatChars)} (${l.repeatReads}) | ${fmtK(l.briefChars)} | ${largest(l.largest)} |`
+    ),
+    '',
+    t(bundle, 'metrics.context.typeHeader'),
+    '|---|---|---|---|---|---|',
+    ...Object.entries(c.byType).map(
+      ([type, y]) =>
+        `| ${type} | ${y.launches} | ${y.resumes} | ${y.compactions} | ${fmtK(y.startupMax)} | ${fmtK(y.peakMax)} |`
+    ),
+    '',
+    t(
+      bundle,
+      'metrics.context.afterReport',
+      x.resumesAfterReport,
+      afterReportText(c.resumesAfterReport, bundle)
+    ),
+  ].join('\n');
 }
 
 /** The `compare` table. */
@@ -1373,12 +1739,19 @@ export function renderCompare(rows, bundle) {
   const pp = (x) => `${Math.round(x * 100)} ${t(bundle, 'metrics.unit.pp')}`;
   const na = t(bundle, 'metrics.card.na');
   const inputs = (r) => [r.prompts, r.handbacks, r.notifications].map((n) => n ?? na).join(' / ');
+  // D18: launches / resumes / compactions / resumes after a report, the deltas in brackets.
+  const context = (r) => {
+    if (!r.context) return na;
+    const values = CONTEXT_FIGURES.map((k) => r.context[k] ?? na).join(' / ');
+    if (!r.dContext) return values;
+    return `${values} (${CONTEXT_FIGURES.map((k) => signed(r.dContext[k], String)).join(' / ')})`;
+  };
   return [
     t(bundle, 'metrics.compare.header'),
-    '|---|---|---|---|---|---|---|---|---|---|---|',
+    '|---|---|---|---|---|---|---|---|---|---|---|---|',
     ...rows.map(
       (r) =>
-        `| ${r.feature}${r.issue ? ` (#${r.issue})` : ''} | ${r.recordedAt} | ${fmtCost(r.costUSD, r.costPartial, bundle)} | ${r.costComparable === false ? na : signed(r.dCostUSD, fmtUSD)} | ${dur(r.activeMin)} | ${signed(r.dActiveMin, dur)} | ${fmtPct(r.reworkShare)} | ${signed(r.dReworkShare, pp)} | ${r.gateBlocks ?? '-'} | ${r.gatesComparable === false ? na : signed(r.dGateBlocks, String)} | ${inputs(r)} |`
+        `| ${r.feature}${r.issue ? ` (#${r.issue})` : ''} | ${r.recordedAt} | ${fmtCost(r.costUSD, r.costPartial, bundle)} | ${r.costComparable === false ? na : signed(r.dCostUSD, fmtUSD)} | ${dur(r.activeMin)} | ${signed(r.dActiveMin, dur)} | ${fmtPct(r.reworkShare)} | ${signed(r.dReworkShare, pp)} | ${context(r)} | ${r.gateBlocks ?? '-'} | ${r.gatesComparable === false ? na : signed(r.dGateBlocks, String)} | ${inputs(r)} |`
     ),
   ].join('\n');
 }

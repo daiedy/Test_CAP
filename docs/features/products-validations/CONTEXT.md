@@ -49,7 +49,7 @@ Result of `mcp__cds-mcp__search_model` (`CatalogService.Products`, draft-enabled
 | `_i18n/messages.properties`, `messages_ru.properties` | 21 keys | 11 new keys, listed below |
 | `test/`, `app/products/webapp/test/` | 209 backend tests, 58 `opaTest`s + 24 QUnit | one backend test per rule and path, one OPA5 journey, one contract test, QUnit for the new pure functions of `DetailsForm.js`, fixture adjustments (research section 8) |
 
-### Rule catalogue
+### All: Rule catalogue
 Mechanism, timing and target per rule. "Draft PATCH" = the message appears after the field change in edit mode; "Save" = at `draftActivate`; "commit" = active API writes. Target "field" = Fiori Elements puts the message on the field (value state plus message popover entry); "popover" = message popover only. The preventing control of each rule is in the next table. Facts: `research/validation-facts.md` sections 1 and 10.
 
 | # | Field | Rule and domain reason | Mechanism | Fires at | Target | Verdict |
@@ -79,7 +79,7 @@ Mechanism, timing and target per rule. "Draft PATCH" = the message appears after
 | R14 | `ProductDetailSelections` | at most N selections per MULTI_LIST attribute | would need `count(...)` | | | rejected (user, 2026-10-14): an aggregate or a subquery in `@assert` is not allowed, `exists` cannot count, a handler would be the only way, no domain reason |
 | - | `DetailAttributes.scale` on the server | decimals of a DECIMAL attribute | `round(x, n)` is not portable (ADR-0027) | | | rejected, client type only |
 
-### Preventing controls
+### UI: Preventing controls
 The user's principle: per rule, the control that prevents the error before the request; the server constraint of the catalogue stays the guard on every path.
 
 | # | Preventing control | Where | Status |
@@ -96,6 +96,7 @@ The user's principle: per rule, the control that prevents the error before the r
 | R12 | the dependent row disabled (`enabled=false`) with the placeholder "Depends on {0}" (the enabling attribute's localized name) and its value cleared while no enabling value is selected in the product; enabled again, empty, with the range placeholder when one is; a 3-second toast and an `InvisibleMessage` announcement name a clear (Q6); the disabled row is outside "Filled N of M" (Q7); data: `attribute.enabledBy` (codes and their attribute) and the selected codes of the product's MULTI_LIST rows (`selectedCodes` of their multi combo boxes); re-evaluated after every `selectionFinish` and when the rows are built | `DetailsForm.js` (`isEnabled(row, selectedCodesByRow)`, `countFilled` skipping disabled rows), SCREENS "R12" | control |
 | R13 | none, validation only (D13 b: no suggestion list; the LAPTOPS bounds 4-128 and the message suffice) | | |
 
+### All: Message keys, seed and contract
 Message keys (`_i18n/messages.properties`, `#XMSG` comment lines; `ru` in `messages_ru.properties` in the same change; the final `en` and `ru` wording is the approved SCREENS "Texts" table, Q4): `PRODUCTS_NAME_TOO_SHORT`, `PRODUCTS_NAME_DUPLICATE`, `PRODUCTS_PRICE_POSITIVE`, `PRODUCTS_PRICE_MINOR_UNIT`, `PRODUCTS_IMAGE_URL_HTTPS`, `PRODUCTS_DESCRIPTION_REQUIRED_IN_STOCK`, `PRODUCTS_DETAIL_VALUE_REQUIRED`, `PRODUCTS_DETAIL_VALUE_OUT_OF_SUBCATEGORY_RANGE`, `PRODUCTS_DETAIL_VALUE_BELOW_OTHER` ("{0} must not be below {1}.": `{0}` the row's attribute name, `{1}` the name of `atLeast`, both localized), `PRODUCTS_DETAIL_VALUE_NOT_POWER_OF_TWO`, `PRODUCTS_DETAIL_VALUE_NOT_ENABLED` (guard, not user-facing: the form never sends it). The import reuses `PRODUCTS_IMPORT_ROW_INVALID` with these texts as the reason, no new import key. Format and range rules keep their `ASSERT_FORMAT` / `ASSERT_RANGE` codes with the custom text (research section 2); `@mandatory`, `@assert.target` and the existing stock and rating ranges keep the cds default texts (D2). App texts (`app/products/webapp/i18n/`): the placeholders `ProductsObjectPage.details.range`, `rangeFrom`, `rangeUpTo`, `dependsOn` and the toast `cleared`, `en` and `ru` from SCREENS "Texts".
 
 Seed (R10, `db/data/my.catalog-SubcategoryAttributes.csv`, columns `minValue;maxValue`; every filled seeded value of `my.catalog-ProductDetails.csv` fits, research section 10.1): LAPTOPS `SCREEN_SIZE` 10-18, `RAM` 4-128, `STORAGE` 32-8192 (D12); MICE `DPI` 400-32000, `BATTERY_LIFE` 1-2000; AUDIO `BATTERY_LIFE` 1-100; SEATING `MAX_LOAD` 50-300; LIGHTING `POWER` 1-150, `BRIGHTNESS` 50-5000; APPLIANCES `POWER` 50-3000, `CAPACITY` 0.2-10; DRINKWARE `CAPACITY` 0.1-3; BAGS `CAPACITY` 5-80; CUTLERY `WEIGHT` 0.1-5, `PIECES` 1-50; PHONE_ACCESSORIES `WEIGHT` 0.01-1; OUTDOOR `WEIGHT` 0.1-30; FITNESS `THICKNESS` 1-25; NOTEBOOKS `PAGE_COUNT` 20-600; WRITING_INSTRUMENTS `TIP_SIZE` 0.1-2; the 25 other assignments stay unbounded (LIST, MULTI_LIST, TEXT attributes).

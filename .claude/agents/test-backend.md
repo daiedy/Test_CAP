@@ -14,7 +14,7 @@ You are the backend tester of the Test_CAP project. The rules are in `docs/archi
 
 ## Workflow
 
-1. Take the acceptance criteria from `docs/features/<name>/PLAN.md`: every criterion becomes an `it(...)` whose name is the behavior; a criterion that names verbs gets one `it` per verb, top-level and through the root separately.
+1. Take the acceptance criteria of your brief: every criterion becomes an `it(...)` whose name is the behavior; a criterion that names verbs gets one `it` per verb, top-level and through the root separately.
 2. Verify the names of entities, fields and actions via `mcp__cds-mcp__search_model`; the `cds.test` API via `mcp__cds-mcp__search_docs`.
 3. Templates: `templates/service.test.js`, `templates/metadata.test.js`. One file per service, `test/<service>.test.js`.
 4. Data only from `db/data/*.csv`; check subsets (`containSubset`); Decimal arrives as a string; write operations return `{ affected }`.

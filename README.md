@@ -211,7 +211,7 @@ The reference versions are pinned exactly in `.mcp.json` and change only through
 
 The pipeline is started by the `/feature` command. A slash command is a command script: an instruction written in advance that the main chat executes when the human types the command. Such a script is called a skill; the script file is `.claude/skills/feature/SKILL.md`. The diagram below shows the whole path of a feature, and under it each phase is taken apart separately.
 
-![Flow diagram: eight phases in rows; the lead agent on the left, worker agents and what they deliver in the middle, what is checked before the next phase, and the automatic checks in the right column](docs/images/pipeline-flow.svg)
+![Flow diagram: eight phases in rows; the lead agent on the left, worker agents and what they deliver in the middle, what is checked before the next phase, and the automatic checks in the right column, including the brief at a worker's start, the read gate, the hand-over gate and the resume gate; a dashed loop sends defects and blocking findings to a fresh worker of phase 2 or 3](docs/images/pipeline-flow.svg)
 
 *The feature's path through the pipeline: eight phases, the checkpoints between them and the automatic checks that fire along the way.*
 
@@ -235,7 +235,9 @@ The lead agent comes up with a short feature name and asks the human for the che
 
 #### Phase 1 · Research and plan
 
-The architect studies the project and writes two feature documents: the context and the plan. The context says what already exists, what is affected and which rules apply. The plan holds the acceptance criteria and a table of steps: who does it, which files, in which way, which check confirms it. If the feature has screens, the screen designer writes a separate screens file. The context stays a short brief for the workers; experiments and measurements go into a separate research folder, which only the architect and the reviewer read. A plan that the `/spec` command has already written is re-read by the architect, not written again.
+The architect studies the project and writes two feature documents: the context and the plan. The context says what already exists, what is affected and which rules apply. The plan holds the acceptance criteria and a table of steps: who does it, which files, in which way, which check confirms it. If the feature has screens, the screen designer writes a separate screens file. The context stays short; experiments and measurements go into a separate research folder, which only the architect and the reviewer read. A plan that the `/spec` command has already written is re-read by the architect, not written again.
+
+Both documents carry marks, so that later each worker can be handed only its own part, called its brief (section "How the worker agents work"). Every acceptance criterion sits under the phase it belongs to or under "every phase", every step row starts with its phase number, and every context section names its readers: all, backend or UI. The document shape check verifies the marks and that no role's brief has grown past its size ceiling.
 
 **Checkpoint.** Before showing the plan, the lead agent runs the document shape check and returns a red result to the architect. The plan is approved with the word "approved". Without this word nothing goes further in any mode. If the architect answered "a new decision is needed" or "no approved way", the pipeline stops and the question goes to the human.
 
@@ -243,7 +245,7 @@ The architect studies the project and writes two feature documents: the context 
 
 **Human.** Open the feature plan, the file `PLAN.md` in the feature folder, read the acceptance criteria and the open questions, answer the questions and write the word "approved" in the chat.
 
-> **In code.** `CONTEXT.md` (brief), `PLAN.md`, `SCREENS.md`, `research/*.md` from the templates in `templates/feature/`; shape check `node scripts/check-feature-docs.mjs <name>`; an ADR in `docs/decisions/` gets the status accepted on approval.
+> **In code.** `CONTEXT.md`, `PLAN.md`, `SCREENS.md`, `research/*.md` from the templates in `templates/feature/`; marks `### Phase <N>: <label>` and `### Every phase` over the criteria, `<N>: ` at the start of the Phase cell of a step row, `### All: <title>`, `### Backend: <title>` and `### UI: <title>` in the context; shape check `node scripts/check-feature-docs.mjs <name>` with the brief ceilings of `test/context-budget.json`; an ADR in `docs/decisions/` gets the status accepted on approval.
 
 #### Phase 2 · Backend
 
@@ -251,11 +253,11 @@ The backend developer does the plan steps for the data model, the service, trans
 
 **Checkpoint.** Linter and tests green, command output attached to the reports.
 
-**Checks.** After every edit: compilation of the CDS model, linter and code formatting, check of translation pairs; the CAP reference call log; exit control of each of the two workers.
+**Checks.** At each worker's start its brief; before every file read the read gate; after every edit: compilation of the CDS model, linter and code formatting, check of translation pairs; the CAP reference call log; exit control when each of the two workers hands over its report.
 
 **Human.** In semi-autonomous and manual mode look at the result and give the command to continue. In autonomous mode step in only if the checks are red.
 
-> **In code.** `db/schema.cds`, `srv/*.cds`, `srv/annotations/`, `srv/*.js`, `_i18n/`, `db/data/*.csv`; tests `test/*.test.js`; gate `npm run lint` and `npm test`; contract snapshot `npx vitest -u` and `app/products/webapp/localService/metadata.xml`; commit `feat(srv): <name> backend`.
+> **In code.** `db/schema.cds`, `srv/*.cds`, `srv/annotations/`, `srv/*.js`, `_i18n/`, `db/data/*.csv`; tests `test/*.test.js`; gate `npm run lint` and `npm test`; contract snapshot `npx vitest -u` and `app/products/webapp/localService/metadata.xml`; briefs `.pipeline/brief/cap-backend-dev-2.md` and `.pipeline/brief/test-backend-2.md`; commit `feat(srv): <name> backend`.
 
 #### Phase 3 · User interface
 
@@ -263,7 +265,7 @@ The phase is needed only if the plan has screens. First the screen developer wor
 
 **Checkpoint.** UI linter without errors, tests green.
 
-**Checks.** After every edit the UI5 linter and the translation check; file protection does not let anyone edit the manifest directly, only the Fiori reference changes it; the reference call log; exit control of each worker.
+**Checks.** At each worker's start its brief with the sections of the screens file it needs; after every edit the UI5 linter and the translation check; file protection does not let anyone edit the manifest directly, only the Fiori reference changes it; the reference call log; exit control when each worker hands over its report.
 
 **Human.** As in phase 2.
 
@@ -271,19 +273,19 @@ The phase is needed only if the plan has screens. First the screen developer wor
 
 #### Phase 4 · Browser verification
 
-The browser verifier opens the application in a real browser, walks through the user scenarios from the plan and writes the verification report as it goes, not at the end. If defects are found, the lead agent returns the work to phase 2 or 3 with an exact list. There are at most two such returns, then the question goes to the human.
+The browser verifier opens the application in a real browser, walks through the user scenarios from the plan and writes the verification report as it goes, not at the end. If defects are found, the lead agent returns the work to phase 2 or 3 with an exact list. The rework goes to a fresh worker of the type that owns the code, not to the worker that already reported: the fresh one gets its brief, the defect list and the path of the previous report. There are at most two such returns, then the question goes to the human.
 
 **Checkpoint.** The verdict "ready for review".
 
-**Checks.** The browser call log; exit control of the verifier.
+**Checks.** The verifier's brief at its start; the browser call log; exit control when the verifier hands over its report; on a return, the resume gate on the lead agent's side.
 
 **Human.** After two rounds of defects decide what to do next.
 
-> **In code.** server `npx cds serve --in-memory --port 4004`, entry point `/products/webapp/test/flpSandbox.html`, tools `mcp__chrome-devtools__*`; result `VERIFICATION.md` and `screenshots/`; a stopped agent is continued through `SendMessage`.
+> **In code.** server `npx cds serve --in-memory --port 4004`, entry point `/products/webapp/test/flpSandbox.html`, tools `mcp__chrome-devtools__*`; result `VERIFICATION.md` and `screenshots/`; a rework is a new `Agent` launch of the owning type with the path `.pipeline/logs/report-<agent-type>-<agent-id>.md`, and `resume-gate.mjs` refuses a `SendMessage` to a worker that already reported.
 
 #### Phase 5 · Review
 
-The reviewer reads the changes, checks them against the plan, the conventions and the registry and writes the review report: blocking, important and minor findings. Each finding goes to the worker whose code it is. After the fixes the reviewer looks again only at what was fixed.
+The reviewer gets no brief: it reads the plan and the context whole, then the changes, checks them against the plan, the conventions and the registry and writes the review report: blocking, important and minor findings. Each finding goes to a fresh worker of the type whose code it is, together with the path of the previous report. After the fixes the reviewer looks again only at what was fixed.
 
 **Checkpoint.** Zero blocking findings.
 
@@ -299,7 +301,7 @@ The documentation keeper updates the registry, the changelog, the project state,
 
 **Checkpoint.** The documentation freshness check is green.
 
-**Checks.** Exit control of the keeper.
+**Checks.** The keeper's brief with all acceptance criteria at its start; exit control when it hands over its report.
 
 **Human.** In semi-autonomous and manual mode give the command to continue.
 
@@ -321,15 +323,17 @@ If the feature came from an issue, before the report the lead agent posts the fe
 
 #### Between phases
 
-After every checkpoint the lead agent updates the lines Feature, Phase, Last commit and Next in the "Now" section of the project state file: the final gate fires at every pause of the main chat and will not let through a pause with changed code and a stale state. If a worker did not finish within its allotted number of turns, the lead agent does not start a new one but continues the same worker from where it stopped. That is why workers write their documents to disk as they work, not at the end. If the chat history has become too long and Claude Code compacts it into a summary, a note is written to the session log before the compaction.
+After every checkpoint the lead agent updates the lines Feature, Phase, Last commit and Next in the "Now" section of the project state file: the final gate fires at every pause of the main chat and will not let through a pause with changed code and a stale state. A worker that has handed over its report is not woken up again: further work on its part, even a one-line fix, goes to a fresh worker of the same type. A woken worker would carry its whole earlier history along, while a fresh one starts light and loses nothing, because workers write their documents to disk as they work, not at the end, and every delivered report is saved to a file. If the chat history has become too long and Claude Code compacts it into a summary, a note is written to the session log before the compaction.
 
-> **In code.** the `## Now` section in `docs/STATE.md`; the turn limit is `maxTurns` in the role frontmatter; an agent is continued through `SendMessage`; the compaction log `.pipeline/sessions.log`.
+> **In code.** the `## Now` section in `docs/STATE.md`; a rework is a new `Agent` launch whose message holds the defect list and the report path `.pipeline/logs/report-<agent-type>-<agent-id>.md`; `resume-gate.mjs` on PreToolUse `SendMessage` refuses a resume after a report; the compaction log `.pipeline/sessions.log`.
 
 ### Automatic checks
 
-A hook is a program that Claude Code runs itself at a certain moment. The human does not call it. Claude Code passes it information about what is happening right now: which tool was called, which file, which agent. Claude Code understands a hook's answer in three ways: add text to the agent's memory as a hint; forbid the action with an explanation; not release the agent, return it a list of complaints, and it keeps working. Inside the worker agents the same "before edit" and "after edit" checks fire as in the main chat, and at the exit a worker has a check of its own.
+A hook is a program that Claude Code runs itself at a certain moment. The human does not call it. Claude Code passes it information about what is happening right now: which tool was called, which file, which agent. Claude Code understands a hook's answer in three ways: add text to the agent's memory as a hint; forbid the action with an explanation; not release the agent, return it a list of complaints, and it keeps working. The "before a file read", "before edit" and "after edit" checks fire in the main chat and inside the worker agents alike; a worker also has checks of its own at its start and when it hands over its report.
 
-> **In code.** the `hooks` block in `.claude/settings.json`: event → list of entries, an entry has a `matcher` (a regular expression on the tool name) and the command `node scripts/hooks/<script>.mjs` with a timeout in seconds. The hook reads JSON from stdin: `tool_name`, `tool_input`, `session_id`, inside a worker also `agent_id` and `agent_type`, on a repeated stop `stop_hook_active`. It answers like this: stdout or the `additionalContext` field add text to the context; `permissionDecision: deny | ask` forbids or asks; exit code 2 with text in stderr does not release the agent. Shared functions in `scripts/lib/hook-utils.mjs`.
+A hook may pass the agent at most 10,000 characters. When a check prints more, the hook passes a summary by structure, for example the number of findings per rule or the names of the failed tests, and the path of a log file that holds everything. It never cuts the text at the head or the tail, because the cut part may be the one that matters.
+
+> **In code.** the `hooks` block in `.claude/settings.json`: event → list of entries, an entry has a `matcher` (a regular expression on the tool name) and the command `node scripts/hooks/<script>.mjs` with a timeout in seconds. The hook reads JSON from stdin: `tool_name`, `tool_input`, `session_id`, inside a worker also `agent_id` and `agent_type`, on a repeated stop `stop_hook_active`. It answers like this: stdout or the `additionalContext` field add text to the context; `permissionDecision: deny | ask` forbids or asks; exit code 2 with text in stderr does not release the agent. Shared functions in `scripts/lib/hook-utils.mjs`; the limit is `HOOK_OUTPUT_MAX` (10,000 characters), the summary and the log under `.pipeline/logs/` come from `relay()`. Twelve of the thirteen scripts belong to the eight checks below; the thirteenth, `user-prompt.mjs` on `UserPromptSubmit`, only marks a `/spec` or `/feature` command in the metrics log `.pipeline/metrics-<session>.jsonl` and checks nothing.
 
 Two checks can be switched off with an environment variable. An environment variable is a setting that is set in the terminal when Claude Code is started. That is why only the human can set it, and an agent inside the session cannot.
 
@@ -376,59 +380,70 @@ Two checks can be switched off with an environment variable. An environment vari
 #### Check 5 · Worker exit control
 
 - **When it fires.** When a worker hands over its report (its last call, `SubagentHandback`), or, if it ends with plain text instead, when it stops.
-- **What problem it solves.** A worker could hand over work with linter errors, write a file past the checks through the terminal, or never ask the reference at all.
-- **What it does.** Three checks over the list of changed files. First: linter errors; the root ESLint runs on changed CDS, `srv/`, `test/` and `scripts/` files, the app ESLint on changed `webapp/` JavaScript outside `test/` and `localService/` (including the JSDoc rules for `ext/`), and ui5lint on changed webapp JavaScript and HTML files and on view and fragment XML. A linter runs only when it is installed in the app; a missing one is a note advising `npm install`, not a block. A run that crashes without a report counts as a failure and blocks the handover like an error does. Second: files for which the service log has no record of an edit through the editor. That means they were written around the checks, through the terminal. Such files are checked here, and the protected ones among them are blocked. Third: a comparison of the edits with the reference call log; if the file type requires a reference query and there was none, the worker is sent back once with a request either to ask the reference or to write in the report the section "MCP not used", that is "reference not used", with the reason. On a repeated handover without the section it is let through, but recorded in the log for the retrospective.
-- **What the human sees.** The worker makes an extra round and fixes things. A section with the reason appears in the report.
+- **What problem it solves.** A worker could hand over work with linter errors, write a file past the checks through the terminal, or never ask the reference at all. The check has to fire before the report leaves: a complaint that comes after the report is delivered reaches nobody.
+- **What it does.** Three checks over the list of changed files. First: linter errors; the root ESLint runs on changed CDS, `srv/`, `test/` and `scripts/` files, the app ESLint on changed `webapp/` JavaScript outside `test/` and `localService/` (including the JSDoc rules for `ext/`), and ui5lint on changed webapp JavaScript and HTML files and on view and fragment XML. A linter runs only when it is installed in the app; a missing one is a note advising `npm install`, not a block. A run that crashes without a report counts as a failure and blocks the handover like an error does. Second: files for which the service log has no record of an edit through the editor. That means they were written around the checks, through the terminal. Such files are checked here, and the protected ones among them are blocked. Third: a comparison of the edits with the reference call log; if the file type requires a reference query and there was none, the worker is sent back once with a request either to ask the reference or to write in the report the section "MCP not used", that is "reference not used", with the reason. On a repeated handover without the section it is let through, but recorded in the log for the retrospective. If the worker cannot fix a complaint, after three refusals the next attempt passes and is recorded, so a report never gets stuck. Every delivered report is saved to a file, which a fresh worker for a rework reads.
+- **What the human sees.** The worker makes an extra round and fixes things. A section with the reason appears in the report. The delivered report lies in `.pipeline/logs/`.
 - **How to bypass it and who can.** Only for protected files, with the same environment variable `PIPELINE_ALLOW_PROTECTED=1`. Only the human sets it.
 
-> **In code.** event `PreToolUse`, matcher `SubagentHandback`, script `handback-gate.mjs` with `scripts/lib/handover-checks.mjs`; the report text is `tool_input.message`; a deny names what to fix, and after `HANDBACK_DENY_MAX` (3) denies the next attempt passes with a `handback-limit` record; `PostToolUse` `SubagentHandback` keeps the delivered report in `.pipeline/logs/report-<agent-type>-<agent-id>.md`. Event `SubagentStop`, script `subagent-stop.mjs`, runs the same checks for a plain-text end only (input has `last_assistant_message`). Changed files by `git status`; eslint (root and per-app pass) and ui5lint only at severity error, the ui5lint scope is `UI5_SCOPE` and the app ESLint scope `APP_ESLINT_SCOPE`/`APP_ESLINT_EXCLUDE` of `scripts/lib/file-checks.mjs`, a tool runs only when `<app>/node_modules/.bin/<tool>` exists and a non-zero exit without a parsable report is a blocking failure (ADR-0029 amendments D-F); files without an `edit` record go through `runFileChecks`, protected ones are blocked by `protectedWriteHit`; MCP gaps are counted by `mcpGaps` against the `MCP_RULES` table in `scripts/lib/mcp-audit.mjs`; the `## MCP not used` section is looked up in the report text. Answer: exit 2 and text in stderr; with `stop_hook_active` the record `skipped-unjustified`.
+> **In code.** event `PreToolUse`, matcher `SubagentHandback`, script `handback-gate.mjs` with `scripts/lib/handover-checks.mjs`; the report text is `tool_input.message`; a deny names what to fix, and after `HANDBACK_DENY_MAX` (3) denies the next attempt passes with a `handback-limit` record; `PostToolUse` `SubagentHandback` keeps the delivered report in `.pipeline/logs/report-<agent-type>-<agent-id>.md`. Event `SubagentStop`, script `subagent-stop.mjs`, runs the same checks for a plain-text end only (input has `last_assistant_message`). Changed files by `git status`; eslint (root and per-app pass) and ui5lint only at severity error, the ui5lint scope is `UI5_SCOPE` and the app ESLint scope `APP_ESLINT_SCOPE`/`APP_ESLINT_EXCLUDE` of `scripts/lib/file-checks.mjs`, a tool runs only when `<app>/node_modules/.bin/<tool>` exists and a non-zero exit without a parsable report is a blocking failure (ADR-0029 amendments D-F); files without an `edit` record go through `runFileChecks`, protected ones are blocked by `protectedWriteHit`; MCP gaps are counted by `mcpGaps` against the `MCP_RULES` table in `scripts/lib/mcp-audit.mjs`; the `## MCP not used` section is looked up in the report text. Answer: on `SubagentHandback` `permissionDecision: deny` with what to fix, on `SubagentStop` exit 2 and text in stderr; an MCP gap without the section is refused once, the next attempt passes with the record `skipped-unjustified`.
 
 #### Check 6 · Final gate
 
 - **When it fires.** Every time the main chat finishes a reply and waits for the human, including the pauses between phases.
 - **What problem it solves.** Work could end with changed code but stale documentation and tests that were never run.
-- **What it does.** First it checks that the project state file keeps the template shape. Then, if code was changed, it checks three things: the registry is fresh, and if not, it regenerates the registry itself; the project state file and the changelog have been updated; all tests are green. Along the way it warns if more than ten unsorted lessons have piled up. It remembers the result, so a repeated finish without new edits passes instantly.
+- **What it does.** First it checks that the project state file keeps the template shape. Then, if code was changed, it checks three things: the registry is fresh, and if not, it regenerates the registry itself; the project state file and the changelog have been updated; all tests are green. If tests are red, it names the failed tests and prints the path of the full test log. Along the way it warns if more than ten unsorted lessons have piled up. It remembers the result, so a repeated finish without new edits passes instantly.
 - **What the human sees.** The chat does not finish its work but completes the documentation or fixes the tests.
 - **How to bypass it and who can.** The environment variable `PIPELINE_SKIP_GATE=1`. Only the human sets it.
 
-> **In code.** event `Stop`, script `stop-gate.mjs`. Order: protected files (`protectedWriteHit`) → shape of `docs/STATE.md` (`stateShapeErrors`, budget `STATE_PRINT_BUDGET`) → hash of `git status` over `db/ srv/ app/ test/ _i18n/` against `.claude/.gate-state.json` → `node scripts/check-docs-fresh.mjs` (`--fix` when stale) → `docs/STATE.md` and `docs/CHANGELOG.md` in `git status` → `npm test` (limit 10 minutes) → counter of entries in `docs/LESSONS.md`. Bypass `PIPELINE_SKIP_GATE=1`, loop protection `stop_hook_active`.
+> **In code.** event `Stop`, script `stop-gate.mjs`. Order: protected files (`protectedWriteHit`) → shape of `docs/STATE.md` (`stateShapeErrors`, budget `STATE_PRINT_BUDGET`) → hash of `git status` over `db/ srv/ app/ test/ _i18n/` against `.claude/.gate-state.json` → `node scripts/check-docs-fresh.mjs` (`--fix` when stale) → `docs/STATE.md` and `docs/CHANGELOG.md` in `git status` → `npm test` (limit 10 minutes; a red run is saved by `relay()` under `.pipeline/logs/` and its path is always printed) → counter of entries in `docs/LESSONS.md`. Bypass `PIPELINE_SKIP_GATE=1`, loop protection `stop_hook_active`.
 
 #### Check 7 · Note before memory compaction
 
 - **When it fires.** When the chat memory overflows and Claude Code compresses the history into a short retelling.
 - **What problem it solves.** After compaction the chat remembers only the retelling.
-- **What it does.** Appends to the session log a line with the date, the branch and the number of changed files.
+- **What it does.** Appends to the session log a line with the date, the branch and the number of changed files. It also clears the main chat's record of files read whole, so that after the compaction the read gate lets them be read whole again.
 - **What the human sees.** A line in the service log `.pipeline/sessions.log`; it does not get into the repository.
 - **How to bypass it and who can.** No bypass needed.
 
-> **In code.** event `PreCompact` (field `trigger`: auto or manual), script `pre-compact.mjs`. A line like `2026-09-24 19:07 UTC session <id>: branch main, changed files 3, compaction manual` in `.pipeline/sessions.log`; the folder is in `.gitignore`.
+> **In code.** event `PreCompact` (field `trigger`: auto or manual), script `pre-compact.mjs`. A line like `2026-09-24 19:07 UTC session <id>: branch main, changed files 3, compaction manual` in `.pipeline/sessions.log`; the folder is in `.gitignore`. The read gate reset is an entry `{event: "reset", agent}` in `.pipeline/read-ledger-<session>.jsonl`.
 
-#### Check 8 · Brief and reading gates
+#### Check 8 · Brief, read gate and resume gate
 
-- **When it fires.** When a worker starts, when any agent reads a file and when the lead agent wants to send a message to a worker.
-- **What problem it solves.** A worker used to read the whole plan and the whole context of the feature, read the same file again and again, and was woken up for a rework with a long history that it carried along. On the big feature of the project the workers' tool results alone were about 2.6 million characters.
-- **What it does.** At the start it hands the worker a brief: only the steps, the criteria and the context sections for its role and its phase, plus a list of what was left out and how large it is. If a worker opens a whole file it has already read, or the whole plan that its brief already holds, the first attempt is refused with the reason, and the second passes. A message to a worker that has already delivered its report is refused: a rework goes to a fresh worker, which gets the defect list and the path of the previous report. When a check prints more than fits into a hook message, it prints a summary and the path of a log that holds everything, never the head or the tail.
-- **What the human sees.** A refused call with an explanation in the worker's transcript, the brief in `.pipeline/brief/`, the figures per launch (startup and peak context, resumes, compactions, repeated reads) in `node scripts/metrics.mjs context <feature>`.
-- **How to bypass it and who can.** The gates are soft: they refuse once, and any error in a gate lets the call through. No bypass is needed.
+- **When it fires.** When a worker starts, before any agent reads a file and before the lead agent sends a message to a worker.
+- **What problem it solves.** Without it a worker reads the whole plan and the whole context of the feature, although most of them concern other roles, reads the same file again and again, and a worker woken up for a rework carries its whole earlier history along. Everything an agent has read stays in its context, costs tokens and makes its reasoning worse: on one large feature the results of the workers' reads and commands alone came to about 2.6 million characters.
+- **What it does.** At the start it hands the worker a brief: only its steps, the criteria and the context sections for its role and its phase, plus a list of what was left out, with file and size. If an agent opens a whole file it has already read and that has not changed, or a worker with a brief opens the whole plan or the whole context, the first attempt is refused with the reason and the second passes; reading part of a file always passes. A message that would wake up a worker that has already delivered its report is refused: the rework goes to a fresh worker, which gets its brief, the defect list and the path of the previous report. A worker stopped at its turn limit without a report may still be continued.
+- **What the human sees.** A refused call with an explanation in the agent's transcript; the briefs in `.pipeline/brief/`; the context figures of a feature with `node scripts/metrics.mjs context <feature>`: per worker launch the context at the start and at its peak, the compactions, the size of the tool results by tool, the repeated reads, the size of the brief and the five largest results, and per role the launches, resumes and compactions.
+- **How to bypass it and who can.** The read gate is soft: it refuses once, and the retry passes. The resume gate has no bypass, because a rework is always possible as a new worker. Any error inside a gate lets the call through.
 
-> **In code.** event `SubagentStart`, script `subagent-start.mjs` with `briefFor()` and `briefPhase()` in `scripts/lib/feature-brief.mjs`; the brief is returned as `additionalContext` up to `HOOK_OUTPUT_MAX` (10,000 characters), else as a pointer to `.pipeline/brief/<agent-type>-<phase>.md`. Event `PreToolUse`, matcher `Read`, script `read-gate.mjs` (ledger `.pipeline/read-ledger-<session>.jsonl`, `scripts/lib/read-ledger.mjs`); matcher `SendMessage`, script `resume-gate.mjs`. Every deny appends a `gate` record to `.pipeline/metrics-<session>.jsonl`. Decision ADR-0031.
+> **In code.** event `SubagentStart`, script `subagent-start.mjs` with `briefFor()` and `briefPhase()` in `scripts/lib/feature-brief.mjs`; the brief is returned as `additionalContext` up to `HOOK_OUTPUT_MAX` (10,000 characters), else as a pointer to `.pipeline/brief/<agent-type>-<phase>.md`. Event `PreToolUse`, matcher `Read`, script `read-gate.mjs` (ledger `.pipeline/read-ledger-<session>.jsonl`, `scripts/lib/read-ledger.mjs`, reasons `reread` and `brief`); matcher `SendMessage`, script `resume-gate.mjs` (reason `resume`). Every deny appends a `gate` record to `.pipeline/metrics-<session>.jsonl`. The card is `node scripts/metrics.mjs context <feature|#N|session>`; `resumesAfterReport` is pinned at 0 in `test/context-budget.json`, and `node scripts/metrics.mjs record` refuses a feature above it. Decision ADR-0031.
 
 ### How the worker agents work
 
+The diagram follows one worker from its launch to its report. The lead agent starts the worker, and a hook hands it its brief before it does anything else. While the worker reads, edits and asks the references, every call passes a hook first, and the read gate may refuse a repeated read once. The worker hands over its report with one last call, the hand-over gate refuses it until the errors are fixed, and after that the worker is never woken up again: further work goes to a fresh worker of the same type.
+
+![Lifecycle of one worker in five columns: the lead agent launches it, the start hook hands the brief, the worker reads and edits through the read gate, file protection, the post-edit check and the reference log, hands over its report through the hand-over gate, which saves the report; after the report the resume gate refuses to wake the worker, and a dashed path leads to a fresh worker for the rework](docs/images/worker-lifecycle.svg)
+
+*The life of one worker: launch, brief, work under the hooks, hand-over and what happens after the report.*
+
 #### What a worker knows at the start
 
-At the start a worker knows four things:
+At the start a worker knows five things:
 
 - its role: the file that says what this role does and which tools it may use;
 - the shared working protocol: the order of actions, the same for all workers;
 - the project constitution: what this project is, the ten invariant rules and which command is for which request;
-- its memory index: a short list of notes that this role has collected in past tasks.
+- its memory index: a short list of notes that this role has collected in past tasks;
+- its brief: the part of the feature plan and context meant for its role and its phase.
 
-Plus the text of the assignment from the lead agent: the feature name, the path to the feature folder, the plan step numbers, the checkpoint mode and the list of files to read and not to read.
+Plus the text of the assignment from the lead agent: the feature name, the path to the feature folder, the plan step numbers, the checkpoint mode, its turn budget and what changed since the plan was approved. For a rework the assignment also holds the defect list and the path of the previous worker's report.
 
-> **In code.** the role file `.claude/agents/<role>.md`, its body becomes the system prompt; the protocol `.claude/skills/project-protocol/SKILL.md`, preloaded by the `skills` field; the constitution `CLAUDE.md`; the memory index `.claude/agent-memory/<role>/MEMORY.md`, Claude Code inserts the first 200 lines or 25 KB. The assignment is passed by the `Agent` tool; the reading list per role is in the "Orchestrator rules" section of the `/feature` script.
+The brief solves a simple problem: the full plan and context of a large feature are long, and most of them concern other roles. A hook assembles the brief automatically at the worker's start from the marked feature documents. It holds the worker's own step rows and the acceptance criteria of its phase and of every phase; for the backend and interface roles also the context sections meant for all readers and for their side; for the interface roles the list of screens file sections to read; and finally a "Not included" list that names every section left out, with its file and size, so that nothing disappears silently. A brief of up to 10,000 characters arrives whole; a longer one is saved to a file and the worker gets its path.
 
-Everything the model sees at the moment of work is called the agent context. Every file read takes up space in it and costs tokens, that is billable units of text. That is why at the start a worker gets only what is listed, and reads the rest itself.
+Not every worker gets a brief. The architect, the screen designer and the reviewer read the documents whole, because their job is the whole picture. A worker launched for a rework in a phase where its role has no steps gets the brief of its last own phase. A worker that is continued after a stop gets no new brief: it still has the first one.
+
+> **In code.** the role file `.claude/agents/<role>.md`, its body becomes the system prompt; the protocol `.claude/skills/project-protocol/SKILL.md`, preloaded by the `skills` field; the constitution `CLAUDE.md`; the memory index `.claude/agent-memory/<role>/MEMORY.md`, Claude Code inserts the first 200 lines or 25 KB. The brief is built by `briefFor()` and `briefPhase()` in `scripts/lib/feature-brief.mjs` (roles with a brief: `BRIEF_ROLES`) and handed by `subagent-start.mjs` on `SubagentStart` as `additionalContext` up to `HOOK_OUTPUT_MAX` (10,000 characters), else as a pointer; the file is always `.pipeline/brief/<agent-type>-<phase>.md`, for example `cap-backend-dev-2.md`; `node scripts/feature-brief.mjs <name> <agent-type> <phase>` builds the same brief by hand. The assignment is passed by the `Agent` tool; what it holds is in the "Orchestrator rules" section of the `/feature` script.
+
+Everything the model sees at the moment of work is called the agent context. Every file read takes up space in it and costs tokens, that is billable units of text, and old or repeated material also makes the model's reasoning worse. That is why at the start a worker gets only its brief and the files listed above, and opens the rest only when it needs it.
 
 #### What a worker does not know
 
@@ -438,7 +453,7 @@ A worker does not see the human's chat with the lead agent. If the human said so
 
 Next the worker reads on its own, in the order the protocol sets:
 
-1. the plan and the context of the feature (`PLAN.md`, `CONTEXT.md`); the screens file `SCREENS.md` only for the interface roles; the `research/` folder only if a plan step names a file;
+1. its brief, whole; a whole feature document only for a section the brief lists as not included. Without a brief (the architect, the screen designer, the reviewer) the plan and the context of the feature whole (`PLAN.md`, `CONTEXT.md`), the screens file `SCREENS.md` only for the interface roles, the `research/` folder only if a plan step names a file;
 2. the "Now" and "Open debt" sections of the project state file (`docs/STATE.md`);
 3. the registry of existing code (`docs/registry/*.md`) and the model through the CAP reference (`mcp__cds-mcp__search_model`), so as not to write a duplicate;
 4. the catalog of approved ways (`docs/architecture/PATTERNS.md`), where every typical task has exactly one way;
@@ -448,27 +463,33 @@ Only then does it edit. File-type rules are loaded automatically at the moment t
 
 > **In code.** `.claude/rules/<type>.md` with the `paths` field in the frontmatter, for example `srv/**/*.js` for handlers or `app/**/webapp/test/**` for UI tests; Claude Code loads the rule when an agent reads a file that matches the glob.
 
+#### When a file read is refused
+
+Two soft refusals keep the reading lean. If an agent opens a whole file it has already read and that has not changed since, the first attempt is refused with the reason: the content is still in its context. If a worker with a brief opens the whole plan or the whole context, the first attempt is refused with the path of its brief. In both cases the repeated attempt passes, so an agent that really needs the file gets it. Reading part of a file always passes. When the main chat's history is compacted, its record of read files starts over, because the earlier content is no longer in its memory.
+
+> **In code.** `read-gate.mjs` on PreToolUse `Read`; the ledger `.pipeline/read-ledger-<session>.jsonl` per agent id, file and content hash (`scripts/lib/read-ledger.mjs`); a `Read` with `offset` or `limit` always passes; a deny appends a `gate` record with the reason `reread` or `brief`; `pre-compact.mjs` writes the `reset` entry.
+
 #### What "reference first" means
 
-Before changing anything in the SAP area, a worker must ask the reference. If the reference contradicts the model's memory, the reference is right. A skipped query is visible: the reference call log records every call, and the worker exit control compares the edits with the log and sends the worker back if there was no query.
+Before changing anything in the SAP area, a worker must ask the reference. If the reference contradicts the model's memory, the reference is right. A skipped query is visible: the reference call log records every call, and when the worker hands over its report, the exit control compares the edits with the log and refuses the report if there was no query.
 
 > **In code.** the `MCP_RULES` table in `scripts/lib/mcp-audit.mjs`: `db/**/*.cds` and `srv/**/*.cds` expect `mcp__cds-mcp__search_model` or `search_docs`; `srv/**/*.js` and `test/**/*.js` expect `cds-mcp`; `app/**/annotations/**/*.cds` expects `mcp__fiori-mcp__search_docs`; `app/**/webapp/**/*.js` and `*.xml` expect the UI5 MCP or `fiori-mcp`; `webapp/test/**` accepts the skills `ui5-best-practices-opa5` and `qunit`. A failed call also counts as an attempt.
 
 #### How a worker reports
 
-The report follows a strict form: done; files; what was reused; check results with command output; open questions; when needed, the section "MCP not used" with the reason why the reference was not used; lessons. The claim "tests pass" without fresh command output is not accepted.
+The report follows a strict form: done; files; what was reused; check results, each as the verdict the command printed and, for a long output, the path of its log, never the last lines; open questions; which business rules changed their behavior; when needed, the section "MCP not used" with the reason why the reference was not used; lessons. The claim "tests pass" without fresh command output is not accepted. The worker hands the report over with one last call; the exit control runs on that call, and the delivered report is saved to a file that a later fresh worker can read.
 
-> **In code.** the report form in section 8 of the protocol: `## Done`, `## Files`, `## Reused`, `## Checks`, `## Open questions`, `## MCP not used`, `## For LESSONS`.
+> **In code.** the report form in section 8 of the protocol: `## Done`, `## Files`, `## Reused`, `## Checks` (command → verdict, log path), `## Open questions`, `## Rules touched`, `## MCP not used`, `## For LESSONS`; handed over with the `SubagentHandback` tool and kept by the PostToolUse hook as `.pipeline/logs/report-<agent-type>-<agent-id>.md`.
 
 #### What happens when a worker runs out of turns
 
-A worker has a turn limit, that is the number of actions after which it must stop. It writes its document to disk as it works, and when the limit is exhausted it stops and names the last completed item. The lead agent continues the same worker from the same place instead of starting a new one.
+A worker has a turn limit, that is the number of actions after which it must stop. It writes its document to disk as it works, and when the limit is exhausted it stops and names the last completed item. Usually the lead agent then starts a fresh worker of the same type, which picks up from the file on disk. Only when the stopped worker has done more than its file shows yet does the lead agent continue that same worker; this is allowed because the worker has not handed over a report.
 
-> **In code.** `maxTurns` in the role frontmatter: 30 for `ux-designer` and `upstream-watcher`, 50 for `reviewer`, 60 for `architect`, the developers and `test-backend`, 80 for `test-ui`, `ui-verifier` and `docs-keeper`; continuation via `SendMessage` with the text "continue from …".
+> **In code.** `maxTurns` in the role frontmatter: 30 for `ux-designer` and `upstream-watcher`, 50 for `reviewer`, 60 for `architect`, the developers and `test-backend`, 80 for `test-ui`, `ui-verifier` and `docs-keeper`; continuation via `SendMessage` with the text "continue from …", which `resume-gate.mjs` lets through only when the worker's transcript holds no delivered `SubagentHandback` report.
 
 #### What a worker never does on its own
 
-A worker does not choose between two ways. If the catalog of ways is silent, it stops and asks a question. After the handover the worker's memory disappears. Only the files it wrote and its report remain.
+A worker does not choose between two ways. If the catalog of ways is silent, it stops and asks a question. After the handover the worker is never woken up again. Only the files it wrote and its saved report remain.
 
 ### Documentation files
 
@@ -488,10 +509,11 @@ The model has no memory between sessions and between agents. Everything that mus
 | `docs/registry/` | What already exists in the code: entities, services, handlers, screens, reusable functions. Generator `scripts/gen-registry.mjs`, freshness `scripts/check-docs-fresh.mjs`, staleness marker `.stale`. | Generated by a command, never edited by hand. | All workers before a new function; the reviewer looks for duplicates. |
 | `docs/decisions/` | Why it was decided this way: architecture decision records with context, alternatives and consequences. | The architect; the human accepts. | By link from the catalog of ways. |
 | GitHub Issues, label `feature` | What is planned and in which order: the request in the human's words, priority `prio:P1..P3`, "Blocked by" dependencies, labels `spec-ready` and `in-progress`. Not in the repository (ADR-0019). | The human through `/backlog` or the issue form; the lead agent sets labels and closes. | Session start prints the queue; `/spec #N` and `/feature #N` take the issue by number. |
-| `docs/features/<name>/` | Working documents of one feature while it is in progress: the context `CONTEXT.md`, the plan `PLAN.md`, the screens file `SCREENS.md`, research `research/*.md`, the verification report `VERIFICATION.md`, the review report `REVIEW.md`, the summary `SUMMARY.md`, the folder `screenshots/`. After completion only `SUMMARY.md` remains, with a link to the full record in the git history. | The architect, the screen designer, the browser verifier, the reviewer, the documentation keeper. | The workers of this feature. |
+| `docs/features/<name>/` | Working documents of one feature while it is in progress: the context `CONTEXT.md`, the plan `PLAN.md`, the screens file `SCREENS.md`, research `research/*.md`, the verification report `VERIFICATION.md`, the review report `REVIEW.md`, the summary `SUMMARY.md`, the folder `screenshots/`. The plan and the context carry marks by phase and by reader, from which the briefs are cut. After completion only `SUMMARY.md` remains, with a link to the full record in the git history. | The architect, the screen designer, the browser verifier, the reviewer, the documentation keeper. | The workers of this feature. |
 | `templates/` | Reference templates of files of each type. | The human. | The worker when creating a new file. |
-| `.pipeline/` | The pipeline service logs: `mcp-audit-<session>.jsonl` (who edited what and which reference was queried), `sessions.log` (compactions), `issues.json` (a cache of the backlog queue for sessions without network). Never enter the repository, cleaned after 14 days. | Hooks. | Worker exit control; the retrospective `/retro`. |
+| `.pipeline/` | The pipeline service files: `mcp-audit-<session>.jsonl` (who edited what and which reference was queried), `metrics-<session>.jsonl` (events for the cost and context figures, including every refusal of a gate), `read-ledger-<session>.jsonl` (which agent read which file whole), `brief/` (the briefs handed to the workers), `logs/` (the full output of long checks and the delivered worker reports), `sessions.log` (compactions), `issues.json` (a cache of the backlog queue for sessions without network). Never enter the repository; cleaned after 14 days, the metrics log after 30. | Hooks. | Worker exit control and the read gate; workers read their brief and, for a rework, the previous report; the retrospective `/retro` and the metrics. |
 | `test/prompt-budget.json` | The size of each prompt, rule and script file as a ceiling; growth fails the test `test/prompt-budget.test.js`. | `node scripts/prompt-budget.mjs --record` at the retrospective. | The test on every `npm test`. |
+| `test/context-budget.json` | The size ceiling of the largest brief per role group (backend, UI, browser verifier, documentation) and the allowed number of resumes after a report, zero. A larger brief fails the document shape check; a resume after a report makes the cost record refuse the feature. | `node scripts/feature-brief.mjs <name> --record` at the retrospective; it raises a ceiling, never lowers it. | `check-feature-docs.mjs` at the plan checkpoint; `metrics.mjs record` at the end of a feature. |
 | `docs/upstream/UPDATES.md` | What is new in SAP CAP, UI5 and the tools. | The upstream watcher. | Session start prints a pointer line to the latest digest; the watcher and `/upstream-check` read it. |
 
 #### Layers of instructions
@@ -500,7 +522,7 @@ The instructions lie in layers, from the general to the specific. The constituti
 
 #### Feature documents
 
-Feature documents are the working documents of one task. They live in the feature folder: the context, the plan, the verification report, the review report, the summary and screenshots. The architect, the screen designer, the browser verifier, the reviewer and the documentation keeper write them, and the workers of this feature read them, each its own part by the reading list from the `/feature` script: the backend roles the context and the plan, the UI roles also the screens file, the reviewer everything. The folder lives while the feature is in progress: after completion the lead agent prunes it to `SUMMARY.md`, and the full record stays in the git history by a link from that file.
+Feature documents are the working documents of one task. They live in the feature folder: the context, the plan, the verification report, the review report, the summary and screenshots. The architect, the screen designer, the browser verifier, the reviewer and the documentation keeper write them, and the workers of this feature read them, each its own part through its brief: the backend roles their steps, criteria and the backend sections of the context, the UI roles the UI sections and the parts of the screens file they need, while the architect, the screen designer and the reviewer read everything. The folder lives while the feature is in progress: after completion the lead agent prunes it to `SUMMARY.md`, and the full record stays in the git history by a link from that file.
 
 #### What is generated automatically
 
@@ -523,13 +545,15 @@ CLAUDE.md                          constitution: invariants, documentation map, 
 .github/ISSUE_TEMPLATE/feature.yml issue form for a planned feature: the same structure /backlog creates
 .mcp.json                          4 MCP servers: cds-mcp, fiori-mcp, ui5-mcp-server, chrome-devtools
 scripts/
-  hooks/*.mjs                      8 hook scripts: session-start, protect-files, protect-files-bash, post-edit, mcp-audit, subagent-stop, stop-gate, pre-compact
-  lib/*.mjs                        shared libraries: hook-utils, protected-paths, file-checks, mcp-audit (MCP_RULES), doc-shapes, registry-sources, backlog (queue, recommendation, briefing)
+  hooks/*.mjs                      13 hook scripts: session-start, user-prompt, subagent-start, protect-files, protect-files-bash, read-gate, resume-gate, handback-gate, post-edit, mcp-audit, subagent-stop, stop-gate, pre-compact
+  lib/*.mjs                        shared libraries: hook-utils (relay), protected-paths, file-checks, mcp-audit (MCP_RULES), doc-shapes, registry-sources, backlog (queue, recommendation, briefing), feature-brief (briefs), read-ledger (read gate), handover-checks (exit control)
   backlog.mjs                      backlog CLI: list, briefing, create, prio, blocked-by, status, close, setup-labels
+  feature-brief.mjs                briefs by hand: one brief, --all, --record raises the ceilings in test/context-budget.json
+  metrics.mjs                      cost and context cards: session, feature, context, record
   prune-feature.mjs                prunes a finished feature to SUMMARY.md with a permalink to the full record
   i18n/pipeline*.properties        briefing and queue texts per language (en base, ru)
   gen-registry.mjs                 docs/registry generator (npm run docs:registry)
-  check-docs-fresh.mjs             registry freshness; check-feature-docs.mjs: shape of PLAN and CONTEXT; prompt-budget.mjs: ceiling on prompt sizes
+  check-docs-fresh.mjs             registry freshness; check-feature-docs.mjs: shape and marks of PLAN and CONTEXT, brief ceilings; prompt-budget.mjs: ceiling on prompt sizes
   watch-releases.mjs               release collection for upstream-watcher
 docs/
   STATE.md, CHANGELOG.md, LESSONS.md
@@ -539,8 +563,15 @@ docs/
   features/<name>/                 only features in progress: CONTEXT, PLAN, SCREENS, research/, VERIFICATION, REVIEW, SUMMARY, screenshots/; finished ones keep SUMMARY.md
   upstream/                        UPDATES.md (digest), versions.json
 templates/                         reference templates: STATE.md, feature/*, adr.md, entity.cds, service.cds, handler.js, tests
-test/*.test.js                     Vitest: service, $metadata contract, hooks, document shapes, prompt budget
-.pipeline/                         service logs (not in git): mcp-audit-<session>.jsonl, sessions.log, issues.json
+test/*.test.js                     Vitest: service, $metadata contract, hooks, document shapes, briefs, prompt budget
+test/context-budget.json           brief ceilings per role group; resumes after a report pinned at 0
+.pipeline/                         service files (not in git)
+  mcp-audit-<session>.jsonl        who edited what and which reference was queried
+  metrics-<session>.jsonl          events for the cost and context cards, gate refusals
+  read-ledger-<session>.jsonl      whole-file reads per agent, for the read gate
+  brief/<agent-type>-<phase>.md    briefs handed at a worker's start
+  logs/                            full output of long checks; report-<agent-type>-<agent-id>.md, delivered reports
+  sessions.log, issues.json        compaction notes; backlog queue cache
 db/  srv/  app/  _i18n/            the application itself: CAP model, service, Fiori Elements, translations
 ```
 
@@ -633,8 +664,12 @@ The human chooses the language, separately on each machine: the setting `PIPELIN
 - **Registry of existing code.** An automatically assembled list of what already exists in the code; never edited by hand. In code: `docs/registry/*.md`, the generator `scripts/gen-registry.mjs`.
 - **Architecture decision record, ADR.** A document on why it was decided this way: context, alternatives, consequences. In code: `docs/decisions/ADR-NNNN-*.md`, the template `templates/adr.md`.
 - **Catalog of approved ways, PATTERNS.** A document where exactly one way to solve each typical task is written down. In code: `docs/architecture/PATTERNS.md`.
-- **Agent context.** Everything the model sees while it works; every file in it costs tokens. In code: what the hooks add through `additionalContext`, plus the files read; the length of the work is limited by `maxTurns`.
+- **Agent context.** Everything the model sees while it works; every file in it costs tokens. In code: what the hooks add through `additionalContext`, plus the files read; the length of the work is limited by `maxTurns`; measured by `node scripts/metrics.mjs context`.
+- **Brief, role brief.** The part of the feature plan and context that one worker needs for its role and phase, handed automatically at its start, with a list of what was left out; not to be confused with the briefing at session start. In code: `.pipeline/brief/<agent-type>-<phase>.md`, built by `scripts/lib/feature-brief.mjs`, handed by `subagent-start.mjs`.
+- **Read gate.** A soft check that refuses once a repeated whole read of an unchanged file, or a whole read of the plan or the context by a worker that has a brief; the second attempt passes. In code: `read-gate.mjs` on PreToolUse `Read`.
+- **Hand-over gate, exit control.** The checks that run when a worker hands over its report: linter errors, files written around the checks, protected files, a missing reference query. It refuses the report until the worker fixes them, at most three times. In code: `handback-gate.mjs` on PreToolUse `SubagentHandback`, `scripts/lib/handover-checks.mjs`.
+- **Resume gate.** A check that stops the lead agent from waking up a worker that has already handed over its report; the rework goes to a fresh worker of the same type. In code: `resume-gate.mjs` on PreToolUse `SendMessage`.
 - **Feature.** One task that goes through the pipeline from the request to finished code and documentation. In code: a GitHub issue, the branch `feature/<name>`, the folder `docs/features/<name>/` while the feature is in progress.
 - **Backlog.** The list of planned features with priorities and dependencies; lives in GitHub Issues, not in the repository. In code: issues with the label `feature`, `prio:P1..P3`, the "Blocked by" line; `scripts/backlog.mjs`, ADR-0019.
-- **Briefing.** A short summary at the start of a session: what is in progress, the backlog queue, what to do now, how much debt. In code: `renderBriefing` in `scripts/lib/backlog.mjs`, printed by `session-start.mjs`.
+- **Briefing.** A short summary at the start of a session: what is in progress, the backlog queue, what to do now, how much debt; not the same as a worker's brief. In code: `renderBriefing` in `scripts/lib/backlog.mjs`, printed by `session-start.mjs`.
 - **Pipeline language, PIPELINE_LANG.** A personal setting for the language in which the human receives the briefing, the queue and the chat replies. In code: `env.PIPELINE_LANG` in `.claude/settings.local.json`, the texts `scripts/i18n/pipeline*.properties`.

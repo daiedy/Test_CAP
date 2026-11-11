@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { briefFor, allBriefs } from '../scripts/lib/feature-brief.mjs';
+import { briefFor, allBriefs, briefPhase, phaseLabel } from '../scripts/lib/feature-brief.mjs';
 import { planShapeErrors, contextShapeErrors } from '../scripts/lib/doc-shapes.mjs';
 
 const repo = path.resolve(import.meta.dirname, '..');
@@ -495,5 +495,65 @@ describe('role brief (ADR-0031 decision 2)', () => {
     // A second record over the same documents changes no ceiling.
     expect(runCli('feature-brief.mjs', [NAME, '--record'], dir).status).toBe(0);
     expect(JSON.parse(fs.readFileSync(file, 'utf8')).briefs.bytes).toEqual(after.briefs.bytes);
+  });
+
+  it("the brief falls back to the agent's own phase", () => {
+    // test-backend gets a second row in phase 4, as in context-hygiene: own rows on both sides of
+    // phase 3 tell "the last own phase before" from "the highest own phase".
+    const docs = {
+      ...DOCS,
+      plan: PLAN.replace(
+        '| 7 | 5: review |',
+        '| 9 | 4: verification | `test-backend` | `VERIFICATION.md` | | ROW-9 |\n| 7 | 5: review |'
+      ),
+    };
+    expect(docs.plan).toContain('ROW-9');
+    const phaseOf = (type, phase) => briefPhase(docs, type, phase);
+    // The phase itself when the type has a row there.
+    expect(phaseOf('cap-backend-dev', 2)).toBe('2');
+    expect(phaseOf('test-backend', '4')).toBe('4');
+    expect(phaseOf('fiori-app-dev', 3)).toBe('3');
+    // Else the last own phase before it: a review rework gets its implementation rows.
+    expect(phaseOf('cap-backend-dev', 5)).toBe('2');
+    expect(phaseOf('test-backend', 3)).toBe('2');
+    expect(phaseOf('test-backend', 5)).toBe('4');
+    expect(phaseOf('fiori-app-dev', 5)).toBe('3');
+    expect(phaseOf('docs-keeper', 7)).toBe('6');
+    // Else the highest own phase: a launch before the type's first row.
+    expect(phaseOf('docs-keeper', 5)).toBe('6');
+    expect(phaseOf('ui-verifier', 2)).toBe('4');
+    expect(phaseOf('test-ui', 0)).toBe('3');
+    // Own rows in phases 2 and 4: the highest, not the lowest.
+    expect(phaseOf('test-backend', 1)).toBe('4');
+    // Null for a type that reads whole (even with a row in that phase), for a brief role without a
+    // row in any phase, and for a plan without a Steps table.
+    expect(phaseOf('reviewer', 5)).toBeNull();
+    expect(phaseOf('architect', 1)).toBeNull();
+    expect(phaseOf('an-unknown-agent', 2)).toBeNull();
+    expect(phaseOf('ui5-freestyle-dev', 3)).toBeNull();
+    expect(briefPhase({ ...docs, plan: '# Plan\n\n## Steps\n\nnone\n' }, 'test-backend', 2)).toBe(
+      null
+    );
+    expect(briefPhase(null, 'test-backend', 2)).toBeNull();
+
+    // The header names both phases when they differ; the body is the brief of the own phase.
+    const own = briefFor(DOCS, 'cap-backend-dev', 2);
+    const rework = briefFor(DOCS, 'cap-backend-dev', 2, 5);
+    const [head, ...body] = rework.text.split('\n');
+    expect(head).toBe('# Brief: cap-backend-dev, phase 2 (own steps; current phase 5)');
+    expect(own.text.split('\n')[0]).toBe('# Brief: cap-backend-dev, phase 2');
+    expect(briefFor(DOCS, 'cap-backend-dev', 2, 2).text).toBe(own.text);
+    expect(briefFor(DOCS, 'cap-backend-dev', '2', '2').text).toBe(own.text);
+    expect(body).toEqual(own.text.split('\n').slice(1));
+    expect(body[1]).toMatch(/^Feature `fixture-brief`, phase 2, step 2\. /);
+    expect(rework).toMatchObject({ steps: ['2'], group: 'backend', sections: own.sections });
+    expect(rework.bytes).toBe(Buffer.byteLength(rework.text));
+    expect(rework.hash).not.toBe(own.hash);
+    expect(phaseLabel(2, 5)).toBe('phase 2 (own steps; current phase 5)');
+    expect(phaseLabel('4')).toBe('phase 4');
+    // briefFor() stays strict: no row of the type in the phase asked, no brief.
+    expect(briefFor(DOCS, 'cap-backend-dev', 3)).toBeNull();
+    expect(briefFor(DOCS, 'cap-backend-dev', 5)).toBeNull();
+    expect(briefFor(DOCS, 'cap-backend-dev', 3, 5)).toBeNull();
   });
 });

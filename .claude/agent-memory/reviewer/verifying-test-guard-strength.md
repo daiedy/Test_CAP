@@ -45,3 +45,8 @@ run for a framework-rendered control. See [[pipeline-review-conventions]] for wh
    run `npx ui5-test-runner --url http://localhost:<port>/products/webapp/test/testsuite.qunit.html
    --parallel 1 --split-opa --report-dir <scratchpad>` from `app/products` against your own
    `cds serve` on another port, and never stop the :4004 process.
+
+5. **A fallback branch needs a fixture that tells its alternatives apart (2026-11-11, #44 rework).**
+   For a rule like "last X at or before, else the highest", list the fixture rows per key: if every
+   case reaching the `else` has a single candidate, highest == lowest and a `phases[0]` mutation
+   stays green. A reported mutation check of the main branch says nothing about the fallback branch.

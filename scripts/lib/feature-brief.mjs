@@ -3,13 +3,14 @@
  * feature's PLAN.md, CONTEXT.md and SCREENS.md that agent needs, with a `## Not included` list that
  * names every omitted section, so nothing is cut silently (ADR-0018). `briefFor()` is pure;
  * `readFeatureDocs()`, `writeBrief()`, `readBudget()` and `recordCeilings()` do the I/O. Read by the
- * SubagentStart hook, scripts/feature-brief.mjs and scripts/check-feature-docs.mjs. The documents
+ * SubagentStart hook (which picks the phase by `briefPhase()`), scripts/feature-brief.mjs and
+ * scripts/check-feature-docs.mjs. The documents
  * are read through doc-shapes.mjs and the Steps rows through `stepRows()`, the reader of D12.
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import { sections, subsections, lineOf, criteriaPhaseOf, readersOf } from './doc-shapes.mjs';
-import { stepRows } from './pipeline-metrics.mjs';
+import { stepRows, planAssignments } from './pipeline-metrics.mjs';
 import { sha256, BRIEF_DIR } from './hook-utils.mjs';
 
 /** SCREENS.md sections written for the plan gate: in no brief. */
@@ -106,6 +107,33 @@ const block = (sec) => (sec.heading ? [sec.heading, ...sec.lines] : sec.lines);
 /** Path of the brief of an agent type and phase, repo-relative posix. */
 export function briefPath(agentType, phase) {
   return `${BRIEF_DIR}/${agentType}-${phase}.md`;
+}
+
+/**
+ * The phase whose brief an agent type receives at a launch in `phase` (ADR-0031 decision 2): `phase`
+ * itself when the type has a step row there; else the last phase before it with a step row of the
+ * type (a review rework in phase 5 gets the brief of its own implementation phase); else the
+ * highest phase with one. The one place of this choice, read by the SubagentStart hook.
+ * @param {{plan: string}|null} docs the feature documents, as for `briefFor()`
+ * @param {string} agentType the agent type of the launch
+ * @param {string|number} phase the `Phase:` of docs/STATE.md, 0-7
+ * @returns {string|null} the phase of the brief; null for an agent type that reads whole, a plan
+ *   without a Steps table or no step row of the type in any phase
+ */
+export function briefPhase(docs, agentType, phase) {
+  if (!Object.hasOwn(BRIEF_ROLES, agentType)) return null;
+  const own = planAssignments(docs?.plan)?.get(agentType);
+  if (!own) return null;
+  const phases = [...own].map(Number).sort((a, b) => a - b);
+  const p = Number(phase);
+  return String(phases.filter((n) => n <= p).at(-1) ?? phases.at(-1));
+}
+
+/** `phase 2`, or `phase 2 (own steps; current phase 5)` for a brief of another phase. */
+export function phaseLabel(phase, current = phase) {
+  const p = String(phase);
+  const c = String(current);
+  return c === p ? `phase ${p}` : `phase ${p} (own steps; current phase ${c})`;
 }
 
 /** Whether a criteria subsection reaches the role. */
@@ -279,13 +307,15 @@ function notIncludedLine(o) {
  * @param {{name: string, plan: string, context?: string|null, screens?: string|null}} docs the
  *   feature name and the texts of its PLAN.md, CONTEXT.md and SCREENS.md (null or absent: no file)
  * @param {string} agentType the agent type of the launch
- * @param {string|number} phase the `/feature` phase of the launch, 0-7
+ * @param {string|number} phase the phase of the brief's step rows, 0-7
+ * @param {string|number} [current] the `/feature` phase of the launch when it differs from `phase`
+ *   (`briefPhase()`); the header then says `phase 2 (own steps; current phase 5)`
  * @returns {{text: string, bytes: number, chars: number, hash: string, group: string,
  *   steps: string[], sections: number, omitted: {file: string, heading: string, parent?: string,
  *   note?: string, bytes: number}[]}|null} the brief; null for an agent type that reads whole, a
  *   plan without a Steps table, or no step row of the agent type in that phase
  */
-export function briefFor(docs, agentType, phase) {
+export function briefFor(docs, agentType, phase, current = phase) {
   const role = Object.hasOwn(BRIEF_ROLES, agentType) ? BRIEF_ROLES[agentType] : null;
   const table = role && docs?.plan ? stepRows(docs.plan) : null;
   if (!table) return null;
@@ -302,7 +332,7 @@ export function briefFor(docs, agentType, phase) {
   const hash = (k) => (docs[k] ? sha256(docs[k]).slice(0, 12) : 'absent');
   const steps = own.map((r) => r.step);
   const lines = [
-    `# Brief: ${agentType}, phase ${p}`,
+    `# Brief: ${agentType}, ${phaseLabel(p, current)}`,
     '',
     `Feature \`${docs.name}\`, phase ${p}, step${steps.length > 1 ? 's' : ''} ${steps.join(', ')}. Sources: \`${file('plan')}\` ${hash('plan')}, \`${FILES.context}\` ${hash('context')}, \`${FILES.screens}\` ${hash('screens')} (sha256, first 12).`,
     'Your slice of the feature documents (ADR-0031 decision 2, `scripts/lib/feature-brief.mjs`): read a whole file only for a section listed under "Not included".',
@@ -391,14 +421,15 @@ export function readFeatureDocs(root, name) {
  * @param {string} root repo root
  * @param {string} name feature folder under docs/features
  * @param {string} agentType the agent type of the launch
- * @param {string|number} phase the `/feature` phase of the launch
+ * @param {string|number} phase the phase of the brief's step rows
+ * @param {string|number} [current] the `/feature` phase of the launch, as for `briefFor()`
  * @returns {(ReturnType<typeof briefFor> & {path: string})|null} the brief with its repo-relative
  *   path; null when there is no brief (see `briefFor()`) or no PLAN.md
  */
-export function writeBrief(root, name, agentType, phase) {
+export function writeBrief(root, name, agentType, phase, current = phase) {
   if (!/^[0-7]$/.test(String(phase))) return null;
   const docs = readFeatureDocs(root, name);
-  const brief = docs && briefFor(docs, agentType, phase);
+  const brief = docs && briefFor(docs, agentType, phase, current);
   if (!brief) return null;
   const rel = briefPath(agentType, phase);
   fs.mkdirSync(path.join(root, BRIEF_DIR), { recursive: true });

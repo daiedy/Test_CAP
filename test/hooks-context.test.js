@@ -167,7 +167,9 @@ describe('SubagentStart brief (ADR-0031 decision 2)', () => {
       expect(res.stdout, `${agentType} ${agentId}`).toBe('');
     };
     silent('s1', 'reviewer');
-    // A resume with the brief this agent id already received: the launch hands it, the resume not.
+    // A resume: s2 already has an agent-start record in the session, so the hook hands nothing
+    // (F5: no SubagentStart context reaches a resumed agent), whatever the documents hold; the case
+    // "a resume gets no brief" changes them in between.
     expect(json(start(session, 's2', 'cap-backend-dev'))).not.toBeNull();
     silent('s2', 'cap-backend-dev');
     try {
@@ -191,6 +193,120 @@ describe('SubagentStart brief (ADR-0031 decision 2)', () => {
       's4',
     ]);
     expect(records.filter((r) => r.event === 'brief').map((r) => r.agent)).toEqual(['s2']);
+  });
+
+  it("a rework outside its phase gets its own phase's brief", () => {
+    const session = 'ctx-rework';
+    const label = 'phase 2 (own steps; current phase 5)';
+    const briefRecord = (agent, agentType, bytes, mode) => ({
+      event: 'brief',
+      agent,
+      agentType,
+      feature: 'fixture-live',
+      phase: '2',
+      bytes,
+      mode,
+      hash: expect.stringMatching(/^[0-9a-f]{12,64}$/),
+    });
+    try {
+      // Phase 5 has no row of either type in the template plan; both have their rows in phase 2.
+      sb.put({ 'docs/STATE.md': stateDoc({ phase: '5: review' }) });
+      const handed = {};
+      for (const [agent, type] of [
+        ['w1', 'cap-backend-dev'],
+        ['w2', 'test-backend'],
+      ]) {
+        const res = start(session, agent, type);
+        expect(res.status, res.stderr).toBe(0);
+        const file = `.pipeline/brief/${type}-2.md`;
+        const text = fs.readFileSync(path.join(sb.root, file), 'utf8');
+        expect(text.split('\n')[0]).toBe(`# Brief: ${type}, ${label}`);
+        expect(text).toContain(`Feature \`fixture-live\`, phase 2, step`);
+        expect(json(res).hookSpecificOutput.additionalContext).toBe(text);
+        expect(fs.existsSync(path.join(sb.root, `.pipeline/brief/${type}-5.md`))).toBe(false);
+        handed[agent] = briefRecord(agent, type, Buffer.byteLength(text), 'inline');
+      }
+      // A whole reader with a row in phase 5 still gets nothing.
+      expect(start(session, 'w0', 'reviewer').stdout).toBe('');
+
+      // By path: the pointer line carries the label and the phase 2 file.
+      const bulk = Array.from({ length: 200 }, (_, i) => `- backend fact ${i}: ${'x'.repeat(60)}`);
+      sb.put({
+        [`${FEATURE}/CONTEXT.md`]: template('CONTEXT.md').replace(
+          '### UI: <topic>',
+          `### Backend: bulk\n\n${bulk.join('\n')}\n\n### UI: <topic>`
+        ),
+      });
+      const res = start(session, 'w3', 'cap-backend-dev');
+      expect(res.status, res.stderr).toBe(0);
+      const pointer = json(res).hookSpecificOutput.additionalContext;
+      expect(pointer.split('\n')).toHaveLength(1);
+      expect(pointer).toContain(`Your brief of feature fixture-live, ${label}: ${BRIEF} (`);
+      const big = fs.readFileSync(path.join(sb.root, BRIEF));
+      expect(big.toString('utf8').split('\n')[0]).toBe(`# Brief: cap-backend-dev, ${label}`);
+      handed.w3 = briefRecord('w3', 'cap-backend-dev', big.length, 'path');
+
+      expect(metrics(session).filter((r) => r.event === 'brief')).toEqual([
+        handed.w1,
+        handed.w2,
+        handed.w3,
+      ]);
+      // The read gate points the rework to the phase 2 file it was handed.
+      for (const [agent, type] of [
+        ['w1', 'cap-backend-dev'],
+        ['w2', 'test-backend'],
+      ]) {
+        const denied = read(
+          session,
+          `${FEATURE}/PLAN.md`,
+          {},
+          { agent_id: agent, agent_type: type }
+        );
+        expect(decision(denied), agent).toBe('deny');
+        expect(reason(denied)).toContain(`.pipeline/brief/${type}-2.md`);
+        expect(reason(denied)).toContain('phase 2');
+        expect(reason(denied)).not.toContain(`${type}-5.md`);
+      }
+    } finally {
+      sb.resetTree();
+    }
+  });
+
+  it('a resume gets no brief', () => {
+    const session = 'ctx-resume';
+    const first = start(session, 'u1', 'cap-backend-dev');
+    expect(json(first).hookSpecificOutput.additionalContext).toContain('## Your steps');
+    const handed = fs.readFileSync(path.join(sb.root, BRIEF), 'utf8');
+    try {
+      // The documents change between the launch and the resume: the brief would hash differently.
+      sb.put({
+        [`${FEATURE}/CONTEXT.md`]: template('CONTEXT.md').replace(
+          '### UI: <topic>',
+          '### Backend: changed after the launch\n\n- RESUME-FACT a new fact\n\n### UI: <topic>'
+        ),
+      });
+      const res = start(session, 'u1', 'cap-backend-dev');
+      expect(res.status, res.stderr).toBe(0);
+      expect(res.stdout).toBe('');
+      expect(res.stderr).toBe('');
+      // No brief file is written: the file still holds the launch's brief.
+      expect(fs.readFileSync(path.join(sb.root, BRIEF), 'utf8')).toBe(handed);
+      expect(metrics(session).map((r) => `${r.event} ${r.agent}`)).toEqual([
+        'agent-start u1',
+        'brief u1',
+        'agent-start u1',
+      ]);
+      // A new agent id of the same type is a launch and gets the changed brief.
+      const fresh = json(start(session, 'u2', 'cap-backend-dev')).hookSpecificOutput;
+      expect(fresh.additionalContext).toContain('RESUME-FACT');
+      expect(
+        metrics(session)
+          .filter((r) => r.event === 'brief')
+          .map((r) => r.agent)
+      ).toEqual(['u1', 'u2']);
+    } finally {
+      sb.resetTree();
+    }
   });
 });
 

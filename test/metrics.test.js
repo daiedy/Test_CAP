@@ -1559,9 +1559,70 @@ describe('pipeline metrics (ADR-0022)', () => {
         timestamp,
         attachment: { type: 'queued_command', prompt: SENTINEL, commandMode: 'task-notification' },
       },
+      // The SubagentStart brief in an agent's transcript (review Minor "Privacy test gap"): its
+      // `content` is the brief text, of which only the length is kept.
+      {
+        type: 'attachment',
+        uuid: 's-h1',
+        timestamp,
+        attachment: {
+          type: 'hook_additional_context',
+          hookEvent: 'SubagentStart',
+          hookName: 'SubagentStart',
+          content: [SENTINEL, `# Brief ${SENTINEL}`],
+        },
+      },
     ];
     const slimmed = raw.map(slim);
     for (const r of slimmed) expect(JSON.stringify(r), r.uuid).not.toContain(SENTINEL);
+    const hookChars = SENTINEL.length + `# Brief ${SENTINEL}`.length;
+    expect(slimmed[5]).toEqual({
+      type: 'attachment',
+      ts: Date.parse(timestamp),
+      uuid: 's-h1',
+      hookContext: { event: 'SubagentStart', chars: hookChars },
+    });
+
+    // The same records on disk as a session, the attachment in the transcript of the launch that
+    // `toolu_s1` started: the sentinel reaches neither the loaded session nor the card, while the
+    // card counts the brief's characters.
+    const project = fs.mkdtempSync(path.join(home, 'sentinel-'));
+    const agentDir = path.join(project, 's-sentinel', 'subagents');
+    fs.mkdirSync(agentDir, { recursive: true });
+    const jsonl = (rows) => rows.map((r) => JSON.stringify(r)).join('\n') + '\n';
+    fs.writeFileSync(path.join(project, 's-sentinel.jsonl'), jsonl(raw.slice(0, 5)));
+    const agentAssistant = {
+      type: 'assistant',
+      uuid: 's-a2',
+      requestId: 's-r2',
+      timestamp,
+      agentId: 'a7',
+      message: {
+        model: OPUS,
+        usage: { input_tokens: 3, output_tokens: 4 },
+        content: [{ type: 'text', text: SENTINEL }],
+      },
+    };
+    fs.writeFileSync(path.join(agentDir, 'agent-a7.jsonl'), jsonl([raw[5], agentAssistant]));
+    fs.writeFileSync(
+      path.join(agentDir, 'agent-a7.meta.json'),
+      JSON.stringify({ agentType: 'test-backend', toolUseId: 'toolu_s1' })
+    );
+    const session = loadSession(project, 's-sentinel');
+    expect(session.agents.map((a) => a.agentType)).toEqual(['test-backend']);
+    expect(JSON.stringify(session)).not.toContain(SENTINEL);
+    const report = sessionReport(session, { pricing });
+    expect(report.context.launches).toHaveLength(1);
+    expect(report.context.launches[0]).toMatchObject({
+      agentType: 'test-backend',
+      briefChars: hookChars,
+    });
+    expect(JSON.stringify(report)).not.toContain(SENTINEL);
+    const card = renderCard(report, bundle);
+    const contextCard = renderContext(report, bundle);
+    expect(contextCard).toContain('| test-backend |');
+    expect(card).not.toContain(SENTINEL);
+    expect(contextCard).not.toContain(SENTINEL);
     // What stays: names, ids and enums only.
     expect(slimmed[0]).toMatchObject({
       type: 'assistant',

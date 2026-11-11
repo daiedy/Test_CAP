@@ -4,12 +4,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## Now
 
-- Date: 2026-11-11
+- Date: 2026-11-12
 - Branch: feature/context-hygiene
 - Feature: none
-- Phase: none (context-hygiene #44 done and closed 2026-11-11, branch not merged)
-- Last commit: 50c704f docs: pipeline manual in README after context-hygiene, worker lifecycle diagram
-- Next: Russian manual page sync; push `feature/context-hygiene` and open a pull request (user decision); merge after a green CI run; then `/feature #10` with the before/after context card
+- Phase: none (context-hygiene #44 done and closed 2026-11-11, pull request to `main`)
+- Last commit: 932cdd1 docs: STATE after the manual sync
+- Next: merge the `feature/context-hygiene` pull request after a green CI run (user, 2026-11-12); then `/feature #10` with the before/after context card
 
 ## Open debt
 

@@ -12,8 +12,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { runFileChecks, UI5_SCOPE } from '../scripts/lib/file-checks.mjs';
-import { isUnder } from '../scripts/lib/hook-utils.mjs';
-import { createSandbox } from './fixtures/hook-sandbox.mjs';
+import { isUnder, HOOK_OUTPUT_MAX } from '../scripts/lib/hook-utils.mjs';
+import { blockText } from '../scripts/lib/handover-checks.mjs';
+import { createSandbox, SANDBOX_GITIGNORE, handbackInput } from './fixtures/hook-sandbox.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const APP = path.join(root, 'app', 'products');
@@ -44,6 +45,32 @@ const DOCUMENTED = UNDOCUMENTED.replace(
 // The app config keeps `semi` for all of webapp, webapp/test included: linted, this text gives a
 // finding anywhere, so an empty result shows the path is skipped, not that the text is clean.
 const NO_SEMICOLON = UNDOCUMENTED.replace('return value;', 'return value');
+
+// MANY undocumented helpers: one jsdoc/require-jsdoc error each, a lint note and a block text far
+// above HOOK_OUTPUT_MAX (ADR-0031 decision 4).
+const MANY = 300;
+const BULK = [
+  'sap.ui.define([], function () {',
+  '  "use strict";',
+  ...Array.from(
+    { length: MANY },
+    (_, i) => `  function helper${i}(value) {\n    return value;\n  }`
+  ),
+  `  return { ${Array.from({ length: MANY }, (_, i) => `helper${i}: helper${i}`).join(', ')} };`,
+  '});',
+  '',
+].join('\n');
+/** The last line of a relay() summary: the bytes and the repo-relative path of the whole. */
+const WHOLE_LOG =
+  /The whole output \((\d+) bytes\) is in (\.pipeline\/logs\/\S+\.log); read it there\./;
+/** The log a relayed `text` names under `base`, checked to hold the announced bytes. */
+function logOf(base, text) {
+  const m = text.match(WHOLE_LOG);
+  expect(m, text).not.toBeNull();
+  const body = fs.readFileSync(path.join(base, m[2]), 'utf8');
+  expect(Buffer.byteLength(body)).toBe(Number(m[1]));
+  return body;
+}
 
 const STALE_NOTE = /registry is marked stale/;
 /** The notes of the ESLint run: findings, a crash or the timeout. */
@@ -260,5 +287,164 @@ describe('wiki pages in the file checks (ADR-0030 decision 6)', () => {
     } finally {
       sb.remove();
     }
+  });
+});
+
+describe('relays without cuts (ADR-0031 decision 4)', () => {
+  it('a long report is summarised with the path of the whole', () => {
+    // The lint note of an edit: counts per severity and rule, the log holds every finding.
+    const r = 'app/demo/webapp/ext/bulk.js';
+    put(r, BULK);
+    const [note] = eslintNotes(runFileChecks(tmp, r, { markRegistryStale: false }));
+    expect(note).toMatch(
+      new RegExp(`^eslint ${r}: \\d+ findings, counted by severity and rule:\\n`)
+    );
+    expect(note).toMatch(new RegExp(`^ {2}error jsdoc/require-jsdoc: ${MANY}$`, 'm'));
+    expect(note).not.toMatch(/^ {2}error \d+:\d+ /m);
+    expect(note.length).toBeLessThan(HOOK_OUTPUT_MAX);
+    const whole = logOf(tmp, note);
+    expect(whole.match(/^ {2}error \d+:\d+ .*\(jsdoc\/require-jsdoc\)$/gm)).toHaveLength(MANY);
+    // A note that fits stays whole and writes no log.
+    const logs = () => fs.readdirSync(path.join(tmp, '.pipeline', 'logs'));
+    const before = logs();
+    put(r, UNDOCUMENTED);
+    const [short] = eslintNotes(runFileChecks(tmp, r, { markRegistryStale: false }));
+    expect(short).toMatch(/^ {2}error 3:3 .*\(jsdoc\/require-jsdoc\)$/m);
+    expect(short).not.toContain('.pipeline/logs');
+    expect(logs()).toEqual(before);
+
+    // The handback gate's deny reason and the SubagentStop block of the same findings.
+    const files = { '.gitignore': `${SANDBOX_GITIGNORE}node_modules\n` };
+    for (const f of ['ui5.yaml', 'package.json', 'eslint.config.mjs', 'webapp/manifest.json'])
+      files[`app/demo/${f}`] = fs.readFileSync(path.join(APP, f), 'utf8');
+    const box = createSandbox({ prefix: 'relay', session: 'relay', files });
+    const cache = fs.mkdtempSync(path.join(os.tmpdir(), 'relay-npm-'));
+    const env = {
+      npm_config_cache: cache,
+      npm_config_offline: 'true',
+      npm_config_update_notifier: 'false',
+    };
+    try {
+      for (const dir of ['app/demo', '.'])
+        fs.symlinkSync(
+          path.join(APP, 'node_modules'),
+          path.join(box.root, dir, 'node_modules'),
+          'dir'
+        );
+      box.put({ [r]: BULK });
+      const gate = box.hook(
+        'handback-gate.mjs',
+        handbackInput('PreToolUse', { agentId: 'w1' }),
+        env
+      );
+      const stop = box.hook(
+        'subagent-stop.mjs',
+        {
+          hook_event_name: 'SubagentStop',
+          agent_id: 'w2',
+          agent_type: 'cap-backend-dev',
+          stop_hook_active: false,
+          last_assistant_message: '## Done',
+        },
+        env
+      );
+      expect(stop.status, stop.stderr).toBe(2);
+      const denied = JSON.parse(gate.stdout).hookSpecificOutput;
+      expect(denied.permissionDecision).toBe('deny');
+      for (const [text, next] of [
+        [denied.permissionDecisionReason, 'call SubagentHandback again'],
+        [stop.stderr, 'finish again'],
+      ]) {
+        expect(text).toMatch(
+          new RegExp(
+            `^The subagent cannot finish: \\d+ linter errors in changed files\\. Fix them and ${next}\\.\\n`
+          )
+        );
+        expect(text).toMatch(
+          new RegExp(`^Errors per rule:\\n(?: {2}.*\\n)*? {2}jsdoc/require-jsdoc: ${MANY}$`, 'm')
+        );
+        expect(text).toMatch(/^Errors per file:\n {2}app\/demo\/webapp\/ext\/bulk\.js: \d+$/m);
+        expect(text).not.toMatch(/bulk\.js:\d+:\d+ /);
+        expect(text.length).toBeLessThan(HOOK_OUTPUT_MAX);
+        const log = logOf(box.root, text);
+        expect(
+          log.match(/^app\/demo\/webapp\/ext\/bulk\.js:\d+:\d+ .*\(jsdoc\/require-jsdoc\)$/gm)
+        ).toHaveLength(MANY);
+      }
+    } finally {
+      box.remove();
+      fs.rmSync(cache, { recursive: true, force: true });
+    }
+
+    // blockText() of both hooks: whole when it fits; the protected and MCP summaries count paths.
+    const lines = [
+      'app/x/a.js:1:1 Missing semicolon. (semi)',
+      'app/x/b.js:2:1 Missing semicolon. (semi)',
+    ];
+    expect(blockText({ reason: 'lint', lines, root: tmp }, 'finish again')).toBe(
+      `The subagent cannot finish: 2 linter errors in changed files. Fix them and finish again.\n${lines.join('\n')}\n`
+    );
+    for (const [why, label, count] of [
+      ['protected', 'hook script', 'reason'],
+      ['mcp', 'CDS model and services', 'rule'],
+    ]) {
+      const paths = Array.from(
+        { length: 400 },
+        (_, i) => `  scripts/x/file-${i}.mjs (${label}) → a query`
+      );
+      const text = blockText({ reason: why, lines: paths, root: tmp }, 'finish again');
+      expect(text).toContain(`400 paths, counted by ${count}:\n  ${label}: 400\n`);
+      expect(text.length).toBeLessThan(HOOK_OUTPUT_MAX);
+      expect(logOf(tmp, text)).toContain(paths.join('\n'));
+    }
+  }, 60_000);
+
+  it('no relay cuts output by characters or lines', () => {
+    // A cut by characters or lines is a slice with a literal length, a constant length or a
+    // negative start. Allowed, each on purpose (ADR-0031 decision 4, "Unchanged"): hash and date
+    // formatting, a field of a log record, the 80-character quote of an offending line in
+    // doc-shapes.mjs, the D17 top-five list, and CHECK_LIMIT of SubagentStop, which prints what it
+    // skipped. capped() of SessionStart is a visible cap with the path (ADR-0018 principle 3).
+    const SLICES = {
+      'scripts/hooks/post-edit.mjs': ['.slice(0, MARKER_MAX)'], // the phase record's STATE values
+      'scripts/hooks/pre-compact.mjs': ['.slice(0, 16)'], // the minute of a sessions.log stamp
+      'scripts/hooks/read-gate.mjs': ['.slice(0, 12)'], // a sha256 prefix in the deny reason
+      'scripts/hooks/subagent-stop.mjs': ['.slice(0, CHECK_LIMIT)'], // prints what it skipped
+      'scripts/lib/backlog.mjs': ['.slice(0, 10)'], // a date
+      'scripts/lib/doc-shapes.mjs': [...Array(10).fill('.slice(0, 80)'), '.slice(0, 60)'], // quotes
+      'scripts/lib/feature-brief.mjs': ['.slice(0, 10)', '.slice(0, 12)'], // a date, a hash
+      'scripts/lib/handover-checks.mjs': ['.slice(idx, idx + 800)'], // the justification record
+      'scripts/lib/pipeline-metrics.mjs': [
+        '.slice(0, 10)',
+        '.slice(0, 16)',
+        '.slice(0, LARGEST_RESULTS)',
+      ],
+      'scripts/lib/registry-sources.mjs': ['.slice(0, 16)'], // a hash
+    };
+    // truncate() only for a field of a log record: the audit subject, the justification text.
+    const TRUNCATES = {
+      'scripts/hooks/mcp-audit.mjs': ['truncate(String(subject), 120)'],
+      'scripts/lib/handover-checks.mjs': ['truncate(text.slice(idx, idx + 800), 800)'],
+    };
+    const CALL = String.raw`\(([^()]*(?:\([^()]*\)[^()]*)*)\)`;
+    const LENGTH = /(^|[^\w.])(\d{2,}|-[2-9]|-\d{2,})\b|\b[A-Z][A-Z0-9_]{2,}\b/;
+    const slices = {};
+    const truncates = {};
+    for (const dir of ['scripts/hooks', 'scripts/lib'])
+      for (const name of fs.readdirSync(path.join(root, dir)).filter((n) => /\.m?js$/.test(n))) {
+        const file = `${dir}/${name}`;
+        const text = fs.readFileSync(path.join(root, file), 'utf8');
+        expect(text, file).not.toMatch(/\blastLines\b/);
+        for (const m of text.matchAll(
+          new RegExp(String.raw`\.(slice|substring|substr)${CALL}`, 'g')
+        ))
+          if (LENGTH.test(m[2])) (slices[file] ||= []).push(m[0]);
+        for (const m of text.matchAll(new RegExp(String.raw`(?<!function )\btruncate${CALL}`, 'g')))
+          (truncates[file] ||= []).push(m[0]);
+      }
+    const sorted = (map) =>
+      Object.fromEntries(Object.entries(map).map(([k, v]) => [k, [...v].sort()]));
+    expect(sorted(slices)).toEqual(sorted(SLICES));
+    expect(truncates).toEqual(TRUNCATES);
   });
 });

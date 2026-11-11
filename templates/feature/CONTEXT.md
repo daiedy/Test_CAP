@@ -2,7 +2,7 @@
 
 Date: YYYY-MM-DD. Author: `architect`. Branch: `feature/<kebab-name>`.
 
-This file is the brief for the implementers: every agent of the feature reads it whole (protocol step 1), so it holds only the sections below (ADR-0018). Screens go to `SCREENS.md` (`ux-designer`). Experiments, measurements, rejected mechanisms and framework facts go to `research/<topic>.md`, read only by `architect` and `reviewer` unless a plan step names the file.
+This file is the brief for the implementers, so it holds only the sections below (ADR-0018). Each implementer and tester receives its slice of it with PLAN.md from the SubagentStart hook (ADR-0031, `scripts/feature-brief.mjs`); `reviewer` and `architect` read it whole. A section is for every reader, or is split into `### <Readers>: <title>` subsections, Readers a comma list of `All`, `Backend` (`cap-backend-dev`, `test-backend`) and `UI` (`fiori-app-dev`, `ui5-freestyle-dev`, `test-ui`); text before the first subsection is for every reader; `## Open questions` goes to no brief. Screens go to `SCREENS.md` (`ux-designer`). Experiments, measurements, rejected mechanisms and framework facts go to `research/<topic>.md`, read only by `architect` and `reviewer` unless a plan step names the file.
 
 ## Request
 In one paragraph, in the user's words: what is needed and why.
@@ -16,6 +16,12 @@ Result of `mcp__cds-mcp__search_model` and `docs/registry/DOMAIN-MODEL.md`, `SER
 | Object | Exists now | What changes |
 |---|---|---|
 | `CatalogService.Products` | projection, fields ... | add ... |
+
+### Backend: <topic>
+Design that only `cap-backend-dev` and `test-backend` need: rules, message keys, seed data, the contract.
+
+### UI: <topic>
+Design that only `fiori-app-dev`, `ui5-freestyle-dev` and `test-ui` need: controls, annotations, fragments.
 
 ## What already exists and is reused
 From `docs/registry/HANDLERS.md`, `REUSE-CATALOG.md`, `UI-ARTIFACTS.md`. If nothing, state explicitly "nothing suitable exists" and why.

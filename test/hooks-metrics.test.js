@@ -6,9 +6,17 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { metricsFile } from '../scripts/lib/metrics-log.mjs';
+import { metricsFile, appendMetric } from '../scripts/lib/metrics-log.mjs';
+import { appendAudit } from '../scripts/lib/mcp-audit.mjs';
+import { HANDBACK_DENY_MAX } from '../scripts/lib/handover-checks.mjs';
 import { writeFixture, iso } from './fixtures/transcript-fixture.mjs';
-import { createSandbox, stateDoc, PHASE_2 } from './fixtures/hook-sandbox.mjs';
+import {
+  createSandbox,
+  stateDoc,
+  PHASE_2,
+  writeAddressee,
+  handbackInput,
+} from './fixtures/hook-sandbox.mjs';
 
 const SESSION = `test-metrics-${process.pid}`;
 const SENTINEL = 'SENTINEL-7f3a';
@@ -318,7 +326,108 @@ describe('metrics records of the hooks (ADR-0022)', () => {
     } finally {
       resetTree();
     }
-  });
+
+    // ADR-0031: the read gate denies a repeated whole read (`reread`) and a briefed agent's whole
+    // read of the feature plan (`brief`).
+    const read = (file, agent = {}) =>
+      hook('read-gate.mjs', {
+        hook_event_name: 'PreToolUse',
+        tool_name: 'Read',
+        tool_input: { file_path: path.join(sandbox, file) },
+        ...agent,
+      });
+    expect(appended(() => read('docs/CHANGELOG.md')).records).toEqual([]);
+    out = appended(() => read('docs/CHANGELOG.md'));
+    expect(decision(out.res)).toBe('deny');
+    expect(out.records).toEqual([gate('read-gate', 'main', 'main', 'reread')]);
+    try {
+      put({ 'docs/features/fixture-live/PLAN.md': '# Fixture: plan\n' });
+      appendMetric(sandbox, SESSION, {
+        event: 'brief',
+        agent: 'rb',
+        agentType: 'cap-backend-dev',
+        feature: 'fixture-live',
+        phase: '2',
+        bytes: 1,
+        mode: 'path',
+        hash: 'a'.repeat(12),
+      });
+      out = appended(() =>
+        read('docs/features/fixture-live/PLAN.md', {
+          agent_id: 'rb',
+          agent_type: 'cap-backend-dev',
+        })
+      );
+      expect(decision(out.res)).toBe('deny');
+      expect(out.records).toEqual([gate('read-gate', 'rb', 'cap-backend-dev', 'brief')]);
+    } finally {
+      resetTree();
+    }
+
+    // The resume gate denies a resume of an agent that delivered its report (`resume`).
+    const transcripts = fs.mkdtempSync(path.join(os.tmpdir(), 'hooks-metrics-tx-'));
+    try {
+      const main = writeAddressee(transcripts, SESSION, 'rr', { attempts: ['delivered'] });
+      out = appended(() =>
+        hook('resume-gate.mjs', {
+          hook_event_name: 'PreToolUse',
+          tool_name: 'SendMessage',
+          transcript_path: main,
+          tool_input: { to: 'rr', message: 'once more' },
+        })
+      );
+      expect(decision(out.res)).toBe('deny');
+      expect(out.records).toEqual([gate('resume-gate', 'main', 'main', 'resume')]);
+    } finally {
+      fs.rmSync(transcripts, { recursive: true, force: true });
+    }
+
+    // The handback gate: `protected` up to HANDBACK_DENY_MAX, then `handback-limit`; `lint` (a
+    // root ESLint run without a report: offline, nothing installed in the sandbox) and `mcp`.
+    const handback = (agentId, env) =>
+      hook('handback-gate.mjs', handbackInput('PreToolUse', { agentId }), env);
+    const cache = fs.mkdtempSync(path.join(os.tmpdir(), 'hooks-metrics-npm-'));
+    try {
+      put({ '.claude/settings.json': '{}\n' });
+      for (let i = 0; i < HANDBACK_DENY_MAX; i++) {
+        out = appended(() => handback('hp'));
+        expect(decision(out.res)).toBe('deny');
+        expect(out.records).toEqual([gate('handback-gate', 'hp', 'cap-backend-dev', 'protected')]);
+      }
+      out = appended(() => handback('hp'));
+      expect(out.res.stdout).toBe('');
+      expect(out.records).toEqual([
+        gate('handback-gate', 'hp', 'cap-backend-dev', 'handback-limit'),
+      ]);
+      resetTree();
+
+      put({ 'scripts/zz-probe.mjs': 'export const a = 1;\n' });
+      out = appended(() =>
+        handback('hl', {
+          npm_config_cache: cache,
+          npm_config_offline: 'true',
+          ...NO_NPM_NOTIFIER,
+        })
+      );
+      expect(decision(out.res)).toBe('deny');
+      expect(out.records).toEqual([gate('handback-gate', 'hl', 'cap-backend-dev', 'lint')]);
+      resetTree();
+
+      appendAudit(sandbox, SESSION, {
+        event: 'edit',
+        agent: 'hm',
+        agentType: 'cap-backend-dev',
+        tool: 'Edit',
+        file: 'srv/service.cds',
+      });
+      out = appended(() => handback('hm'));
+      expect(decision(out.res)).toBe('deny');
+      expect(out.records).toEqual([gate('handback-gate', 'hm', 'cap-backend-dev', 'mcp')]);
+    } finally {
+      resetTree();
+      fs.rmSync(cache, { recursive: true, force: true });
+    }
+  }, 60_000);
 
   it('writes a compact record with the trigger only', () => {
     for (const [trigger, instructions] of [
@@ -464,12 +573,18 @@ describe('metrics records of the hooks (ADR-0022)', () => {
       hook('subagent-stop.mjs', subagentStop({ last_assistant_message: `## Done ${SENTINEL}` }))
     );
 
-    // No file the hooks wrote holds the sentinel, in any case.
+    // No log the hooks wrote holds the sentinel, in any case: the files directly in .pipeline/.
+    // Its subdirectories hold texts kept on purpose, the saved report under logs/ above all
+    // (ADR-0031 decision 7, test/hooks-context.test.js "keeps the report on disk").
     const logs = path.join(sandbox, '.pipeline');
-    expect(fs.readdirSync(logs)).toEqual(
+    const names = fs
+      .readdirSync(logs, { withFileTypes: true })
+      .filter((d) => d.isFile())
+      .map((d) => d.name);
+    expect(names).toEqual(
       expect.arrayContaining([path.basename(metricsFile(sandbox, SESSION)), 'sessions.log'])
     );
-    for (const name of fs.readdirSync(logs))
+    for (const name of names)
       expect(fs.readFileSync(path.join(logs, name), 'utf8').toLowerCase(), name).not.toContain(
         SENTINEL.toLowerCase()
       );

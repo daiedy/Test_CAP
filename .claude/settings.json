@@ -46,6 +46,36 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PATH=\"/opt/homebrew/opt/node@22/bin:/opt/homebrew/bin:$PATH\" node scripts/hooks/read-gate.mjs",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "SendMessage",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PATH=\"/opt/homebrew/opt/node@22/bin:/opt/homebrew/bin:$PATH\" node scripts/hooks/resume-gate.mjs",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "SubagentHandback",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PATH=\"/opt/homebrew/opt/node@22/bin:/opt/homebrew/bin:$PATH\" node scripts/hooks/handback-gate.mjs",
+            "timeout": 180
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -65,6 +95,16 @@
           {
             "type": "command",
             "command": "PATH=\"/opt/homebrew/opt/node@22/bin:/opt/homebrew/bin:$PATH\" node scripts/hooks/mcp-audit.mjs",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "SubagentHandback",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PATH=\"/opt/homebrew/opt/node@22/bin:/opt/homebrew/bin:$PATH\" node scripts/hooks/handback-gate.mjs",
             "timeout": 10
           }
         ]

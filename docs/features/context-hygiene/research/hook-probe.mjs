@@ -17,7 +17,11 @@
 //                                       mode with allowed tools: no SubagentHandback tool at all),
 //                                       `handback-gate` (auto mode; the first SubagentHandback is
 //                                       denied with a 12,000-char reason, and every SubagentStop
-//                                       after a delivered report exits 2, at most twice per agent)
+//                                       after a delivered report exits 2, at most twice per agent),
+//                                       `handback-limit` (auto mode, F9; every SubagentHandback is
+//                                       denied with a neutral reason, the agent calls it again only
+//                                       when Claude Code tells it the report was not delivered, so
+//                                       the attempts count the platform's retries; no stop blocks)
 //   node hook-probe.mjs run <dir>       run that command (claude -p, cwd = <dir>), save the JSON result
 //   node hook-probe.mjs analyze <dir>   print the evidence: hook input keys, transcript record
 //                                       kinds, keys, sizes and probe tokens (no prompt text)
@@ -119,7 +123,11 @@ function settingsFor(dir) {
   };
 }
 
-const VARIANTS = ['handback', 'plain-first', 'manual', 'handback-gate'];
+const VARIANTS = ['handback', 'plain-first', 'manual', 'handback-gate', 'handback-limit'];
+
+// `handback-limit` (F9): the agent never retries a denied SubagentHandback on its own, so every
+// attempt after the first is one Claude Code asked for.
+const F9_RULE = `If a SubagentHandback call is denied, do not call SubagentHandback again on your own and do not change the message: end your turn with exactly the line "PROBE-F9-WAIT-<n>", where <n> is the number in the denial. Call SubagentHandback again, with the same message, only when a message tells you that your report was not delivered.\n`;
 
 function agentFile(dir, variant) {
   const target = join(dir, 'target.txt');
@@ -127,12 +135,13 @@ function agentFile(dir, variant) {
     variant === 'plain-first'
       ? `Step 0. Your first reply is exactly the line "PROBE-PLAIN-FIRST" and nothing else: call no tool, not even SubagentHandback, and end your turn. Start step 1 only when a message that starts with PROBE-F6 arrives.\n`
       : '';
+  const f9 = variant === 'handback-limit' ? F9_RULE : '';
   return `---
 name: ${AGENT}
 description: Probe agent of the context-hygiene hook probe. Use only when the prompt asks for the hook probe.
 tools: Read
 model: inherit
-maxTurns: 15
+maxTurns: ${variant === 'handback-limit' ? 30 : 15}
 ---
 
 You are a hook probe. Do exactly these steps and nothing else.
@@ -146,7 +155,7 @@ PROBE-F8-REPORT-BEGIN
 <your lines from steps 1-4>
 PROBE-F8-REPORT-END
 If you have no SubagentHandback tool, give the same text as your final reply and say "no SubagentHandback tool" in it.
-
+${f9}
 If a message starts with PROBE-F6, follow its instruction, then finish (deliver again only if the message asks for it).
 If you later receive a message that starts with PROBE-RESUME, list every token starting with PROBE-F1, PROBE-F2 or PROBE-F5 that you can see anywhere in your context, then deliver a new report with SubagentHandback whose message starts with PROBE-F8-RESUME-BEGIN and ends with PROBE-F8-RESUME-END.
 `;
@@ -158,6 +167,12 @@ const MAIN_PROMPT = `This is a hook probe in a throwaway project. Do exactly thi
 3. Wait for its second report, then reply with one line: "DONE" followed by the agent ID.
 If a stop hook gives you an instruction that starts with PROBE-F6, follow it, then continue with the steps above.`;
 
+const MAIN_PROMPT_F9 = `This is a hook probe in a throwaway project. Do exactly this and nothing else:
+1. Launch the subagent "${AGENT}" with the Agent tool in the foreground, description "hook probe", prompt "Run the probe procedure of your instructions."
+2. Do not resume it and do not send it any message. When it has finished, reply with one line: "DONE", the agent ID, then "report" if its result holds a text between PROBE-F8-REPORT-BEGIN and PROBE-F8-REPORT-END, else "no report".`;
+
+const mainPrompt = (variant) => (variant === 'handback-limit' ? MAIN_PROMPT_F9 : MAIN_PROMPT);
+
 function commandFor(dir, cfg) {
   // `manual`: no auto mode, so no SubagentHandback tool; the three tools the probe needs are
   // allowed explicitly and anything else is denied without a prompt.
@@ -168,7 +183,7 @@ function commandFor(dir, cfg) {
   return [
     cfg.claudeBin,
     '-p',
-    MAIN_PROMPT,
+    mainPrompt(cfg.variant),
     '--output-format',
     'json',
     '--model',
@@ -450,10 +465,28 @@ function hook(mode) {
     const msg = input.tool_input?.message;
     // `handback-gate`: deny the agent's first SubagentHandback with a 12,000-char reason, the
     // alternative gate when a SubagentStop block after a handback reaches nobody.
+    // `handback-limit` (F9): deny every attempt with a neutral, numbered reason.
+    const attempt = prior.filter((p) => p.input?.agent_id === input.agent_id).length + 1;
+    const limit = mode === 'pre-handback' && cfg.variant === 'handback-limit';
     const deny =
-      mode === 'pre-handback' &&
-      cfg.variant === 'handback-gate' &&
-      !prior.some((p) => p.input?.agent_id === input.agent_id);
+      limit || (mode === 'pre-handback' && cfg.variant === 'handback-gate' && attempt === 1);
+    if (limit) {
+      logLine(dir, 'derived.jsonl', {
+        ts: now,
+        mode,
+        agent_id: input.agent_id,
+        attempt,
+        messageSha: typeof msg === 'string' ? sha(msg) : null,
+        decision: 'deny',
+      });
+      return out({
+        hookSpecificOutput: {
+          hookEventName: 'PreToolUse',
+          permissionDecision: 'deny',
+          permissionDecisionReason: `PROBE-F9-DENY-${attempt}: the probe denied this report (attempt ${attempt}).`,
+        },
+      });
+    }
     logLine(dir, 'derived.jsonl', {
       ts: now,
       mode,
@@ -512,6 +545,7 @@ function hook(mode) {
     ).length;
     const block =
       input.agent_type === AGENT &&
+      cfg.variant !== 'handback-limit' &&
       (cfg.variant === 'handback-gate' ? afterHandback && blocksSoFar < 2 : firstStop);
     if (block) {
       logLine(dir, 'decisions.jsonl', {
@@ -527,7 +561,7 @@ function hook(mode) {
     return;
   }
   if (mode === 'stop') {
-    if (prior.length === 0) {
+    if (prior.length === 0 && cfg.variant !== 'handback-limit') {
       process.stderr.write(sized('F6-STOP', F6_SIZE, f6Instruction('F6-STOP')));
       process.exit(2);
     }
@@ -578,8 +612,23 @@ function recordKind(rec) {
     attachmentType: rec.attachment?.type,
     hookEvent: rec.attachment?.hookEvent ?? rec.hookEvent,
     origin: rec.origin?.kind ?? (typeof rec.origin === 'string' ? rec.origin : undefined),
+    isMeta: rec.isMeta || undefined,
     blockKinds: blocks.map((b) => (b.type === 'tool_use' ? `tool_use:${b.name}` : b.type)),
   };
+}
+
+/** Characters of a record's message content, text and tool results together. */
+function contentChars(rec) {
+  const c = rec.message?.content;
+  if (typeof c === 'string') return c.length;
+  if (!Array.isArray(c)) return 0;
+  return c.reduce(
+    (n, b) =>
+      n +
+      (typeof b.text === 'string' ? b.text.length : 0) +
+      (typeof b.content === 'string' ? b.content.length : 0),
+    0
+  );
 }
 
 function summarizeTranscript(file) {
@@ -594,13 +643,15 @@ function summarizeTranscript(file) {
     const ps = probeStrings(rec);
     if (
       ps.length ||
-      k.blockKinds.some((b) => /SubagentHandback|SendMessage|Read/.test(b)) ||
+      k.isMeta ||
+      k.blockKinds.some((b) => /SubagentHandback|SendMessage|Read|Agent/.test(b)) ||
       k.subtype === 'compact_boundary'
     ) {
       probes.push({
         line: i,
         ts: rec.timestamp,
         ...k,
+        contentChars: contentChars(rec),
         keys: Object.keys(rec),
         attachmentKeys: rec.attachment ? Object.keys(rec.attachment) : undefined,
         probeStrings: ps,

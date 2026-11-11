@@ -1,0 +1,18 @@
+{
+  "briefs": {
+    "recordedAt": "2026-11-11",
+    "bytes": {
+      "backend": 57639,
+      "ui": 46085,
+      "verifier": 8931,
+      "docs": 17531
+    },
+    "sources": {
+      "backend": "context-hygiene",
+      "ui": "products-validations",
+      "verifier": "products-validations",
+      "docs": "products-validations"
+    }
+  },
+  "resumesAfterReport": 0
+}

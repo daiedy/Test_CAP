@@ -1,13 +1,15 @@
 /**
  * Per-file-type quality checks shared by the PostToolUse hook (Edit/Write) and the
  * git-based gates (SubagentStop, Stop), so a file written through Bash is checked too.
- * ADR-0016. Every check is advisory and returns a string note or null. The scopes, the install
+ * ADR-0016. Every check is advisory and returns a string note or null; a note that relays tool
+ * output goes through relay(): whole up to HOOK_OUTPUT_MAX, else a summary by structure with the
+ * path of the whole under .pipeline/logs/ (ADR-0031 decision 4). The scopes, the install
  * check and the one JSON-report reader of the linters are exported for the blocking lint gate of
  * SubagentStop (ADR-0029 amendment D-F).
  */
 import path from 'node:path';
 import fs from 'node:fs';
-import { isUnder, run, truncate, findUp, exists } from './hook-utils.mjs';
+import { isUnder, run, relay, countLines, findUp, exists } from './hook-utils.mjs';
 import {
   stateShapeErrors,
   statePrintedBytes,
@@ -48,7 +50,13 @@ function markStale(root, r) {
 function checkCds(root, r) {
   const res = run('npx', ['cds', 'compile', r, '--to', 'json'], { cwd: root, timeoutMs: TIMEOUT });
   if (res.timedOut) return `cds compile ${r}: 60 s limit exceeded.`;
-  if (res.code !== 0) return `cds compile ${r} failed:\n${truncate(res.stderr || res.stdout)}`;
+  if (res.code !== 0)
+    return relay(
+      root,
+      'cds-compile',
+      `cds compile ${r} failed:\n${res.stderr || res.stdout}`,
+      () => `cds compile ${r} failed (exit ${res.code}).`
+    );
   return null;
 }
 
@@ -69,7 +77,8 @@ export function notInstalledNote(root, appDir, tool) {
 /**
  * The one reader of a linter's JSON report (ESLint, ui5lint) for the edit notes and the SubagentStop
  * gate. A run is clean only when its stdout parses as a report without messages; a run without a
- * report, an empty stdout included, is a failure with the exit code and the end of stderr.
+ * report, an empty stdout included, is a failure with the exit code and the whole stderr (the
+ * relay of the note or the block text decides the short form, ADR-0031 decision 4).
  * @param {{code: number|null, stdout: string, stderr: string, timedOut: boolean}} res the run
  * @param {string} cwd the directory the run started in; ui5lint paths are relative to it
  * @returns {{messages: object[]} | {failure: string}} findings with an absolute `file`, or the failure
@@ -86,8 +95,7 @@ export function readLintReport(res, cwd) {
   const files = Array.isArray(report) ? report : report?.files;
   if (!Array.isArray(files)) {
     const err = (res.stderr || res.stdout || '').trim() || 'no output';
-    const end = err.length > 1000 ? `...${err.slice(-1000)}` : err;
-    return { failure: `failed (exit ${res.code}) without a JSON report: ${end}` };
+    return { failure: `failed (exit ${res.code}) without a JSON report: ${err}` };
   }
   return {
     messages: files.flatMap((f) =>
@@ -102,9 +110,19 @@ export function runLinter(tool, cwd, targets, timeoutMs = TIMEOUT) {
   return readLintReport(res, cwd);
 }
 
-/** The advisory note of one linted file `r` (repo path); null without findings. */
-function lintNote(tool, r, result) {
-  if (result.failure) return `${tool} ${r}: ${result.failure}`;
+/**
+ * The advisory note of one linted file `r` (repo path); null without findings. Every finding, or
+ * above HOOK_OUTPUT_MAX the counts per severity and rule with the path of the whole (relay()); a
+ * run without a report likewise whole, or its verdict with the path.
+ */
+function lintNote(root, tool, r, result) {
+  if (result.failure)
+    return relay(
+      root,
+      `lint-${tool}`,
+      `${tool} ${r}: ${result.failure}`,
+      () => `${tool} ${r}: ${result.failure.split(':')[0]}.`
+    );
   const msgs = result.messages;
   if (!msgs.length) return null;
   const errors = msgs.filter((m) => m.severity === 2).length;
@@ -112,21 +130,35 @@ function lintNote(tool, r, result) {
     tool === 'ui5lint'
       ? `${errors} errors, ${msgs.length - errors} warnings`
       : `${msgs.length} findings`;
-  const lines = msgs
-    .slice(0, 20)
-    .map(
-      (m) =>
-        `  ${m.severity === 2 ? 'error' : 'warn '} ${m.line ?? '?'}:${m.column ?? '?'} ${m.message} (${m.ruleId || 'parse'})`
-    );
-  return `${tool} ${r}: ${head}\n${lines.join('\n')}`;
+  const severity = (m) => (m.severity === 2 ? 'error' : 'warn ');
+  const lines = msgs.map(
+    (m) =>
+      `  ${severity(m)} ${m.line ?? '?'}:${m.column ?? '?'} ${m.message} (${m.ruleId || 'parse'})`
+  );
+  return relay(
+    root,
+    `lint-${tool}`,
+    `${tool} ${r}: ${head}\n${lines.join('\n')}`,
+    () =>
+      `${tool} ${r}: ${head}, counted by severity and rule:\n` +
+      countLines(msgs.map((m) => `${severity(m).trim()} ${m.ruleId || 'parse'}`))
+  );
 }
 
 function checkJs(root, r) {
   const notes = [];
   const fmt = run('npx', ['prettier', '--write', r], { cwd: root, timeoutMs: TIMEOUT });
-  if (fmt.code !== 0) notes.push(`prettier ${r}: ${truncate(fmt.stderr || fmt.stdout, 600)}`);
+  if (fmt.code !== 0)
+    notes.push(
+      relay(
+        root,
+        'prettier',
+        `prettier ${r}: ${fmt.stderr || fmt.stdout}`,
+        () => `prettier ${r}: failed (exit ${fmt.code}).`
+      )
+    );
   // The root install is the precondition of every hook: no install check here (amendment F).
-  const lint = lintNote('eslint', r, runLinter('eslint', root, [r]));
+  const lint = lintNote(root, 'eslint', r, runLinter('eslint', root, [r]));
   if (lint) notes.push(lint);
   return notes;
 }
@@ -138,7 +170,7 @@ function checkUi5(root, r) {
   const relToApp = path.relative(appDir, abs).split(path.sep).join('/');
   const lint = (tool) =>
     appHasTool(appDir, tool)
-      ? lintNote(tool, r, runLinter(tool, appDir, [relToApp]))
+      ? lintNote(root, tool, r, runLinter(tool, appDir, [relToApp]))
       : notInstalledNote(root, appDir, tool);
   const notes = [lint('ui5lint')];
   if (isUnder(relToApp, APP_ESLINT_SCOPE) && !isUnder(relToApp, APP_ESLINT_EXCLUDE))
@@ -186,8 +218,14 @@ function checkCyrillic(root, r) {
     if (/[\u0400-\u04FF]/.test(l)) hits.push(i + 1);
   });
   if (!hits.length) return null;
-  const shown = hits.slice(0, 10).join(', ');
-  return `Language rule: ${r} contains Cyrillic on line(s) ${shown}${hits.length > 10 ? ` and ${hits.length - 10} more` : ''}. Code, comments and docs must be English (CONVENTIONS, Languages); only i18n bundles, .texts.csv and asserted test values may hold Russian.`;
+  const rule =
+    'Code, comments and docs must be English (CONVENTIONS, Languages); only i18n bundles, .texts.csv and asserted test values may hold Russian.';
+  return relay(
+    root,
+    'cyrillic',
+    `Language rule: ${r} contains Cyrillic on line(s) ${hits.join(', ')}. ${rule}`,
+    () => `Language rule: ${r} contains Cyrillic on ${hits.length} lines. ${rule}`
+  );
 }
 
 // sap-fe-mockserver (@sap-ux/fe-mockserver-core) iterates every mockdata file with forEach, so a

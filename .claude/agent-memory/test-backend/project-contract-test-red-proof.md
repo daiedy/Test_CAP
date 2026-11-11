@@ -96,6 +96,13 @@ merges with the rule's defaults (`require-jsdoc` `require` without `FunctionDecl
 requires it), so mutate to `false`. A test on a committed generated file cannot see a model change by
 itself; that is the sync test's job, so do not expect it red.
 
+Script-test variant (context-hygiene step 9a, 2026-11-11): `scripts/feature-brief.mjs` and
+`scripts/check-feature-docs.mjs` take their root from `process.cwd()`, so a test runs the repo's
+scripts with a temp cwd holding `docs/features/<fixture>/` and `test/context-budget.json`, no copy
+needed. `scripts/metrics.mjs` takes `repoRoot()` from its own location, so a mutation copy needs
+`scripts test templates package.json docs/STATE.md docs/wiki` (fs.cpSync in the runner) plus the
+`node_modules` symlink; one runner, one vitest file per mutation, 33 mutations + 1 equivalent in ~3 min.
+
 **How to apply:** whenever a plan asks for a contract test that "must fail on main", or a new `it`
 could pass vacuously. Count the asserted substring in the pre-feature EDMX; if the count is not 0,
 say so in the report instead of claiming the test proves the change. See

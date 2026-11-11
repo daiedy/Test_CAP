@@ -22,7 +22,11 @@ export const METRICS_PREFIX = 'metrics';
 export const METRICS_RETENTION_DAYS = 30;
 /** The id of the running session, written by SessionStart; a CLI default only. */
 export const CURRENT_SESSION_FILE = path.join(AUDIT_DIR, 'current-session');
-/** `reason` values of a `gate` record. */
+/**
+ * `reason` values of a `gate` record. ADR-0031: `reread` and `brief` (read gate, decision 3),
+ * `resume` (resume gate, decision 7), `handback-limit` (the handback gate's pass after its last
+ * deny, decision 8).
+ */
 export const GATE_REASONS = [
   'lint',
   'mcp',
@@ -33,6 +37,10 @@ export const GATE_REASONS = [
   'tests-timeout',
   'state-shape',
   'state-budget',
+  'reread',
+  'brief',
+  'resume',
+  'handback-limit',
 ];
 
 export function metricsFile(root, sessionId) {

@@ -10,6 +10,23 @@ import crypto from 'node:crypto';
 
 const NODE_BIN_DIRS = ['/opt/homebrew/opt/node@22/bin', '/opt/homebrew/bin'];
 
+/**
+ * The largest hook string Claude Code hands to the model whole, in characters (probe fact F2,
+ * Claude Code 2.1.322): a longer `additionalContext` is saved to a file and shown as a
+ * 2,000-character preview. Per string, not per stdout; stderr and a deny reason are not cut (F6).
+ */
+export const HOOK_OUTPUT_MAX = 10_000;
+
+/** Whole outputs and saved reports the hooks point to by path (ADR-0031), pruned by SessionStart. */
+export const LOGS_DIR = '.pipeline/logs';
+/**
+ * Role briefs, `<agent-type>-<phase>.md` (ADR-0031 decision 2): written by feature-brief.mjs, read
+ * by the agents and counted as brief characters by the context card (D18).
+ */
+export const BRIEF_DIR = '.pipeline/brief';
+/** Age at which SessionStart prunes LOGS_DIR and the briefs, as the MCP audit. */
+export const LOGS_RETENTION_DAYS = 14;
+
 /** Repo root: scripts/lib is two levels below the root. */
 export function repoRoot() {
   return path.resolve(import.meta.dirname, '..', '..');
@@ -165,6 +182,10 @@ export function sha256(text) {
   return crypto.createHash('sha256').update(text).digest('hex');
 }
 
+/**
+ * Cuts a field of a log record (the audit `subject`, a justification text) to `max` characters
+ * with a visible marker. Never for output a hook relays to the model: that goes through relay().
+ */
 export function truncate(text, max = 1500) {
   if (!text) return '';
   return text.length > max
@@ -172,9 +193,72 @@ export function truncate(text, max = 1500) {
     : text;
 }
 
-export function lastLines(text, n) {
-  const lines = (text || '').trimEnd().split('\n');
-  return lines.slice(-n).join('\n');
+/** Writes `text` to a new `LOGS_DIR/<name>-<UTC stamp>.log` under `root`; the absolute path. */
+function writeLog(root, name, text) {
+  const dir = path.join(root, LOGS_DIR);
+  fs.mkdirSync(dir, { recursive: true });
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const base = `${String(name).replace(/[^A-Za-z0-9_.-]/g, '_')}-${stamp}`;
+  for (let i = 1; ; i++) {
+    const file = path.join(dir, `${base}${i > 1 ? `-${i}` : ''}.log`);
+    try {
+      fs.writeFileSync(file, text, { flag: 'wx' });
+      return file;
+    } catch (e) {
+      if (e.code !== 'EEXIST') throw e;
+    }
+  }
+}
+
+/**
+ * Relays tool output into a hook string without a cut (ADR-0031 decision 4): the text whole when it
+ * has at most HOOK_OUTPUT_MAX characters; otherwise the whole goes to a log under LOGS_DIR and the
+ * result is `summarize(text)`, the writer's summary by structure (counts per rule or file, the
+ * failed test names), followed by one line with the log path. No head, no tail, and the summary is
+ * returned whole whatever its length (stderr and a deny reason are not cut by Claude Code, F6).
+ * A log that cannot be written leaves the text whole: longer, but nothing is lost.
+ * With `keep` the log is written for a text that fits as well, and the whole text is followed by
+ * one line with its path (the Stop gate's red `npm test`: the path is always printed).
+ * @param {string} root repo root; the log lands under it
+ * @param {string} name log name prefix; characters outside `[A-Za-z0-9_.-]` become `_`
+ * @param {string} text the whole output
+ * @param {(text: string) => string} summarize the summary by structure of `text`, without the path
+ * @param {{keep?: boolean}} [options] `keep`: write the log whatever the length
+ * @returns {string} the text, or the summary, with the repo-relative log path when one was written
+ */
+export function relay(root, name, text, summarize, { keep = false } = {}) {
+  const whole = String(text ?? '');
+  const fits = whole.length <= HOOK_OUTPUT_MAX;
+  if (fits && !keep) return whole;
+  let file;
+  try {
+    file = writeLog(root, name, whole);
+  } catch {
+    return whole;
+  }
+  const bytes = Buffer.byteLength(whole);
+  const [body, tail] = fits
+    ? [whole, `The whole output (${bytes} bytes) is also saved in ${rel(file, root)}.`]
+    : [
+        summarize(whole),
+        `The whole output (${bytes} bytes) is in ${rel(file, root)}; read it there.`,
+      ];
+  return body.endsWith('\n') ? `${body}${tail}\n` : `${body}\n${tail}`;
+}
+
+/**
+ * The counts of `keys` as lines `  <key>: <n>`, the most frequent first, ties by key: the body of a
+ * relay() summary by structure.
+ * @param {string[]} keys one key per finding (a rule, a file, a reason)
+ * @returns {string} the lines joined with `\n`
+ */
+export function countLines(keys) {
+  const counts = new Map();
+  for (const k of keys) counts.set(k, (counts.get(k) || 0) + 1);
+  return [...counts]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([k, n]) => `  ${k}: ${n}`)
+    .join('\n');
 }
 
 /** Print JSON to stdout for Claude Code to parse. */

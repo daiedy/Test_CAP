@@ -1,6 +1,6 @@
 /**
- * The only reader of Claude Code transcripts (ADR-0022 decision 2; definitions D1, D2, D5 in
- * docs/metrics/definitions.md). The transcript format is internal to
+ * The only reader of Claude Code transcripts (ADR-0022 decision 2; definitions D1, D2, D5, D14-D18
+ * in docs/metrics/definitions.md). The transcript format is internal to
  * Claude Code: every field read here is listed in `slim()`, and nothing else survives the parse of
  * a line, so no text, thinking, prompt or tool output is held in memory or passed on. No pricing,
  * no phases, no writes: aggregation lives in pipeline-metrics.mjs. Node built-ins only.
@@ -18,6 +18,35 @@ export const TOKEN_KINDS = ['input', 'cacheWrite5m', 'cacheWrite1h', 'cacheRead'
 const USAGE_FIELDS = [...TOKEN_KINDS, 'cacheWrite', 'thinking'];
 /** Tool uses whose wait is a turn gap, not a tool gap (D5). */
 export const TURN_GAP_TOOLS = new Set(['AskUserQuestion', 'Agent', 'SendMessage']);
+/**
+ * Record kinds that repeat the content blocks of other records (Claude Code 2.1.322 request
+ * history; context-hygiene hook probe, "Beyond the facts" 3): `slim()` drops them, so a tool use
+ * or a tool result is never counted twice.
+ */
+export const SKIPPED_KINDS = new Set(['api-request', 'api-request-blob', 'api-request-shape']);
+/** The tool through which an auto-mode subagent delivers its report (probe facts F7, F8). */
+export const HANDBACK_TOOL = 'SubagentHandback';
+/** `subtype` of the `system` record that marks a compaction of the thread's context (D18). */
+export const COMPACT_SUBTYPE = 'compact_boundary';
+/** `origin.kind` of the `user` record that delivers a `SendMessage` to a stopped agent (D18). */
+export const RESUME_ORIGIN = 'coordinator';
+/** Tools whose `input.file_path` slim() keeps (D16, D17). */
+export const FILE_TOOLS = new Set(['Read', 'Edit', 'Write']);
+/**
+ * D15: the class of a Bash command's leading program; any other program is `other`. Only the
+ * class is kept, never the command.
+ */
+export const PROGRAM_CLASSES = Object.freeze({
+  print: ['cat', 'sed', 'head', 'tail', 'awk', 'nl'],
+  search: ['grep', 'rg', 'find', 'ls', 'wc'],
+  git: ['git'],
+  check: ['npm', 'npx', 'node'],
+});
+const CLASS_OF = new Map(
+  Object.entries(PROGRAM_CLASSES).flatMap(([c, programs]) => programs.map((p) => [p, c]))
+);
+/** Segments skipped before the leading program: they set up, they deliver nothing. */
+const PRELUDE = new Set(['cd', 'export', 'mkdir', 'echo', 'printf']);
 
 // ---------- files ----------
 
@@ -101,14 +130,63 @@ function usageOf(u) {
   };
 }
 
+/**
+ * D15: the class of the leading program of a Bash command (PROGRAM_CLASSES), `other` for any other
+ * program. The leading program is the first word of the first `&&`, `||`, `;` or line segment that
+ * is not a PRELUDE command, after leading `VAR=value` assignments and an opening parenthesis or
+ * brace; a path such as `/usr/bin/git` counts by its base name. A pipe does not start a segment:
+ * `cat x | head` is `print`.
+ * @param {unknown} command the `input.command` of a Bash tool use
+ * @returns {'print'|'search'|'git'|'check'|'other'}
+ */
+export function programClass(command) {
+  const segments = String(command ?? '')
+    .split(/&&|\|\||;|\n/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  for (const segment of segments) {
+    const words = segment.replace(/^[({\s]+/, '').split(/\s+/);
+    while (words.length && /^[A-Za-z_][A-Za-z0-9_]*=/.test(words[0])) words.shift();
+    const program = path.posix.basename(words[0] || '');
+    if (!program || PRELUDE.has(program)) continue;
+    return CLASS_OF.get(program) || 'other';
+  }
+  return 'other';
+}
+
+/** Characters of the text of a tool result or a hook string: a string, or its text blocks. */
+function textChars(content) {
+  if (typeof content === 'string') return content.length;
+  if (!Array.isArray(content)) return 0;
+  return content.reduce(
+    (n, b) =>
+      n + (typeof b === 'string' ? b.length : b?.type === 'text' ? String(b.text ?? '').length : 0),
+    0
+  );
+}
+
 function toolOf(c) {
   const t = { name: c.name };
-  if (c.name === 'Agent') {
-    t.id = c.id;
-    t.subagentType = c.input?.subagent_type;
+  if (typeof c.id === 'string') t.id = c.id;
+  const input = c.input || {};
+  if (c.name === 'Agent') t.subagentType = input.subagent_type;
+  if (c.name === 'SendMessage' && typeof input.to === 'string') t.to = input.to;
+  if (FILE_TOOLS.has(c.name) && typeof input.file_path === 'string') {
+    t.file = input.file_path;
+    // D16: a range (`offset`, `limit`) or a page selection (`pages`) is not a whole-file read,
+    // the same keys the read gate tests (probe fact F3: absent on a whole read).
+    if (c.name === 'Read') t.partial = ['offset', 'limit', 'pages'].some((k) => input[k] != null);
   }
-  if (c.name === 'SendMessage' && typeof c.input?.to === 'string') t.to = c.input.to;
+  if (c.name === 'Bash') t.program = programClass(input.command);
   return t;
+}
+
+/** A `tool_result` block reduced to its tool-use id, its text length and an error flag (D15). */
+function resultOf(b) {
+  const out = { id: typeof b.tool_use_id === 'string' ? b.tool_use_id : null };
+  out.chars = textChars(b.content);
+  if (b.is_error === true) out.error = true;
+  return out;
 }
 
 const COST_STATE_FIELDS = [
@@ -159,11 +237,17 @@ function turnInputOf(r, content) {
 }
 
 /**
- * One raw transcript record reduced to the fields the metrics use (definitions section 1).
- * `lastTool` is the name of the last content block when that block is a `tool_use`; `input` is
- * the D13 kind of a turn input (`human`, `peer`, `task-notification`), set only when there is one.
+ * One raw transcript record reduced to the fields the metrics use (definitions section 1), or null
+ * for a record of SKIPPED_KINDS. `lastTool` is the name of the last content block when that block
+ * is a `tool_use`; `tools` the tool uses with their `id`, for Read, Edit, Write the `file` and for
+ * Read whether it was `partial`, for Bash the `program` class (D15-D17); `results` per `tool_result`
+ * block its tool-use `id`, its text `chars` and `error: true` for an error result (a hook deny);
+ * `resume` marks the `coordinator` delivery of a `SendMessage` (D18); `hookContext` the hook event
+ * and characters of a `hook_additional_context` attachment; `input` is the D13 kind of a turn input
+ * (`human`, `peer`, `task-notification`), set only when there is one.
  */
 export function slim(r) {
+  if (SKIPPED_KINDS.has(r.type)) return null;
   const out = { type: r.type, ts: r.timestamp ? Date.parse(r.timestamp) : null };
   if (r.uuid) out.uuid = r.uuid;
   if (r.requestId) out.requestId = r.requestId;
@@ -180,6 +264,15 @@ export function slim(r) {
     out.lastTool = last?.type === 'tool_use' ? last.name : null;
   } else if (r.type === 'user') {
     out.toolResult = r.toolUseResult !== undefined;
+    const results = blocks.filter((c) => c?.type === 'tool_result').map(resultOf);
+    if (results.length) out.results = results;
+    if (r.origin?.kind === RESUME_ORIGIN) out.resume = true;
+  } else if (r.type === 'attachment' && r.attachment?.type === 'hook_additional_context') {
+    // D18 brief characters: the hook event and the length of its strings, never the text.
+    out.hookContext = {
+      event: typeof r.attachment.hookEvent === 'string' ? r.attachment.hookEvent : null,
+      chars: textChars(r.attachment.content),
+    };
   } else if (r.type === 'system') {
     out.subtype = r.subtype || null;
     // History fallback of the gate metric: a Stop hook that blocked (count only, errors unread).
@@ -196,9 +289,9 @@ export function slim(r) {
   return out;
 }
 
-/** A transcript file as slim records; [] when the file is missing. */
+/** A transcript file as slim records, SKIPPED_KINDS dropped; [] when the file is missing. */
 export function readTranscript(file) {
-  return file ? readJsonl(file, slim) : [];
+  return file ? readJsonl(file, slim).filter(Boolean) : [];
 }
 
 /**
@@ -387,9 +480,27 @@ export function timelinePoints(records) {
     .sort((a, b) => a.t - b.t);
 }
 
-/** Every tool use with its timestamp: `{ ts, name, id?, subagentType?, to? }`. */
+/**
+ * Every tool use with its timestamp: `{ ts, name, id?, subagentType?, to?, file?, partial?,
+ * program? }`.
+ */
 export function toolUses(records) {
   return records.flatMap((r) => (r.tools || []).map((t) => ({ ts: r.ts, ...t })));
+}
+
+/**
+ * The delivered reports of a thread (ADR-0031 decision 7; definitions D18): every `SubagentHandback`
+ * tool use of an `assistant` record whose `tool_result`, matched by tool-use id, exists and is not
+ * an error. A denied attempt (a PreToolUse deny, probe fact F9) leaves the tool use with an error
+ * result, and a tool use without a result yet delivered nothing; neither counts. One reading for the
+ * resume gate and the card's resumes after a report.
+ * @param {object[]} records slim records of one thread, in file order
+ * @returns {{ts: number|null, name: string, id: string}[]} in record order
+ */
+export function deliveredReports(records) {
+  const failed = new Map();
+  for (const r of records) for (const x of r.results || []) if (x.id) failed.set(x.id, !!x.error);
+  return toolUses(records).filter((u) => u.name === HANDBACK_TOOL && failed.get(u.id) === false);
 }
 
 /**

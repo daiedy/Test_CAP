@@ -19,8 +19,11 @@ import {
   exists,
   emitJson,
   currentBranch,
+  LOGS_DIR,
+  LOGS_RETENTION_DAYS,
 } from '../lib/hook-utils.mjs';
-import { pruneAudit } from '../lib/mcp-audit.mjs';
+import { pruneAudit, pruneByName } from '../lib/mcp-audit.mjs';
+import { pruneLedger } from '../lib/read-ledger.mjs';
 import {
   appendMetric,
   pruneMetrics,
@@ -59,6 +62,22 @@ function recordSession(root, input) {
   }
 }
 
+/**
+ * ADR-0031: prune the read ledgers (14 days, as the audit), the role briefs and the whole logs
+ * (LOGS_RETENTION_DAYS). Best effort: a failure here never touches the briefing.
+ */
+async function pruneContextFiles(root) {
+  try {
+    pruneLedger(root);
+    pruneByName(path.join(root, LOGS_DIR), /./, LOGS_RETENTION_DAYS);
+    // Loaded lazily: a broken brief builder must not cost the briefing.
+    const { BRIEF_DIR } = await import('../lib/feature-brief.mjs');
+    pruneByName(path.join(root, BRIEF_DIR), /\.md$/, LOGS_RETENTION_DAYS);
+  } catch {
+    // best effort
+  }
+}
+
 /** Emit the hook result: `systemMessage` for the user, `additionalContext` for Claude. */
 function emit(userLines, contextLines) {
   emitJson({
@@ -75,6 +94,7 @@ try {
   const root = repoRoot();
   const out = [];
   pruneAudit(root); // MCP audit files older than 14 days (ADR-0014)
+  await pruneContextFiles(root);
   recordSession(root, input);
 
   out.push(`# Test_CAP project context (SessionStart, source=${input.source || 'unknown'})`);

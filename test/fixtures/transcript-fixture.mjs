@@ -43,6 +43,15 @@ const agentCall = (subagentType, id) => [
 ];
 const ZERO = [0, 0, 0, 0, 0];
 const OUT = (n) => [0, 0, 0, 0, n];
+/** A `tool_use` block with its id and the input keys of definitions section 1 (D14-D18). */
+const use = (name, id, input) => ({ type: 'tool_use', name, id, ...(input ? { input } : {}) });
+/** A `tool_result` block: its text is `chars` times `x`; `error` writes `is_error: true`. */
+const toolResult = (id, chars, error = false) => ({
+  type: 'tool_result',
+  tool_use_id: id,
+  content: 'x'.repeat(chars),
+  ...(error ? { is_error: true } : {}),
+});
 
 /** `[input, cacheWrite5m, cacheWrite1h, cacheRead, output]` as a transcript `message.usage`. */
 function usage([input, write5m, write1h, read, output], thinking) {
@@ -70,12 +79,26 @@ function thread(day, branch, agentId = null) {
     return r;
   };
   return {
-    user: (min, uuid, { result = false, prompt = false, origin, branch: b } = {}) => ({
+    user: (min, uuid, { result = false, prompt = false, origin, branch: b, results } = {}) => ({
       type: 'user',
       ...base(min, uuid, b),
-      ...(result ? { toolUseResult: true } : {}),
+      ...(result || results ? { toolUseResult: true } : {}),
       ...(prompt || origin ? { message: { content: '' } } : {}),
+      // D15: `tool_result` blocks (`toolResult()`), whose text is a run of `x` of a given length.
+      ...(results ? { message: { content: results } } : {}),
       ...(origin ? { origin: { kind: origin } } : {}),
+    }),
+    /** A `hook_additional_context` attachment: the hook event and strings of a given length. */
+    hookContext: (min, uuid, hookEvent, chars) => ({
+      type: 'attachment',
+      ...base(min, uuid),
+      attachment: { type: 'hook_additional_context', hookEvent, content: ['x'.repeat(chars)] },
+    }),
+    /** An `api-request-blob` record repeating content blocks (dropped whole by `slim()`). */
+    blob: (min, uuid, content) => ({
+      type: 'api-request-blob',
+      ...base(min, uuid),
+      message: { content },
     }),
     /**
      * A `queued_command` attachment (a turn input absorbed into a running turn, D13): its kind in
@@ -458,6 +481,246 @@ const kUnpriced = {
   agents: [],
 };
 
+// D14-D18 (context-hygiene step 9, data-flow section 5): the context of a launch. Main `m-context`
+// launches m1 (cap-backend-dev) and m2 (test-backend) and resumes each once with SendMessage. Paths
+// lie under CONTEXT_ROOT, the repo root the pure tests pass. Every request opus; D3 = input +
+// cacheWrite5m + cacheWrite1h + cacheRead, computed in the comments.
+export const CONTEXT_ROOT = '/fx/repo';
+const DOC = `${CONTEXT_ROOT}/docs/a.md`;
+const BRIEF = `${CONTEXT_ROOT}/.pipeline/brief/cap-backend-dev-2.md`;
+const CONTEXT = 'feature/fixture-context';
+const mm = thread(8, CONTEXT);
+const m1 = thread(8, CONTEXT, 'm1');
+const m2 = thread(8, CONTEXT, 'm2');
+const mContext = {
+  id: 'm-context',
+  main: [
+    mm.user(0, 'm-m-u1', { origin: 'human' }),
+    mm.assistant(1, 'm-m-a1', 'r-m-1', [1000, 30000, 0, 0, 500], {
+      content: agentCall('cap-backend-dev', 'tu-m1'),
+    }), // 31,000
+    mm.user(3.1, 'm-m-u2', { result: true }),
+    mm.assistant(3.2, 'm-m-a2', 'r-m-2', [1000, 1000, 0, 30000, 500], {
+      content: agentCall('test-backend', 'tu-m2'),
+    }), // 32,000
+    mm.user(4.6, 'm-m-u3', { result: true }),
+    mm.assistant(4.7, 'm-m-a3', 'r-m-3', [1000, 1000, 0, 32000, 500], {
+      content: [tool('SendMessage', { to: 'm1' })],
+    }), // 34,000
+    mm.user(5.3, 'm-m-u4', { result: true }),
+    mm.assistant(5.4, 'm-m-a4', 'r-m-4', [1000, 1000, 0, 34000, 500], {
+      content: [tool('SendMessage', { to: 'm2' })],
+    }), // 36,000
+    mm.user(5.9, 'm-m-u5', { result: true }),
+    mm.assistant(6, 'm-m-a5', 'r-m-5', [1000, 0, 0, 36000, 200]), // 37,000
+  ],
+  agents: [
+    {
+      // A whole read, a partial read, a whole re-read without an edit (D16 repeat, 40), a Bash
+      // result per class, the SubagentStart brief (60) and a Read of the brief file (70), one
+      // compaction, an Edit before the next whole read (no repeat), a delivered report (a
+      // SubagentHandback whose result is no error) and after it a `coordinator` resume.
+      id: 'm1',
+      agentType: 'cap-backend-dev',
+      toolUseId: 'tu-m1',
+      records: [
+        m1.user(1.2, 'm-1-u1'),
+        m1.hookContext(1.2, 'm-1-h1', 'SubagentStart', 60),
+        m1.assistant(1.3, 'm-1-a1', 'r-m1-1', [500, 20000, 0, 0, 300], {
+          content: [
+            use('Read', 'tu-m1-r1', { file_path: DOC }),
+            use('Bash', 'tu-m1-b1', { command: 'cat x' }),
+          ],
+        }), // 20,500: startup
+        m1.user(1.4, 'm-1-u2', {
+          results: [toolResult('tu-m1-r1', 40), toolResult('tu-m1-b1', 25)],
+        }),
+        m1.assistant(1.5, 'm-1-a2', 'r-m1-2', [500, 2000, 0, 20000, 300], {
+          content: [
+            use('Read', 'tu-m1-r2', { file_path: DOC, offset: 1, limit: 5 }),
+            use('Read', 'tu-m1-r3', { file_path: DOC }),
+            use('Bash', 'tu-m1-b2', { command: 'grep y' }),
+            use('Read', 'tu-m1-r4', { file_path: BRIEF }),
+          ],
+        }), // 22,500: peak
+        m1.user(1.6, 'm-1-u3', {
+          results: [
+            toolResult('tu-m1-r2', 10),
+            toolResult('tu-m1-r3', 40),
+            toolResult('tu-m1-b2', 15),
+            toolResult('tu-m1-r4', 70),
+          ],
+        }),
+        m1.system(1.7, 'm-1-s1', 'compact_boundary'),
+        m1.assistant(1.8, 'm-1-a3', 'r-m1-3', [500, 3000, 0, 5000, 300], {
+          content: [
+            use('Edit', 'tu-m1-e1', { file_path: DOC }),
+            use('Read', 'tu-m1-r5', { file_path: DOC }),
+          ],
+        }), // 8,500
+        m1.user(1.9, 'm-1-u4', {
+          results: [toolResult('tu-m1-e1', 5), toolResult('tu-m1-r5', 40)],
+        }),
+        m1.assistant(2, 'm-1-a4', 'r-m1-4', [500, 1000, 0, 8500, 300], {
+          content: [
+            use('Bash', 'tu-m1-b3', { command: 'git status' }),
+            use('Bash', 'tu-m1-b4', { command: 'npx vitest run' }),
+          ],
+        }), // 10,000
+        m1.user(2.1, 'm-1-u5', {
+          results: [toolResult('tu-m1-b3', 8), toolResult('tu-m1-b4', 30)],
+        }),
+        m1.assistant(2.2, 'm-1-a5', 'r-m1-5', [500, 1000, 0, 10000, 300], {
+          content: [use('SubagentHandback', 'tu-m1-h1')],
+        }), // 11,500
+        // Repeats the handback and a Read result: dropped, so nothing counts twice.
+        m1.blob(2.2, 'm-1-x1', [use('SubagentHandback', 'tu-m1-h1'), toolResult('tu-m1-r1', 40)]),
+        m1.user(2.3, 'm-1-u6', { results: [toolResult('tu-m1-h1', 12)] }),
+        m1.user(4.8, 'm-1-u7', { origin: 'coordinator' }),
+        m1.assistant(4.9, 'm-1-a6', 'r-m1-6', [500, 1500, 0, 11500, 300], {
+          content: [use('Bash', 'tu-m1-b5', { command: 'ls' })],
+        }), // 13,500: the context of the resume after the report
+        m1.user(5, 'm-1-u8', { results: [toolResult('tu-m1-b5', 20)] }),
+        m1.assistant(5.1, 'm-1-a7', 'r-m1-7', [500, 500, 0, 13500, 200]), // 14,500
+      ],
+    },
+    {
+      // A whole read, a denied whole re-read (an error result reads nothing: no repeat), a partial
+      // `pages` read, a denied SubagentHandback (no report) and after it a `coordinator` resume.
+      id: 'm2',
+      agentType: 'test-backend',
+      toolUseId: 'tu-m2',
+      records: [
+        m2.user(3.3, 'm-2-u1'),
+        m2.assistant(3.4, 'm-2-a1', 'r-m2-1', [400, 15000, 0, 0, 200], {
+          content: [use('Read', 'tu-m2-r1', { file_path: DOC })],
+        }), // 15,400: startup
+        m2.user(3.45, 'm-2-u2', { results: [toolResult('tu-m2-r1', 40)] }),
+        m2.assistant(3.5, 'm-2-a2', 'r-m2-2', [400, 500, 0, 15000, 200], {
+          content: [
+            use('Read', 'tu-m2-r2', { file_path: DOC }),
+            use('Read', 'tu-m2-r3', { file_path: DOC, pages: '1' }),
+          ],
+        }), // 15,900
+        m2.user(3.55, 'm-2-u3', {
+          results: [toolResult('tu-m2-r2', 30, true), toolResult('tu-m2-r3', 10)],
+        }),
+        m2.assistant(3.6, 'm-2-a3', 'r-m2-3', [400, 500, 0, 15500, 200], {
+          content: [use('SubagentHandback', 'tu-m2-h1')],
+        }), // 16,400
+        m2.user(3.7, 'm-2-u4', { results: [toolResult('tu-m2-h1', 50, true)] }),
+        m2.user(5.5, 'm-2-u5', { origin: 'coordinator' }),
+        m2.assistant(5.6, 'm-2-a4', 'r-m2-4', [400, 500, 0, 16000, 200]), // 16,900: peak
+      ],
+    },
+  ],
+};
+
+const READ_DOC = { tool: 'Read', detail: 'docs/a.md' };
+/** D14-D18 of `m-context` by hand (definitions section 6), paths relative to CONTEXT_ROOT. */
+export const CONTEXT_EXPECTED = {
+  m1: {
+    agent: 'm1',
+    agentType: 'cap-backend-dev',
+    startup: 20500,
+    peak: 22500,
+    compactions: 1,
+    resumes: 1,
+    requests: 7,
+    // r1 40, b1 25, r2 10, r3 40, b2 15, r4 70, e1 5, r5 40, b3 8, b4 30, h1 12, b5 20; the blob's
+    // copy of r1 is dropped.
+    toolResults: 12,
+    toolChars: 315,
+    byTool: {
+      Read: { n: 5, chars: 200 },
+      Bash: { n: 5, chars: 98 },
+      Edit: { n: 1, chars: 5 },
+      SubagentHandback: { n: 1, chars: 12 },
+    },
+    bash: {
+      print: { n: 1, chars: 25 },
+      search: { n: 2, chars: 35 },
+      git: { n: 1, chars: 8 },
+      check: { n: 1, chars: 30 },
+    },
+    // r3 repeats r1 (r2 is partial and neither starts nor repeats); r5 follows the Edit.
+    repeatReads: 1,
+    repeatChars: 40,
+    // The SubagentStart string 60 plus the Read of the brief file 70.
+    briefChars: 130,
+    largest: [
+      { tool: 'Read', detail: '.pipeline/brief/cap-backend-dev-2.md', chars: 70 },
+      { ...READ_DOC, chars: 40 },
+      { ...READ_DOC, chars: 40 },
+      { ...READ_DOC, chars: 40 },
+      { tool: 'Bash', detail: 'check', chars: 30 },
+    ],
+    afterReport: [{ agent: 'm1', agentType: 'cap-backend-dev', ts: iso(8, 4.8), context: 13500 }],
+  },
+  m2: {
+    agent: 'm2',
+    agentType: 'test-backend',
+    startup: 15400,
+    peak: 16900,
+    compactions: 0,
+    resumes: 1,
+    requests: 4,
+    // r1 40, r2 30 (denied, counts with its own length), r3 10, h1 50 (denied).
+    toolResults: 4,
+    toolChars: 130,
+    byTool: { Read: { n: 3, chars: 80 }, SubagentHandback: { n: 1, chars: 50 } },
+    bash: {},
+    // The denied r2 reads nothing, the `pages` read r3 is partial: no repeat.
+    repeatReads: 0,
+    repeatChars: 0,
+    briefChars: 0,
+    largest: [
+      { tool: 'SubagentHandback', detail: null, chars: 50 },
+      { ...READ_DOC, chars: 40 },
+      { ...READ_DOC, chars: 30 },
+      { ...READ_DOC, chars: 10 },
+    ],
+    // A denied handback is no report, so its resume is not one after a report.
+    afterReport: [],
+  },
+  main: { agent: 'main', startup: 31000, peak: 37000, compactions: 0, resumes: 0, requests: 5 },
+  byType: {
+    'cap-backend-dev': {
+      launches: 1,
+      resumes: 1,
+      compactions: 1,
+      startupMax: 20500,
+      peakMax: 22500,
+      toolChars: 315,
+      briefChars: 130,
+      repeatChars: 40,
+    },
+    'test-backend': {
+      launches: 1,
+      resumes: 1,
+      compactions: 0,
+      startupMax: 15400,
+      peakMax: 16900,
+      toolChars: 130,
+      briefChars: 0,
+      repeatChars: 0,
+    },
+  },
+  // History `context` (data-flow section 4): totals over the two launches.
+  history: {
+    launches: 2,
+    resumes: 2,
+    compactions: 1,
+    mainCompactions: 0,
+    resumesAfterReport: 1,
+    startupMax: 20500,
+    peakMax: 22500,
+    toolResultChars: 445,
+    briefChars: 130,
+    repeatReadChars: 40,
+  },
+};
+
 export const SESSIONS = [
   aMain,
   bResumed,
@@ -469,6 +732,7 @@ export const SESSIONS = [
   hLive,
   iBranch,
   kUnpriced,
+  mContext,
 ];
 
 // ---------- event logs built in code (records of docs/metrics/data-flow.md section 2) ----------

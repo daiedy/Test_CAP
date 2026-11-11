@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-11-11
 - Branch: feature/context-hygiene
 - Feature: context-hygiene (#44)
-- Phase: 2: probe (plan approved 2026-11-10, gate mode autonomous)
-- Last commit: 4a16c70 docs(spec): context-hygiene hook probe F1-F8 on Claude Code 2.1.322
-- Next: `architect` amends PLAN, CONTEXT and ADR-0031 for the probe decisions Q8 and Q9, then steps 3-9 one agent at a time
+- Phase: 2: tests (steps 3-8 done, uncommitted until the phase 2 gate; F9 measured, `HANDBACK_DENY_MAX` = 3; ceiling = per-group maximum over the migrated folders, Q10 2026-11-11; plan approved 2026-11-10, amendment Q8 and Q9 approved 2026-11-11, gate mode autonomous)
+- Last commit: fad85e9 docs(spec): context-hygiene step 4 markers and amendment Q10
+- Next: step 7 context card by `cap-backend-dev`, then steps 8-9 one agent at a time (step 9 also fixes `test/hooks-metrics.test.js` "records no prompt text" for the saved report)
 
 ## Open debt
 

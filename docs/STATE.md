@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-11-12
-- Branch: feature/context-hygiene
+- Branch: main
 - Feature: none
-- Phase: none (context-hygiene #44 done and closed 2026-11-11, pull request to `main`)
-- Last commit: 932cdd1 docs: STATE after the manual sync
-- Next: merge the `feature/context-hygiene` pull request after a green CI run (user, 2026-11-12); then `/feature #10` with the before/after context card
+- Phase: none (context-hygiene #44 merged via PR #54, CI green, 2026-11-12)
+- Last commit: e112a7a Merge pull request #54 from daiedy/feature/context-hygiene
+- Next: `/feature #10` with the before/after context card (`node scripts/metrics.mjs context`); Dependabot PR #48 (msal-node major) waits for a human
 
 ## Open debt
 

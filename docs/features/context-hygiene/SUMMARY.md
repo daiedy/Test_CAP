@@ -1,6 +1,6 @@
 # Context hygiene: summary
 
-Completion date: 2026-11-11. Commits: `389c3f8` ... `b78c95e` (spec `389c3f8`, probe `4a16c70`, amendments `37521e3` and `fad85e9`, implementation `9eb5077`, verification `59125a8`, review rework `b78c95e`); the phase 6 documentation commit follows. Issue #44, ADR-0031.
+Completion date: 2026-11-11. Commits: `389c3f8` ... `5ab25a6` (spec `389c3f8`, probe `4a16c70`, amendments `37521e3` and `fad85e9`, implementation `9eb5077`, verification `59125a8`, review rework `b78c95e`, documentation `5ab25a6`). Issue #44, ADR-0031.
 
 ## What was done
 - Markers: `PLAN.md` criteria sit under `### Phase <N>: <label>` or `### Every phase`, `CONTEXT.md` sections are for `All`, `Backend` or `UI`; `planShapeErrors()` and `contextShapeErrors()` check them, the `products-validations` documents are migrated (templates `templates/feature/PLAN.md`, `CONTEXT.md`, `SCREENS.md`).
@@ -72,3 +72,7 @@ Moved to `docs/LESSONS.md` (Pending, with destinations): ceilings sit exactly at
 
 ## Open debt
 STATE rows: the read gate records a read at PreToolUse (a failed whole `Read` counts); one `--force` of `metrics.mjs record` bypasses the duplicate and the ratchet refusals alike; `post-edit.mjs` joins notes that can exceed `HOOK_OUTPUT_MAX`; the `brief` record has no current-phase field; the before/after measurement on `/feature #10` and the Q4 `autoCompactWindow` decision are open (user).
+
+## Full record
+
+Pruned to this file (ADR-0019). CONTEXT.md, PLAN.md, REVIEW.md, VERIFICATION.md, research of this feature stay in git history at https://github.com/daiedy/Test_CAP/tree/5ab25a6bb66a446451861f53f1d30e0c6b6ee081/docs/features/context-hygiene (commit `5ab25a6`).

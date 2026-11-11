@@ -6,10 +6,10 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 - Date: 2026-11-11
 - Branch: feature/context-hygiene
-- Feature: context-hygiene (#44)
-- Phase: 7: completion (documentation done, 281 tests, review 0 blocking)
-- Last commit: b78c95e fix(pipeline): context-hygiene review rework, brief of the own phase, no brief on a resume
-- Next: commit the documentation, close #44, prune the feature folder
+- Feature: none
+- Phase: none (context-hygiene #44 done and closed 2026-11-11, branch not merged)
+- Last commit: 5ab25a6 docs: context-hygiene summary and registry
+- Next: push `feature/context-hygiene` and open a pull request (user decision); merge after a green CI run; then `/feature #10` with the before/after context card
 
 ## Open debt
 

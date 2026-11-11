@@ -8,4 +8,5 @@
 - [Pricing-check diagnosis](project-pricing-check-diagnosis.md) — per-process all-5m/all-1h interval test tells a wrong price from a cache-split artefact; prompt events = D13 sum
 - [Turn budget and write-first](feedback_turn_budget.md) — 60-turn limit; write the test file first, no exploration, minimal hook runs, report added npm test time
 - [Wiki temp projects](project-wiki-temp-projects.md) — check-docs-fresh --fix needs scripts/ + node_modules; export spawns strip GITHUB_*; mutation `from` must not hit a comment
+- [Live hook verification](project-live-hook-verification.md) — own agent id and transcript, brief record 3, read gate deny/pass/ledger, PIPELINE_LANG=en for metrics CLI
 - [Hook test mutation check](hook-test-mutation-check.md) — scratch-root table harness (-t, JSON reporter, control run); mutate an allow-on-error rule to deny; offline npx eslint = cheap lint finding

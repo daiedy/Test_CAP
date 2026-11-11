@@ -1,6 +1,6 @@
 # Context hygiene: context
 
-Date: 2026-11-09, amended 2026-11-10 and 2026-11-11 (probe gate, Q8 and Q9). Author: `architect`. Branch: `feature/context-hygiene`. Issue #44 (P1). Decisions: ADR-0031 and the ADR-0018 amendment, accepted by the user on 2026-11-10; ADR-0031 decision 7 level 2 and decision 8 amended 2026-11-11 with notes on ADR-0014 and ADR-0016; their Status lines read "proposed" until step 12 writes the accepted form.
+Date: 2026-11-09, amended 2026-11-10 and 2026-11-11 (probe gate, Q8 and Q9; brief ceilings after step 4, Q10). Author: `architect`. Branch: `feature/context-hygiene`. Issue #44 (P1). Decisions: ADR-0031 and the ADR-0018 amendment, accepted by the user on 2026-11-10; ADR-0031 decision 7 level 2 and decision 8 amended 2026-11-11 with notes on ADR-0014 and ADR-0016; their Status lines read "proposed" until step 12 writes the accepted form.
 
 This file is the brief for the implementers (ADR-0018). Per-launch tables, the scratch scripts and the rejected mechanisms are in `research/context-measurements.md`, read by `architect` and `reviewer` unless a step names it. The subsections already carry the reader prefix of ADR-0031 decision 1 (`All`, `Backend`); this feature has no UI role.
 
@@ -31,6 +31,9 @@ Probe gate on 2026-11-11 (`research/hook-probe-results.md` "Open questions" 1 an
 - Q8 Report source (F8 failed in auto mode): a PostToolUse hook on `SubagentHandback` writes `tool_input.message` whole to `.pipeline/logs/report-<agent_type>-<agent_id>.md`; SubagentStop keeps writing `last_assistant_message` when its input has that key (a plain-text end, a non-auto session). New matcher in `.claude/settings.json` (protected, allowed in this session).
 - Q9 Blocking checks before the handback (F6 condition): a SubagentStop exit 2 after a `SubagentHandback` reaches nobody, so the blocking checks of `subagent-stop.mjs` move into #44: they run on PreToolUse `SubagentHandback` and deny with the whole reason, a check about the report reads `tool_input.message`, and the attempt after the platform's retry limit passes with a `gate` record. SubagentStop keeps its records and stays the gate for a plain-text end. ADR-0031 decision 8; ADR-0014 and ADR-0016 change in mechanism (the hook event), not in rule.
 
+After step 4 on 2026-11-11:
+- Q10 Brief ceilings: the ceiling of a role group in `test/context-budget.json` is the per-group maximum over the migrated folders `products-validations` and `context-hygiene` (step 4: backend 55,677 bytes from #44 `cap-backend-dev` 2, ui 46,085 from #10 `fiori-app-dev` 3, verifier 8,931 from #10 `ui-verifier` 4, docs 17,531 from #10 `docs-keeper` 6), and `feature-brief.mjs --record` merges by maximum, never lowering a group's ceiling; a lower ceiling is a retro decision with a CHANGELOG line (ADR-0018 principle 4). Reason: #44's own backend brief is above #10's, and a last-writer record would lower the docs ceiling below #10.
+
 ## Affected entities and services
 
 No CDS entity, service, handler or UI artifact changes; `mcp__cds-mcp__search_model` has nothing to answer here. The objects are pipeline files.
@@ -52,7 +55,7 @@ Session `5fcef594` is the `/feature` run of #28 (`business-rules-wiki`): 21 suba
 | Check output today | green `npm test` 739 bytes in 19 lines, 6 of them a repeated Node `ExperimentalWarning` (about 510 bytes); a red run with two failures, one a 20-line drift in an 88K string: 3,254 bytes; `npm run lint` 285, `format:check` 204, `check-docs-fresh` 24, `wiki.mjs audit` 18 bytes | commands run 2026-11-09, temp project for the red run |
 | Size of feature documents | nine features since ADR-0018: PLAN.md 18.6K-41.5K bytes (median 27.4K), CONTEXT.md 8.3K-36.5K (median 14.8K), SCREENS.md 23.2K-92.6K (five features) | git history at each prune commit |
 | #10 documents | PLAN.md 31,623 bytes (criteria 15,099, steps 8,745), CONTEXT.md 36,532 ("Affected" 21,769), SCREENS.md 92,580 | `measure-docs.mjs` |
-| #10 briefs, estimate by rule | `cap-backend-dev` 42.2K, `test-backend` 41.2K, `fiori-app-dev` 37.1K, `test-ui` 36.0K of 68.1K characters whole (53-62%); all above 10,000, so the path is the usual case | `brief-estimate.mjs`; replaced by the measured sizes of step 4 |
+| Briefs, measured at step 4 (2026-11-11, migrated documents before the Q10 amendment) | #10: `cap-backend-dev` 2 47,508; `test-backend` 2 46,514; `fiori-app-dev` 3 46,085; `test-ui` 3 44,922; `ui-verifier` 4 8,931; `docs-keeper` 6 17,531 bytes. #44: `cap-backend-dev` 2 55,677; `test-backend` 2 48,973; `test-backend` 4 39,429; `docs-keeper` 6 14,744 bytes. Every brief above `HOOK_OUTPUT_MAX` (10,000) is handed by path; only the #10 `ui-verifier` brief goes whole | `node scripts/feature-brief.mjs <name> --all` |
 | Phase column | `planAssignments()` returns null for the #10 plan and for `templates/feature/PLAN.md`: a Phase cell without the phase number, so plan-aware rework falls back to the home-phase rule | one-off call of `scripts/lib/pipeline-metrics.mjs` |
 | Hook context in this project's transcripts | `additionalContext` reached subagents from PostToolUse (228 Edit, 45 Write) and PreToolUse Write (2); SessionStart up to 5,353 characters; none from SubagentStart yet; PostToolUse input carries `agent_id` and `agent_type` in a subagent | `probe-hook-context-history.mjs`, `.pipeline/mcp-audit-5fcef594*.jsonl` |
 
@@ -94,7 +97,7 @@ Relied on without a probe: one hook per matcher, so the missing order between pa
 - Layout of `.pipeline/brief/<agent-type>-<phase>.md`: a header (feature, phase, step numbers, the content hashes of the sources), `## Your steps`, `## Acceptance criteria`, the CONTEXT sections in file order, `## Reading list` (SCREENS sections with line ranges; the feature's ADR only for a decision a step row names; `research/` only for a file a step row names), `## Not included` (file, heading and bytes of every omitted section).
 - Feature and phase come from the `Feature` and `Phase` lines of `docs/STATE.md` `## Now` (`featureNameOf`, `phaseOf`). No feature, no `PLAN.md`, no step row for the agent type in that phase: the hook prints nothing.
 - Hand-over: the whole brief as `additionalContext` when it is at most `HOOK_OUTPUT_MAX` characters, otherwise one pointer (path, bytes, section count, "read it whole as protocol step 1"). The hook appends `{ event: 'brief', agent, agentType, feature, phase, bytes, mode, hash }` to the metrics log; on a resume with the same hash it prints nothing, with another hash the path and the changed headings.
-- Ceilings: `test/context-budget.json` holds the measured bytes of the largest brief per role group (`feature-brief.mjs --record` on the migrated #10); `check-feature-docs.mjs` fails above it. Raising a ceiling is a retro decision with a CHANGELOG line, like `test/prompt-budget.json`.
+- Ceilings (Q10): `test/context-budget.json` holds per role group the maximum of the largest briefs of the two migrated folders, `products-validations` and `context-hygiene` (step 4: backend 55,677 bytes from #44 `cap-backend-dev` 2, ui 46,085 from #10 `fiori-app-dev` 3, verifier 8,931 from #10 `ui-verifier` 4, docs 17,531 from #10 `docs-keeper` 6). `feature-brief.mjs --record` merges by maximum: per group it keeps the higher of the recorded and the measured bytes and it keeps the other keys of the file, so a record never lowers a ceiling. `check-feature-docs.mjs` fails above the ceiling. A record run and a lower ceiling are retro decisions with a CHANGELOG line (ADR-0018 principle 4), like `test/prompt-budget.json`.
 
 ### Backend: the read gate (ADR-0031 decision 3, Q1)
 
@@ -145,7 +148,7 @@ Unchanged: `truncate()` for the audit `subject` and the justification text (fiel
 |---|---|---|
 | `templates/feature/PLAN.md`, `CONTEXT.md`, `SCREENS.md` | shapes of ADR-0018; not protected | phase subsections, `<N>: <label>` Phase cells, reader subsections, one reader line |
 | `scripts/lib/doc-shapes.mjs` (P) | `planShapeErrors()`, `contextShapeErrors()`, `sections()` | marker rules; `###` parsing inside a section |
-| `scripts/lib/feature-brief.mjs` (P, new), `scripts/feature-brief.mjs` (new) | nothing suitable | role groups, `briefFor()`, `writeBrief()`, the CLI |
+| `scripts/lib/feature-brief.mjs` (P, new), `scripts/feature-brief.mjs` (new) | nothing suitable | role groups, `briefFor()`, `writeBrief()`, `recordCeilings()` with the max-merge of Q10, the CLI |
 | `scripts/check-feature-docs.mjs` | shape check of one folder | also the brief ceilings |
 | `scripts/hooks/subagent-start.mjs` (P) | writes `agent-start`, prints nothing by decision | hands the brief, writes `brief` |
 | `scripts/hooks/read-gate.mjs`, `scripts/lib/read-ledger.mjs` (P, new), `.claude/settings.json` (P) | no hook on `Read` | the gate and its registration |
@@ -181,18 +184,18 @@ Unchanged: `truncate()` for the audit `subject` and the justification text (fiel
 ## Relevant lessons
 
 - ADR-0029 amendment D-F (2026-10-25): a gate that silently checks nothing looks green; a matcher gets a test per syntax and for the crash path. Applies to the marker rules and the gate.
-- CHANGELOG 2026-09-11: a figure names the phase and the copy it was measured on. The brief sizes above are an estimate until step 4.
+- CHANGELOG 2026-09-11: a figure names the phase and the copy it was measured on. The brief sizes above are measured at step 4 on the migrated documents before the Q10 amendment; the record of step 9 measures the documents as they stand then.
 - ADR-0030 amendment (2026-10-27): a design that quoted an unreleased behaviour was caught only by the step 0 probe. Hence step 2 before any dependent code.
 - Agent memory, 2026-10-09: the Bash guard denies a command whose text names a protected path, also in a temp directory; the probe project uses its own folder names and documents are written with Write and Edit.
 - `/feature` rule: agents that edit `scripts/` run one at a time and no suite runs meanwhile.
 
 ## Open questions
 
-None open. The six gate questions of the issue and PLAN Q1-Q7 are decided (user, 2026-11-10), Q8 and Q9 at the probe gate (user, 2026-11-11); the list is under "User decisions":
+None open. The six gate questions of the issue and PLAN Q1-Q7 are decided (user, 2026-11-10), Q8 and Q9 at the probe gate and Q10 after step 4 (user, 2026-11-11); the list is under "User decisions":
 
 - Check output: every check already prints one line per finding (measured above), so no command changes and no runner is added (Q3); the cuts are in the hook relays, which get `relay()` and `.pipeline/logs/`; the report names the verdict line and the log path.
 - Repeated reads: deny once per agent, file and content hash with the reason; the retry passes, so a compaction needs no detection and no N exists (Q1).
-- Marker syntax and budgets: `### Phase <N>: <label>`, `### Every phase`, `### <Readers>: <title>`; SCREENS.md by its template section names (Q2); the ceiling is the measured size of the largest brief per role group on the migrated #10, recorded in `test/context-budget.json`, next to `resumesAfterReport: 0`.
+- Marker syntax and budgets: `### Phase <N>: <label>`, `### Every phase`, `### <Readers>: <title>`; SCREENS.md by its template section names (Q2); the ceiling is the per-group maximum of the largest briefs of the two migrated folders, recorded by a max-merge in `test/context-budget.json` next to `resumesAfterReport: 0` (Q10).
 - The delegation message shrinks: the brief carries steps, criteria, context and the reading list; the message keeps the feature name, step numbers, gate mode, turn budget and what changed since approval. Baseline median 3.9K characters; the card shows the figure after.
 - Who gets a slice: the five implementer and tester types, `ui-verifier`, `docs-keeper`. `reviewer`, `architect` and `ux-designer` read whole. A rework launch is a fresh agent with the brief, the defect list and the saved report path (amendment 2); the #10 documents are re-marked without re-approval (Q6).
 - `autoCompactWindow`: out of scope, decided again after `/feature #10` with the compaction counter of amendment 1 on the card (Q4); shell prints stay and the card shows the figure (Q5). Also out: `updatedToolOutput`, a wrapper around the check commands, a hook on Bash prints, MCP instruction size at startup, the launch granularity of `/feature`, republishing the manual pages outside the repository.

@@ -1,6 +1,6 @@
 ---
 name: context-hygiene-design
-description: What fills a pipeline agent's context (measured on the #28 run, 2026-11-09), Claude Code transcript and hook facts found on the way, the ADR-0031 design for #44 context-hygiene, its plan gate of 2026-11-10 (decision 7 rework by fresh launch) and the probe gate of 2026-11-11 (decision 8 handback gate, F6/F8 facts)
+description: What fills a pipeline agent's context (measured on the #28 run, 2026-11-09), Claude Code transcript and hook facts found on the way, the ADR-0031 design for #44 context-hygiene, its plan gate of 2026-11-10 (decision 7 rework by fresh launch) the probe gate of 2026-11-11 (decision 8 handback gate, F6/F8 facts) and Q10 (brief ceilings by max-merge over both migrated folders)
 metadata:
   type: project
 ---
@@ -34,6 +34,8 @@ Project facts:
 - `templates/**` is not in `PROTECTED`; `scripts/lib/**` is. The issue's scope hint had it the other way round.
 - ESLint (`npm run lint`, `lint:js`) lints `.mjs` files under `docs/features/*/research/`: a scratch script uses `process.stdout.write`, not `console.log`.
 - Nine features since ADR-0018: PLAN.md 18.6K-41.5K bytes, CONTEXT.md 8.3K-36.5K, SCREENS.md 23.2K-92.6K. A role brief of #10 is an estimated 53-62% of PLAN plus CONTEXT and always above the 10,000-character hook limit.
+- Step 4 migration (2026-11-11), measured briefs: #10 `cap-backend-dev` 47,508 bytes, `test-backend` 46,514, `fiori-app-dev` 46,085, `test-ui` 44,922, `ui-verifier` 8,931, `docs-keeper` 17,531; #44 `cap-backend-dev` 55,677 (six steps in one phase), `test-backend` 48,973 / 39,429, `docs-keeper` 14,744. `recordCeilings()` replaced each group's ceiling with the last recorded feature's figure (no max), so ceilings recorded from #10 would make #44's own check red. User decision Q10 (2026-11-11): the ceiling is the per-group maximum over both migrated folders and `--record` merges by maximum (never lowers; a lower ceiling is a retro decision with a CHANGELOG line); PLAN criterion "Brief record", step 5 Files. The amendment itself grew the #44 `cap-backend-dev` 2 brief to 57,639 bytes: a figure quoted in a plan describes the documents before the edit that quotes it.
+- Marking rules learned in the migration: a `###` subsection runs to the next heading, so paragraphs after a table belong to it; split with an `All` heading before you mark a table `UI`. A criterion that spans the two model phases (contract test, `metadata.xml` per phase) goes under `### Every phase`, or the other phase's brief loses it. `### Every phase` may sit between phase sections; the order is free, and keeping it in place makes the word diff pure insertions.
 
 **Why:** the issue assumed check output and repeated reads were the bulk; the measurement moved the weight to the role brief and to the relays. Re-deriving it costs a session and the transcripts expire.
 

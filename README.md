@@ -150,7 +150,7 @@ There are six participants: the human, two kinds of agents and three things arou
 - **Who it is.** The main Claude Code chat, the very one the human writes to; this role is also called the orchestrator.
 - **What it does.** On the `/feature` command it drives the task through the phases: calls the workers one after another, checks their results and makes the commits, but does not write or fix code itself.
 
-> **In code.** The main Claude Code session; the script `.claude/skills/feature/SKILL.md` with the flag `disable-model-invocation: true` (only the human starts it); it calls workers with the `Agent` tool and resumes a stopped one through `SendMessage`.
+> **In code.** The main Claude Code session; the script `.claude/skills/feature/SKILL.md` with the flag `disable-model-invocation: true` (only the human starts it); it calls workers with the `Agent` tool and resumes through `SendMessage` only a worker stopped mid-step, never one that already delivered its report (ADR-0031).
 
 #### Participant 3 · Worker agents
 
@@ -161,10 +161,10 @@ There are six participants: the human, two kinds of agents and three things arou
 
 #### Participant 4 · Automatic checks
 
-- **Who it is.** Seven checks that Claude Code runs by itself at specific moments, called hooks. Behind them are eight scripts on seven events.
+- **Who it is.** Eight checks that Claude Code runs by itself at specific moments, called hooks. Behind them are thirteen scripts on nine events.
 - **What it does.** They hint to the agent, forbid a dangerous action, or hold the agent back until it fixes the errors.
 
-> **In code.** Hooks; seven events `SessionStart`, `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `SubagentStop`, `Stop`, `PreCompact` in `.claude/settings.json`; eight scripts `scripts/hooks/*.mjs` and the shared libraries `scripts/lib/*.mjs`.
+> **In code.** Hooks; nine events `SessionStart`, `UserPromptSubmit`, `SubagentStart`, `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `SubagentStop`, `Stop`, `PreCompact` in `.claude/settings.json`; thirteen scripts `scripts/hooks/*.mjs` and the shared libraries `scripts/lib/*.mjs`.
 
 #### Participant 5 · SAP references
 
@@ -375,13 +375,13 @@ Two checks can be switched off with an environment variable. An environment vari
 
 #### Check 5 · Worker exit control
 
-- **When it fires.** When a worker finishes its work.
+- **When it fires.** When a worker hands over its report (its last call, `SubagentHandback`), or, if it ends with plain text instead, when it stops.
 - **What problem it solves.** A worker could hand over work with linter errors, write a file past the checks through the terminal, or never ask the reference at all.
 - **What it does.** Three checks over the list of changed files. First: linter errors; the root ESLint runs on changed CDS, `srv/`, `test/` and `scripts/` files, the app ESLint on changed `webapp/` JavaScript outside `test/` and `localService/` (including the JSDoc rules for `ext/`), and ui5lint on changed webapp JavaScript and HTML files and on view and fragment XML. A linter runs only when it is installed in the app; a missing one is a note advising `npm install`, not a block. A run that crashes without a report counts as a failure and blocks the handover like an error does. Second: files for which the service log has no record of an edit through the editor. That means they were written around the checks, through the terminal. Such files are checked here, and the protected ones among them are blocked. Third: a comparison of the edits with the reference call log; if the file type requires a reference query and there was none, the worker is sent back once with a request either to ask the reference or to write in the report the section "MCP not used", that is "reference not used", with the reason. On a repeated handover without the section it is let through, but recorded in the log for the retrospective.
 - **What the human sees.** The worker makes an extra round and fixes things. A section with the reason appears in the report.
 - **How to bypass it and who can.** Only for protected files, with the same environment variable `PIPELINE_ALLOW_PROTECTED=1`. Only the human sets it.
 
-> **In code.** event `SubagentStop`, script `subagent-stop.mjs`. Changed files by `git status`; eslint (root and per-app pass) and ui5lint only at severity error, the ui5lint scope is `UI5_SCOPE` and the app ESLint scope `APP_ESLINT_SCOPE`/`APP_ESLINT_EXCLUDE` of `scripts/lib/file-checks.mjs`, a tool runs only when `<app>/node_modules/.bin/<tool>` exists and a non-zero exit without a parsable report is a blocking failure (ADR-0029 amendments D-F); files without an `edit` record go through `runFileChecks`, protected ones are blocked by `protectedWriteHit`; MCP gaps are counted by `mcpGaps` against the `MCP_RULES` table in `scripts/lib/mcp-audit.mjs`; the `## MCP not used` section is looked up in `last_assistant_message`. Answer: exit 2 and text in stderr; with `stop_hook_active` the record `skipped-unjustified`.
+> **In code.** event `PreToolUse`, matcher `SubagentHandback`, script `handback-gate.mjs` with `scripts/lib/handover-checks.mjs`; the report text is `tool_input.message`; a deny names what to fix, and after `HANDBACK_DENY_MAX` (3) denies the next attempt passes with a `handback-limit` record; `PostToolUse` `SubagentHandback` keeps the delivered report in `.pipeline/logs/report-<agent-type>-<agent-id>.md`. Event `SubagentStop`, script `subagent-stop.mjs`, runs the same checks for a plain-text end only (input has `last_assistant_message`). Changed files by `git status`; eslint (root and per-app pass) and ui5lint only at severity error, the ui5lint scope is `UI5_SCOPE` and the app ESLint scope `APP_ESLINT_SCOPE`/`APP_ESLINT_EXCLUDE` of `scripts/lib/file-checks.mjs`, a tool runs only when `<app>/node_modules/.bin/<tool>` exists and a non-zero exit without a parsable report is a blocking failure (ADR-0029 amendments D-F); files without an `edit` record go through `runFileChecks`, protected ones are blocked by `protectedWriteHit`; MCP gaps are counted by `mcpGaps` against the `MCP_RULES` table in `scripts/lib/mcp-audit.mjs`; the `## MCP not used` section is looked up in the report text. Answer: exit 2 and text in stderr; with `stop_hook_active` the record `skipped-unjustified`.
 
 #### Check 6 · Final gate
 
@@ -402,6 +402,16 @@ Two checks can be switched off with an environment variable. An environment vari
 - **How to bypass it and who can.** No bypass needed.
 
 > **In code.** event `PreCompact` (field `trigger`: auto or manual), script `pre-compact.mjs`. A line like `2026-09-24 19:07 UTC session <id>: branch main, changed files 3, compaction manual` in `.pipeline/sessions.log`; the folder is in `.gitignore`.
+
+#### Check 8 · Brief and reading gates
+
+- **When it fires.** When a worker starts, when any agent reads a file and when the lead agent wants to send a message to a worker.
+- **What problem it solves.** A worker used to read the whole plan and the whole context of the feature, read the same file again and again, and was woken up for a rework with a long history that it carried along. On the big feature of the project the workers' tool results alone were about 2.6 million characters.
+- **What it does.** At the start it hands the worker a brief: only the steps, the criteria and the context sections for its role and its phase, plus a list of what was left out and how large it is. If a worker opens a whole file it has already read, or the whole plan that its brief already holds, the first attempt is refused with the reason, and the second passes. A message to a worker that has already delivered its report is refused: a rework goes to a fresh worker, which gets the defect list and the path of the previous report. When a check prints more than fits into a hook message, it prints a summary and the path of a log that holds everything, never the head or the tail.
+- **What the human sees.** A refused call with an explanation in the worker's transcript, the brief in `.pipeline/brief/`, the figures per launch (startup and peak context, resumes, compactions, repeated reads) in `node scripts/metrics.mjs context <feature>`.
+- **How to bypass it and who can.** The gates are soft: they refuse once, and any error in a gate lets the call through. No bypass is needed.
+
+> **In code.** event `SubagentStart`, script `subagent-start.mjs` with `briefFor()` and `briefPhase()` in `scripts/lib/feature-brief.mjs`; the brief is returned as `additionalContext` up to `HOOK_OUTPUT_MAX` (10,000 characters), else as a pointer to `.pipeline/brief/<agent-type>-<phase>.md`. Event `PreToolUse`, matcher `Read`, script `read-gate.mjs` (ledger `.pipeline/read-ledger-<session>.jsonl`, `scripts/lib/read-ledger.mjs`); matcher `SendMessage`, script `resume-gate.mjs`. Every deny appends a `gate` record to `.pipeline/metrics-<session>.jsonl`. Decision ADR-0031.
 
 ### How the worker agents work
 

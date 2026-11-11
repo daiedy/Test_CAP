@@ -1,5 +1,5 @@
 {
-  "x-sources": "e615eb5e65892b11",
+  "x-sources": "f861dd991b02b394",
   "nodes": [
     {
       "path": "docs/wiki/Glossary.md",
@@ -246,7 +246,8 @@
         "docs/decisions/ADR-0019-backlog-github-issues.md",
         "docs/decisions/ADR-0022-pipeline-metrics.md",
         "docs/decisions/ADR-0023-pipeline-state-hygiene.md",
-        "docs/decisions/ADR-0030-business-rules-wiki.md"
+        "docs/decisions/ADR-0030-business-rules-wiki.md",
+        "docs/decisions/ADR-0031-context-hygiene.md"
       ],
       "verified": null,
       "codeHash": null,
@@ -267,7 +268,8 @@
         "ADR-0019",
         "ADR-0022",
         "ADR-0023",
-        "ADR-0030"
+        "ADR-0030",
+        "ADR-0031"
       ]
     },
     {

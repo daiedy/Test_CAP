@@ -12,7 +12,7 @@ Invariant 1 (MCP-first) and ADR-0009 require every agent to query the SAP MCP se
 - **One hard rule.** `app/**/webapp/manifest.json` is denied for Edit/Write by the PreToolUse hook: the manifest is changed only through Fiori MCP `execute_functionality` (invariant 1). This is not a judgment call for the agent, unlike a typo fix in a CDS title.
 - **Retro closes the loop.** `/retro` counts `justification` and `skipped-unjustified` records per agent type; a repeated justified skip becomes an exception in `MCP_RULES`, an unjustified one a stricter check or a prompt line.
 
-## Amendment: the soft gate fires before the handback (2026-11-11; proposed, feature `context-hygiene`)
+## Amendment: the soft gate fires before the handback (accepted by the user 2026-11-11, feature `context-hygiene`)
 
 In auto mode the check runs on PreToolUse `SubagentHandback` and reads the `## MCP not used` section from `tool_input.message`, SubagentStop keeps it for a plain-text end; the rule (block once, a written reason, `skipped-unjustified` on the next attempt) is unchanged (ADR-0031 decision 8).
 

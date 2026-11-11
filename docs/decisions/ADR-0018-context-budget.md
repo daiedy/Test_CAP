@@ -29,7 +29,7 @@ Applied as eight links:
 - `readSection()` in `scripts/lib/hook-utils.mjs` replaces `readLines()`; display caps that print a count ("30 of N") stay.
 - The retro skill keeps `docs/LESSONS.md` by shape (one `Pending` line per lesson with a destination), not by a line count.
 
-## Amendment: marked units, commands as writers, the brief instead of the reading list (proposed, feature `context-hygiene`; decision by the user pending)
+## Amendment: marked units, commands as writers, the brief instead of the reading list (accepted by the user 2026-11-10, feature `context-hygiene`)
 
 The four principles stay. Three clauses are widened; the mechanisms are ADR-0031.
 

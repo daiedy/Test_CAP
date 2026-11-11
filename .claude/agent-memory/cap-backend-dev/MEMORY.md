@@ -5,4 +5,4 @@
 - [OpenAPI converter: local copy wins](openapi-converter-local-copy.md) — cds compile uses the project's @cap-js/openapi; 1.7.0 gives Swagger UI 500 on drafts, root pinned at 1.6.0 (2026-10-25)
 - [Registry chain in a temp copy](registry-chain-in-temp-copy.md) — prove docs:registry / --fix changes in an rsync copy with linked node_modules; no dated-header churn (2026-10-26)
 - [Read a pinned action at its ref](pinned-action-read-at-ref.md) — default-branch README != pinned release; wiki-action v5.0.6 has no subfolder/blob link rewrite (2026-10-26)
-- [Claude Code hook runtime facts](claude-code-hook-runtime-facts.md) — internal SubagentStop every ~32 s, live reload, agent_id join, SubagentStop precedes the final message flush (2026-09-29)
+- [Claude Code hook runtime facts](claude-code-hook-runtime-facts.md) — internal SubagentStop ~32 s, live reload, agent_id join; 2.1.322: SubagentStop block after a handback is dropped, 10,000-char cap (2026-11-11)

@@ -23,7 +23,7 @@ Contract rule: no step changes the OData model; `metadata.xml` and the `$metadat
 - [x] D19: a run at its limit without a delivered report is a limit stop, a run with a report or below the limit is not, verified by `test/metrics.test.js` "limit stops per run"
 - [x] The card shows turn notes and limit stops per agent type in `en` and `ru`, and the history line carries `turnLimitStops` and `turnNotes`, verified by `test/metrics.test.js` "turn fields on the card and the history line"
 - [x] `.claude/settings.json` registers `turn-budget.mjs` on the event step 1 confirmed, verified by `test/hooks-turn-budget.test.js` "registered in settings"
-- [ ] The protocol section 2 step 10 and the `feature` skill turn-budget line point to the note, `test/prompt-budget.json` re-recorded, verified by `test/prompt-budget.test.js`
+- [x] The protocol section 2 step 10 and the `feature` skill turn-budget line point to the note, `test/prompt-budget.json` re-recorded, verified by `test/prompt-budget.test.js`
 
 ### Phase 4: live check
 - [x] In a temp project with the real hook, an agent of `maxTurns: 12` receives a note from turn 6 on, after an MCP call too, and delivers its report before turn 12, verified by `VERIFICATION.md` check 1
@@ -32,6 +32,12 @@ Contract rule: no step changes the OData model; `metadata.xml` and the `$metadat
 
 ### Phase 5: review
 - [ ] `REVIEW.md` has zero blocking findings, verified by `REVIEW.md`
+- [ ] A batch whose request is not yet in the agent file counts as its turn, so a lagged read at the threshold notes, verified by `test/hooks-turn-budget.test.js` "a batch not yet on disk counts"
+- [ ] A batch whose `tool_use_id` is in the agent file adds no turn, verified by `test/hooks-turn-budget.test.js` "a batch on disk counts once"
+- [ ] An input without a `tool_calls[].tool_use_id` string counts the file alone, verified by `test/hooks-turn-budget.test.js` "no batch ids counts the file"
+- [ ] Two `turn-note` records of one run with equal `turn` count as two notes, verified by `test/metrics.test.js` "each turn-note record counts"
+- [ ] Live, the batch `tool_use_id` values match the agent file's `tool_use` ids and the new count is never below the true turn, verified by `VERIFICATION.md` check 4
+- [ ] The changed hook keeps the 0.3 s main-thread and 0.5 s 11 MB medians over 20 runs, verified by `VERIFICATION.md` check 3 re-run
 
 ### Phase 6: documentation
 - [ ] ADR-0032 accepted, PATTERNS row "Turn budget note", `docs/metrics/definitions.md` D19 and `data-flow.md` sections 2 and 4 updated, verified by `node scripts/check-docs-fresh.mjs`
@@ -55,6 +61,9 @@ Contract rule: no step changes the OData model; `metadata.xml` and the `$metadat
 | 6 | 2: tests | `test-backend` | `test/hooks-turn-budget.test.js` (new, `createSandbox()`), `test/metrics.test.js`, `test/hooks-metrics.test.js`, `test/fixtures/transcript-fixture.mjs` | Hook test on a sandbox | `npm test` green, one `it` per named criterion |
 | 7 | 4: live check | `test-backend` | `VERIFICATION.md`; a temp project outside the repository with a copy of `scripts/` and a probe agent of `maxTurns: 12` and one MCP tool, built like `research/turn-probe.mjs` | Probe before code | checks 1-3 with figures |
 | 8 | 5: review | `reviewer` | `REVIEW.md` | | zero blocking findings |
+| 8a | 5: rework | `cap-backend-dev` | `scripts/lib/transcript-usage.mjs` (`runTurns(records, batchIds = [])`: plus 1 when `batchIds` holds a string and no `assistant` record of the last run has a `tools[].id` in it; JSDoc: exact or one high, no "exact at hook time"), `scripts/hooks/turn-budget.mjs` (passes the `tool_use_id` strings of `input.tool_calls`, no other key; header comments to match), `scripts/lib/pipeline-metrics.mjs` (`notes` = the run's `turn-note` records, no dedupe on `turn`; JSDoc reason) | ADR-0032 decision 4 amendment; REVIEW Important 1-3 | `node --check`, one `createSandbox()` run of the hook with `PIPELINE_ALLOW_PROTECTED` unset, `npm run lint`, `npm test` |
+| 8b | 5: rework tests | `test-backend` | `test/hooks-turn-budget.test.js` (`batch()` sends the id `<agent>-tu<n>` of the last written turn unless a test passes its own, SENTINEL kept in `tool_response`; three new `it`, the first on the threshold batch), `test/metrics.test.js` (the duplicate note at :1811 and its comment go; new `it`) | Hook test on a sandbox | `npm test` green, one `it` per named criterion |
+| 8c | 5: rework live check | `test-backend` | `VERIFICATION.md` check 4 and a check 3 re-run; a temp project as in check 1 plus a scratch PostToolBatch logger of tool names, `tool_use_id` values and both counts per batch (`runTurns(records)`, `runTurns(records, ids)`), counts only, deleted after | Probe before code | check 4: ids matched, per batch new and old count against the true turn; check 3 medians |
 | 9 | 6: documentation | `docs-keeper`, then the orchestrator for the manual pages | `docs/architecture/PATTERNS.md`, `docs/metrics/definitions.md`, `docs/metrics/data-flow.md`, `CLAUDE.md`, `README.md`, `docs/images/pipeline-flow.svg`, `docs/wiki/decisions/Pipeline-decisions.md`, `test/prompt-budget.json`, `docs/LESSONS.md`, `docs/STATE.md`, `docs/CHANGELOG.md`, `SUMMARY.md`; the RU/EN manual pages | | `node scripts/check-docs-fresh.mjs`, `node scripts/wiki.mjs audit`, `npm test` |
 
 ## Decisions that require an ADR
@@ -62,7 +71,7 @@ Contract rule: no step changes the OData model; `metadata.xml` and the `$metadat
 
 ## Risks
 - PostToolBatch absent in 2.1.322 or not fired inside a subagent: probe P1, fallback to PostToolUse and PostToolUseFailure (CONTEXT).
-- The transcript lags the hook (documented): probe P4; one turn short is inside the reserve.
+- The transcript lags the hook (documented): exact in probe P4 (2.1.322), one short on 2.1.323 (VERIFICATION check 1); the batch-id rule of step 8a counts the batch's request (ADR-0032 decision 4 amendment).
 - An agent reads the note and goes on: phase 4 check 1 on a live run, then the card's notes against limit stops per feature (#59 signal).
 - The note costs a node start on every turn of every thread: phase 4 check 3 against 0.3 s and 0.5 s.
 - A Claude Code update changes the transcript or the hook input: the hook fails silent, the card shows notes falling to 0 while stops remain; `/upstream-check` names PostToolBatch.

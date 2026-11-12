@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-11-13
 - Branch: feature/agent-turn-budget
 - Feature: agent-turn-budget (#60)
-- Phase: 4: live check (PLAN step 7, no phase 3: no UI)
-- Last commit: d90c06b feat(pipeline): agent-turn-budget turn note hook and D19 card fields
-- Next: `VERIFICATION.md` checks 1-3; then review, docs and the RU/EN manual pages; `/feature #26`; Dependabot PR #48 waits
+- Phase: 5: review (PLAN step 8)
+- Last commit: e2a933a fix(pipeline): agent-turn-budget review rework, batch ids complete the count
+- Next: VERIFICATION check 4 (step 8c), re-review of the fixed items; then docs and the RU/EN manual pages; `/feature #26`; Dependabot PR #48 waits
 
 ## Open debt
 

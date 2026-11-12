@@ -36,8 +36,8 @@ Contract rule: no step changes the OData model; `metadata.xml` and the `$metadat
 - [x] A batch whose `tool_use_id` is in the agent file adds no turn, verified by `test/hooks-turn-budget.test.js` "a batch on disk counts once"
 - [x] An input without a `tool_calls[].tool_use_id` string counts the file alone, verified by `test/hooks-turn-budget.test.js` "no batch ids counts the file"
 - [x] Two `turn-note` records of one run with equal `turn` count as two notes, verified by `test/metrics.test.js` "each turn-note record counts"
-- [ ] Live, the batch `tool_use_id` values match the agent file's `tool_use` ids and the new count is never below the true turn, verified by `VERIFICATION.md` check 4
-- [ ] The changed hook keeps the 0.3 s main-thread and 0.5 s 11 MB medians over 20 runs, verified by `VERIFICATION.md` check 3 re-run
+- [x] Live, the batch `tool_use_id` values match the agent file's `tool_use` ids and the new count is never below the true turn, verified by `VERIFICATION.md` check 4
+- [x] The changed hook keeps the 0.3 s main-thread and 0.5 s 11 MB medians over 20 runs, verified by `VERIFICATION.md` check 3 re-run
 
 ### Phase 6: documentation
 - [ ] ADR-0032 accepted, PATTERNS row "Turn budget note", `docs/metrics/definitions.md` D19 and `data-flow.md` sections 2 and 4 updated, verified by `node scripts/check-docs-fresh.mjs`

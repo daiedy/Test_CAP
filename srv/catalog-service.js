@@ -1,5 +1,11 @@
 import cds from '@sap/cds';
-import { columnOf, decodeContent, readImportRows } from './lib/products-import.js';
+import {
+  columnOf,
+  decodeContent,
+  descriptionViolations,
+  minorUnitViolations,
+  readImportRows,
+} from './lib/products-import.js';
 
 const LOG = cds.log('catalog');
 
@@ -202,9 +208,9 @@ function messageText(key, locale, args) {
 /**
  * Warning of U3 (PLAN D16, SCREENS "Subcategory change"): {0} the number of removed filled values,
  * {1} their localized attribute names in the old field order, joined by ", ". The warning travels
- * in the sap-messages header only and is not persisted as a draft message (research R7). cds 10
- * writes sap-messages in the default language (see importProducts), so the text is resolved in the
- * request locale here; SELECT.localized reads the names in that locale.
+ * in the sap-messages header only and is not persisted as a draft message (research R7); the
+ * runtime localizes it from the key (cds 10.2.2), SELECT.localized reads the names in the request
+ * locale.
  * @param {cds.ApplicationService} srv this CatalogService
  * @param {Array<{ attribute_code: string, position?: number }>} removed the deleted filled rows
  * @param {cds.Request} req the request that receives the warning
@@ -220,21 +226,20 @@ async function warnValuesRemoved(srv, removed, req) {
   const names = [...removed]
     .sort((a, b) => (a.position ?? last) - (b.position ?? last))
     .map((row) => nameOf.get(row.attribute_code) ?? row.attribute_code);
-  const args = [removed.length, names.join(', ')];
   req.warn({
     code: 'PRODUCTS_DETAILS_VALUES_REMOVED',
     target: 'subcategory_code',
-    message: messageText('PRODUCTS_DETAILS_VALUES_REMOVED', req.locale, args),
-    args,
+    args: [removed.length, names.join(', ')],
   });
 }
 
 /**
  * One INSERT per row through the service, so `@mandatory` / `@assert.*` / data types are checked by
- * the framework (research 5.3, 5.3a) and attributed to the sheet row. Duplicate names and the
- * subcategory-category pair are checked before the inserts, because no annotation reports them per
- * row (ADR-0021 decision 5, amendment 4 E). Any error rejects the whole request, which rolls back
- * the rows already inserted (ADR-0021 decision 4).
+ * the framework (research 5.3, 5.3a) and attributed to the sheet row. Duplicate names, the
+ * subcategory-category pair and the root constraints R4 and R6 are checked before the inserts,
+ * because no annotation reports them per row (ADR-0021 decision 5, amendment 4 E; ADR-0028
+ * decision 6). Any error rejects the whole request, which rolls back the rows already inserted
+ * (ADR-0021 decision 4).
  * @param {cds.ApplicationService} srv this CatalogService
  * @param {object} Products the service entity
  * @param {cds.Request} req action request
@@ -252,6 +257,7 @@ async function importProducts(srv, Products, req) {
   const order = (column) => columns.indexOf(column);
   const rowErrors = await duplicateNames(rows, order);
   rowErrors.push(...(await subcategoryMismatches(rows, order, req.locale)));
+  rowErrors.push(...(await constraintViolations(rows, order, req.locale)));
   for (const { row, entry } of rows) {
     try {
       await srv.run(INSERT.into(Products).entries(entry));
@@ -265,14 +271,7 @@ async function importProducts(srv, Products, req) {
   }
 
   LOG.info('products imported', { count: rows.length });
-  // cds 10 writes sap-messages in the default language (ODataAdapter.sap_messages4 calls
-  // normalized() but not localized()), so the text is resolved in the request locale here.
-  const args = [rows.length];
-  req.info({
-    code: 'PRODUCTS_IMPORT_DONE',
-    message: messageText('PRODUCTS_IMPORT_DONE', req.locale, args),
-    args,
-  });
+  req.info({ code: 'PRODUCTS_IMPORT_DONE', args: [rows.length] });
   return rows.length;
 }
 
@@ -361,10 +360,42 @@ async function subcategoryMismatches(rows, order, locale) {
 }
 
 /**
+ * Rows that break the root constraints R4 (no decimals in a currency without minor units) and R6
+ * (a description while in stock), ADR-0028 decision 6: like PRODUCTS_SUBCATEGORY_MISMATCH they are
+ * `@assert` constraints checked once at commit without a row, so the pure functions of
+ * `srv/lib/products-import.js` repeat them per row; the constraints stay the guard of every write.
+ * One SELECT reads the minor units of the file's currency codes.
+ * @param {Array<{ row: number, entry: Record<string, unknown> }>} rows import rows
+ * @param {(column: string) => number} order header position of a column
+ * @param {string} locale request locale for the reason texts
+ * @returns {Promise<Array<{ row: number, order: number, code: string, args: Array<unknown> }>>}
+ *   PRODUCTS_IMPORT_ROW_INVALID per offending row, columns `price` and `description`
+ */
+async function constraintViolations(rows, order, locale) {
+  const codes = [...new Set(rows.map(({ entry }) => entry.currency_code))].filter(
+    (code) => code !== undefined
+  );
+  const { Currencies } = cds.entities('sap.common');
+  const currencies = codes.length
+    ? await SELECT.from(Currencies).columns('code', 'minorUnit').where`code in ${codes}`
+    : [];
+  const minorUnitByCode = new Map(currencies.map(({ code, minorUnit }) => [code, minorUnit]));
+  const reason = (key) => messageText(key, locale) ?? key;
+  return [
+    ...minorUnitViolations(rows, order, minorUnitByCode, reason('PRODUCTS_PRICE_MINOR_UNIT')),
+    ...descriptionViolations(rows, order, reason('PRODUCTS_DESCRIPTION_REQUIRED_IN_STOCK')),
+  ];
+}
+
+/**
  * Map a rejected INSERT to row messages, one per column: the framework's input validation
- * reports ASSERT_* codes with the element as target (research 5.3). Anything else is rethrown.
+ * reports ASSERT_* codes with the element as target (research 5.3). The reason is the text of the
+ * error's `message` when it is a key of the bundle (an `@assert.format.message` or
+ * `@assert.range.message` of ADR-0028 decision 1), else the cds default text of its `code`
+ * (research 11.2). Anything else is rethrown.
  * @param {Error & { details?: Array<object>, code?: string, target?: string, args?: Array<unknown> }} err
- *   error of the rejected INSERT, with the framework's messages in `details` when there are several
+ *   error of the rejected INSERT, with the framework's messages in `details` when there are several;
+ *   `message` holds the project key of a custom text
  * @param {number} row sheet row, header = 1
  * @param {string} locale request locale for the framework's reason text
  * @param {(column: string) => number} order header position of a column
@@ -375,10 +406,11 @@ function validationErrors(err, row, locale, order) {
   const details = err.details?.length ? err.details : [err];
   if (!details.every((d) => typeof d.code === 'string' && d.code.startsWith('ASSERT_'))) throw err;
   const byColumn = new Map();
-  for (const { code, target, args } of details) {
+  for (const { code, message, target, args } of details) {
     const column = columnOf(target);
     if (byColumn.has(column)) continue;
-    const reason = messageText(code, locale, args) ?? code;
+    const custom = typeof message === 'string' ? messageText(message, locale, args) : undefined;
+    const reason = custom ?? messageText(code, locale, args) ?? code;
     byColumn.set(column, {
       row,
       order: order(column),

@@ -8,7 +8,9 @@ import {
   columnOf,
   coerceCell,
   decodeContent,
+  descriptionViolations,
   mapHeader,
+  minorUnitViolations,
   readImportRows,
   toImportRows,
   unzippedSize,
@@ -252,6 +254,50 @@ describe('products-import decodeContent and columnOf', () => {
     }
     expect(columnOf('ID')).toBe('ID');
     expect(columnOf(undefined)).toBe('');
+  });
+});
+
+// The per-row pre-checks of the root constraints R4 and R6 (ADR-0028 decision 6); the import test of
+// test/catalog-service.test.js proves them through the action.
+describe('products-import per-row constraint checks', () => {
+  const order = (column) => HEADER.indexOf(column);
+  const numbered = (...entries) => entries.map((entry, i) => ({ row: i + 2, entry }));
+  const invalid = (row, column) => ({
+    row,
+    order: order(column),
+    code: 'PRODUCTS_IMPORT_ROW_INVALID',
+    args: [row, column, 'reason'],
+  });
+
+  it('descriptionViolations reports a row in stock without a description and skips the rest', () => {
+    const rows = numbered(
+      { stock: 5 },
+      { stock: 5, description: '   ' },
+      { stock: 5, description: 'Lamp' },
+      { stock: 0 },
+      { stock: 'abc' },
+      {}
+    );
+    expect(descriptionViolations(rows, order, 'reason')).toEqual([
+      invalid(2, 'description'),
+      invalid(3, 'description'),
+    ]);
+  });
+
+  it('minorUnitViolations reports decimals in a currency without minor units and skips the rest', () => {
+    const minorUnits = new Map([
+      ['JPY', 0],
+      ['USD', 2],
+    ]);
+    const rows = numbered(
+      { price: 10.5, currency_code: 'JPY' },
+      { price: 10, currency_code: 'JPY' },
+      { price: 10.5, currency_code: 'USD' },
+      { price: 10.5, currency_code: 'XXX' },
+      { price: 'abc', currency_code: 'JPY' },
+      { price: 10.5 }
+    );
+    expect(minorUnitViolations(rows, order, minorUnits, 'reason')).toEqual([invalid(2, 'price')]);
   });
 });
 

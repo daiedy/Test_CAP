@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-11-12
 - Branch: feature/products-validations
 - Feature: products-validations (#10)
-- Phase: 2: Backend (plan re-approved 2026-11-12 with the import-text fix and two debt rows, autonomous gates)
-- Last commit: f383e60 docs: context-hygiene retro and upstream re-measure on cds 10.2.2
-- Next: cap-backend-dev steps 2-4, then test-backend steps 3 and 5; gate `npm run lint`, `npm test` (about 312); Dependabot PR #48 (msal-node major) waits for a human
+- Phase: 2: Backend (gate green 2026-11-12: lint 0 errors, `npm test` 310 passed in 18 files, `metadata.xml` 1763; autonomous gates)
+- Last commit: 5f82fda docs(spec): products-validations plan re-reviewed on cds 10.2.2 and re-approved
+- Next: phase 3 UI, fiori-app-dev step 6, then test-ui step 7; Dependabot PR #48 waits for a human
 
 ## Open debt
 

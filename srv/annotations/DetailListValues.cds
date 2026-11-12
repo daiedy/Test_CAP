@@ -13,4 +13,7 @@ annotate CatalogService.DetailListValues with {
   attribute @title: '{i18n>DetailListValues.attribute}';
   /** Display order of the value in its attribute's list. */
   position  @title: '{i18n>DetailListValues.position}';
+  // Read by the R12 guard of srv/annotations/ProductDetails.cds and by the Details form, ADR-0028 decision 10.
+  /** Attribute that becomes available in a product when this value is selected. */
+  enables   @title: '{i18n>DetailListValues.enables}';
 };

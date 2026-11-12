@@ -34,6 +34,7 @@
           <NavigationPropertyBinding Path="category" Target="Categories"/>
           <NavigationPropertyBinding Path="subcategory" Target="Subcategories"/>
           <NavigationPropertyBinding Path="details" Target="ProductDetails"/>
+          <NavigationPropertyBinding Path="namesakes" Target="Products"/>
           <NavigationPropertyBinding Path="SiblingEntity" Target="Products"/>
         </EntitySet>
         <EntitySet Name="ProductDetails" EntityType="CatalogService.ProductDetails">
@@ -59,8 +60,10 @@
         </EntitySet>
         <EntitySet Name="DetailAttributes" EntityType="CatalogService.DetailAttributes">
           <NavigationPropertyBinding Path="valueType" Target="DetailValueTypes"/>
+          <NavigationPropertyBinding Path="atLeast" Target="DetailAttributes"/>
           <NavigationPropertyBinding Path="subcategories" Target="SubcategoryAttributes"/>
           <NavigationPropertyBinding Path="values" Target="DetailListValues"/>
+          <NavigationPropertyBinding Path="enabledBy" Target="DetailListValues"/>
           <NavigationPropertyBinding Path="texts" Target="DetailAttributes_texts"/>
           <NavigationPropertyBinding Path="localized" Target="DetailAttributes_texts"/>
         </EntitySet>
@@ -70,6 +73,7 @@
         </EntitySet>
         <EntitySet Name="DetailListValues" EntityType="CatalogService.DetailListValues">
           <NavigationPropertyBinding Path="attribute" Target="DetailAttributes"/>
+          <NavigationPropertyBinding Path="enables" Target="DetailAttributes"/>
           <NavigationPropertyBinding Path="texts" Target="DetailListValues_texts"/>
           <NavigationPropertyBinding Path="localized" Target="DetailListValues_texts"/>
         </EntitySet>
@@ -120,6 +124,7 @@
         <NavigationProperty Name="details" Type="Collection(CatalogService.ProductDetails)" Partner="product">
           <OnDelete Action="Cascade"/>
         </NavigationProperty>
+        <NavigationProperty Name="namesakes" Type="Collection(CatalogService.Products)"/>
         <Property Name="IsActiveEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="true"/>
         <Property Name="HasActiveEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="false"/>
         <Property Name="HasDraftEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="false"/>
@@ -226,8 +231,13 @@
         <Property Name="minValue" Type="Edm.Decimal" Precision="15" Scale="3"/>
         <Property Name="maxValue" Type="Edm.Decimal" Precision="15" Scale="3"/>
         <Property Name="scale" Type="Edm.Int32"/>
+        <NavigationProperty Name="atLeast" Type="CatalogService.DetailAttributes">
+          <ReferentialConstraint Property="atLeast_code" ReferencedProperty="code"/>
+        </NavigationProperty>
+        <Property Name="atLeast_code" Type="Edm.String" MaxLength="30"/>
         <NavigationProperty Name="subcategories" Type="Collection(CatalogService.SubcategoryAttributes)" Partner="attribute"/>
         <NavigationProperty Name="values" Type="Collection(CatalogService.DetailListValues)" Partner="attribute"/>
+        <NavigationProperty Name="enabledBy" Type="Collection(CatalogService.DetailListValues)" Partner="enables"/>
         <NavigationProperty Name="texts" Type="Collection(CatalogService.DetailAttributes_texts)">
           <OnDelete Action="Cascade"/>
         </NavigationProperty>
@@ -261,6 +271,10 @@
         </NavigationProperty>
         <Property Name="attribute_code" Type="Edm.String" MaxLength="30"/>
         <Property Name="position" Type="Edm.Int32"/>
+        <NavigationProperty Name="enables" Type="CatalogService.DetailAttributes" Partner="enabledBy">
+          <ReferentialConstraint Property="enables_code" ReferencedProperty="code"/>
+        </NavigationProperty>
+        <Property Name="enables_code" Type="Edm.String" MaxLength="30"/>
         <NavigationProperty Name="texts" Type="Collection(CatalogService.DetailListValues_texts)">
           <OnDelete Action="Cascade"/>
         </NavigationProperty>
@@ -282,6 +296,9 @@
         </NavigationProperty>
         <Property Name="attribute_code" Type="Edm.String" MaxLength="30"/>
         <Property Name="position" Type="Edm.Int32"/>
+        <Property Name="required" Type="Edm.Boolean"/>
+        <Property Name="minValue" Type="Edm.Decimal" Precision="15" Scale="3"/>
+        <Property Name="maxValue" Type="Edm.Decimal" Precision="15" Scale="3"/>
       </EntityType>
       <EntityType Name="Permissions">
         <Key>
@@ -744,6 +761,7 @@
       <Annotations Target="CatalogService.Products/name">
         <Annotation Term="Common.Label" String="Product Name"/>
         <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
+        <Annotation Term="Validation.Pattern" String="^\s*\S.+\S\s*$"/>
         <Annotation Term="Core.Description" String="Name of the product."/>
       </Annotations>
       <Annotations Target="CatalogService.Products/description">
@@ -754,7 +772,9 @@
         <Annotation Term="Measures.ISOCurrency" Path="currency_code"/>
         <Annotation Term="Common.Label" String="Price"/>
         <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
-        <Annotation Term="Validation.Minimum" Int="0"/>
+        <Annotation Term="Validation.Minimum" Int="0">
+          <Annotation Term="Validation.Exclusive" Bool="true"/>
+        </Annotation>
         <Annotation Term="Validation.Maximum" Float="99999999.99"/>
         <Annotation Term="Core.Description" String="Unit price of the product in its currency."/>
       </Annotations>
@@ -870,11 +890,16 @@
       </Annotations>
       <Annotations Target="CatalogService.Products/imageUrl">
         <Annotation Term="Common.Label" String="Image URL"/>
+        <Annotation Term="Validation.Pattern" String="^https://\S+$"/>
         <Annotation Term="Core.Description" String="URL of the product image."/>
       </Annotations>
       <Annotations Target="CatalogService.Products/details">
         <Annotation Term="Common.Label" String="Details"/>
         <Annotation Term="Core.Description" String="Detail rows of the product, one per attribute assigned to its subcategory."/>
+      </Annotations>
+      <Annotations Target="CatalogService.Products/namesakes">
+        <Annotation Term="Common.Label" String="Products with the Same Name"/>
+        <Annotation Term="Core.Description" String="Other products whose name equals this product's name, ignoring case and leading or trailing spaces."/>
       </Annotations>
       <Annotations Target="CatalogService.Products/IsActiveEntity">
         <Annotation Term="UI.Hidden" Bool="true"/>
@@ -1347,11 +1372,39 @@
         <Annotation Term="Common.Label" String="Decimal Places"/>
         <Annotation Term="Core.Description" String="Number of decimal places of a DECIMAL attribute."/>
       </Annotations>
+      <Annotations Target="CatalogService.DetailAttributes/atLeast">
+        <Annotation Term="Common.Label" String="Not Below the Value Of"/>
+        <Annotation Term="Core.Description" String="Attribute whose value in the same product this attribute's value must not be below."/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailAttributes/atLeast_code">
+        <Annotation Term="Common.Label" String="Not Below the Value Of"/>
+        <Annotation Term="Common.ValueList">
+          <Record Type="Common.ValueListType">
+            <PropertyValue Property="Label" String="Not Below the Value Of"/>
+            <PropertyValue Property="CollectionPath" String="DetailAttributes"/>
+            <PropertyValue Property="Parameters">
+              <Collection>
+                <Record Type="Common.ValueListParameterInOut">
+                  <PropertyValue Property="LocalDataProperty" PropertyPath="atLeast_code"/>
+                  <PropertyValue Property="ValueListProperty" String="code"/>
+                </Record>
+                <Record Type="Common.ValueListParameterDisplayOnly">
+                  <PropertyValue Property="ValueListProperty" String="name"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+      </Annotations>
       <Annotations Target="CatalogService.DetailAttributes/subcategories">
         <Annotation Term="Core.Description" String="Subcategory assignments of the attribute."/>
       </Annotations>
       <Annotations Target="CatalogService.DetailAttributes/values">
         <Annotation Term="Core.Description" String="Allowed values of a LIST or MULTI_LIST attribute."/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailAttributes/enabledBy">
+        <Annotation Term="Common.Label" String="Enabled by List Values"/>
+        <Annotation Term="Core.Description" String="List values that make the attribute available when one of them is selected in the same product."/>
       </Annotations>
       <Annotations Target="CatalogService.DetailValueTypes">
         <Annotation Term="UI.Identification">
@@ -1462,6 +1515,30 @@
         <Annotation Term="Common.Label" String="Position"/>
         <Annotation Term="Core.Description" String="Display order of the value in its attribute's list."/>
       </Annotations>
+      <Annotations Target="CatalogService.DetailListValues/enables">
+        <Annotation Term="Common.Label" String="Enables Attribute"/>
+        <Annotation Term="Core.Description" String="Attribute that becomes available in a product when this value is selected."/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailListValues/enables_code">
+        <Annotation Term="Common.Label" String="Enables Attribute"/>
+        <Annotation Term="Common.ValueList">
+          <Record Type="Common.ValueListType">
+            <PropertyValue Property="Label" String="Enables Attribute"/>
+            <PropertyValue Property="CollectionPath" String="DetailAttributes"/>
+            <PropertyValue Property="Parameters">
+              <Collection>
+                <Record Type="Common.ValueListParameterInOut">
+                  <PropertyValue Property="LocalDataProperty" PropertyPath="enables_code"/>
+                  <PropertyValue Property="ValueListProperty" String="code"/>
+                </Record>
+                <Record Type="Common.ValueListParameterDisplayOnly">
+                  <PropertyValue Property="ValueListProperty" String="name"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+      </Annotations>
       <Annotations Target="CatalogService.SubcategoryAttributes">
         <Annotation Term="Core.Description" String="Detail attribute assigned to a subcategory, with the position of its field in a product's details."/>
       </Annotations>
@@ -1536,6 +1613,18 @@
       <Annotations Target="CatalogService.SubcategoryAttributes/position">
         <Annotation Term="Common.Label" String="Position"/>
         <Annotation Term="Core.Description" String="Position of the attribute's field in a product's details."/>
+      </Annotations>
+      <Annotations Target="CatalogService.SubcategoryAttributes/required">
+        <Annotation Term="Common.Label" String="Required"/>
+        <Annotation Term="Core.Description" String="Whether a product of the subcategory needs a value for the attribute."/>
+      </Annotations>
+      <Annotations Target="CatalogService.SubcategoryAttributes/minValue">
+        <Annotation Term="Common.Label" String="Minimum for the Subcategory"/>
+        <Annotation Term="Core.Description" String="Lowest allowed value of the attribute for products of the subcategory, inside the attribute's own minimum."/>
+      </Annotations>
+      <Annotations Target="CatalogService.SubcategoryAttributes/maxValue">
+        <Annotation Term="Common.Label" String="Maximum for the Subcategory"/>
+        <Annotation Term="Core.Description" String="Highest allowed value of the attribute for products of the subcategory, inside the attribute's own maximum."/>
       </Annotations>
       <Annotations Target="CatalogService.Permissions">
         <Annotation Term="Core.Description" String="Tells the caller whether the current user may change the catalog."/>

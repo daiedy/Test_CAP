@@ -36,6 +36,11 @@ A `CatalogEditor` can create many products at once from the List Report table to
 
 - First sheet, first row is a header naming the columns `name`, `description`, `price`, `currency`, `stock`, `category`, `subcategory`, `rating`, `imageUrl` (case-insensitive, any order); each column may appear at most once. Mandatory columns: `name`, `price`, `currency`, `stock`, `category`, `subcategory`.
 - `category`, `subcategory` and `currency` hold codes (`ELECTRONICS`, `LAPTOPS`, `USD`), never localized names; the subcategory must belong to the row's category.
+- Each row follows the product rules (ADR-0028):
+  - `name` has at least 3 characters after trimming and is new in the catalog and in the file, ignoring case and leading or trailing spaces.
+  - `price` is above 0, and a whole amount in a currency without minor units such as `JPY` or `KRW`.
+  - `description` is filled whenever `stock` is above 0.
+  - `imageUrl`, when given, starts with `https://` and contains no spaces.
 - At most 1,000 data rows per file; the workbook must not unzip to more than 10 MB.
 - All-or-nothing: a file with any bad row writes nothing, and the response lists every bad row with its row number and column.
 - Sample file: `test/fixtures/products-import-valid.xlsx` (3 rows, one per category and currency).

@@ -19,6 +19,8 @@ const base = '/odata/v4/catalog';
 // Valid payload for POST /Products; negative tests drop or replace one field at a time.
 const newProduct = {
   name: 'Test Lamp',
+  // In stock, so a description is required (R6, ADR-0028 decision 4).
+  description: 'Desk lamp of the service tests',
   price: '10.00',
   currency_code: 'USD',
   stock: 5,
@@ -407,9 +409,10 @@ describe('CatalogService.Products drafts', () => {
       });
 
       // The pair together: the category alone would empty the mandatory subcategory (reset).
+      // CUTLERY has no required detail (R8, D6), so the empty rows the edit fills do not block Save.
       const patched = await PATCH(draftKey(id), {
         category_code: 'KITCHEN',
-        subcategory_code: 'APPLIANCES',
+        subcategory_code: 'CUTLERY',
       });
       expect(patched.status).to.equal(200);
 
@@ -418,7 +421,7 @@ describe('CatalogService.Products drafts', () => {
       expect(activated.data).to.containSubset({
         IsActiveEntity: true,
         category_code: 'KITCHEN',
-        subcategory_code: 'APPLIANCES',
+        subcategory_code: 'CUTLERY',
         modifiedBy: 'alice',
       });
     } finally {
@@ -666,7 +669,16 @@ describe('CatalogService.Products drafts', () => {
     expect(draft).to.containSubset({ category_code: 'ELECTRONICS', subcategory_code: 'MICE' });
     expect(messageCodes(draft)).to.not.include('PRODUCTS_SUBCATEGORY_MISMATCH');
 
-    await PATCH(key, { name: 'Draft Mouse', price: '19.99', currency_code: 'USD', stock: 3 });
+    await PATCH(key, {
+      name: 'Draft Mouse',
+      description: 'Mouse of the drafts describe', // in stock (R6)
+      price: '19.99',
+      currency_code: 'USD',
+      stock: 3,
+    });
+    // DPI is required for mice (R8, D6); its row came with the subcategory (U2).
+    const { data: dpi } = await GET(`${key}/details?$filter=attribute_code eq 'DPI'&$select=ID`);
+    await PATCH(`${key}/details(ID=${dpi.value[0].ID},IsActiveEntity=false)`, { numberValue: 800 });
     // A new draft activates with 201 Created; a draftEdit draft answers 200.
     const activated = await POST(`${key}/CatalogService.draftActivate`, {});
     expect(activated.status).to.equal(201);
@@ -676,6 +688,210 @@ describe('CatalogService.Products drafts', () => {
       category_code: 'ELECTRONICS',
       subcategory_code: 'MICE',
     });
+  });
+});
+
+// Validations of products-validations (ADR-0028) on the product itself, one `it` per rule and path:
+// format and range rules answer in the draft PATCH response, constraints on the next DraftMessages
+// read, both at draftActivate with the `in/` target (research validation-facts sections 1 and 11.1).
+describe('CatalogService.Products validations', () => {
+  let seeded; // the seeded products with the columns a test may change, restored after each test
+  const columns = ['ID', 'name', 'description', 'price', 'currency_code', 'stock', 'imageUrl'];
+  const createActive = (payload) =>
+    POST(`${base}/Products`, active({ ...newProduct, name: 'Rule Lamp', ...payload }));
+  // A new product as a draft (Create in the UI), so a PATCH runs the draft validation.
+  const createDraft = async (payload) => {
+    const { data } = await POST(`${base}/Products`, {
+      ...newProduct,
+      name: 'Rule Draft',
+      ...payload,
+    });
+    return data.ID;
+  };
+  const idOf = async (name) => {
+    const { data } = await GET(`${base}/Products?$filter=name eq '${name}'&$select=ID`);
+    return data.value[0].ID;
+  };
+  const text = {
+    nameTooShort: 'Enter a product name with at least 3 characters.',
+    nameDuplicate: 'A product with this name already exists. Enter a different name.',
+    pricePositive: 'Enter a price greater than 0.',
+    minorUnit: 'Enter the price as a whole number. This currency has no decimal places.',
+    imageUrl: 'Enter an address that starts with https:// and has no spaces.',
+    description: 'Enter a description. Products in stock are visible to customers.',
+  };
+
+  beforeAll(async () => {
+    seeded = await cds.run(cds.ql.SELECT.from('my.catalog.Products').columns(...columns));
+  });
+
+  afterEach(async () => {
+    const drafts = await cds.run(
+      cds.ql.SELECT.from('CatalogService.Products.drafts').columns('ID')
+    );
+    for (const { ID } of drafts) await DELETE(draftKey(ID));
+    // Every product that is not seeded was created here (none of them has detail rows).
+    const ids = seeded.map((p) => p.ID);
+    await cds.run(cds.ql.DELETE.from('my.catalog.Products').where`ID not in ${ids}`);
+    for (const { ID, ...values } of seeded) {
+      await cds.run(cds.ql.UPDATE.entity('my.catalog.Products').set(values).where({ ID }));
+    }
+  });
+
+  it('rejects a name shorter than 3 characters with the project text (@assert.format.message)', async () => {
+    for (const name of ['AB', '  AB  ']) {
+      const err = await expect(createActive({ name })).to.be.rejectedWith(/400/);
+      expect(err, name).to.containSubset({ code: 'ASSERT_FORMAT', target: 'name' });
+      expect(err.message, name).to.contain(text.nameTooShort);
+    }
+    // Three characters after trimming are enough.
+    const { status } = await createActive({ name: ' Abc ' });
+    expect(status).to.equal(201);
+  });
+
+  it('reports a too short name on the draft PATCH and rejects activation', async () => {
+    const id = await createDraft();
+    // A format rule is a message of the PATCH response itself (P10b, B7).
+    const { status, data } = await PATCH(draftKey(id), { name: ' A ' });
+    expect(status).to.equal(200);
+    expect(data.DraftMessages).to.containSubset([
+      { code: 'ASSERT_FORMAT', message: text.nameTooShort },
+    ]);
+    expect(data.DraftMessages.find((m) => m.code === 'ASSERT_FORMAT').target).to.match(/name$/);
+    const err = await expect(draftActivate(id)).to.be.rejectedWith(/400/);
+    expect(err).to.containSubset({ code: 'ASSERT_FORMAT', target: 'in/name' });
+    expect(err.message).to.contain(text.nameTooShort);
+  });
+
+  it('rejects a product whose name exists in another case or with padding (PRODUCTS_NAME_DUPLICATE)', async () => {
+    for (const name of ['Backpack', 'backpack ', ' BACKPACK']) {
+      const err = await expect(createActive({ name })).to.be.rejectedWith(/400/);
+      expect(err, name).to.containSubset({ code: 'PRODUCTS_NAME_DUPLICATE', target: 'name' });
+      expect(err.message, name).to.contain(text.nameDuplicate);
+    }
+    const { data } = await GET(`${base}/Products?$count=true&$top=0`);
+    expect(data['@odata.count']).to.equal(15);
+  });
+
+  it('reports a duplicate name on the draft and rejects activation', async () => {
+    const id = await createDraft();
+    // A constraint: the PATCH response is clean, the next read carries the message.
+    const { status, data } = await PATCH(draftKey(id), { name: 'Backpack' });
+    expect(status).to.equal(200);
+    expect(data.DraftMessages).to.deep.equal([]);
+    const draft = await readDraft(draftKey(id), 'name,DraftMessages');
+    expect(messageCodes(draft)).to.deep.equal(['PRODUCTS_NAME_DUPLICATE']);
+    expect(draft.DraftMessages[0]).to.containSubset({ message: text.nameDuplicate });
+    expect(draft.DraftMessages[0].target).to.match(/\/name$/);
+    const err = await expect(draftActivate(id)).to.be.rejectedWith(/400/);
+    expect(err).to.containSubset({ code: 'PRODUCTS_NAME_DUPLICATE', target: 'in/name' });
+  });
+
+  it("keeps a product's own name through edit and save and refuses a rename to another product's name", async () => {
+    const backpack = await idOf('Backpack');
+    expect((await draftEdit(backpack)).status).to.equal(201);
+    // The own active row is no namesake of its draft (the association excludes the same ID).
+    expect((await PATCH(draftKey(backpack), { name: 'Backpack' })).status).to.equal(200);
+    const draft = await readDraft(draftKey(backpack), 'name,DraftMessages');
+    expect(draft.DraftMessages).to.deep.equal([]);
+    expect((await draftActivate(backpack)).status).to.equal(200);
+
+    const err = await expect(PATCH(activeKey(backpack), { name: 'Yoga Mat' })).to.be.rejectedWith(
+      /400/
+    );
+    expect(err).to.containSubset({ code: 'PRODUCTS_NAME_DUPLICATE', target: 'name' });
+    const { data } = await GET(`${activeKey(backpack)}?$select=name`);
+    expect(data).to.containSubset({ name: 'Backpack' });
+  });
+
+  it('rejects a price of 0 or below with the project text (@assert.range open bound)', async () => {
+    for (const price of ['0.00', '-1.00']) {
+      const err = await expect(createActive({ price })).to.be.rejectedWith(/400/);
+      expect(err, price).to.containSubset({ code: 'ASSERT_RANGE', target: 'price' });
+      expect(err.message, price).to.contain(text.pricePositive);
+    }
+    const { status, data } = await createActive({ price: '0.01' });
+    expect(status).to.equal(201);
+    expect(data).to.containSubset({ price: '0.01' });
+  });
+
+  it('rejects decimals in a currency without minor units (PRODUCTS_PRICE_MINOR_UNIT)', async () => {
+    const err = await expect(
+      createActive({ currency_code: 'JPY', price: '10.50' })
+    ).to.be.rejectedWith(/400/);
+    expect(err).to.containSubset({ code: 'PRODUCTS_PRICE_MINOR_UNIT', target: 'price' });
+    expect(err.message).to.contain(text.minorUnit);
+
+    const yen = await createActive({ name: 'Rule Yen Lamp', currency_code: 'JPY', price: '10.00' });
+    expect(yen.status).to.equal(201);
+    const dollar = await createActive({ name: 'Rule Dollar Lamp', price: '10.50' });
+    expect(dollar.status).to.equal(201);
+    expect(dollar.data).to.containSubset({ currency_code: 'USD', price: '10.50' });
+  });
+
+  it('reports the minor-unit rule on both fields of the draft when the currency changes', async () => {
+    const id = await createDraft({ price: '10.50' });
+    expect((await PATCH(draftKey(id), { currency_code: 'JPY' })).status).to.equal(200);
+    const draft = await readDraft(draftKey(id), 'price,currency_code,DraftMessages');
+    expect(messageCodes(draft)).to.deep.equal(['PRODUCTS_PRICE_MINOR_UNIT']);
+    const [message] = draft.DraftMessages;
+    expect(message).to.containSubset({ message: text.minorUnit });
+    // error() with two targets: the first is the target, the second an additional target (D8).
+    expect(message.target).to.match(/\/price$/);
+    expect(message.additionalTargets).to.have.length(1);
+    expect(message.additionalTargets[0]).to.match(/\/currency_code$/);
+
+    const err = await expect(draftActivate(id)).to.be.rejectedWith(/400/);
+    expect(err).to.containSubset({ code: 'PRODUCTS_PRICE_MINOR_UNIT', target: 'in/price' });
+  });
+
+  it('rejects an image URL that is not https or contains whitespace (@assert.format)', async () => {
+    for (const imageUrl of ['http://example.com/a.png', 'https://example.com/a b.png']) {
+      const err = await expect(createActive({ imageUrl })).to.be.rejectedWith(/400/);
+      expect(err, imageUrl).to.containSubset({ code: 'ASSERT_FORMAT', target: 'imageUrl' });
+      expect(err.message, imageUrl).to.contain(text.imageUrl);
+    }
+    const { status } = await createActive({ imageUrl: 'https://example.com/a.png' });
+    expect(status).to.equal(201);
+
+    // On a draft the message is in the PATCH response itself.
+    const id = await createDraft();
+    const { status: patched, data } = await PATCH(draftKey(id), {
+      imageUrl: 'http://example.com/a.png',
+    });
+    expect(patched).to.equal(200);
+    expect(data.DraftMessages).to.containSubset([
+      { code: 'ASSERT_FORMAT', message: text.imageUrl },
+    ]);
+    expect(data.DraftMessages.find((m) => m.code === 'ASSERT_FORMAT').target).to.match(/imageUrl$/);
+  });
+
+  it('requires a description while the product is in stock (PRODUCTS_DESCRIPTION_REQUIRED_IN_STOCK)', async () => {
+    for (const description of [undefined, '   ']) {
+      const err = await expect(createActive({ description })).to.be.rejectedWith(/400/);
+      expect(err, String(description)).to.containSubset({
+        code: 'PRODUCTS_DESCRIPTION_REQUIRED_IN_STOCK',
+        target: 'description',
+      });
+      expect(err.message).to.contain(text.description);
+    }
+    // Out of stock a product may still be incomplete.
+    const { status, data } = await createActive({ stock: 0, description: undefined });
+    expect(status).to.equal(201);
+    expect(data).to.containSubset({ stock: 0, description: null });
+  });
+
+  it('reports the missing description on the draft when the stock changes', async () => {
+    const id = await createDraft({ stock: 0, description: null });
+    expect(messageCodes(await readDraft(draftKey(id), 'ID,DraftMessages'))).to.deep.equal([]);
+    expect((await PATCH(draftKey(id), { stock: 7 })).status).to.equal(200);
+    const draft = await readDraft(draftKey(id), 'stock,description,DraftMessages');
+    expect(messageCodes(draft)).to.deep.equal(['PRODUCTS_DESCRIPTION_REQUIRED_IN_STOCK']);
+    const [message] = draft.DraftMessages;
+    expect(message).to.containSubset({ message: text.description });
+    expect(message.target).to.match(/\/description$/);
+    expect(message.additionalTargets).to.have.length(1);
+    expect(message.additionalTargets[0]).to.match(/\/stock$/);
   });
 });
 
@@ -737,6 +953,50 @@ describe('CatalogService.ProductDetails', () => {
     category_code: 'ELECTRONICS',
     subcategory_code: 'MICE',
   };
+  // An active deep POST of a product with its detail rows (products-validations, ADR-0028).
+  const postActive = (payload, options) =>
+    POST(`${base}/Products`, active({ ...newProduct, ...payload }), options);
+  // Codes of the DraftMessages of a draft root or row.
+  const draftCodes = async (key) => messageCodes(await readDraft(key, 'ID,DraftMessages'));
+  // Payload of a product with one row per entry; every row gets its ID up front, so an error target
+  // of the deep POST names the row: `details(ID=<row>)/<element>`.
+  const withDetails = (name, category_code, subcategory_code, rows) => ({
+    name,
+    category_code,
+    subcategory_code,
+    details: rows.map((row) => ({ ID: cds.utils.uuid(), ...row })),
+  });
+  // A laptop with valid values (SCREEN_SIZE 10-18, RAM 4-128, STORAGE 32-8192); `values` replaces some.
+  const laptopPayload = (name, values = {}) =>
+    withDetails(
+      name,
+      'ELECTRONICS',
+      'LAPTOPS',
+      Object.entries({ SCREEN_SIZE: 15, RAM: 16, STORAGE: 512, ...values }).map(
+        ([attribute_code, numberValue]) => ({ attribute_code, numberValue })
+      )
+    );
+  // A mouse with DPI 1600 (required), the given connectivity selections (no CONNECTIVITY row when
+  // undefined) and battery life.
+  const mousePayload = (name, connectivity, battery) =>
+    withDetails(name, 'ELECTRONICS', 'MICE', [
+      ...(connectivity
+        ? [
+            {
+              attribute_code: 'CONNECTIVITY',
+              selections: connectivity.map((value_code) => ({ value_code })),
+            },
+          ]
+        : []),
+      { attribute_code: 'DPI', numberValue: 1600 },
+      { attribute_code: 'BATTERY_LIFE', numberValue: battery },
+    ]);
+  const idIn = (payload, code) => payload.details.find((row) => row.attribute_code === code).ID;
+  const activeTarget = (payload, code, element = 'numberValue') =>
+    `details(ID=${idIn(payload, code)})/${element}`;
+  const activationTarget = (rowId, element = 'numberValue') =>
+    `in/details(ID=${rowId},IsActiveEntity=false)/${element}`;
+  let seededAssignments; // SubcategoryAttributes, restored after a test that flags one required
 
   beforeAll(async () => {
     const names = ['Laptop Pro 15', 'Wireless Mouse', 'Office Chair', 'Bluetooth Speaker'];
@@ -750,6 +1010,7 @@ describe('CatalogService.ProductDetails', () => {
     seededProducts = await cds.run(
       cds.ql.SELECT.from('my.catalog.Products').columns('ID', 'category_code', 'subcategory_code')
     );
+    seededAssignments = await cds.run(cds.ql.SELECT.from('my.catalog.SubcategoryAttributes'));
   });
 
   afterEach(async () => {
@@ -796,6 +1057,10 @@ describe('CatalogService.ProductDetails', () => {
         subcategory_code: 'LAPTOPS',
         attribute_code: 'COLOUR',
       })
+    );
+    // The required flags a scratch assignment set (R8 branches of TEXT, LIST and MULTI_LIST).
+    await cds.run(
+      cds.ql.UPSERT.into('my.catalog.SubcategoryAttributes').entries(seededAssignments)
     );
   });
 
@@ -1049,26 +1314,27 @@ describe('CatalogService.ProductDetails', () => {
 
   it('creates a detail row of an active product through the product', async () => {
     // Every seeded product has all its rows; a product created through the API has none (D13).
+    // DPI: a battery life would need a wireless connectivity row first (R12).
     const product = await createActive(bareMouse);
     const { status, data } = await POST(`${activeKey(product.ID)}/details`, {
-      attribute_code: 'BATTERY_LIFE',
-      numberValue: 12,
+      attribute_code: 'DPI',
+      numberValue: 800,
     });
     expect(status).to.equal(201);
     expect(data).to.containSubset({
       IsActiveEntity: true,
       product_ID: product.ID,
-      attribute_code: 'BATTERY_LIFE',
-      numberValue: '12.000',
+      attribute_code: 'DPI',
+      numberValue: '800.000',
     });
     const { data: stored } = await GET(
       `${activeRow(product.ID, data.ID)}?$select=numberValue&$expand=attribute($select=name,unit)`
     );
     expect(stored).to.containSubset({
-      numberValue: '12.000',
-      attribute: { name: 'Battery Life', unit: 'h' },
+      numberValue: '800.000',
+      attribute: { name: 'Sensor Resolution', unit: 'dpi' },
     });
-    expect(await activeCodes(product.ID)).to.deep.equal(['BATTERY_LIFE']);
+    expect(await activeCodes(product.ID)).to.deep.equal(['DPI']);
   });
 
   it('rejects an attribute that is not assigned to the subcategory of the product (PRODUCTS_DETAIL_ATTRIBUTE_NOT_ASSIGNED)', async () => {
@@ -1403,20 +1669,19 @@ describe('CatalogService.ProductDetails', () => {
     }
 
     const ram = rows.find((row) => row.attribute_code === 'RAM').ID;
+    // SCREEN_SIZE is required for laptops (R8, D6), so Save needs its value.
+    const screen = rows.find((row) => row.attribute_code === 'SCREEN_SIZE').ID;
     expect((await PATCH(draftRow(draft.ID, ram), { numberValue: 32 })).status).to.equal(200);
+    expect((await PATCH(draftRow(draft.ID, screen), { numberValue: 14 })).status).to.equal(200);
     const activated = await draftActivate(draft.ID);
     expect(activated.status).to.equal(201);
     // Empty values are saved as empty rows (U4); the @readonly position survives activation (R5).
+    const filled = { [ram]: '32.000', [screen]: '14.000' };
     const saved = await rowsOf(activeKey(draft.ID));
     expect(
       saved.map((row) => [row.ID, row.attribute_code, row.position, row.numberValue])
     ).to.deep.equal(
-      rows.map((row) => [
-        row.ID,
-        row.attribute_code,
-        row.position,
-        row.ID === ram ? '32.000' : null,
-      ])
+      rows.map((row) => [row.ID, row.attribute_code, row.position, filled[row.ID] ?? null])
     );
   });
 
@@ -1490,6 +1755,11 @@ describe('CatalogService.ProductDetails', () => {
     expect(inMice[1].ID).to.not.equal(rowOf(mouse, 'DPI'));
     expect(inMice[1]).to.containSubset({ numberValue: null });
 
+    // DPI is required for mice (R8, D6): Save needs a value in the new row.
+    expect((await PATCH(draftRow(mouse, inMice[1].ID), { numberValue: 800 })).status).to.equal(200);
+    const beforeSave = await rowsOf(draftKey(mouse));
+    expect(beforeSave[1]).to.containSubset({ ID: inMice[1].ID, numberValue: '800.000' });
+
     // Save stores exactly these rows.
     expect((await draftActivate(mouse)).status).to.equal(200);
     const shape = (rows) =>
@@ -1500,7 +1770,7 @@ describe('CatalogService.ProductDetails', () => {
         row.numberValue,
         selectionsIn(row),
       ]);
-    expect(shape(await rowsOf(activeKey(mouse)))).to.deep.equal(shape(inMice));
+    expect(shape(await rowsOf(activeKey(mouse)))).to.deep.equal(shape(beforeSave));
   });
 
   it('removes the selections of a replaced multi-value row', async () => {
@@ -1845,6 +2115,395 @@ describe('CatalogService.ProductDetails', () => {
     expect(carol).to.containSubset({ code: '403' });
     const { data } = await GET(`${connectivity}/selections?$select=value_code`);
     expect(data.value.map((s) => s.value_code)).to.deep.equal(['BLUETOOTH_5_0']);
+  });
+
+  // products-validations (ADR-0028 decisions 5, 8-10): the rules of the detail rows. A constraint
+  // writes its draft message at commit (row and root DraftMessages on the next read) and only for a
+  // touched row; activation names the row `in/details(ID=...,IsActiveEntity=false)/<element>`.
+  it('requires the detail values marked required for the subcategory and reports them on the draft row', async () => {
+    await draftEdit(laptop);
+    const screen = rowOf(laptop, 'SCREEN_SIZE'); // LAPTOPS/SCREEN_SIZE is required (D6)
+    expect((await PATCH(draftRow(laptop, screen), { numberValue: null })).status).to.equal(200);
+    const onRow = await readDraft(draftRow(laptop, screen), 'ID,DraftMessages');
+    expect(messageCodes(onRow)).to.deep.equal(['PRODUCTS_DETAIL_VALUE_REQUIRED']);
+    expect(onRow.DraftMessages[0]).to.containSubset({
+      message: 'Fill in this detail. It is required for products of this subcategory.',
+    });
+    expect(onRow.DraftMessages[0].target).to.match(rowTarget(screen, 'numberValue'));
+    expect(await draftCodes(draftKey(laptop))).to.deep.equal(['PRODUCTS_DETAIL_VALUE_REQUIRED']);
+
+    const err = await expect(draftActivate(laptop)).to.be.rejectedWith(/400/);
+    expect(err).to.containSubset({
+      code: 'PRODUCTS_DETAIL_VALUE_REQUIRED',
+      target: activationTarget(screen),
+    });
+  });
+
+  it('checks the required branch of every value type', async () => {
+    // INTEGER and DECIMAL, seeded: the required SCREEN_SIZE is enough, the optional rows stay empty.
+    const filled = laptopPayload('Details Required Laptop', { RAM: null, STORAGE: null });
+    expect((await postActive(filled)).status).to.equal(201);
+    const empty = laptopPayload('Details Empty Laptop', { SCREEN_SIZE: null });
+    const number = await expect(postActive(empty)).to.be.rejectedWith(/400/);
+    expect(number).to.containSubset({
+      code: 'PRODUCTS_DETAIL_VALUE_REQUIRED',
+      target: activeTarget(empty, 'SCREEN_SIZE'),
+    });
+
+    // TEXT, LIST and MULTI_LIST have no required assignment in the seed (SCREENS Q3): scratch flags,
+    // restored by afterEach.
+    const flag = (subcategory_code, attribute_code) =>
+      cds.run(
+        cds.ql.UPDATE.entity('my.catalog.SubcategoryAttributes')
+          .set({ required: true })
+          .where({ subcategory_code, attribute_code })
+      );
+    await flag('DESK_ORGANIZATION', 'DIMENSIONS');
+    await flag('SEATING', 'MATERIAL');
+    await flag('SEATING', 'COLOUR');
+
+    const organizer = withDetails('Details Organizer', 'FURNITURE', 'DESK_ORGANIZATION', [
+      { attribute_code: 'DIMENSIONS', textValue: '   ' },
+    ]);
+    const text = await expect(postActive(organizer)).to.be.rejectedWith(/400/);
+    expect(text).to.containSubset({
+      code: 'PRODUCTS_DETAIL_VALUE_REQUIRED',
+      target: activeTarget(organizer, 'DIMENSIONS', 'textValue'),
+    });
+
+    const chair = withDetails('Details Required Chair', 'FURNITURE', 'SEATING', [
+      { attribute_code: 'MATERIAL' },
+      { attribute_code: 'MAX_LOAD', numberValue: 120 },
+      { attribute_code: 'COLOUR' },
+    ]);
+    const lists = await expect(postActive(chair)).to.be.rejectedWith(/400/);
+    expect(lists).to.containSubset({ code: 'MULTIPLE_ERRORS' });
+    expect(lists.details).to.have.length(2);
+    // MULTI_LIST has no value column: its branch sits on the attribute (popover only, Q3).
+    expect(lists.details).to.containSubset([
+      {
+        code: 'PRODUCTS_DETAIL_VALUE_REQUIRED',
+        target: activeTarget(chair, 'MATERIAL', 'attribute_code'),
+      },
+      {
+        code: 'PRODUCTS_DETAIL_VALUE_REQUIRED',
+        target: activeTarget(chair, 'COLOUR', 'listValue_code'),
+      },
+    ]);
+
+    // Filled, the same products are accepted.
+    organizer.details[0].textValue = '30 x 20 x 10';
+    chair.details[0].selections = [{ value_code: 'MESH' }];
+    chair.details[2].listValue_code = 'BLACK';
+    expect((await postActive(organizer)).status).to.equal(201);
+    expect((await postActive(chair)).status).to.equal(201);
+  });
+
+  it('lists the required assignments of the subcategories', async () => {
+    const { data } = await GET(
+      `${base}/SubcategoryAttributes?$filter=required eq true` +
+        '&$select=subcategory_code,attribute_code&$orderby=subcategory_code,attribute_code'
+    );
+    expect(data.value.map((a) => `${a.subcategory_code}/${a.attribute_code}`)).to.deep.equal([
+      'APPLIANCES/CAPACITY',
+      'APPLIANCES/POWER',
+      'DRINKWARE/CAPACITY',
+      'FITNESS/THICKNESS',
+      'LAPTOPS/SCREEN_SIZE',
+      'MICE/DPI',
+      'SEATING/MAX_LOAD',
+    ]);
+  });
+
+  it('narrows a detail value to the bounds of the subcategory assignment', async () => {
+    // SCREEN_SIZE allows 1-100 for any product and 10-18 for a laptop; the global bounds come first.
+    const rejected = [
+      [9, 'PRODUCTS_DETAIL_VALUE_OUT_OF_SUBCATEGORY_RANGE'],
+      [19, 'PRODUCTS_DETAIL_VALUE_OUT_OF_SUBCATEGORY_RANGE'],
+      [0.5, 'PRODUCTS_DETAIL_VALUE_OUT_OF_RANGE'],
+    ];
+    for (const [value, code] of rejected) {
+      const payload = laptopPayload('Details Bounded Laptop', { SCREEN_SIZE: value });
+      const err = await expect(postActive(payload)).to.be.rejectedWith(/400/);
+      expect(err, String(value)).to.containSubset({
+        code,
+        target: activeTarget(payload, 'SCREEN_SIZE'),
+      });
+      if (code === 'PRODUCTS_DETAIL_VALUE_OUT_OF_SUBCATEGORY_RANGE') {
+        expect(err.message).to.contain(
+          'Enter a value within the range allowed for this subcategory.'
+        );
+      }
+    }
+    const accepted = await postActive(laptopPayload('Details Bounded Laptop', { SCREEN_SIZE: 15 }));
+    expect(accepted.status).to.equal(201);
+  });
+
+  it('reports the assignment bounds on the draft row and at activation', async () => {
+    await draftEdit(laptop);
+    const screen = rowOf(laptop, 'SCREEN_SIZE');
+    const row = draftRow(laptop, screen);
+    expect((await PATCH(row, { numberValue: 25 })).status).to.equal(200);
+    const onRow = await readDraft(row, 'ID,DraftMessages');
+    expect(messageCodes(onRow)).to.deep.equal(['PRODUCTS_DETAIL_VALUE_OUT_OF_SUBCATEGORY_RANGE']);
+    expect(onRow.DraftMessages[0].target).to.match(rowTarget(screen, 'numberValue'));
+    expect(await draftCodes(draftKey(laptop))).to.deep.equal([
+      'PRODUCTS_DETAIL_VALUE_OUT_OF_SUBCATEGORY_RANGE',
+    ]);
+    const err = await expect(draftActivate(laptop)).to.be.rejectedWith(/400/);
+    expect(err).to.containSubset({
+      code: 'PRODUCTS_DETAIL_VALUE_OUT_OF_SUBCATEGORY_RANGE',
+      target: activationTarget(screen),
+    });
+
+    // Back inside the bounds the message is gone and Save passes.
+    expect((await PATCH(row, { numberValue: 15 })).status).to.equal(200);
+    expect(await draftCodes(row)).to.deep.equal([]);
+    expect(await draftCodes(draftKey(laptop))).to.deep.equal([]);
+    expect((await draftActivate(laptop)).status).to.equal(200);
+  });
+
+  it('seeds the bounds per assignment and keeps every seeded value inside them', async () => {
+    const { data } = await GET(
+      `${base}/SubcategoryAttributes?$filter=minValue ne null` +
+        '&$select=subcategory_code,attribute_code,minValue,maxValue'
+    );
+    // Decimal arrives as a string.
+    expect(data.value).to.containSubset([
+      {
+        subcategory_code: 'LAPTOPS',
+        attribute_code: 'SCREEN_SIZE',
+        minValue: '10.000',
+        maxValue: '18.000',
+      },
+    ]);
+    const bounds = Object.fromEntries(
+      data.value.map((a) => [
+        `${a.subcategory_code}/${a.attribute_code}`,
+        [Number(a.minValue), Number(a.maxValue)],
+      ])
+    );
+    expect(bounds).to.deep.equal({
+      'LAPTOPS/SCREEN_SIZE': [10, 18],
+      'LAPTOPS/RAM': [4, 128],
+      'LAPTOPS/STORAGE': [32, 8192],
+      'MICE/DPI': [400, 32000],
+      'MICE/BATTERY_LIFE': [1, 2000],
+      'AUDIO/BATTERY_LIFE': [1, 100],
+      'SEATING/MAX_LOAD': [50, 300],
+      'LIGHTING/POWER': [1, 150],
+      'LIGHTING/BRIGHTNESS': [50, 5000],
+      'APPLIANCES/POWER': [50, 3000],
+      'APPLIANCES/CAPACITY': [0.2, 10],
+      'DRINKWARE/CAPACITY': [0.1, 3],
+      'BAGS/CAPACITY': [5, 80],
+      'CUTLERY/WEIGHT': [0.1, 5],
+      'CUTLERY/PIECES': [1, 50],
+      'PHONE_ACCESSORIES/WEIGHT': [0.01, 1],
+      'OUTDOOR/WEIGHT': [0.1, 30],
+      'FITNESS/THICKNESS': [1, 25],
+      'NOTEBOOKS/PAGE_COUNT': [20, 600],
+      'WRITING_INSTRUMENTS/TIP_SIZE': [0.1, 2],
+    });
+
+    // Every filled seeded value lies inside the bounds of its product's assignment.
+    const subcategoryOf = new Map(seededProducts.map((p) => [p.ID, p.subcategory_code]));
+    const values = seededRows.filter((row) => row.numberValue != null);
+    for (const row of values) {
+      const key = `${subcategoryOf.get(row.product_ID)}/${row.attribute_code}`;
+      expect(bounds, key).to.have.property(key);
+      expect(Number(row.numberValue), key).to.be.within(...bounds[key]);
+    }
+    expect(values).to.have.length(10);
+  });
+
+  it('refuses a storage below the memory of the same laptop (cross-row rule)', async () => {
+    const small = laptopPayload('Details Small Storage', { RAM: 128, STORAGE: 64 });
+    const err = await expect(postActive(small)).to.be.rejectedWith(/400/);
+    // error() with path arguments: both attribute names, the target is the STORAGE row (D8, D11).
+    expect(err).to.containSubset({
+      code: 'PRODUCTS_DETAIL_VALUE_BELOW_OTHER',
+      target: activeTarget(small, 'STORAGE'),
+    });
+    expect(err.message).to.contain('Storage must not be below Memory (RAM).');
+    const large = await postActive(
+      laptopPayload('Details Large Storage', { RAM: 16, STORAGE: 512 })
+    );
+    expect(large.status).to.equal(201);
+  });
+
+  it('reports the cross-row rule on the touched row and at activation', async () => {
+    await draftEdit(laptop);
+    const [ram, storage] = ['RAM', 'STORAGE'].map((code) => rowOf(laptop, code));
+    // STORAGE 64 is above RAM 16. RAM 128 then breaks the rule, but the rule sits on the STORAGE
+    // row, which this PATCH does not touch (D11: no mirror branch).
+    expect((await PATCH(draftRow(laptop, storage), { numberValue: 64 })).status).to.equal(200);
+    expect(await draftCodes(draftKey(laptop))).to.deep.equal([]);
+    expect((await PATCH(draftRow(laptop, ram), { numberValue: 128 })).status).to.equal(200);
+    expect(await draftCodes(draftKey(laptop))).to.deep.equal([]);
+    const err = await expect(draftActivate(laptop)).to.be.rejectedWith(/400/);
+    expect(err).to.containSubset({
+      code: 'PRODUCTS_DETAIL_VALUE_BELOW_OTHER',
+      target: activationTarget(storage),
+    });
+
+    // Touching the STORAGE row writes the message there.
+    expect((await PATCH(draftRow(laptop, storage), { numberValue: 32 })).status).to.equal(200);
+    const onRow = await readDraft(draftRow(laptop, storage), 'ID,DraftMessages');
+    expect(messageCodes(onRow)).to.deep.equal(['PRODUCTS_DETAIL_VALUE_BELOW_OTHER']);
+    expect(onRow.DraftMessages[0]).to.containSubset({
+      message: 'Storage must not be below Memory (RAM).',
+    });
+    expect(onRow.DraftMessages[0].target).to.match(rowTarget(storage, 'numberValue'));
+  });
+
+  it('keeps a dependent detail empty unless an enabling value is selected (API guard)', async () => {
+    // Bluetooth, 2.4 GHz and Wi-Fi enable BATTERY_LIFE; WIRED_USB does not (DetailListValues.enables).
+    const rejected = [
+      mousePayload('Details Wired Mouse', ['WIRED_USB'], 12),
+      mousePayload('Details Unconnected Mouse', undefined, 12),
+    ];
+    for (const payload of rejected) {
+      const err = await expect(postActive(payload)).to.be.rejectedWith(/400/);
+      expect(err, payload.name).to.containSubset({
+        code: 'PRODUCTS_DETAIL_VALUE_NOT_ENABLED',
+        target: activeTarget(payload, 'BATTERY_LIFE'),
+      });
+    }
+    const accepted = [
+      mousePayload('Details Bluetooth Mouse', ['BLUETOOTH_5_0'], 12),
+      mousePayload('Details Wired Mouse', ['WIRED_USB'], null),
+    ];
+    for (const payload of accepted) {
+      expect((await postActive(payload)).status, payload.name).to.equal(201);
+    }
+  });
+
+  it('guards the dependent detail at activation after the enabling selections are removed', async () => {
+    await draftEdit(mouse);
+    const [connectivity, battery] = ['CONNECTIVITY', 'BATTERY_LIFE'].map((c) => rowOf(mouse, c));
+    const selections = `${draftRow(mouse, connectivity)}/selections`;
+    // Bluetooth 5.0 and Wireless 2.4 GHz are selected: a battery life is allowed.
+    expect((await PATCH(draftRow(mouse, battery), { numberValue: 12 })).status).to.equal(200);
+    expect(await draftCodes(draftKey(mouse))).to.deep.equal([]);
+    // Deleting the selections touches no value row, so the guard waits for Save.
+    for (const { ID } of seededSelections.filter((s) => s.detail_ID === connectivity)) {
+      expect((await DELETE(`${selections}(ID=${ID},IsActiveEntity=false)`)).status).to.equal(204);
+    }
+    expect(await draftCodes(draftKey(mouse))).to.deep.equal([]);
+    const err = await expect(draftActivate(mouse)).to.be.rejectedWith(/400/);
+    expect(err).to.containSubset({
+      code: 'PRODUCTS_DETAIL_VALUE_NOT_ENABLED',
+      target: activationTarget(battery),
+    });
+
+    // Touching the value writes the message on the row.
+    expect((await PATCH(draftRow(mouse, battery), { numberValue: 13 })).status).to.equal(200);
+    const onRow = await readDraft(draftRow(mouse, battery), 'ID,DraftMessages');
+    expect(messageCodes(onRow)).to.deep.equal(['PRODUCTS_DETAIL_VALUE_NOT_ENABLED']);
+    expect(onRow.DraftMessages[0].target).to.match(rowTarget(battery, 'numberValue'));
+
+    // A wireless selection enables the value again.
+    expect((await POST(selections, { value_code: 'WIFI' })).status).to.equal(201);
+    expect((await PATCH(draftRow(mouse, battery), { numberValue: 14 })).status).to.equal(200);
+    expect(await draftCodes(draftRow(mouse, battery))).to.deep.equal([]);
+    expect((await draftActivate(mouse)).status).to.equal(200);
+    const saved = await rowsOf(activeKey(mouse));
+    expect(selectionsIn(saved[0])).to.deep.equal(['WIFI']);
+    expect(saved[2]).to.containSubset({ attribute_code: 'BATTERY_LIFE', numberValue: '14.000' });
+  });
+
+  it('seeds the enabling values and keeps every dependent attribute reachable', async () => {
+    const { data: enabling } = await GET(
+      `${base}/DetailListValues?$filter=enables_code eq 'BATTERY_LIFE'` +
+        '&$select=code,attribute_code&$orderby=code'
+    );
+    expect(enabling.value.map((v) => v.code)).to.deep.equal([
+      'BLUETOOTH_5_0',
+      'BLUETOOTH_5_3',
+      'WIFI',
+      'WIRELESS_2_4_GHZ',
+    ]);
+
+    // A dependent attribute needs its enabler in the same product, so a subcategory that assigns it
+    // also assigns an attribute whose values enable it.
+    const { data: attributes } = await GET(
+      `${base}/DetailAttributes?$select=code&$expand=enabledBy($select=code,attribute_code)`
+    );
+    const enablersOf = new Map(
+      attributes.value
+        .filter((a) => a.enabledBy.length)
+        .map((a) => [a.code, new Set(a.enabledBy.map((v) => v.attribute_code))])
+    );
+    expect([...enablersOf.keys()]).to.deep.equal(['BATTERY_LIFE']);
+    const { data: assignments } = await GET(
+      `${base}/SubcategoryAttributes?$select=subcategory_code,attribute_code`
+    );
+    const assigned = Map.groupBy(assignments.value, (a) => a.subcategory_code);
+    const checked = [];
+    for (const [subcategory, rows] of assigned) {
+      const codes = new Set(rows.map((a) => a.attribute_code));
+      for (const [dependent, enablers] of enablersOf) {
+        if (!codes.has(dependent)) continue;
+        expect(
+          [...enablers].some((code) => codes.has(code)),
+          `${subcategory}/${dependent}`
+        ).to.equal(true);
+        checked.push(subcategory);
+      }
+    }
+    expect(checked.sort()).to.deep.equal(['AUDIO', 'MICE']);
+  });
+
+  it('accepts only a power of two as laptop memory', async () => {
+    const odd = laptopPayload('Details Odd Memory', { RAM: 12 });
+    const err = await expect(postActive(odd)).to.be.rejectedWith(/400/);
+    expect(err).to.containSubset({
+      code: 'PRODUCTS_DETAIL_VALUE_NOT_POWER_OF_TWO',
+      target: activeTarget(odd, 'RAM'),
+    });
+    expect(err.message).to.contain('Enter a power of two, for example 8, 16 or 32.');
+    const even = await postActive(laptopPayload('Details Even Memory', { RAM: 16 }));
+    expect(even.status).to.equal(201);
+
+    await draftEdit(laptop);
+    const ram = rowOf(laptop, 'RAM');
+    expect((await PATCH(draftRow(laptop, ram), { numberValue: 12 })).status).to.equal(200);
+    const onRow = await readDraft(draftRow(laptop, ram), 'ID,DraftMessages');
+    expect(messageCodes(onRow)).to.deep.equal(['PRODUCTS_DETAIL_VALUE_NOT_POWER_OF_TWO']);
+    expect(onRow.DraftMessages[0].target).to.match(rowTarget(ram, 'numberValue'));
+    const activation = await expect(draftActivate(laptop)).to.be.rejectedWith(/400/);
+    expect(activation).to.containSubset({
+      code: 'PRODUCTS_DETAIL_VALUE_NOT_POWER_OF_TWO',
+      target: activationTarget(ram),
+    });
+  });
+
+  it('reports the new validation messages in Russian', async () => {
+    const russian = [
+      [
+        { ...laptopPayload('Details Yen Laptop'), currency_code: 'JPY', price: '10.50' },
+        'PRODUCTS_PRICE_MINOR_UNIT',
+        'Введите цену целым числом. У этой валюты нет дробной части.',
+      ],
+      [
+        laptopPayload('LAPTOP PRO 15'),
+        'PRODUCTS_NAME_DUPLICATE',
+        'Товар с таким названием уже есть в каталоге. Введите другое название.',
+      ],
+      [laptopPayload('AB'), 'ASSERT_FORMAT', 'Введите название товара длиной не менее 3 символов.'],
+      // The attribute names come from DetailAttributes texts in the request's language (research 10.6).
+      [
+        laptopPayload('Details Small Storage', { RAM: 128, STORAGE: 64 }),
+        'PRODUCTS_DETAIL_VALUE_BELOW_OTHER',
+        'Значение Накопитель не может быть меньше значения Оперативная память.',
+      ],
+    ];
+    for (const [payload, code, message] of russian) {
+      const err = await expect(postActive(payload, ru)).to.be.rejectedWith(/400/);
+      expect(err, code).to.containSubset({ code });
+      expect(err.message, code).to.contain(message);
+    }
   });
 });
 
@@ -2470,5 +3129,56 @@ describe('CatalogService.Products importProducts', () => {
     expect(JSON.parse(headers['sap-messages'])).to.containSubset([
       { code: 'PRODUCTS_IMPORT_DONE', message: 'Импортировано товаров: 1.' },
     ]);
+  });
+
+  it('importProducts reports the minor-unit and description rules per row', async () => {
+    // R4 and R6 are root constraints checked at commit without a row, so the import repeats them
+    // per row before the inserts (ADR-0028 decision 6). Rows 4 and 5 are their valid neighbours.
+    const { err, codes, messages } = await rejected(
+      importSheet([
+        HEADER,
+        generatedRow(1, { currency: 'JPY', price: 10.5 }),
+        generatedRow(2, { description: null, stock: 5 }),
+        generatedRow(3, { currency: 'JPY', price: 10 }),
+        generatedRow(4, { description: null, stock: 0 }),
+        // Current behaviour: a JPY price below 0 with decimals gets both price reasons, the
+        // pre-check's first, then the INSERT's range text.
+        generatedRow(5, { currency: 'JPY', price: -0.5 }),
+      ])
+    );
+    expect(codes).to.deep.equal([
+      'PRODUCTS_IMPORT_NOTHING_IMPORTED',
+      ...Array(4).fill('PRODUCTS_IMPORT_ROW_INVALID'),
+    ]);
+    expect(messages.slice(1)).to.deep.equal([
+      'Row 2, column "price": Enter the price as a whole number. This currency has no decimal places.',
+      'Row 3, column "description": Enter a description. Products in stock are visible to customers.',
+      'Row 6, column "price": Enter the price as a whole number. This currency has no decimal places.',
+      'Row 6, column "price": Enter a price greater than 0.',
+    ]);
+    for (const detail of err.details) expect(detail.target).to.equal(undefined);
+    expect(await count()).to.equal(15);
+  });
+
+  it('importProducts reports the project text of a format rule', async () => {
+    // The reason is the @assert.format.message text, not the cds default "Enter a value matching
+    // the pattern ..." (research validation-facts 11.2).
+    const { codes, messages } = await rejected(
+      importSheet([
+        HEADER,
+        generatedRow(1, { name: 'AB' }),
+        generatedRow(2, { imageUrl: 'http://example.com/a.png' }),
+      ])
+    );
+    expect(codes).to.deep.equal([
+      'PRODUCTS_IMPORT_NOTHING_IMPORTED',
+      'PRODUCTS_IMPORT_ROW_INVALID',
+      'PRODUCTS_IMPORT_ROW_INVALID',
+    ]);
+    expect(messages.slice(1)).to.deep.equal([
+      'Row 2, column "name": Enter a product name with at least 3 characters.',
+      'Row 3, column "imageUrl": Enter an address that starts with https:// and has no spaces.',
+    ]);
+    expect(await count()).to.equal(15);
   });
 });

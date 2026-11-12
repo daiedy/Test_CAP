@@ -4,7 +4,7 @@
     "title": "Product Catalog API",
     "description": "Reads and maintains catalog products with their categories, subcategories and typed details, and imports products from an Excel workbook.",
     "version": "1.0.0",
-    "x-sources": "8fe25d39ba100345"
+    "x-sources": "736656c2ea630bdb"
   },
   "x-sap-api-type": "ODATAV4",
   "x-odata-version": "4.01",
@@ -1239,7 +1239,9 @@
                   "maxValue",
                   "maxValue desc",
                   "scale",
-                  "scale desc"
+                  "scale desc",
+                  "atLeast_code",
+                  "atLeast_code desc"
                 ]
               }
             }
@@ -1262,7 +1264,8 @@
                   "valueType_code",
                   "minValue",
                   "maxValue",
-                  "scale"
+                  "scale",
+                  "atLeast_code"
                 ]
               }
             }
@@ -1280,8 +1283,10 @@
                 "enum": [
                   "*",
                   "valueType",
+                  "atLeast",
                   "subcategories",
                   "values",
+                  "enabledBy",
                   "texts",
                   "localized"
                 ]
@@ -1355,7 +1360,8 @@
                   "valueType_code",
                   "minValue",
                   "maxValue",
-                  "scale"
+                  "scale",
+                  "atLeast_code"
                 ]
               }
             }
@@ -1373,8 +1379,10 @@
                 "enum": [
                   "*",
                   "valueType",
+                  "atLeast",
                   "subcategories",
                   "values",
+                  "enabledBy",
                   "texts",
                   "localized"
                 ]
@@ -1389,6 +1397,228 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CatalogService.DetailAttributes"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/error"
+          }
+        }
+      }
+    },
+    "/DetailAttributes('{code}')/atLeast": {
+      "parameters": [
+        {
+          "description": "Code of the attribute.",
+          "in": "path",
+          "name": "code",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "maxLength": 30
+          }
+        }
+      ],
+      "get": {
+        "summary": "Retrieves at least of a detail attribute.",
+        "tags": [
+          "Detail Attributes"
+        ],
+        "parameters": [
+          {
+            "name": "$select",
+            "description": "Select properties to be returned, see [Select](http://docs.oasis-open.org/odata/odata/v4.01/odata-v4.01-part1-protocol.html#sec_SystemQueryOptionselect)",
+            "in": "query",
+            "explode": false,
+            "schema": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "enum": [
+                  "name",
+                  "descr",
+                  "code",
+                  "unit",
+                  "valueType_code",
+                  "minValue",
+                  "maxValue",
+                  "scale",
+                  "atLeast_code"
+                ]
+              }
+            }
+          },
+          {
+            "name": "$expand",
+            "description": "The value of $expand query option is a comma-separated list of navigation property names, stream property names, or $value indicating the stream content of a media-entity. The corresponding related entities and stream values will be represented inline, see [Expand](http://docs.oasis-open.org/odata/odata/v4.01/odata-v4.01-part1-protocol.html#sec_SystemQueryOptionexpand)",
+            "in": "query",
+            "explode": false,
+            "schema": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "enum": [
+                  "*",
+                  "valueType",
+                  "atLeast",
+                  "subcategories",
+                  "values",
+                  "enabledBy",
+                  "texts",
+                  "localized"
+                ]
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retrieved at least",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogService.DetailAttributes"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/error"
+          }
+        }
+      }
+    },
+    "/DetailAttributes('{code}')/enabledBy": {
+      "parameters": [
+        {
+          "description": "Code of the attribute.",
+          "in": "path",
+          "name": "code",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "maxLength": 30
+          }
+        }
+      ],
+      "get": {
+        "summary": "Retrieves a list of enabled by of a detail attribute.",
+        "tags": [
+          "Detail Attributes",
+          "Detail List Values"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/top"
+          },
+          {
+            "$ref": "#/components/parameters/skip"
+          },
+          {
+            "$ref": "#/components/parameters/search"
+          },
+          {
+            "name": "$filter",
+            "description": "Filter items by property values, see [Filtering](http://docs.oasis-open.org/odata/odata/v4.01/odata-v4.01-part1-protocol.html#sec_SystemQueryOptionfilter)",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/count"
+          },
+          {
+            "name": "$orderby",
+            "description": "Order items by property values, see [Sorting](http://docs.oasis-open.org/odata/odata/v4.01/odata-v4.01-part1-protocol.html#sec_SystemQueryOptionorderby)",
+            "in": "query",
+            "explode": false,
+            "schema": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "enum": [
+                  "name",
+                  "name desc",
+                  "descr",
+                  "descr desc",
+                  "code",
+                  "code desc",
+                  "attribute_code",
+                  "attribute_code desc",
+                  "position",
+                  "position desc",
+                  "enables_code",
+                  "enables_code desc"
+                ]
+              }
+            }
+          },
+          {
+            "name": "$select",
+            "description": "Select properties to be returned, see [Select](http://docs.oasis-open.org/odata/odata/v4.01/odata-v4.01-part1-protocol.html#sec_SystemQueryOptionselect)",
+            "in": "query",
+            "explode": false,
+            "schema": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "enum": [
+                  "name",
+                  "descr",
+                  "code",
+                  "attribute_code",
+                  "position",
+                  "enables_code"
+                ]
+              }
+            }
+          },
+          {
+            "name": "$expand",
+            "description": "The value of $expand query option is a comma-separated list of navigation property names, stream property names, or $value indicating the stream content of a media-entity. The corresponding related entities and stream values will be represented inline, see [Expand](http://docs.oasis-open.org/odata/odata/v4.01/odata-v4.01-part1-protocol.html#sec_SystemQueryOptionexpand)",
+            "in": "query",
+            "explode": false,
+            "schema": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "enum": [
+                  "*",
+                  "attribute",
+                  "enables",
+                  "texts",
+                  "localized"
+                ]
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retrieved enabled by",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Collection of DetailListValues",
+                  "properties": {
+                    "@count": {
+                      "$ref": "#/components/schemas/count"
+                    },
+                    "value": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CatalogService.DetailListValues"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -1514,7 +1744,13 @@
                   "attribute_code",
                   "attribute_code desc",
                   "position",
-                  "position desc"
+                  "position desc",
+                  "required",
+                  "required desc",
+                  "minValue",
+                  "minValue desc",
+                  "maxValue",
+                  "maxValue desc"
                 ]
               }
             }
@@ -1533,7 +1769,10 @@
                   "ID",
                   "subcategory_code",
                   "attribute_code",
-                  "position"
+                  "position",
+                  "required",
+                  "minValue",
+                  "maxValue"
                 ]
               }
             }
@@ -1981,7 +2220,9 @@
                   "attribute_code",
                   "attribute_code desc",
                   "position",
-                  "position desc"
+                  "position desc",
+                  "enables_code",
+                  "enables_code desc"
                 ]
               }
             }
@@ -2001,7 +2242,8 @@
                   "descr",
                   "code",
                   "attribute_code",
-                  "position"
+                  "position",
+                  "enables_code"
                 ]
               }
             }
@@ -2019,6 +2261,7 @@
                 "enum": [
                   "*",
                   "attribute",
+                  "enables",
                   "texts",
                   "localized"
                 ]
@@ -2102,7 +2345,9 @@
                   "attribute_code",
                   "attribute_code desc",
                   "position",
-                  "position desc"
+                  "position desc",
+                  "enables_code",
+                  "enables_code desc"
                 ]
               }
             }
@@ -2122,7 +2367,8 @@
                   "descr",
                   "code",
                   "attribute_code",
-                  "position"
+                  "position",
+                  "enables_code"
                 ]
               }
             }
@@ -2140,6 +2386,7 @@
                 "enum": [
                   "*",
                   "attribute",
+                  "enables",
                   "texts",
                   "localized"
                 ]
@@ -2210,7 +2457,8 @@
                   "descr",
                   "code",
                   "attribute_code",
-                  "position"
+                  "position",
+                  "enables_code"
                 ]
               }
             }
@@ -2228,6 +2476,7 @@
                 "enum": [
                   "*",
                   "attribute",
+                  "enables",
                   "texts",
                   "localized"
                 ]
@@ -2290,7 +2539,8 @@
                   "valueType_code",
                   "minValue",
                   "maxValue",
-                  "scale"
+                  "scale",
+                  "atLeast_code"
                 ]
               }
             }
@@ -2308,8 +2558,10 @@
                 "enum": [
                   "*",
                   "valueType",
+                  "atLeast",
                   "subcategories",
                   "values",
+                  "enabledBy",
                   "texts",
                   "localized"
                 ]
@@ -2320,6 +2572,91 @@
         "responses": {
           "200": {
             "description": "Retrieved attribute",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogService.DetailAttributes"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/error"
+          }
+        }
+      }
+    },
+    "/DetailListValues('{code}')/enables": {
+      "parameters": [
+        {
+          "description": "Code of the list value.",
+          "in": "path",
+          "name": "code",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "maxLength": 30
+          }
+        }
+      ],
+      "get": {
+        "summary": "Retrieves enables of a detail list value.",
+        "tags": [
+          "Detail List Values",
+          "Detail Attributes"
+        ],
+        "parameters": [
+          {
+            "name": "$select",
+            "description": "Select properties to be returned, see [Select](http://docs.oasis-open.org/odata/odata/v4.01/odata-v4.01-part1-protocol.html#sec_SystemQueryOptionselect)",
+            "in": "query",
+            "explode": false,
+            "schema": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "enum": [
+                  "name",
+                  "descr",
+                  "code",
+                  "unit",
+                  "valueType_code",
+                  "minValue",
+                  "maxValue",
+                  "scale",
+                  "atLeast_code"
+                ]
+              }
+            }
+          },
+          {
+            "name": "$expand",
+            "description": "The value of $expand query option is a comma-separated list of navigation property names, stream property names, or $value indicating the stream content of a media-entity. The corresponding related entities and stream values will be represented inline, see [Expand](http://docs.oasis-open.org/odata/odata/v4.01/odata-v4.01-part1-protocol.html#sec_SystemQueryOptionexpand)",
+            "in": "query",
+            "explode": false,
+            "schema": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "enum": [
+                  "*",
+                  "valueType",
+                  "atLeast",
+                  "subcategories",
+                  "values",
+                  "enabledBy",
+                  "texts",
+                  "localized"
+                ]
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retrieved enables",
             "content": {
               "application/json": {
                 "schema": {
@@ -3910,7 +4247,8 @@
                   "descr",
                   "code",
                   "attribute_code",
-                  "position"
+                  "position",
+                  "enables_code"
                 ]
               }
             }
@@ -3928,6 +4266,7 @@
                 "enum": [
                   "*",
                   "attribute",
+                  "enables",
                   "texts",
                   "localized"
                 ]
@@ -4595,7 +4934,8 @@
                   "valueType_code",
                   "minValue",
                   "maxValue",
-                  "scale"
+                  "scale",
+                  "atLeast_code"
                 ]
               }
             }
@@ -4613,8 +4953,10 @@
                 "enum": [
                   "*",
                   "valueType",
+                  "atLeast",
                   "subcategories",
                   "values",
+                  "enabledBy",
                   "texts",
                   "localized"
                 ]
@@ -4685,7 +5027,8 @@
                   "descr",
                   "code",
                   "attribute_code",
-                  "position"
+                  "position",
+                  "enables_code"
                 ]
               }
             }
@@ -4703,6 +5046,7 @@
                 "enum": [
                   "*",
                   "attribute",
+                  "enables",
                   "texts",
                   "localized"
                 ]
@@ -4807,6 +5151,7 @@
                   "category",
                   "subcategory",
                   "details",
+                  "namesakes",
                   "DraftAdministrativeData",
                   "SiblingEntity"
                 ]
@@ -5167,6 +5512,7 @@
                   "category",
                   "subcategory",
                   "details",
+                  "namesakes",
                   "DraftAdministrativeData",
                   "SiblingEntity"
                 ]
@@ -5314,6 +5660,7 @@
                   "category",
                   "subcategory",
                   "details",
+                  "namesakes",
                   "DraftAdministrativeData",
                   "SiblingEntity"
                 ]
@@ -5761,6 +6108,7 @@
                   "category",
                   "subcategory",
                   "details",
+                  "namesakes",
                   "DraftAdministrativeData",
                   "SiblingEntity"
                 ]
@@ -6158,6 +6506,237 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CatalogService.ProductDetails"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/error"
+          }
+        }
+      }
+    },
+    "/Products(ID={ID},IsActiveEntity='{IsActiveEntity}')/namesakes": {
+      "parameters": [
+        {
+          "description": "key: ID",
+          "in": "path",
+          "name": "ID",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid",
+            "example": "01234567-89ab-cdef-0123-456789abcdef"
+          }
+        },
+        {
+          "description": "key: IsActiveEntity",
+          "in": "path",
+          "name": "IsActiveEntity",
+          "required": true,
+          "schema": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      ],
+      "get": {
+        "summary": "Retrieves a list of namesakes of a product.",
+        "tags": [
+          "Products"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/top"
+          },
+          {
+            "$ref": "#/components/parameters/skip"
+          },
+          {
+            "$ref": "#/components/parameters/search"
+          },
+          {
+            "name": "$filter",
+            "description": "Filter items by property values, see [Filtering](http://docs.oasis-open.org/odata/odata/v4.01/odata-v4.01-part1-protocol.html#sec_SystemQueryOptionfilter)",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/count"
+          },
+          {
+            "name": "$orderby",
+            "description": "Order items by property values, see [Sorting](http://docs.oasis-open.org/odata/odata/v4.01/odata-v4.01-part1-protocol.html#sec_SystemQueryOptionorderby)",
+            "in": "query",
+            "explode": false,
+            "schema": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "enum": [
+                  "ID",
+                  "ID desc",
+                  "createdAt",
+                  "createdAt desc",
+                  "createdBy",
+                  "createdBy desc",
+                  "modifiedAt",
+                  "modifiedAt desc",
+                  "modifiedBy",
+                  "modifiedBy desc",
+                  "name",
+                  "name desc",
+                  "description",
+                  "description desc",
+                  "price",
+                  "price desc",
+                  "currency_code",
+                  "currency_code desc",
+                  "stock",
+                  "stock desc",
+                  "rating",
+                  "rating desc",
+                  "category_code",
+                  "category_code desc",
+                  "subcategory_code",
+                  "subcategory_code desc",
+                  "imageUrl",
+                  "imageUrl desc",
+                  "IsActiveEntity",
+                  "IsActiveEntity desc",
+                  "HasActiveEntity",
+                  "HasActiveEntity desc",
+                  "HasDraftEntity",
+                  "HasDraftEntity desc",
+                  "DraftMessages/code",
+                  "DraftMessages/code desc",
+                  "DraftMessages/message",
+                  "DraftMessages/message desc",
+                  "DraftMessages/target",
+                  "DraftMessages/target desc",
+                  "DraftMessages/additionalTargets",
+                  "DraftMessages/additionalTargets desc",
+                  "DraftMessages/transition",
+                  "DraftMessages/transition desc",
+                  "DraftMessages/numericSeverity",
+                  "DraftMessages/numericSeverity desc",
+                  "DraftMessages/longtextUrl",
+                  "DraftMessages/longtextUrl desc"
+                ]
+              }
+            }
+          },
+          {
+            "name": "$select",
+            "description": "Select properties to be returned, see [Select](http://docs.oasis-open.org/odata/odata/v4.01/odata-v4.01-part1-protocol.html#sec_SystemQueryOptionselect)",
+            "in": "query",
+            "explode": false,
+            "schema": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "enum": [
+                  "ID",
+                  "createdAt",
+                  "createdBy",
+                  "modifiedAt",
+                  "modifiedBy",
+                  "name",
+                  "description",
+                  "price",
+                  "currency_code",
+                  "stock",
+                  "rating",
+                  "category_code",
+                  "subcategory_code",
+                  "imageUrl",
+                  "IsActiveEntity",
+                  "HasActiveEntity",
+                  "HasDraftEntity",
+                  "DraftMessages"
+                ]
+              }
+            }
+          },
+          {
+            "name": "$expand",
+            "description": "The value of $expand query option is a comma-separated list of navigation property names, stream property names, or $value indicating the stream content of a media-entity. The corresponding related entities and stream values will be represented inline, see [Expand](http://docs.oasis-open.org/odata/odata/v4.01/odata-v4.01-part1-protocol.html#sec_SystemQueryOptionexpand)",
+            "in": "query",
+            "explode": false,
+            "schema": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "enum": [
+                  "*",
+                  "currency",
+                  "category",
+                  "subcategory",
+                  "details",
+                  "namesakes",
+                  "DraftAdministrativeData",
+                  "SiblingEntity"
+                ]
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retrieved namesakes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Collection of Products",
+                  "properties": {
+                    "@count": {
+                      "$ref": "#/components/schemas/count"
+                    },
+                    "value": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CatalogService.Products"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates a single namesake of a product.",
+        "tags": [
+          "Products"
+        ],
+        "requestBody": {
+          "description": "Product sold in the catalog, created and changed through a draft.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatalogService.Products-create"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created namesake",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogService.Products"
                 }
               }
             }
@@ -6935,7 +7514,13 @@
                   "attribute_code",
                   "attribute_code desc",
                   "position",
-                  "position desc"
+                  "position desc",
+                  "required",
+                  "required desc",
+                  "minValue",
+                  "minValue desc",
+                  "maxValue",
+                  "maxValue desc"
                 ]
               }
             }
@@ -6954,7 +7539,10 @@
                   "ID",
                   "subcategory_code",
                   "attribute_code",
-                  "position"
+                  "position",
+                  "required",
+                  "minValue",
+                  "maxValue"
                 ]
               }
             }
@@ -7041,7 +7629,10 @@
                   "ID",
                   "subcategory_code",
                   "attribute_code",
-                  "position"
+                  "position",
+                  "required",
+                  "minValue",
+                  "maxValue"
                 ]
               }
             }
@@ -7121,7 +7712,8 @@
                   "valueType_code",
                   "minValue",
                   "maxValue",
-                  "scale"
+                  "scale",
+                  "atLeast_code"
                 ]
               }
             }
@@ -7139,8 +7731,10 @@
                 "enum": [
                   "*",
                   "valueType",
+                  "atLeast",
                   "subcategories",
                   "values",
+                  "enabledBy",
                   "texts",
                   "localized"
                 ]
@@ -7662,6 +8256,20 @@
             "nullable": true,
             "description": "Number of decimal places of a DECIMAL attribute."
           },
+          "atLeast": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CatalogService.DetailAttributes"
+              }
+            ],
+            "nullable": true,
+            "description": "Attribute whose value in the same product this attribute's value must not be below."
+          },
+          "atLeast_code": {
+            "type": "string",
+            "maxLength": 30,
+            "nullable": true
+          },
           "subcategories": {
             "type": "array",
             "items": {
@@ -7680,6 +8288,16 @@
             "description": "Allowed values of a LIST or MULTI_LIST attribute."
           },
           "values@count": {
+            "$ref": "#/components/schemas/count"
+          },
+          "enabledBy": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CatalogService.DetailListValues"
+            },
+            "description": "List values that make the attribute available when one of them is selected in the same product."
+          },
+          "enabledBy@count": {
             "$ref": "#/components/schemas/count"
           },
           "texts": {
@@ -7809,6 +8427,20 @@
             "format": "int32",
             "nullable": true,
             "description": "Display order of the value in its attribute's list."
+          },
+          "enables": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CatalogService.DetailAttributes"
+              }
+            ],
+            "nullable": true,
+            "description": "Attribute that becomes available in a product when this value is selected."
+          },
+          "enables_code": {
+            "type": "string",
+            "maxLength": 30,
+            "nullable": true
           },
           "texts": {
             "type": "array",
@@ -8633,6 +9265,7 @@
           "name": {
             "type": "string",
             "maxLength": 100,
+            "pattern": "^\\s*\\S.+\\S\\s*$",
             "nullable": true,
             "description": "Name of the product."
           },
@@ -8659,6 +9292,7 @@
             "x-sap-precision": 15,
             "x-sap-scale": 2,
             "nullable": true,
+            "exclusiveMinimum": true,
             "description": "Unit price of the product in its currency."
           },
           "currency": {
@@ -8723,6 +9357,7 @@
           "imageUrl": {
             "type": "string",
             "maxLength": 500,
+            "pattern": "^https://\\S+$",
             "nullable": true,
             "description": "URL of the product image."
           },
@@ -8734,6 +9369,16 @@
             "description": "Detail rows of the product, one per attribute assigned to its subcategory."
           },
           "details@count": {
+            "$ref": "#/components/schemas/count"
+          },
+          "namesakes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CatalogService.Products"
+            },
+            "description": "Other products whose name equals this product's name, ignoring case and leading or trailing spaces."
+          },
+          "namesakes@count": {
             "$ref": "#/components/schemas/count"
           },
           "IsActiveEntity": {
@@ -8789,6 +9434,7 @@
           "name": {
             "type": "string",
             "maxLength": 100,
+            "pattern": "^\\s*\\S.+\\S\\s*$",
             "nullable": true,
             "description": "Name of the product."
           },
@@ -8815,6 +9461,7 @@
             "x-sap-precision": 15,
             "x-sap-scale": 2,
             "nullable": true,
+            "exclusiveMinimum": true,
             "description": "Unit price of the product in its currency."
           },
           "currency_code": {
@@ -8852,6 +9499,7 @@
           "imageUrl": {
             "type": "string",
             "maxLength": 500,
+            "pattern": "^https://\\S+$",
             "nullable": true,
             "description": "URL of the product image."
           },
@@ -8900,6 +9548,7 @@
           "name": {
             "type": "string",
             "maxLength": 100,
+            "pattern": "^\\s*\\S.+\\S\\s*$",
             "nullable": true,
             "description": "Name of the product."
           },
@@ -8926,6 +9575,7 @@
             "x-sap-precision": 15,
             "x-sap-scale": 2,
             "nullable": true,
+            "exclusiveMinimum": true,
             "description": "Unit price of the product in its currency."
           },
           "currency_code": {
@@ -8963,6 +9613,7 @@
           "imageUrl": {
             "type": "string",
             "maxLength": 500,
+            "pattern": "^https://\\S+$",
             "nullable": true,
             "description": "URL of the product image."
           },
@@ -9179,6 +9830,49 @@
             "format": "int32",
             "nullable": true,
             "description": "Position of the attribute's field in a product's details."
+          },
+          "required": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether a product of the subcategory needs a value for the attribute."
+          },
+          "minValue": {
+            "anyOf": [
+              {
+                "type": "number",
+                "format": "decimal",
+                "multipleOf": 0.001,
+                "maximum": 999999999999.999,
+                "minimum": -999999999999.999
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "example": 0,
+            "x-sap-precision": 15,
+            "x-sap-scale": 3,
+            "nullable": true,
+            "description": "Lowest allowed value of the attribute for products of the subcategory, inside the attribute's own minimum."
+          },
+          "maxValue": {
+            "anyOf": [
+              {
+                "type": "number",
+                "format": "decimal",
+                "multipleOf": 0.001,
+                "maximum": 999999999999.999,
+                "minimum": -999999999999.999
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "example": 0,
+            "x-sap-precision": 15,
+            "x-sap-scale": 3,
+            "nullable": true,
+            "description": "Highest allowed value of the attribute for products of the subcategory, inside the attribute's own maximum."
           }
         }
       },

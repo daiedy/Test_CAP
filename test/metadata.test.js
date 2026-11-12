@@ -477,4 +477,57 @@ describe('OData contract of CatalogService', () => {
       cds.compile.to.edmx(withProtocol, options)
     );
   });
+
+  // products-validations, ADR-0028 decisions 1, 2, 5, 8-10: format and range rules reach the contract
+  // as Validation terms (the open lower bound of price as Validation.Exclusive), the rule elements
+  // of the products and the details as properties and navigation properties. Phase 3 adds the
+  // If/Gt Common.FieldControl on Products/description, CodeList.CurrencyCodes on the entity
+  // container and Common.UnitSpecificScale (Path minorUnit) on Currencies/code to this test.
+  it('declares the validation vocabulary, the detail rule elements, the conditional field control and the currency code list', async () => {
+    const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
+      headers: { 'Accept-Language': 'en' },
+    });
+    expect(status).toBe(200);
+    // The EDMX is pretty-printed, so compare without the whitespace between the tags.
+    const compact = data.replace(/>\s+</g, '><');
+    expect(annotationsOf(compact, 'CatalogService.Products/price')).toContain(
+      '<Annotation Term="Validation.Minimum" Int="0">' +
+        '<Annotation Term="Validation.Exclusive" Bool="true"/>' +
+        '</Annotation>'
+    );
+    expect(annotationsOf(compact, 'CatalogService.Products/name')).toContain(
+      '<Annotation Term="Validation.Pattern" String="^\\s*\\S.+\\S\\s*$"/>'
+    );
+    expect(annotationsOf(compact, 'CatalogService.Products/imageUrl')).toContain(
+      '<Annotation Term="Validation.Pattern" String="^https://\\S+$"/>'
+    );
+
+    // Each element inside its own entity type.
+    const entityType = (name) => {
+      const found = compact.match(new RegExp(`<EntityType Name="${name}">.*?</EntityType>`));
+      expect(found, name).not.toBeNull();
+      return found[0];
+    };
+    expect(entityType('Products')).toContain(
+      '<NavigationProperty Name="namesakes" Type="Collection(CatalogService.Products)"/>'
+    );
+    const attributes = entityType('DetailAttributes');
+    expect(attributes).toContain(
+      '<NavigationProperty Name="atLeast" Type="CatalogService.DetailAttributes">'
+    );
+    expect(attributes).toContain(
+      '<NavigationProperty Name="enabledBy" Type="Collection(CatalogService.DetailListValues)" Partner="enables"/>'
+    );
+    expect(entityType('DetailListValues')).toContain(
+      '<NavigationProperty Name="enables" Type="CatalogService.DetailAttributes" Partner="enabledBy">'
+    );
+    const assignments = entityType('SubcategoryAttributes');
+    for (const property of [
+      '<Property Name="required" Type="Edm.Boolean"/>',
+      '<Property Name="minValue" Type="Edm.Decimal" Precision="15" Scale="3"/>',
+      '<Property Name="maxValue" Type="Edm.Decimal" Precision="15" Scale="3"/>',
+    ]) {
+      expect(assignments).toContain(property);
+    }
+  });
 });

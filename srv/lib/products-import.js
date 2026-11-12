@@ -2,6 +2,8 @@
 // Pure functions, no req/res and no cds.context: the handler owns messages and persistence.
 // Value checks (@mandatory, @assert.range, @assert.target, data types) are NOT done here; the
 // service's generic input validation runs them on the INSERT of every row (ADR-0021 decision 3).
+// The exceptions are the per-row pre-checks of root `@assert` constraints, which the framework
+// checks only at commit without a row (ADR-0028 decision 6): descriptionViolations, minorUnitViolations.
 import zlib from 'node:zlib';
 import { readSheet } from 'read-excel-file/node';
 
@@ -257,6 +259,69 @@ export async function readImportRows(bytes) {
     return { columns: [], rows: [], errors: [{ code: 'PRODUCTS_IMPORT_NOT_XLSX', args: [] }] };
   }
   return toImportRows(data);
+}
+
+/**
+ * Row message of a per-row pre-check: PRODUCTS_IMPORT_ROW_INVALID with the row, the column and the
+ * reason text, sorted by the column's header position.
+ * @param {number} row sheet row, header = 1
+ * @param {string} column documented column name
+ * @param {(column: string) => number} order header position of a column
+ * @param {string} text localized reason
+ * @returns {{ row: number, order: number, code: string, args: Array<unknown> }} the row message
+ */
+function rowInvalid(row, column, order, text) {
+  return {
+    row,
+    order: order(column),
+    code: 'PRODUCTS_IMPORT_ROW_INVALID',
+    args: [row, column, text],
+  };
+}
+
+/**
+ * Rows in stock without a description (R6, ADR-0028 decision 6): the `@assert` constraint on
+ * `description` is checked once at commit and names no row, so the rule is repeated here per row,
+ * before the inserts. A row whose stock is not a number above 0 is skipped (the INSERT reports a
+ * bad stock); an empty or blank cell counts as no description.
+ * @param {Array<{ row: number, entry: Record<string, unknown> }>} rows import rows
+ * @param {(column: string) => number} order header position of a column
+ * @param {string} text localized text of PRODUCTS_DESCRIPTION_REQUIRED_IN_STOCK
+ * @returns {Array<{ row: number, order: number, code: string, args: Array<unknown> }>}
+ *   one PRODUCTS_IMPORT_ROW_INVALID per such row, column `description`
+ */
+export function descriptionViolations(rows, order, text) {
+  return rows
+    .filter(
+      ({ entry }) =>
+        typeof entry.stock === 'number' &&
+        entry.stock > 0 &&
+        (entry.description == null || String(entry.description).trim() === '')
+    )
+    .map(({ row }) => rowInvalid(row, 'description', order, text));
+}
+
+/**
+ * Rows whose price has decimals in a currency without minor units (R4, ADR-0028 decision 6): the
+ * `@assert` constraint on `price` is checked once at commit and names no row, so the rule is
+ * repeated here per row, before the inserts. A row with a non-numeric price or a currency code
+ * missing from `minorUnitByCode` is skipped (the INSERT reports it).
+ * @param {Array<{ row: number, entry: Record<string, unknown> }>} rows import rows
+ * @param {(column: string) => number} order header position of a column
+ * @param {Map<string, number|null>} minorUnitByCode minor units per currency code of the file
+ * @param {string} text localized text of PRODUCTS_PRICE_MINOR_UNIT
+ * @returns {Array<{ row: number, order: number, code: string, args: Array<unknown> }>}
+ *   one PRODUCTS_IMPORT_ROW_INVALID per such row, column `price`
+ */
+export function minorUnitViolations(rows, order, minorUnitByCode, text) {
+  return rows
+    .filter(
+      ({ entry }) =>
+        typeof entry.price === 'number' &&
+        minorUnitByCode.get(entry.currency_code) === 0 &&
+        !Number.isInteger(entry.price)
+    )
+    .map(({ row }) => rowInvalid(row, 'price', order, text));
 }
 
 /**

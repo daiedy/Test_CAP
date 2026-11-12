@@ -75,30 +75,43 @@ function raw(stdin) {
   return { stdout: res.stdout, context, records };
 }
 
-/** A PostToolBatch input: the common fields, `payload`, and a tool call holding SENTINEL. */
+/** The `tool_calls` of a batch: one call per tool use id, each result holding SENTINEL. */
+const calls = (...ids) =>
+  ids.map((tool_use_id) => ({
+    tool_name: 'Bash',
+    tool_input: { command: 'ls' },
+    tool_use_id,
+    tool_response: SENTINEL,
+  }));
+
+/** A PostToolBatch input: the common fields, `payload`, and a call `toolu_1` that is in no file. */
 const send = (payload) =>
   raw(
     JSON.stringify({
       session_id: SESSION,
       cwd: box.root,
       hook_event_name: 'PostToolBatch',
-      tool_calls: [
-        {
-          tool_name: 'Bash',
-          tool_input: { command: 'ls' },
-          tool_use_id: 'toolu_1',
-          tool_response: SENTINEL,
-        },
-      ],
+      tool_calls: calls('toolu_1'),
       ...payload,
     })
   );
 
-/** Writes subagent `agentId`'s file with `runs` (turns per run) and sends its batch. */
+/** The tool use id `turnRecords()` writes for turn `n` of agent `bare`. */
+const toolId = (bare, n) => `${bare}-tu${n}`;
+
+/** Writes subagent `agentId`'s file with `runs` (turns per run) and sends its batch: by default
+ * the batch of the file's last turn, already on disk (its tool use id); `extra` overrides. */
 function batch(agentId, agentType, runs, extra = {}) {
   const bare = agentId.replace(/^agent-/, '');
   const transcript_path = writeAgentFile(txDir, SESSION, bare, turnRecords(bare, runs));
-  return send({ transcript_path, agent_id: agentId, agent_type: agentType, ...extra });
+  const last = runs.reduce((a, b) => a + b, 0);
+  return send({
+    transcript_path,
+    agent_id: agentId,
+    agent_type: agentType,
+    tool_calls: calls(toolId(bare, last)),
+    ...extra,
+  });
 }
 
 const SILENT = { stdout: '', context: null, records: [] };
@@ -239,9 +252,100 @@ describe('turn-budget hook (ADR-0032)', () => {
     for (const stdin of ['', '{not json', 'null', '[]', '42']) expect(raw(stdin)).toEqual(SILENT);
     // The control: the same agent file with every field present notes.
     expect(
-      send({ transcript_path, agent_id: 'u5', agent_type: 'test-backend' }).context
-        .additionalContext
+      send({
+        transcript_path,
+        agent_id: 'u5',
+        agent_type: 'test-backend',
+        tool_calls: calls(toolId('u5', 29)),
+      }).context.additionalContext
     ).toBe(lastCall(29, 30));
+  });
+
+  it('a batch not yet on disk counts', () => {
+    // A lagged read at the threshold (Claude Code 2.1.323, VERIFICATION check 1): the file holds
+    // 23 turns, the batch is turn 24, its tool use not yet written. The batch is the 24th turn.
+    const lagged = batch('n1', 'test-backend', [23], { tool_calls: calls(toolId('n1', 24)) });
+    expect(lagged.context).toEqual({
+      hookEventName: 'PostToolBatch',
+      additionalContext: note(24, 30),
+    });
+    expect(lagged.records).toEqual([record('n1', 'test-backend', 24, 30)]);
+    // At 60 turns, and at the edge of the sharper text.
+    const sixty = batch('n2', 'cap-backend-dev', [53], { tool_calls: calls(toolId('n2', 54)) });
+    expect(sixty.context.additionalContext).toBe(note(54, 60));
+    const last = batch('n1', 'test-backend', [26], { tool_calls: calls(toolId('n1', 27)) });
+    expect(last.context.additionalContext).toBe(lastCall(27, 30));
+    // Parallel calls of the batch, none on disk: one turn, not one per call.
+    const parallel = batch('n1', 'test-backend', [23], {
+      tool_calls: calls(toolId('n1', 24), toolId('n1', 25)),
+    });
+    expect(parallel.context.additionalContext).toBe(note(24, 30));
+    // After a resume the run counts alone: 28 + 23 on disk, the batch is turn 24 of the resume.
+    const resumed = batch('n3', 'test-backend', [28, 23], { tool_calls: calls(toolId('n3', 52)) });
+    expect(resumed.context.additionalContext).toBe(note(24, 30));
+    expect(resumed.records).toEqual([record('n3', 'test-backend', 24, 30)]);
+    // Only the ids are read: an on-disk id inside `tool_input` and `tool_response` does not make
+    // the batch on disk, and neither SENTINEL nor any id reaches the output or the event log.
+    const onDiskId = toolId('n4', 23);
+    const nested = batch('n4', 'test-backend', [23], {
+      tool_calls: [
+        {
+          tool_name: 'Bash',
+          tool_input: { command: onDiskId, tool_use_id: onDiskId },
+          tool_use_id: toolId('n4', 24),
+          tool_response: { stdout: SENTINEL, tool_use_id: onDiskId },
+        },
+      ],
+    });
+    expect(nested.context.additionalContext).toBe(note(24, 30));
+    expect(nested.records).toEqual([record('n4', 'test-backend', 24, 30)]);
+    for (const out of [lagged, parallel, nested]) {
+      expect(out.stdout).not.toContain(SENTINEL);
+      expect(out.stdout).not.toMatch(/-tu\d/);
+    }
+    const log = JSON.stringify(box.log());
+    expect(log).not.toContain(SENTINEL);
+    expect(log).not.toMatch(/-tu\d/);
+  });
+
+  it('a batch on disk counts once', () => {
+    // The batch's tool use is in the file: the file count, no turn added.
+    expect(batch('o1', 'test-backend', [23])).toEqual(SILENT);
+    const at = batch('o1', 'test-backend', [24]);
+    expect(at.context.additionalContext).toBe(note(24, 30));
+    expect(at.records).toEqual([record('o1', 'test-backend', 24, 30)]);
+    // Any tool use of the run is enough: an earlier turn's id.
+    expect(batch('o1', 'test-backend', [23], { tool_calls: calls(toolId('o1', 5)) })).toEqual(
+      SILENT
+    );
+    // Parallel calls of one request, the first written and the second not yet: on disk.
+    expect(
+      batch('o1', 'test-backend', [23], { tool_calls: calls(toolId('o1', 23), 'toolu_late') })
+    ).toEqual(SILENT);
+    expect(
+      batch('o1', 'test-backend', [23], { tool_calls: calls('toolu_late', toolId('o1', 23)) })
+    ).toEqual(SILENT);
+    // After a resume, the run's own id: 28 + 23 turns in the file, 23 in the run.
+    expect(batch('o2', 'test-backend', [28, 23])).toEqual(SILENT);
+    expect(batch('o2', 'test-backend', [28, 24]).context.additionalContext).toBe(note(24, 30));
+  });
+
+  it('no batch ids counts the file', () => {
+    // No `tool_calls[].tool_use_id` string: the file alone, 23 silent and 24 at the threshold.
+    const variants = [
+      { tool_calls: undefined },
+      { tool_calls: [] },
+      { tool_calls: [{ tool_name: 'Bash', tool_response: SENTINEL }] },
+      { tool_calls: [{ tool_use_id: 7 }, { tool_use_id: null }, null, toolId('f1', 24)] },
+      { tool_calls: { tool_use_id: toolId('f1', 24) } },
+      { tool_calls: toolId('f1', 24) },
+    ];
+    for (const extra of variants) {
+      expect(batch('f1', 'test-backend', [23], extra), JSON.stringify(extra)).toEqual(SILENT);
+      const at = batch('f1', 'test-backend', [24], extra);
+      expect(at.context.additionalContext, JSON.stringify(extra)).toBe(note(24, 30));
+      expect(at.records).toEqual([record('f1', 'test-backend', 24, 30)]);
+    }
   });
 
   it('reserve by maxTurns', () => {

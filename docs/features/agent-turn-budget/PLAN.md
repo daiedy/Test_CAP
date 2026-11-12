@@ -32,10 +32,10 @@ Contract rule: no step changes the OData model; `metadata.xml` and the `$metadat
 
 ### Phase 5: review
 - [ ] `REVIEW.md` has zero blocking findings, verified by `REVIEW.md`
-- [ ] A batch whose request is not yet in the agent file counts as its turn, so a lagged read at the threshold notes, verified by `test/hooks-turn-budget.test.js` "a batch not yet on disk counts"
-- [ ] A batch whose `tool_use_id` is in the agent file adds no turn, verified by `test/hooks-turn-budget.test.js` "a batch on disk counts once"
-- [ ] An input without a `tool_calls[].tool_use_id` string counts the file alone, verified by `test/hooks-turn-budget.test.js` "no batch ids counts the file"
-- [ ] Two `turn-note` records of one run with equal `turn` count as two notes, verified by `test/metrics.test.js` "each turn-note record counts"
+- [x] A batch whose request is not yet in the agent file counts as its turn, so a lagged read at the threshold notes, verified by `test/hooks-turn-budget.test.js` "a batch not yet on disk counts"
+- [x] A batch whose `tool_use_id` is in the agent file adds no turn, verified by `test/hooks-turn-budget.test.js` "a batch on disk counts once"
+- [x] An input without a `tool_calls[].tool_use_id` string counts the file alone, verified by `test/hooks-turn-budget.test.js` "no batch ids counts the file"
+- [x] Two `turn-note` records of one run with equal `turn` count as two notes, verified by `test/metrics.test.js` "each turn-note record counts"
 - [ ] Live, the batch `tool_use_id` values match the agent file's `tool_use` ids and the new count is never below the true turn, verified by `VERIFICATION.md` check 4
 - [ ] The changed hook keeps the 0.3 s main-thread and 0.5 s 11 MB medians over 20 runs, verified by `VERIFICATION.md` check 3 re-run
 

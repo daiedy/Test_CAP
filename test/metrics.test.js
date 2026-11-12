@@ -1808,7 +1808,6 @@ describe('turn budget (D19, ADR-0032)', () => {
         start(agent, resumeStart, 2),
         note(agent, 0, 1, 3), // before the first record: the launch
         note(agent, 1.0, 2, 3),
-        note(agent, 1.0, 2, 3), // the same turn logged twice counts once
         note(agent, 1.7, 1, 2), // at the resume record: the resume
         note(agent, 2.5, 2, 2),
         // Another agent's records are ignored.
@@ -1827,8 +1826,30 @@ describe('turn budget (D19, ADR-0032)', () => {
     }
   });
 
+  it('each turn-note record counts', () => {
+    // Under PostToolBatch one record is one noted batch. A read one short logs two batches with
+    // the same `turn` (VERIFICATION check 1); a dedupe on `turn` would merge them (REVIEW
+    // Important 3). Equal `turn`, different `ts`: two notes; a third, identical record: three.
+    const five = thread('e1', turnRecords('e1', [5]));
+    const twice = [start('e1', 0.05, 5), note('e1', 2.0, 4, 5), note('e1', 2.1, 4, 5)];
+    expect(threadTurns(five, twice, 60)).toEqual({
+      runs: [{ turns: 5, limit: 5, notes: 2, limitStop: true }],
+      turnNotes: 2,
+      limitStops: 1,
+    });
+    const thrice = [...twice, note('e1', 2.1, 4, 5)];
+    expect(threadTurns(five, thrice, 60)).toMatchObject({ runs: [{ notes: 3 }], turnNotes: 3 });
+    // Equal `turn` in two runs: one note in each.
+    const resumed = thread('e2', turnRecords('e2', [3, 2]));
+    const split = [note('e2', 1.0, 2, 3), note('e2', 2.5, 2, 3)];
+    expect(threadTurns(resumed, split, 60)).toMatchObject({
+      runs: [{ notes: 1 }, { notes: 1 }],
+      turnNotes: 2,
+    });
+  });
+
   it('turn fields on the card and the history line', () => {
-    // One session: test-backend tb1 stopped at its limit with two noted turns (one logged twice),
+    // One session: test-backend tb1 stopped at its limit with three noted turns,
     // test-backend tb2 at its limit with a delivered report, docs-keeper dk1 far below its limit.
     const project = fs.mkdtempSync(path.join(home, 'turns-'));
     const sid = 's-turns';
@@ -1865,8 +1886,8 @@ describe('turn budget (D19, ADR-0032)', () => {
       ...loadSession(project, sid),
       events: [
         start('tb1', 0.05, 5),
+        note('tb1', 1.5, 3, 5),
         note('tb1', 2.0, 4, 5),
-        note('tb1', 2.5, 5, 5),
         note('tb1', 2.5, 5, 5),
         start('tb2', 0.05, 5),
         { ...start('dk1', 0.05, 80), agentType: 'docs-keeper' },
@@ -1877,12 +1898,12 @@ describe('turn budget (D19, ADR-0032)', () => {
       extras: { maxTurns: { 'test-backend': 60, 'docs-keeper': 80 } },
     });
     const row = (type) => report.agents.find((a) => a.agentType === type);
-    expect(report).toMatchObject({ turnNotes: 2, turnLimitStops: 1 });
+    expect(report).toMatchObject({ turnNotes: 3, turnLimitStops: 1 });
     expect(row('main')).toMatchObject({ turnNotes: null, limitStops: null });
     expect(row('test-backend')).toMatchObject({
       launches: 2,
       maxTurns: 60,
-      turnNotes: 2,
+      turnNotes: 3,
       limitStops: 1,
     });
     expect(row('docs-keeper')).toMatchObject({ launches: 1, turnNotes: 0, limitStops: 0 });
@@ -1913,7 +1934,7 @@ describe('turn budget (D19, ADR-0032)', () => {
       const cardRow = (type) => cells(lines.find((l) => l.startsWith(`| ${type} |`)));
       expect(cardRow('test-backend')).toHaveLength(8);
       expect(cardRow('test-backend')[4]).toBe(`${row('test-backend').calls} / 60`);
-      expect(cardRow('test-backend')[5]).toBe('2 / 1');
+      expect(cardRow('test-backend')[5]).toBe('3 / 1');
       expect(cardRow('docs-keeper')[5]).toBe('0 / 0');
       expect(cardRow('main')[5]).toBe('-');
     }
@@ -1921,7 +1942,7 @@ describe('turn budget (D19, ADR-0032)', () => {
     // The history line carries both figures, the fields #59 reads.
     const line = historyLine(report, '2026-11-13');
     expect(Object.keys(line).sort()).toEqual([...HISTORY_KEYS].sort());
-    expect(line).toMatchObject({ turnLimitStops: 1, turnNotes: 2 });
+    expect(line).toMatchObject({ turnLimitStops: 1, turnNotes: 3 });
   });
 
   it('card maxTurns comes from agentMaxTurns', () => {

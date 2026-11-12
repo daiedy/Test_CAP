@@ -828,8 +828,10 @@ function contextBlock(threads, launches, root) {
  * record), else of the run's first `turn-note` record, else `fallback`, the frontmatter today (runs
  * before #60); null when none is known. A limit stop is a run whose turns reached its limit and
  * which holds no delivered report (`deliveredReports()`). A `turn-note` record belongs to the last
- * run started at or before it; `notes` counts its distinct turns, so a note the hook logged twice
- * for one turn counts once. A live thread (no records) is one empty run.
+ * run started at or before it; `notes` counts its records, one per batch under PostToolBatch, with
+ * no dedupe on `turn`: two records of an equal `turn` are two notes the agent received (a lagged
+ * read logs the turn of the batch before, REVIEW Important 3). A live thread (no records) is one
+ * empty run.
  * @param {object} th a launch thread of `threadOf()` or `liveThread()`
  * @param {object[]} events event-log records (`agent-start`, `turn-note`; others are ignored)
  * @param {number|null} fallback `maxTurns` of the agent type's definition today
@@ -865,7 +867,7 @@ export function threadTurns(th, events, fallback = null) {
     return {
       turns,
       limit,
-      notes: new Set(notesOf[i].map((e) => e.turn)).size,
+      notes: notesOf[i].length,
       limitStop: limit != null && turns >= limit && deliveredReports(run).length === 0,
     };
   });

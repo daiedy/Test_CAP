@@ -396,14 +396,28 @@ export function turnsOf(run) {
 }
 
 /**
- * Turns of the current run of a subagent (ADR-0032): `turnsOf()` the last run of `agentRuns()`,
- * the whole file when it holds no resume. Measured exact at PostToolBatch time (turn-budget probe
- * P4: the current request's record is on disk).
+ * Turns of the current run of a subagent (ADR-0032 decision 4 with its amendment): `turnsOf()` the
+ * last run of `agentRuns()` (the whole file when it holds no resume), plus 1 when `batchIds` holds
+ * a string and no `assistant` record of that run has a `tools[].id` among them. At PostToolBatch
+ * time the current request's record is usually on disk, but on Claude Code 2.1.323 it can land
+ * after the hook reads the file (VERIFICATION check 1: the file count one short), so a batch whose
+ * tool uses are not in the file yet counts as its own turn. The result is exact or one high (a
+ * record of the batch's request already on disk without its tool use: the note a turn early, the
+ * safe side); without batch ids it is the file count, exact or one short.
  * @param {object[]} records slim records of one agent file, in file order
+ * @param {string[]} [batchIds] the `tool_use_id` values of the current batch (`tool_calls`)
  * @returns {number}
  */
-export function runTurns(records) {
-  return turnsOf(agentRuns(records).at(-1));
+export function runTurns(records, batchIds = []) {
+  const run = agentRuns(records).at(-1);
+  const ids = new Set(
+    (Array.isArray(batchIds) ? batchIds : []).filter((id) => typeof id === 'string')
+  );
+  if (!ids.size) return turnsOf(run);
+  const onDisk = run.some(
+    (r) => r.type === 'assistant' && (r.tools || []).some((t) => ids.has(t.id))
+  );
+  return turnsOf(run) + (onDisk ? 0 : 1);
 }
 
 function mergeUsage(q, usage, ts, model) {

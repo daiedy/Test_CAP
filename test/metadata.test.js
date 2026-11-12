@@ -478,11 +478,12 @@ describe('OData contract of CatalogService', () => {
     );
   });
 
-  // products-validations, ADR-0028 decisions 1, 2, 5, 8-10: format and range rules reach the contract
-  // as Validation terms (the open lower bound of price as Validation.Exclusive), the rule elements
-  // of the products and the details as properties and navigation properties. Phase 3 adds the
-  // If/Gt Common.FieldControl on Products/description, CodeList.CurrencyCodes on the entity
-  // container and Common.UnitSpecificScale (Path minorUnit) on Currencies/code to this test.
+  // products-validations, ADR-0028 decisions 1, 2, 4, 5, 8-11: format and range rules reach the
+  // contract as Validation terms (the open lower bound of price as Validation.Exclusive), the rule
+  // elements of the products and the details as properties and navigation properties, the R6
+  // marker as the If/Gt Common.FieldControl on Products/description (7 Mandatory while stock > 0,
+  // else 3 Optional) and the R4 control as the currency code list: CodeList.CurrencyCodes on the
+  // entity container and Common.UnitSpecificScale (Path minorUnit) on Currencies/code.
   it('declares the validation vocabulary, the detail rule elements, the conditional field control and the currency code list', async () => {
     const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
       headers: { 'Accept-Language': 'en' },
@@ -529,5 +530,28 @@ describe('OData contract of CatalogService', () => {
     ]) {
       expect(assignments).toContain(property);
     }
+
+    // R6: the required marker of the description follows the stock on the client.
+    const description = annotationsOf(compact, 'CatalogService.Products/description');
+    expect(description).toContain(
+      '<Annotation Term="Common.FieldControl">' +
+        '<If><Gt><Path>stock</Path><Int>0</Int></Gt><Int>7</Int><Int>3</Int></If>' +
+        '</Annotation>'
+    );
+    // Exactly one FieldControl on the description, the dynamic one.
+    expect(description.match(/Term="Common\.FieldControl"/g) ?? []).toHaveLength(1);
+
+    // R4 control: the Fiori currency type reads the minor units from the currency code list.
+    expect(annotationsOf(compact, 'CatalogService.EntityContainer')).toContain(
+      '<Annotation Term="CodeList.CurrencyCodes">' +
+        '<Record Type="CodeList.CodeListSource">' +
+        '<PropertyValue Property="CollectionPath" String="Currencies"/>' +
+        '<PropertyValue Property="Url" String="./$metadata"/>' +
+        '</Record>' +
+        '</Annotation>'
+    );
+    expect(annotationsOf(compact, 'CatalogService.Currencies/code')).toContain(
+      '<Annotation Term="Common.UnitSpecificScale" Path="minorUnit"/>'
+    );
   });
 });

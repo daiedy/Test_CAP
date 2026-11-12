@@ -6,6 +6,9 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
   <edmx:Reference Uri="https://oasis-tcs.github.io/odata-vocabularies/vocabularies/Org.OData.Capabilities.V1.xml">
     <edmx:Include Alias="Capabilities" Namespace="Org.OData.Capabilities.V1"/>
   </edmx:Reference>
+  <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/CodeList.xml">
+    <edmx:Include Alias="CodeList" Namespace="com.sap.vocabularies.CodeList.v1"/>
+  </edmx:Reference>
   <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/Common.xml">
     <edmx:Include Alias="Common" Namespace="com.sap.vocabularies.Common.v1"/>
   </edmx:Reference>
@@ -445,6 +448,12 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
       <Annotation Term="Core.SchemaVersion" String="1.0.0"/>
       <Annotations Target="CatalogService.EntityContainer">
         <Annotation Term="Core.Description" String="Reads and maintains catalog products with their categories, subcategories and typed details, and imports products from an Excel workbook."/>
+        <Annotation Term="CodeList.CurrencyCodes">
+          <Record Type="CodeList.CodeListSource">
+            <PropertyValue Property="CollectionPath" String="Currencies"/>
+            <PropertyValue Property="Url" String="./$metadata"/>
+          </Record>
+        </Annotation>
         <Annotation Term="Common.AddressViaNavigationPath" Bool="true"/>
         <Annotation Term="Common.Label" String="Product Catalog API"/>
       </Annotations>
@@ -768,6 +777,16 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         <Annotation Term="Core.Description" String="Name of the product."/>
       </Annotations>
       <Annotations Target="CatalogService.Products/description">
+        <Annotation Term="Common.FieldControl">
+          <If>
+            <Gt>
+              <Path>stock</Path>
+              <Int>0</Int>
+            </Gt>
+            <Int>7</Int>
+            <Int>3</Int>
+          </If>
+        </Annotation>
         <Annotation Term="Common.Label" String="{i18n>Products.description}"/>
         <Annotation Term="Core.Description" String="Free-text description of the product."/>
       </Annotations>
@@ -1663,6 +1682,7 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         <Annotation Term="Common.Label" String="{i18n>Description}"/>
       </Annotations>
       <Annotations Target="CatalogService.Currencies/code">
+        <Annotation Term="Common.UnitSpecificScale" Path="minorUnit"/>
         <Annotation Term="Common.Text" Path="name"/>
         <Annotation Term="Common.Label" String="{i18n>CurrencyCode}"/>
       </Annotations>

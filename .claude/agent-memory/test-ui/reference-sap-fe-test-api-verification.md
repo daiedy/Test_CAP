@@ -80,3 +80,13 @@ QUnit unit tests (measured 2026-10-12, UI5 1.153 served by `cds serve`, Test Sta
 - The bundled QUnit 2 has no `assert.true` / `assert.false` ("assert.false is not a function", the test dies at its first call); use `assert.strictEqual(value, true, msg)` for boolean returns.
 - Fast check of a unit module without the OPA part: `npx ui5-test-runner --url http://localhost:4004/products/webapp/test/testsuite.qunit.html --page-filter unitTests --parallel 1 --report-dir /tmp/<dir>` (about 7 s, prints `<passed>/<total>` of the unit page).
 - A `sap.ui.model.odata.type.Decimal` built from a module's settings can be exercised directly (`formatValue(v, 'string')`, `validateValue`, `parseValue`) to prove scale, bounds and no padding without a control; the Test Starter `ui5.language: 'EN'` keeps the grouping deterministic ("1,600").
+
+## Validations journey (measured 2026-11-12, UI5 1.154.0, products-validations)
+
+- `JourneyRunner` sets `autoWait: true`, so an OpaBuilder assertion never matches a DISABLED control (timeout): add `.mustBeEnabled(false)` to assertions on a control that may be disabled (`iSeeTheFieldEnabled`, `iSeeThePlaceholder`, `iSeeTheStoredValue` in `pages/ProductDetailsForm.js`).
+- `onFooter().iConfirmCancel()` never matches the Russian discard popover ("Сбросить"): in a `sap-ui-language=ru` case, discard after a restart in English (own draft opens in edit mode on `iPressRow`).
+- A `sap.m.MessageToast` is DOM only: `waitFor({ check })` over `Opa5.getWindow().document.querySelectorAll('.sapMMessageToast')` text; assert it right after the action (3 s life).
+- FE server messages land on the mdc Field: `iCheckField(field, undefined, { valueState: 'Error', valueStateText })` works for `@assert.format`, `@assert` constraints (both targets of `error(..., ('price','currency_code'))`) and the ru text; custom section Inputs get the row message as `valueStateText` after the fragment's DraftMessages read; Save refused by a server 400 opens the MessagePopover by itself (`iSeeSaveBlockedBy` passes).
+- The Price field (Currency composite) does NOT refuse `0` on the client despite `Validation.Exclusive`: the PATCH is sent, the server answers `PRODUCTS_PRICE_POSITIVE`. Under JPY the composite formats 129.99 as "130" while the model keeps 129.99.
+- One failed case on a product leaves its draft; every later case on that product fails at `iExecuteEdit` (no Edit button) and the final 15-row/no-draft check fails: restart `cds serve --in-memory` between probe runs.
+- With `--split-opa` the runner splits `opaTests` into one page per QUnit module; a "only these journeys" run = temporarily `runner.run([A, B])`.

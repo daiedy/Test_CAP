@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-11-12
 - Branch: feature/products-validations
 - Feature: products-validations (#10)
-- Phase: 2: Backend (gate green 2026-11-12: lint 0 errors, `npm test` 310 passed in 18 files, `metadata.xml` 1763; autonomous gates)
-- Last commit: 5f82fda docs(spec): products-validations plan re-reviewed on cds 10.2.2 and re-approved
-- Next: phase 3 UI, fiori-app-dev step 6, then test-ui step 7; Dependabot PR #48 waits for a human
+- Phase: 3: UI (gate green: ui5lint clean, `npm test` 310, `npm run test:ui` 97/97, `metadata.xml` 1783; autonomous gates)
+- Last commit: 9b73611 feat(srv): products-validations backend
+- Next: phase 3 rework round 1 (R3 price 0 not refused on the client, R12 counter text, JPY display of 10.5), then ui-verifier step 8; Dependabot PR #48 waits for a human
 
 ## Open debt
 

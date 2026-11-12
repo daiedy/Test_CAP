@@ -1,22 +1,41 @@
 /* global QUnit */
 // Unit tests of the pure functions of the custom section "Details" (ADR-0027,
-// webapp/ext/fragment/DetailsForm.js): the filled rules and the counter, the display texts
-// (unit join, list names, list order), the write rules of the list fields (B6, B7), the draft
-// check (B2) and the Decimal type settings (PLAN D19). The fragment wiring (form elements,
-// bindings, messages) is covered end to end by ProductDetailsFormJourney.
+// webapp/ext/fragment/DetailsForm.js, which re-exports the row rules of DetailsRules.js): the
+// filled rules and the counter, the display texts (unit join, list names, list order), the write
+// rules of the list fields (B6, B7), the draft check (B2), the Decimal type settings (PLAN D19)
+// and the row rules of products-validations (ADR-0028: required marker R8, assignment bounds and
+// range hint R10, dependency on a list value R12, counter without disabled rows Q7). The fragment
+// wiring (form elements, bindings, messages) is covered end to end by ProductDetailsFormJourney
+// and ProductValidationsJourney.
 sap.ui.define(
   [
     'products/ext/fragment/DetailsForm',
+    'sap/base/strings/formatMessage',
     'sap/ui/model/odata/type/Decimal',
     'sap/ui/model/ParseException',
     'sap/ui/model/ValidateException',
     'sap/ui/core/library',
   ],
-  function (DetailsForm, Decimal, ParseException, ValidateException, coreLibrary) {
+  function (DetailsForm, formatMessage, Decimal, ParseException, ValidateException, coreLibrary) {
     'use strict';
 
     /** No-break space between a value and its unit (SCREENS "Fields per value type"). */
     const NBSP = String.fromCharCode(0xa0);
+    /** En dash of the range hint (SCREENS "R10"). */
+    const EN_DASH = String.fromCharCode(0x2013);
+
+    /** The `en` patterns of the hint keys (webapp/i18n/i18n.properties), for a bundle stub. */
+    const EN_TEXTS = {
+      'ProductsObjectPage.details.range': '{0}' + EN_DASH + '{1}',
+      'ProductsObjectPage.details.rangeFrom': 'from {0}',
+      'ProductsObjectPage.details.rangeUpTo': 'up to {0}',
+    };
+    /** Resource bundle stub with the `en` hint patterns. */
+    const bundle = {
+      getText: function (key, args) {
+        return formatMessage(EN_TEXTS[key], args);
+      },
+    };
 
     /** Value states of the counter badge (SCREENS "Title, counter, layout"). */
     const ValueState = coreLibrary.ValueState;
@@ -43,6 +62,60 @@ sap.ui.define(
     const CAPACITY = { valueType_code: 'DECIMAL', scale: 2, minValue: '0.01', maxValue: '100' };
     const RAM = { valueType_code: 'INTEGER', scale: null, minValue: '1', maxValue: '1024' };
     const SENSOR = { valueType_code: 'INTEGER', scale: null, minValue: '100', maxValue: '50000' };
+
+    /**
+     * Seeded assignments (db/data SubcategoryAttributes) as the row's `attribute/subcategories`
+     * expand delivers them.
+     */
+    const SCREEN_SIZE_ASSIGNMENTS = [
+      { subcategory_code: 'LAPTOPS', required: true, minValue: '10', maxValue: '18' },
+    ];
+    const RAM_ASSIGNMENTS = [
+      { subcategory_code: 'LAPTOPS', required: false, minValue: '4', maxValue: '128' },
+    ];
+    const CAPACITY_ASSIGNMENTS = [
+      { subcategory_code: 'APPLIANCES', required: true, minValue: '0.2', maxValue: '10' },
+      { subcategory_code: 'DRINKWARE', required: true, minValue: '0.1', maxValue: '3' },
+      { subcategory_code: 'BAGS', required: false, minValue: '5', maxValue: '80' },
+    ];
+
+    /** The four wireless values of CONNECTIVITY that enable BATTERY_LIFE (`enabledBy`). */
+    const BATTERY_LIFE_ENABLERS = [
+      'BLUETOOTH_5_0',
+      'BLUETOOTH_5_3',
+      'WIRELESS_2_4_GHZ',
+      'WIFI',
+    ].map(function (code) {
+      return { code: code, attribute_code: 'CONNECTIVITY' };
+    });
+
+    /**
+     * Detail row whose attribute carries its assignments and enabling values.
+     *
+     * @param {object} attribute the seeded attribute
+     * @param {object} [expanded] `code`, `name`, `subcategories`, `enabledBy` of the expand
+     * @param {object} [values] value fields of the row
+     * @returns {object} the row as the section binding reads it
+     */
+    function expandedRow(attribute, expanded, values) {
+      return Object.assign({ attribute: Object.assign({}, attribute, expanded) }, values);
+    }
+
+    /** Wireless Mouse (db/data ProductDetails): Connectivity, Sensor Resolution, Battery Life. */
+    const MOUSE_CONNECTIVITY = expandedRow(
+      { valueType_code: 'MULTI_LIST' },
+      { code: 'CONNECTIVITY', name: 'Connectivity', enabledBy: [] }
+    );
+    const MOUSE_DPI = expandedRow(
+      SENSOR,
+      { code: 'DPI', name: 'Sensor Resolution', enabledBy: [] },
+      { numberValue: '1600' }
+    );
+    const MOUSE_BATTERY = expandedRow(
+      { valueType_code: 'INTEGER', scale: null, minValue: '1', maxValue: '10000' },
+      { code: 'BATTERY_LIFE', name: 'Battery Life', enabledBy: BATTERY_LIFE_ENABLERS },
+      { numberValue: null }
+    );
 
     /**
      * Detail row of one value type.
@@ -553,5 +626,207 @@ sap.ui.define(
         );
       }
     );
+
+    QUnit.module('DetailsForm: row rules of products-validations', hooks);
+
+    QUnit.test('isRequired', function (assert) {
+      const isRequired = this.form.isRequired;
+      const screen = expandedRow(SCREEN_SIZE, { subcategories: SCREEN_SIZE_ASSIGNMENTS });
+      const ram = expandedRow(RAM, { subcategories: RAM_ASSIGNMENTS });
+      const capacity = expandedRow(CAPACITY, { subcategories: CAPACITY_ASSIGNMENTS });
+      assert.strictEqual(isRequired(screen, 'LAPTOPS'), true, 'Screen Size is required on Laptops');
+      assert.strictEqual(isRequired(ram, 'LAPTOPS'), false, 'Memory is assigned, not required');
+      assert.strictEqual(isRequired(capacity, 'DRINKWARE'), true, 'Capacity on Drinkware');
+      assert.strictEqual(isRequired(capacity, 'BAGS'), false, 'Capacity on Bags is optional');
+      assert.strictEqual(
+        isRequired(screen, 'MICE'),
+        false,
+        'an assignment of another subcategory does not count'
+      );
+      assert.strictEqual(isRequired(screen, undefined), false, 'no subcategory: not required');
+      assert.strictEqual(
+        isRequired(
+          expandedRow(SCREEN_SIZE, { subcategories: [{ subcategory_code: 'LAPTOPS' }] }),
+          'LAPTOPS'
+        ),
+        false,
+        'an assignment without the flag is not required'
+      );
+      assert.strictEqual(
+        isRequired(row('DECIMAL'), 'LAPTOPS'),
+        false,
+        'assignments not expanded: not required'
+      );
+      assert.strictEqual(isRequired(null, 'LAPTOPS'), false, 'no row');
+    });
+
+    QUnit.test('assignmentOf and numberTypeSettings with assignment bounds', function (assert) {
+      const assignmentOf = this.form.assignmentOf;
+      const numberTypeSettings = this.form.numberTypeSettings;
+      const rangeHint = this.form.rangeHint;
+      const screen = expandedRow(SCREEN_SIZE, { subcategories: SCREEN_SIZE_ASSIGNMENTS });
+      const capacity = expandedRow(CAPACITY, { subcategories: CAPACITY_ASSIGNMENTS });
+      assert.deepEqual(
+        assignmentOf(capacity, 'APPLIANCES'),
+        { subcategory_code: 'APPLIANCES', required: true, minValue: '0.2', maxValue: '10' },
+        'the assignment of the product subcategory with its bounds'
+      );
+      assert.strictEqual(assignmentOf(capacity, 'MICE'), null, 'no assignment of that subcategory');
+      assert.strictEqual(assignmentOf(capacity, null), null, 'no subcategory');
+      assert.strictEqual(assignmentOf(row('DECIMAL'), 'BAGS'), null, 'assignments not expanded');
+      assert.deepEqual(
+        numberTypeSettings(SCREEN_SIZE, assignmentOf(screen, 'LAPTOPS')).constraints,
+        { precision: 15, scale: 1, minimum: '10', maximum: '18' },
+        'Screen Size on Laptops: the assignment bounds 10..18 replace 1..100'
+      );
+      assert.deepEqual(
+        numberTypeSettings(SCREEN_SIZE, null).constraints,
+        { precision: 15, scale: 1, minimum: '1', maximum: '100' },
+        'without an assignment the attribute bounds stay'
+      );
+      assert.deepEqual(
+        numberTypeSettings(SCREEN_SIZE, { minValue: null, maxValue: '18' }).constraints,
+        { precision: 15, scale: 1, minimum: '1', maximum: '18' },
+        'each bound separately: an open assignment bound keeps the attribute bound'
+      );
+      assert.strictEqual(
+        numberTypeSettings(RAM, { minValue: 0, maxValue: null }).constraints.minimum,
+        '0',
+        'an assignment minimum of 0 is a bound'
+      );
+      assert.strictEqual(
+        rangeHint(numberTypeSettings(SCREEN_SIZE, assignmentOf(screen, 'LAPTOPS')), bundle),
+        '10' + EN_DASH + '18',
+        'the range hint of Screen Size on Laptops'
+      );
+      assert.strictEqual(
+        rangeHint(numberTypeSettings(RAM, { minValue: '32', maxValue: '8192' }), bundle),
+        '32' + EN_DASH + '8,192',
+        'bounds formatted by the row type, grouped (en)'
+      );
+      assert.strictEqual(
+        rangeHint(numberTypeSettings(CAPACITY, assignmentOf(capacity, 'APPLIANCES')), bundle),
+        '0.2' + EN_DASH + '10',
+        'decimals without padding zeros'
+      );
+      assert.strictEqual(
+        rangeHint(numberTypeSettings({ valueType_code: 'INTEGER', minValue: '5' }), bundle),
+        'from 5',
+        'a lower bound only'
+      );
+      assert.strictEqual(
+        rangeHint(numberTypeSettings({ valueType_code: 'INTEGER', maxValue: '50' }), bundle),
+        'up to 50',
+        'an upper bound only'
+      );
+      assert.strictEqual(
+        rangeHint(numberTypeSettings({ valueType_code: 'INTEGER' }), bundle),
+        '',
+        'no bounds: no hint'
+      );
+      assert.strictEqual(rangeHint(null, bundle), '', 'a row that is not numeric: no hint');
+    });
+
+    QUnit.test('isEnabled', function (assert) {
+      const isEnabled = this.form.isEnabled;
+      const enablersLoaded = this.form.enablersLoaded;
+      const enablerName = this.form.enablerName;
+      const mouse = [MOUSE_CONNECTIVITY, MOUSE_DPI, MOUSE_BATTERY];
+      assert.strictEqual(
+        isEnabled(MOUSE_BATTERY, { CONNECTIVITY: ['WIRELESS_2_4_GHZ', 'BLUETOOTH_5_0'] }),
+        true,
+        'Wireless Mouse as seeded: Battery Life is enabled'
+      );
+      assert.strictEqual(
+        isEnabled(MOUSE_BATTERY, { CONNECTIVITY: ['WIRELESS_2_4_GHZ'] }),
+        true,
+        'one wireless value is enough'
+      );
+      assert.strictEqual(
+        isEnabled(MOUSE_BATTERY, { CONNECTIVITY: ['WIRED_USB'] }),
+        false,
+        'a wired value only: disabled'
+      );
+      assert.strictEqual(
+        isEnabled(MOUSE_BATTERY, { CONNECTIVITY: [] }),
+        false,
+        'no value selected: disabled'
+      );
+      assert.strictEqual(isEnabled(MOUSE_BATTERY, {}), false, 'no Connectivity row: disabled');
+      assert.strictEqual(
+        isEnabled(MOUSE_BATTERY, { CONNECTIVITY: null }),
+        false,
+        'selections still loading: disabled'
+      );
+      assert.strictEqual(
+        isEnabled(MOUSE_BATTERY, { COLOUR: ['WIFI'] }),
+        false,
+        'an enabling code counts only in the attribute it belongs to'
+      );
+      assert.strictEqual(isEnabled(MOUSE_DPI, {}), true, 'a row without enabling values');
+      assert.strictEqual(isEnabled(row('INTEGER'), undefined), true, 'enabledBy not expanded');
+      assert.strictEqual(
+        enablersLoaded(MOUSE_BATTERY, { CONNECTIVITY: null }),
+        false,
+        'not final while the Connectivity selections load'
+      );
+      assert.strictEqual(
+        enablersLoaded(MOUSE_BATTERY, { CONNECTIVITY: [] }),
+        true,
+        'final once they are read'
+      );
+      assert.strictEqual(
+        enablersLoaded(MOUSE_BATTERY, {}),
+        true,
+        'final when the product has no Connectivity row'
+      );
+      assert.strictEqual(
+        enablerName(MOUSE_BATTERY, mouse),
+        'Connectivity',
+        'the hint names the enabling attribute from the product row'
+      );
+      assert.strictEqual(enablerName(MOUSE_DPI, mouse), '', 'an independent row names none');
+      assert.strictEqual(
+        enablerName(MOUSE_BATTERY, [MOUSE_DPI, null]),
+        '',
+        'no row of the enabling attribute'
+      );
+    });
+
+    QUnit.test('countFilled excludes disabled rows', function (assert) {
+      const countFilled = this.form.countFilled;
+      const mouse = [MOUSE_CONNECTIVITY, MOUSE_DPI, MOUSE_BATTERY];
+      assert.deepEqual(
+        countFilled(mouse, [1, undefined, undefined], [true, true, false]),
+        { filled: 2, total: 2 },
+        'a wired mouse: Battery Life disabled, Filled 2 of 2'
+      );
+      assert.deepEqual(
+        countFilled(mouse, [1, undefined, undefined], [true, true, true]),
+        { filled: 2, total: 3 },
+        'a wireless value selected: Battery Life enabled and empty, Filled 2 of 3'
+      );
+      const filledBattery = Object.assign({}, MOUSE_BATTERY, { numberValue: '12' });
+      assert.deepEqual(
+        countFilled([MOUSE_CONNECTIVITY, MOUSE_DPI, filledBattery], [2], [true, true, false]),
+        { filled: 2, total: 2 },
+        'a disabled row is left out of N even with a value'
+      );
+      assert.deepEqual(
+        countFilled(mouse, [2], []),
+        { filled: 2, total: 3 },
+        'no flags: every row counts'
+      );
+      assert.deepEqual(
+        countFilled(mouse, [2], [undefined, true, undefined]),
+        { filled: 2, total: 3 },
+        'only false excludes a row'
+      );
+      assert.deepEqual(
+        countFilled(mouse, [0], [false, false, false]),
+        { filled: 0, total: 0 },
+        'every row disabled: 0 of 0'
+      );
+    });
   }
 );

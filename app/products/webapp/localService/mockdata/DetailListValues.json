@@ -4,293 +4,335 @@
     "name": "Mesh",
     "descr": null,
     "attribute_code": "MATERIAL",
-    "position": 1
+    "position": 1,
+    "enables_code": null
   },
   {
     "code": "FABRIC",
     "name": "Fabric",
     "descr": null,
     "attribute_code": "MATERIAL",
-    "position": 2
+    "position": 2,
+    "enables_code": null
   },
   {
     "code": "LEATHER",
     "name": "Leather",
     "descr": null,
     "attribute_code": "MATERIAL",
-    "position": 3
+    "position": 3,
+    "enables_code": null
   },
   {
     "code": "WOOD",
     "name": "Wood",
     "descr": null,
     "attribute_code": "MATERIAL",
-    "position": 4
+    "position": 4,
+    "enables_code": null
   },
   {
     "code": "BAMBOO",
     "name": "Bamboo",
     "descr": null,
     "attribute_code": "MATERIAL",
-    "position": 5
+    "position": 5,
+    "enables_code": null
   },
   {
     "code": "PLASTIC",
     "name": "Plastic",
     "descr": null,
     "attribute_code": "MATERIAL",
-    "position": 6
+    "position": 6,
+    "enables_code": null
   },
   {
     "code": "SILICONE",
     "name": "Silicone",
     "descr": null,
     "attribute_code": "MATERIAL",
-    "position": 7
+    "position": 7,
+    "enables_code": null
   },
   {
     "code": "TPE",
     "name": "TPE",
     "descr": null,
     "attribute_code": "MATERIAL",
-    "position": 8
+    "position": 8,
+    "enables_code": null
   },
   {
     "code": "ALUMINIUM",
     "name": "Aluminium",
     "descr": null,
     "attribute_code": "MATERIAL",
-    "position": 9
+    "position": 9,
+    "enables_code": null
   },
   {
     "code": "STAINLESS_STEEL",
     "name": "Stainless steel",
     "descr": null,
     "attribute_code": "MATERIAL",
-    "position": 10
+    "position": 10,
+    "enables_code": null
   },
   {
     "code": "GLASS",
     "name": "Glass",
     "descr": null,
     "attribute_code": "MATERIAL",
-    "position": 11
+    "position": 11,
+    "enables_code": null
   },
   {
     "code": "CERAMIC",
     "name": "Ceramic",
     "descr": null,
     "attribute_code": "MATERIAL",
-    "position": 12
+    "position": 12,
+    "enables_code": null
   },
   {
     "code": "BLACK",
     "name": "Black",
     "descr": null,
     "attribute_code": "COLOUR",
-    "position": 1
+    "position": 1,
+    "enables_code": null
   },
   {
     "code": "WHITE",
     "name": "White",
     "descr": null,
     "attribute_code": "COLOUR",
-    "position": 2
+    "position": 2,
+    "enables_code": null
   },
   {
     "code": "GREY",
     "name": "Grey",
     "descr": null,
     "attribute_code": "COLOUR",
-    "position": 3
+    "position": 3,
+    "enables_code": null
   },
   {
     "code": "SILVER",
     "name": "Silver",
     "descr": null,
     "attribute_code": "COLOUR",
-    "position": 4
+    "position": 4,
+    "enables_code": null
   },
   {
     "code": "BLUE",
     "name": "Blue",
     "descr": null,
     "attribute_code": "COLOUR",
-    "position": 5
+    "position": 5,
+    "enables_code": null
   },
   {
     "code": "RED",
     "name": "Red",
     "descr": null,
     "attribute_code": "COLOUR",
-    "position": 6
+    "position": 6,
+    "enables_code": null
   },
   {
     "code": "GREEN",
     "name": "Green",
     "descr": null,
     "attribute_code": "COLOUR",
-    "position": 7
+    "position": 7,
+    "enables_code": null
   },
   {
     "code": "YELLOW",
     "name": "Yellow",
     "descr": null,
     "attribute_code": "COLOUR",
-    "position": 8
+    "position": 8,
+    "enables_code": null
   },
   {
     "code": "PINK",
     "name": "Pink",
     "descr": null,
     "attribute_code": "COLOUR",
-    "position": 9
+    "position": 9,
+    "enables_code": null
   },
   {
     "code": "BROWN",
     "name": "Brown",
     "descr": null,
     "attribute_code": "COLOUR",
-    "position": 10
+    "position": 10,
+    "enables_code": null
   },
   {
     "code": "BEIGE",
     "name": "Beige",
     "descr": null,
     "attribute_code": "COLOUR",
-    "position": 11
+    "position": 11,
+    "enables_code": null
   },
   {
     "code": "MULTICOLOUR",
     "name": "Multicolour",
     "descr": null,
     "attribute_code": "COLOUR",
-    "position": 12
+    "position": 12,
+    "enables_code": null
   },
   {
     "code": "BLUETOOTH_5_0",
     "name": "Bluetooth 5.0",
     "descr": null,
     "attribute_code": "CONNECTIVITY",
-    "position": 1
+    "position": 1,
+    "enables_code": "BATTERY_LIFE"
   },
   {
     "code": "BLUETOOTH_5_3",
     "name": "Bluetooth 5.3",
     "descr": null,
     "attribute_code": "CONNECTIVITY",
-    "position": 2
+    "position": 2,
+    "enables_code": "BATTERY_LIFE"
   },
   {
     "code": "WIRELESS_2_4_GHZ",
     "name": "Wireless 2.4 GHz",
     "descr": null,
     "attribute_code": "CONNECTIVITY",
-    "position": 3
+    "position": 3,
+    "enables_code": "BATTERY_LIFE"
   },
   {
     "code": "WIFI",
     "name": "Wi-Fi",
     "descr": null,
     "attribute_code": "CONNECTIVITY",
-    "position": 4
+    "position": 4,
+    "enables_code": "BATTERY_LIFE"
   },
   {
     "code": "WIRED_USB",
     "name": "Wired (USB)",
     "descr": null,
     "attribute_code": "CONNECTIVITY",
-    "position": 5
+    "position": 5,
+    "enables_code": null
   },
   {
     "code": "WIRED_AUDIO_JACK",
     "name": "Wired (audio jack)",
     "descr": null,
     "attribute_code": "CONNECTIVITY",
-    "position": 6
+    "position": 6,
+    "enables_code": null
   },
   {
     "code": "A4",
     "name": "A4",
     "descr": null,
     "attribute_code": "PAPER_SIZE",
-    "position": 1
+    "position": 1,
+    "enables_code": null
   },
   {
     "code": "A5",
     "name": "A5",
     "descr": null,
     "attribute_code": "PAPER_SIZE",
-    "position": 2
+    "position": 2,
+    "enables_code": null
   },
   {
     "code": "A6",
     "name": "A6",
     "descr": null,
     "attribute_code": "PAPER_SIZE",
-    "position": 3
+    "position": 3,
+    "enables_code": null
   },
   {
     "code": "B5",
     "name": "B5",
     "descr": null,
     "attribute_code": "PAPER_SIZE",
-    "position": 4
+    "position": 4,
+    "enables_code": null
   },
   {
     "code": "LETTER",
     "name": "Letter",
     "descr": null,
     "attribute_code": "PAPER_SIZE",
-    "position": 5
+    "position": 5,
+    "enables_code": null
   },
   {
     "code": "POCKET",
     "name": "Pocket",
     "descr": null,
     "attribute_code": "PAPER_SIZE",
-    "position": 6
+    "position": 6,
+    "enables_code": null
   },
   {
     "code": "NONE",
     "name": "Not water-resistant",
     "descr": null,
     "attribute_code": "WATER_RESISTANCE",
-    "position": 1
+    "position": 1,
+    "enables_code": null
   },
   {
     "code": "IPX4",
     "name": "Splash-resistant (IPX4)",
     "descr": null,
     "attribute_code": "WATER_RESISTANCE",
-    "position": 2
+    "position": 2,
+    "enables_code": null
   },
   {
     "code": "IPX5",
     "name": "Water-jet-resistant (IPX5)",
     "descr": null,
     "attribute_code": "WATER_RESISTANCE",
-    "position": 3
+    "position": 3,
+    "enables_code": null
   },
   {
     "code": "IPX6",
     "name": "Powerful-jet-resistant (IPX6)",
     "descr": null,
     "attribute_code": "WATER_RESISTANCE",
-    "position": 4
+    "position": 4,
+    "enables_code": null
   },
   {
     "code": "IPX7",
     "name": "Temporary immersion (IPX7)",
     "descr": null,
     "attribute_code": "WATER_RESISTANCE",
-    "position": 5
+    "position": 5,
+    "enables_code": null
   },
   {
     "code": "IPX8",
     "name": "Continuous immersion (IPX8)",
     "descr": null,
     "attribute_code": "WATER_RESISTANCE",
-    "position": 6
+    "position": 6,
+    "enables_code": null
   }
 ]

@@ -15,6 +15,7 @@ sap.ui.define(
     './ImportProductsJourney',
     './SubcategoryDependsOnCategoryJourney',
     './ProductDetailsFormJourney',
+    './ProductValidationsJourney',
     './DraftMarkerInListReportJourney',
     './RoleAwareActionsJourney',
   ],
@@ -29,6 +30,7 @@ sap.ui.define(
     ImportProducts,
     SubcategoryDependsOnCategory,
     ProductDetailsForm,
+    ProductValidations,
     DraftMarkerInListReport,
     RoleAwareActions
   ) {
@@ -53,6 +55,10 @@ sap.ui.define(
     // discards its subcategory-change draft, ending with the seeded data and the 15 rows without a
     // draft marker; it runs before DraftMarkerInListReportJourney for the same reason as the
     // subcategory journey.
+    // ProductValidationsJourney (products-validations, PLAN step 7) discards every draft it opens or
+    // saves the seeded detail values back, ending with the seeded data and the 15 rows without a
+    // draft marker; it runs before DraftMarkerInListReportJourney for the same reason as the details
+    // journey.
     // RoleAwareActionsJourney runs last (PLAN step 11): it only reads and selects, so it depends on
     // no other journey and changes nothing for them.
     runner.run([
@@ -65,6 +71,7 @@ sap.ui.define(
       ImportProducts,
       SubcategoryDependsOnCategory,
       ProductDetailsForm,
+      ProductValidations,
       DraftMarkerInListReport,
       RoleAwareActions,
     ]);

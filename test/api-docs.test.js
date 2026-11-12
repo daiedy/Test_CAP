@@ -326,6 +326,7 @@ describe('Registry pages of the documentation (ADR-0029 decisions 5 and 8)', () 
         'srv/catalog-service.js',
         'srv/lib/products-import.js',
         'app/products/webapp/ext/fragment/DetailsForm.js',
+        'app/products/webapp/ext/fragment/DetailsRules.js',
       ])
     );
     expect(Object.keys(sections)).toEqual(sources);
@@ -344,13 +345,16 @@ describe('Registry pages of the documentation (ADR-0029 decisions 5 and 8)', () 
       /^\| @returns \| {2}\| `Promise<ReturnType<typeof toImportRows>>` \| as `toImportRows`, /m
     );
     // A function inside the sap.ui.define factory of webapp/ext, with an optional parameter.
-    const countFilled = symbol('app/products/webapp/ext/fragment/DetailsForm.js', 'countFilled');
-    expect(countFilled, 'countFilled in DetailsForm.js').toBeDefined();
-    expect(countFilled).toContain('`function countFilled(rows, selectionCounts)`');
+    const countFilled = symbol('app/products/webapp/ext/fragment/DetailsRules.js', 'countFilled');
+    expect(countFilled, 'countFilled in DetailsRules.js').toBeDefined();
+    expect(countFilled).toContain('`function countFilled(rows, selectionCounts, enabledFlags)`');
     expect(countFilled).toContain('Counts filled rows.');
     expect(countFilled).toContain('| @param | rows | `object[]` | detail rows of one product |');
     expect(countFilled).toContain(
       '| @param | [selectionCounts] | `Array<number\\|undefined>` | selections per row, same order as `rows` |'
+    );
+    expect(countFilled).toContain(
+      '| @param | [enabledFlags] | `boolean[]` | whether each row is enabled, same order as `rows`; only `false` excludes |'
     );
     expect(countFilled).toContain(
       '| @returns |  | `{filled: number, total: number}` | N and M of "Filled N of M" |'

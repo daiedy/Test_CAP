@@ -1,8 +1,8 @@
 /*
  * Page object for the fields of the Object Page form (section GeneralInfo, FieldGroup data fields):
  * the assertions that sap.fe.test onForm() lacks or gets wrong, added with OpaBuilder and matched by
- * control id and control properties only. Use it for "the form field is empty" and "the form field
- * label is ...".
+ * control id and control properties only. Use it for "the form field is empty", "the form field
+ * label is ..." and "the model stores ..." (a value refused on the client was never sent).
  * False pass of the standard API: onForm().iCheckField(field, '') passes for ANY field value, because
  * the value matcher turns a falsy expected value into an empty list (sap/fe/test/builder/
  * MdcFieldBuilder, _equalish). An empty field is therefore asserted with iSeeFormFieldEmpty, never
@@ -38,6 +38,27 @@ sap.ui.define(['sap/ui/test/OpaBuilder'], function (OpaBuilder) {
             return !oField.getValue() && !oField.getAdditionalValue();
           })
           .description("Form field '" + sProperty + "' is empty")
+          .execute();
+      },
+      // The value the model holds behind the form field, with no change pending on its context: a
+      // value refused by the client type never reaches the model, so no request can carry it.
+      // Numbers are compared as numbers (Edm.Decimal arrives as a string).
+      iSeeFormFieldStoredValue: function (sProperty, vValue) {
+        return OpaBuilder.create(this)
+          .hasType('sap.ui.mdc.Field')
+          .hasId(formFieldId(sProperty))
+          .mustBeVisible(false)
+          .has(function (oField) {
+            const oContext = oField.getBindingContext();
+            if (!oContext || oContext.hasPendingChanges()) {
+              return false;
+            }
+            const vActual = oContext.getProperty(sProperty);
+            return typeof vValue === 'number'
+              ? vActual !== null && vActual !== undefined && Number(vActual) === vValue
+              : vActual === vValue;
+          })
+          .description("Form field '" + sProperty + "' stores " + JSON.stringify(vValue))
           .execute();
       },
       // The label of the form field; sap.fe.test onForm() has no label assertion.

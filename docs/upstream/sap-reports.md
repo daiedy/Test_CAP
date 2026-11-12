@@ -4,8 +4,8 @@ Reports of upstream defects the project found and works around. Channel for the 
 
 | Date | Report | Channel | Reference | Status |
 |---|---|---|---|---|
-| 2026-10-07 | 1. Positional `req.error(status, message)` returns the HTTP status as the OData `code` | SAP Community, Technology Q&A (no S-user at hand; the Support Portal channel stays open) | https://community.sap.com/t5/technology-q-a/positional-req-error-409-key-details-code-is-quot-409-quot-not-the-message/qaq-p/14498999 | posted 2026-10-07, awaiting an answer |
-| 2026-10-07 | 2. `sap-messages` header texts ignore `Accept-Language` | SAP Community, Technology Q&A (no S-user at hand; the Support Portal channel stays open) | https://community.sap.com/t5/technology-q-a/sap-messages-header-texts-ignore-accept-language-while-the-error-body-is/qaq-p/14498987 | posted 2026-10-07, awaiting an answer |
+| 2026-10-07 | 1. Positional `req.error(status, message)` returns the HTTP status as the OData `code` | SAP Community, Technology Q&A (no S-user at hand; the Support Portal channel stays open) | https://community.sap.com/t5/technology-q-a/positional-req-error-409-key-details-code-is-quot-409-quot-not-the-message/qaq-p/14498999 | posted 2026-10-07, awaiting an answer; still reproduces on `@sap/cds` 10.2.2 (re-measured 2026-11-12) |
+| 2026-10-07 | 2. `sap-messages` header texts ignore `Accept-Language` | SAP Community, Technology Q&A (no S-user at hand; the Support Portal channel stays open) | https://community.sap.com/t5/technology-q-a/sap-messages-header-texts-ignore-accept-language-while-the-error-body-is/qaq-p/14498987 | posted 2026-10-07; a contributor's answer traced it to `sap_messages4()` in `libx/odata/ODataAdapter.js` skipping `localized()`; fixed in `@sap/cds` 10.2.2 (package `CHANGELOG.md`, Fixed: "Translation of messages in `sap-messages` header"; the source now calls `this.localized(this.normalized(err))`; re-measured 2026-11-12 with args and without the header); the post still needs a closing reply |
 
 ## How to submit
 

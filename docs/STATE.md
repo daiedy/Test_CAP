@@ -7,7 +7,7 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-11-12
 - Branch: main
 - Feature: none
-- Phase: none (context-hygiene #44 merged via PR #54, CI green, 2026-11-12)
+- Phase: none (context-hygiene #44 merged via PR #54; its retro transferred 5 lessons, uncommitted, 2026-11-12)
 - Last commit: e112a7a Merge pull request #54 from daiedy/feature/context-hygiene
 - Next: `/feature #10` with the before/after context card (`node scripts/metrics.mjs context`); Dependabot PR #48 (msal-node major) waits for a human
 
@@ -23,11 +23,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 | A forked session's card counts the parent's history | Cut the scope at the fork point | architect |
 | `initialLoad: true` in `manifest.json` is a deprecated boolean (UI5 1.153.0) | Set `Enabled` through Fiori MCP; OPA5 green | fiori-app-dev |
 | Stop hook flags a `manifest.json` change made through Fiori MCP | Accept it when the MCP audit log shows `execute_functionality` | user |
-| An ADR digest in `docs/wiki/decisions/` has no stamp over its ADR; an amendment leaves it stale | `wiki.mjs confirm` stamps `sources`, `audit` reports it (a `/backlog` wish) | user |
+| An ADR digest in `docs/wiki/decisions/` has no stamp over its ADR; an amendment leaves it stale | `wiki.mjs confirm` stamps `sources`, `audit` reports it (#55 `wiki-digest-stamp`) | user |
 | `refreshRowsOfNewDraft` in `DetailsForm.js` is probably redundant since `$ownRequest` (ADR-0027) | Remove it with `refreshedDrafts` after a browser proof | fiori-app-dev |
 | `DetailsForm.js` has an `eslint-disable` for `max-params` and `max-statements` (70 against 40) | Move the pure functions to a sibling module; narrow the directive | fiori-app-dev |
 | `@cap-js/openapi` pinned to 1.6.0 (1.7.0: 500 on a draft service; ADR-0029 A) | Drop the pin after cap-js/openapi PR #207 | upstream-watcher |
 | Object Page route shows a double-encoded key, `Products('Notebook%2520Set')` | Check whether it predates docs-toolchain and whether FE expects it | fiori-app-dev |
+| `messageText()` in the `req.info`/`req.warn` of `srv/catalog-service.js` (lines 224-227, 271-273) is obsolete: cds 10.2.2 localizes `sap-messages` under `Accept-Language` (re-measured 2026-11-12) | Pass `{ code, args }` only, rewrite PATTERNS "Success message of an action", via `/feature` (fits #10); `messageText` stays for its other callers | cap-backend-dev |
 | `PRODUCTS_IMPORT_UNKNOWN_COLUMN` (`en`, `ru`) omits `subcategory` from the allowed columns | Add it via `/feature`, then `wiki.mjs confirm` the IMPORT page | cap-backend-dev |
 | Read gate records a read at PreToolUse: a failed whole `Read` counts and the next whole attempt is denied once with a false reason | Treat any `Read` key besides `file_path` as non-whole | cap-backend-dev |
 | One `--force` of `metrics.mjs record` bypasses the duplicate and the `resumesAfterReport` refusals alike | Print the ratchet finding on a forced record | cap-backend-dev |

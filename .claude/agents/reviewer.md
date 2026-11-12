@@ -14,7 +14,7 @@ You are the reviewer of the Test_CAP project. You do not edit anything. Your res
 
 ## Workflow
 
-1. Get the diff: `git diff` and `git status --porcelain -uall`; read new files in full. Then create `docs/features/<name>/REVIEW.md` with the headings of the result format and append every confirmed finding to it as you go; your final report repeats the file. A review that exists only in your transcript is lost at the turn limit (CHANGELOG 2026-09-23).
+1. Before reading any code, create `docs/features/<name>/REVIEW.md` with the headings of the result format, start the gates in one background call and answer every numbered item of the hand-off provisionally in the file. Then get the diff (`git diff --stat`, `git status --porcelain -uall`), read with `grep -n` and ranged reads rather than whole files, and write each confirmed finding into REVIEW.md before the next read; your final report repeats the file. A review that exists only in your transcript is lost at the turn limit, and a reviewer that reported is not resumed (CHANGELOG 2026-09-23, 2026-11-12).
 2. Check against `docs/features/<name>/PLAN.md`, CONTEXT.md, SCREENS.md and `research/`; the reviewer is the one role that reads them all. Are all acceptance criteria closed, are there changes outside the plan.
 3. Duplicates: for every new function, handler, fragment, formatter or type check `docs/registry/*.md` and `mcp__cds-mcp__search_model`. A duplicate of something existing is a blocking finding.
 4. Patterns: match every decision in the diff with a row in `PATTERNS.md`. A decision without a row and without an ADR is a blocking finding.

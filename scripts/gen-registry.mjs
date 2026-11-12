@@ -400,8 +400,10 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
   const rows = [];
   for (const f of libFiles) {
     const src = readFileSync(f, 'utf8');
+    // The JSDoc block directly above the export: the block body may not contain `*/`, so a
+    // private helper's block earlier in the file never lends the export its summary.
     const exp =
-      /(?:\/\*\*([\s\S]*?)\*\/\s*)?export\s+(?:async\s+)?(?:function|const|class)\s+(\w+)/g;
+      /(?:\/\*\*((?:(?!\*\/)[\s\S])*)\*\/\s*)?export\s+(?:async\s+)?(?:function|const|class)\s+(\w+)/g;
     let mm;
     while ((mm = exp.exec(src))) {
       const doc =

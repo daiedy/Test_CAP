@@ -6,7 +6,7 @@ skills:
   - project-protocol
 memory: project
 model: inherit
-maxTurns: 50
+maxTurns: 70
 color: red
 ---
 

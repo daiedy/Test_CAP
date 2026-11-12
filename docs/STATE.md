@@ -4,12 +4,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## Now
 
-- Date: 2026-11-12
-- Branch: main
+- Date: 2026-11-13
+- Branch: chore/retro-products-validations
 - Feature: none
-- Phase: none (products-validations #10 merged via PR #57 after green CI, 2026-11-12)
-- Last commit: 774cb72 Merge pull request #57 from daiedy/feature/products-validations
-- Next: `/retro` for #10 (turn-limit stops of ui-verifier, fiori-app-dev, reviewer); `/feature #26` (unblocked); Dependabot PR #48 waits
+- Phase: none (retro of products-validations #10 committed on its chore branch, not merged)
+- Last commit: 299bd08 docs: STATE after merging products-validations (PR #57)
+- Next: merge the retro branch into `main` (pull request); `/spec #60` (P1, turn-count hook); `/feature #26`; Dependabot PR #48 waits
 
 ## Open debt
 
@@ -33,7 +33,7 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 | One `--force` of `metrics.mjs record` bypasses the duplicate and the `resumesAfterReport` refusals alike | Print the ratchet finding on a forced record | cap-backend-dev |
 | `post-edit.mjs` joins notes that together can exceed `HOOK_OUTPUT_MAX`; Claude Code then saves a file with a preview | Pass the joined text through `relay()` | cap-backend-dev |
 | The `brief` record has no current-phase field, so the card cannot tell a fallback brief | Add the field and show it on the card | architect |
-| Brief and gates not measured before/after on a real run (#28: 21 launches, 2,597.4K characters); Q4 `autoCompactWindow` waits | `/feature #10`, `node scripts/metrics.mjs context <feature>` | user |
+| Briefs and gates measured on #10: tool results 3,711.2K characters in 25 launches (#28: 2,597.4K in 21), 0 resumes (#28: 5), 0 compactions; Q4 `autoCompactWindow` waits | Decide Q4 from the card, `node scripts/metrics.mjs context products-validations` | user |
 
 ## What works
 

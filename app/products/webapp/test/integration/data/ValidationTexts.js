@@ -3,7 +3,8 @@
  * texts of _i18n/messages*.properties and the Details form texts of webapp/i18n/i18n*.properties.
  * Generated from the bundles; non-ASCII text is written as backslash-u escapes (transliteration in
  * the comment) to keep the test sources ASCII-only, as in data/DetailAttributeTexts.js. The range
- * pattern carries the en dash U+2013 of the bundle.
+ * pattern carries the en dash U+2013 of the bundle. The framework texts come from the UI5 core
+ * message bundle of the version the app loads (sap-ui-version.json of ui5.sap.com, 1.154.0).
  */
 sap.ui.define([], function () {
   'use strict';
@@ -81,6 +82,14 @@ sap.ui.define([], function () {
       cleared: {
         en: '{0} cleared: it depends on {1}.',
         ru: '{0}: \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u0435 \u043E\u0447\u0438\u0449\u0435\u043D\u043E, \u0437\u0430\u0432\u0438\u0441\u0438\u0442 \u043E\u0442 \u043F\u043E\u043B\u044F {1}.', // {0}: znachenie ochishcheno, zavisit ot polya {1}.
+      },
+    },
+    framework: {
+      // UI5 1.154.0 sap/ui/core/messagebundle key EnterNumberMin: the client type's text for a value below
+      // the minimum (the price's Validation.Minimum 0.01, R3)
+      enterNumberMin: {
+        en: 'Enter a number with a minimum value of {0}',
+        ru: '\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u0447\u0438\u0441\u043B\u043E \u043A\u0430\u043A \u043C\u0438\u043D\u0438\u043C\u0443\u043C {0}', // Vvedite chislo kak minimum {0}
       },
     },
   };

@@ -479,7 +479,8 @@ describe('OData contract of CatalogService', () => {
   });
 
   // products-validations, ADR-0028 decisions 1, 2, 4, 5, 8-11: format and range rules reach the
-  // contract as Validation terms (the open lower bound of price as Validation.Exclusive), the rule
+  // contract as Validation terms (the closed lower bound 0.01 of price as a plain Validation.Minimum
+  // without Validation.Exclusive, which Fiori Elements ignores: amendment A, D1), the rule
   // elements of the products and the details as properties and navigation properties, the R6
   // marker as the If/Gt Common.FieldControl on Products/description (7 Mandatory while stock > 0,
   // else 3 Optional) and the R4 control as the currency code list: CodeList.CurrencyCodes on the
@@ -491,11 +492,9 @@ describe('OData contract of CatalogService', () => {
     expect(status).toBe(200);
     // The EDMX is pretty-printed, so compare without the whitespace between the tags.
     const compact = data.replace(/>\s+</g, '><');
-    expect(annotationsOf(compact, 'CatalogService.Products/price')).toContain(
-      '<Annotation Term="Validation.Minimum" Int="0">' +
-        '<Annotation Term="Validation.Exclusive" Bool="true"/>' +
-        '</Annotation>'
-    );
+    const price = annotationsOf(compact, 'CatalogService.Products/price');
+    expect(price).toContain('<Annotation Term="Validation.Minimum" Float="0.01"/>');
+    expect(price).not.toContain('Validation.Exclusive');
     expect(annotationsOf(compact, 'CatalogService.Products/name')).toContain(
       '<Annotation Term="Validation.Pattern" String="^\\s*\\S.+\\S\\s*$"/>'
     );

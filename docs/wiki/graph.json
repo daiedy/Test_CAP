@@ -1,5 +1,5 @@
 {
-  "x-sources": "addaf6a78a3fe68f",
+  "x-sources": "64c4d8896603c78b",
   "nodes": [
     {
       "path": "docs/wiki/Glossary.md",
@@ -616,7 +616,7 @@
       "status": null,
       "sources": [],
       "verified": "5d108315b067bf1e",
-      "codeHash": "8b5b1878b00638ea",
+      "codeHash": "3a5a3dd1b1064349",
       "aliases": [],
       "adr": []
     },
@@ -715,7 +715,7 @@
       "status": null,
       "sources": [],
       "verified": "cd17f8f8027a7ad1",
-      "codeHash": "4609a0c2fb121eeb",
+      "codeHash": "dd20495a2af02cbf",
       "aliases": [],
       "adr": []
     },
@@ -812,7 +812,7 @@
       "status": null,
       "sources": [],
       "verified": "28732f57355b4bb6",
-      "codeHash": "c2efdc1bca3e78ee",
+      "codeHash": "0ad745d603b03576",
       "aliases": [],
       "adr": []
     },
@@ -871,7 +871,7 @@
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
       "verified": "19aaf72ce352aa0d",
-      "codeHash": "67ae131d7009f47b",
+      "codeHash": "5b98a79409aefd39",
       "aliases": [
         "R10"
       ],
@@ -910,7 +910,7 @@
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
       "verified": "19aaf72ce352aa0d",
-      "codeHash": "67ae131d7009f47b",
+      "codeHash": "5b98a79409aefd39",
       "aliases": [
         "R8"
       ],
@@ -1039,7 +1039,7 @@
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
       "verified": "e5c192f21561f408",
-      "codeHash": "3d42f1d5c4d875bf",
+      "codeHash": "52f7a33c7b8f2deb",
       "aliases": [
         "R4"
       ],
@@ -1072,7 +1072,7 @@
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
       "verified": "e0d6b58590ac81a7",
-      "codeHash": "a8ae560f732ab66b",
+      "codeHash": "1481ff0feae3a5a0",
       "aliases": [
         "R3"
       ],
@@ -1108,7 +1108,7 @@
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
       "verified": "e5c192f21561f408",
-      "codeHash": "3d42f1d5c4d875bf",
+      "codeHash": "52f7a33c7b8f2deb",
       "aliases": [
         "R6"
       ],
@@ -1170,7 +1170,7 @@
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
       "verified": "e0d6b58590ac81a7",
-      "codeHash": "a8ae560f732ab66b",
+      "codeHash": "1481ff0feae3a5a0",
       "aliases": [
         "R1"
       ],
@@ -1204,7 +1204,7 @@
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
       "verified": "c45d03ff2a141221",
-      "codeHash": "2c3a96606355985d",
+      "codeHash": "80644c7eb862ce26",
       "aliases": [
         "R2"
       ],
@@ -1238,7 +1238,7 @@
         "docs/features/products-subcategory-cascade/SUMMARY.md"
       ],
       "verified": "dbca884ae8598da1",
-      "codeHash": "b72e1ad623abf32b",
+      "codeHash": "11076205bbd1b102",
       "aliases": [],
       "adr": []
     },
@@ -1270,7 +1270,7 @@
         "docs/features/products-details-section/SUMMARY.md"
       ],
       "verified": "28732f57355b4bb6",
-      "codeHash": "c2efdc1bca3e78ee",
+      "codeHash": "0ad745d603b03576",
       "aliases": [],
       "adr": []
     },
@@ -1364,7 +1364,7 @@
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
       "verified": "e0d6b58590ac81a7",
-      "codeHash": "a8ae560f732ab66b",
+      "codeHash": "1481ff0feae3a5a0",
       "aliases": [
         "R5"
       ],
@@ -1459,7 +1459,7 @@
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
       "verified": "19aaf72ce352aa0d",
-      "codeHash": "67ae131d7009f47b",
+      "codeHash": "5b98a79409aefd39",
       "aliases": [
         "R12"
       ],
@@ -1495,7 +1495,7 @@
         "docs/features/catalog-hygiene/SUMMARY.md"
       ],
       "verified": "dbca884ae8598da1",
-      "codeHash": "b72e1ad623abf32b",
+      "codeHash": "11076205bbd1b102",
       "aliases": [],
       "adr": []
     },
@@ -1647,7 +1647,7 @@
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
       "verified": "622516bc0195056f",
-      "codeHash": "81194add2875cd8d",
+      "codeHash": "cadbc1509634cc73",
       "aliases": [
         "R13"
       ],
@@ -1707,7 +1707,7 @@
         "docs/features/catalog-hygiene/SUMMARY.md"
       ],
       "verified": "dbca884ae8598da1",
-      "codeHash": "b72e1ad623abf32b",
+      "codeHash": "11076205bbd1b102",
       "aliases": [],
       "adr": []
     },
@@ -1740,7 +1740,7 @@
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
       "verified": "13880a0e9e127e07",
-      "codeHash": "f1378ecd19709c7b",
+      "codeHash": "b0c2bdc749663910",
       "aliases": [
         "R11"
       ],
@@ -1774,7 +1774,7 @@
         "docs/features/products-subcategory-cascade/SUMMARY.md"
       ],
       "verified": "9de3a1665a6a7215",
-      "codeHash": "5f2f69535de96585",
+      "codeHash": "dbff97220c8a76a0",
       "aliases": [],
       "adr": []
     },
@@ -1840,7 +1840,7 @@
         "docs/features/products-subcategory-cascade/SUMMARY.md"
       ],
       "verified": "303b97c760587c79",
-      "codeHash": "505b58f1612e3742",
+      "codeHash": "274aa9cde4f6e250",
       "aliases": [],
       "adr": []
     },

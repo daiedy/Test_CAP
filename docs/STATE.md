@@ -8,8 +8,8 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Branch: feature/products-validations
 - Feature: products-validations (#10)
 - Phase: 3: UI (gate green: ui5lint clean, `npm test` 310, `npm run test:ui` 97/97, `metadata.xml` 1783; autonomous gates)
-- Last commit: 9b73611 feat(srv): products-validations backend
-- Next: phase 3 rework round 1 (R3 price 0 not refused on the client, R12 counter text, JPY display of 10.5), then ui-verifier step 8; Dependabot PR #48 waits for a human
+- Last commit: 732fdcf feat(app): products-validations ui
+- Next: rework round 1 (R3 closed bound 0.01, R12 criterion text, `Currencies.json`), then ui-verifier step 8; Dependabot PR #48 waits
 
 ## Open debt
 

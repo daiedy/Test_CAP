@@ -4,7 +4,7 @@
     "title": "Product Catalog API",
     "description": "Reads and maintains catalog products with their categories, subcategories and typed details, and imports products from an Excel workbook.",
     "version": "1.0.0",
-    "x-sources": "49d3eb376353353c"
+    "x-sources": "2528c0c9e0e6795d"
   },
   "x-sap-api-type": "ODATAV4",
   "x-odata-version": "4.01",
@@ -9282,7 +9282,7 @@
                 "format": "decimal",
                 "multipleOf": 0.01,
                 "maximum": 99999999.99,
-                "minimum": 0
+                "minimum": 0.01
               },
               {
                 "type": "string"
@@ -9292,7 +9292,6 @@
             "x-sap-precision": 15,
             "x-sap-scale": 2,
             "nullable": true,
-            "exclusiveMinimum": true,
             "description": "Unit price of the product in its currency."
           },
           "currency": {
@@ -9451,7 +9450,7 @@
                 "format": "decimal",
                 "multipleOf": 0.01,
                 "maximum": 99999999.99,
-                "minimum": 0
+                "minimum": 0.01
               },
               {
                 "type": "string"
@@ -9461,7 +9460,6 @@
             "x-sap-precision": 15,
             "x-sap-scale": 2,
             "nullable": true,
-            "exclusiveMinimum": true,
             "description": "Unit price of the product in its currency."
           },
           "currency_code": {
@@ -9565,7 +9563,7 @@
                 "format": "decimal",
                 "multipleOf": 0.01,
                 "maximum": 99999999.99,
-                "minimum": 0
+                "minimum": 0.01
               },
               {
                 "type": "string"
@@ -9575,7 +9573,6 @@
             "x-sap-precision": 15,
             "x-sap-scale": 2,
             "nullable": true,
-            "exclusiveMinimum": true,
             "description": "Unit price of the product in its currency."
           },
           "currency_code": {

@@ -21,6 +21,7 @@ sap.ui.define(
 
     const messages = ValidationTexts.messages;
     const texts = ValidationTexts.labels;
+    const framework = ValidationTexts.framework;
     const names = DetailAttributeTexts.names.en;
     const units = DetailAttributeTexts.units;
     const valueNames = DetailAttributeTexts.valueNames.en;
@@ -138,15 +139,17 @@ sap.ui.define(
         function (Given, When, Then) {
           openProduct(Given, When, Then, earbudsName);
           edit(When, Then);
-          // R3: 0 turns the field red. The plan expects the client type to refuse it before any
-          // request (Validation.Exclusive); measured 2026-11-12, the PATCH is sent and the server
-          // answers with PRODUCTS_PRICE_POSITIVE, so only the Error state is asserted here (defect
-          // reported to fiori-app-dev, PLAN step 7 report). Both paths end in the Error state.
+          // R3: the closed bound 0.01 (Validation.Minimum) makes the client type refuse 0 with the
+          // framework text; the model keeps the seeded price, so no request carried the 0.
           Then.onTheObjectPageForm.iSeeFormFieldStoredValue('price', earbudsPrice);
           When.onTheProductsObjectPage.onForm(pricingStock).iChangeField(priceField, '0');
-          Then.onTheProductsObjectPage
-            .onForm(pricingStock)
-            .iCheckField(priceField, undefined, { valueState: 'Error' });
+          seeFieldError(
+            Then,
+            pricingStock,
+            priceField,
+            format(framework.enterNumberMin.en, ['0.01'])
+          );
+          Then.onTheObjectPageForm.iSeeFormFieldStoredValue('price', earbudsPrice);
           // R4 through the server: 10.50 stored under USD, then the currency changes to JPY.
           When.onTheProductsObjectPage.onForm(pricingStock).iChangeField(priceField, '10.50');
           Then.onTheObjectPageForm.iSeeFormFieldStoredValue('price', 10.5);
@@ -308,8 +311,7 @@ sap.ui.define(
             format(texts.dependsOn.en, [connectivity])
           );
           // The disabled row is outside the counter (Q7). Connectivity has no value left after both
-          // seeded values are removed, so only Sensor Resolution counts: "Filled 1 of 2" (the PLAN
-          // criterion text "Filled 2 of 2" assumes a Connectivity value; see the step 7 report).
+          // seeded values are removed, so only Sensor Resolution counts: "Filled 1 of 2".
           Then.onTheDetailsForm.iSeeTheCounter(filled(1, 2), 'Warning');
           // Wi-Fi selected: enabled again, empty, with the range placeholder.
           When.onTheDetailsForm.iToggleListItems(connectivity, [valueNames.WIFI]);

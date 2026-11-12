@@ -804,12 +804,21 @@ describe('CatalogService.Products validations', () => {
     expect(data).to.containSubset({ name: 'Backpack' });
   });
 
-  it('rejects a price of 0 or below with the project text (@assert.range open bound)', async () => {
+  it('rejects a price below 0.01 with the project text (@assert.range)', async () => {
     for (const price of ['0.00', '-1.00']) {
       const err = await expect(createActive({ price })).to.be.rejectedWith(/400/);
       expect(err, price).to.containSubset({ code: 'ASSERT_RANGE', target: 'price' });
       expect(err.message, price).to.contain(text.pricePositive);
     }
+    // Measured 2026-11-12 (cds 10.2.2): a sub-cent price breaks both the scale of Decimal(15, 2)
+    // and the closed bound, and the input validation reports both on price.
+    const subCent = await expect(createActive({ price: '0.005' })).to.be.rejectedWith(/400/);
+    expect(subCent).to.containSubset({ code: 'MULTIPLE_ERRORS' });
+    expect(subCent.details).to.have.length(2);
+    expect(subCent.details).to.containSubset([
+      { code: 'ASSERT_DATA_TYPE', target: 'price' },
+      { code: 'ASSERT_RANGE', target: 'price', message: text.pricePositive },
+    ]);
     const { status, data } = await createActive({ price: '0.01' });
     expect(status).to.equal(201);
     expect(data).to.containSubset({ price: '0.01' });

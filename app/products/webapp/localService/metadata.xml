@@ -791,9 +791,7 @@
         <Annotation Term="Measures.ISOCurrency" Path="currency_code"/>
         <Annotation Term="Common.Label" String="Price"/>
         <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
-        <Annotation Term="Validation.Minimum" Int="0">
-          <Annotation Term="Validation.Exclusive" Bool="true"/>
-        </Annotation>
+        <Annotation Term="Validation.Minimum" Float="0.01"/>
         <Annotation Term="Validation.Maximum" Float="99999999.99"/>
         <Annotation Term="Core.Description" String="Unit price of the product in its currency."/>
       </Annotations>

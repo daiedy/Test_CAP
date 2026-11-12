@@ -21,12 +21,14 @@ annotate CatalogService.Products with {
                 when stock > 0 and (description is null or trim(description) = '')
                   then error('PRODUCTS_DESCRIPTION_REQUIRED_IN_STOCK', null, ('description', 'stock'))
               end);
-  // R3 (ADR-0028 decision 1): open lower bound, a price above 0; own text, the code stays ASSERT_RANGE.
+  // R3 (ADR-0028 decision 1): a price above 0 as the closed lower bound 0.01, the smallest Decimal(15, 2)
+  // amount. Closed, not open (user decision 2026-11-12): FE V4 ignores Validation.Exclusive on the client
+  // but applies Validation.Minimum, so the field refuses 0 before the PATCH. Own text, code stays ASSERT_RANGE.
   // R4 (decision 3): a currency without minor units (sap.common.Currencies.minorUnit = 0) takes whole
   // amounts; floor() is portable (ADR-0027); targets are string literals of the element names.
   /** Unit price of the product in its currency. */
   price       @title: '{i18n>Products.price}'        @mandatory  @Measures.ISOCurrency: currency_code
-              @assert.range: [(0), 99999999.99]     @assert.range.message: 'PRODUCTS_PRICE_POSITIVE'
+              @assert.range: [0.01, 99999999.99]    @assert.range.message: 'PRODUCTS_PRICE_POSITIVE'
               @assert: (case
                 when price is not null and currency.minorUnit is not null and currency.minorUnit = 0
                   and floor(price) != price

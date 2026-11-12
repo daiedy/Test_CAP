@@ -26,9 +26,9 @@ Contract rule: no step changes the OData model; `metadata.xml` and the `$metadat
 - [ ] The protocol section 2 step 10 and the `feature` skill turn-budget line point to the note, `test/prompt-budget.json` re-recorded, verified by `test/prompt-budget.test.js`
 
 ### Phase 4: live check
-- [ ] In a temp project with the real hook, an agent of `maxTurns: 12` receives a note from turn 6 on, after an MCP call too, and delivers its report before turn 12, verified by `VERIFICATION.md` check 1
-- [ ] The run's `turn-note` records and the card of that session show its notes and no limit stop, verified by `VERIFICATION.md` check 2
-- [ ] Hook cost over 20 runs: a main-thread input at most 0.3 s median, a subagent input on the 11 MB #10 transcript at most 0.5 s median, verified by `VERIFICATION.md` check 3
+- [x] In a temp project with the real hook, an agent of `maxTurns: 12` receives a note from turn 6 on, after an MCP call too, and delivers its report before turn 12, verified by `VERIFICATION.md` check 1
+- [x] The run's `turn-note` records and the card of that session show its notes and no limit stop, verified by `VERIFICATION.md` check 2
+- [x] Hook cost over 20 runs: a main-thread input at most 0.3 s median, a subagent input on the 11 MB #10 transcript at most 0.5 s median, verified by `VERIFICATION.md` check 3
 
 ### Phase 5: review
 - [ ] `REVIEW.md` has zero blocking findings, verified by `REVIEW.md`

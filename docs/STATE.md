@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-11-13
-- Branch: chore/retro-products-validations
+- Branch: main
 - Feature: none
-- Phase: none (retro of products-validations #10 committed on its chore branch, not merged)
-- Last commit: 299bd08 docs: STATE after merging products-validations (PR #57)
-- Next: merge the retro branch into `main` (pull request); `/spec #60` (P1, turn-count hook); `/feature #26`; Dependabot PR #48 waits
+- Phase: none (retro of products-validations #10 merged into main, not pushed)
+- Last commit: 334a5ff Merge branch 'chore/retro-products-validations'
+- Next: push `main`; `/spec #60` (P1, turn-count hook); `/feature #26`; Dependabot PR #48 waits
 
 ## Open debt
 

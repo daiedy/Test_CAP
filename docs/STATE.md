@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-11-12
-- Branch: feature/products-validations
+- Branch: main
 - Feature: none
-- Phase: none (products-validations #10 done and closed 2026-11-12, branch not pushed)
-- Last commit: 263b989 docs: products-validations summary and registry
-- Next: push `feature/products-validations` and open the pull request on the user's word, merge after green CI; Dependabot PR #48 waits
+- Phase: none (products-validations #10 merged via PR #57 after green CI, 2026-11-12)
+- Last commit: 774cb72 Merge pull request #57 from daiedy/feature/products-validations
+- Next: `/retro` for #10 (turn-limit stops of ui-verifier, fiori-app-dev, reviewer); `/feature #26` (unblocked); Dependabot PR #48 waits
 
 ## Open debt
 

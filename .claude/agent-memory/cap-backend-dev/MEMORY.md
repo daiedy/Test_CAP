@@ -7,4 +7,6 @@
 - [Read a pinned action at its ref](pinned-action-read-at-ref.md) — default-branch README != pinned release; wiki-action v5.0.6 has no subfolder/blob link rewrite (2026-10-26)
 - [Sandbox hook run from a scratch script](sandbox-hook-run-from-scratch.md) — createSandbox() from /tmp .mjs with stubbed global expect; red lint and red npm test setups (2026-11-11)
 - [vitest -u runs the whole suite](vitest-u-runs-whole-suite.md) — file filter ignored, -u rewrites any mismatching snapshot; check test/__snapshots__ after (2026-11-12)
+- [Suite load timeout of the app lint test](suite-load-timeout-app-lint.md) — hooks-subagent-stop app ESLint beforeAll > 30 s under load in full npm test, alone 19 s; run the suite alone (2026-11-13)
+- [Kept report can be a later note](kept-report-overwritten.md) — report-<type>-<id>.md held a post-handback note, not the report; read git diff instead (2026-11-13)
 - [Claude Code hook runtime facts](claude-code-hook-runtime-facts.md) — internal SubagentStop ~32 s, live reload, agent_id join; 2.1.322: SubagentStop block after a handback is dropped, 10,000-char cap; denied handback: 3 nudges then withheld; compaction = `compact_boundary`; PostToolBatch in subagents, exact turn count at hook time (2026-11-13)

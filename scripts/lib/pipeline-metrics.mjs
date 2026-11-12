@@ -1,7 +1,7 @@
 /**
  * Pipeline metrics (ADR-0022 decision 1): time, tokens, cost, phases and rework of a session or a
  * feature, the context of each launch (ADR-0031 decision 5), the committed history line, the
- * comparison and the Markdown cards. Definitions D4-D18: docs/metrics/definitions.md. Pure
+ * comparison and the Markdown cards. Definitions D4-D19: docs/metrics/definitions.md. Pure
  * functions over slim transcript
  * records (transcript-usage.mjs) and event-log records (metrics-log.mjs); scripts/metrics.mjs does
  * the I/O, except `loadPricing`, the one reader of the price table. Aggregates only: no text of a
@@ -23,7 +23,10 @@ import {
   costState,
   emptyTokens,
   contextOf,
+  agentRuns,
+  turnsOf,
 } from './transcript-usage.mjs';
+import { TURN_NOTE_EVENT } from './turn-budget.mjs';
 import { sections, cellsOf } from './doc-shapes.mjs';
 import { ruleFor, editedFiles, mcpGaps } from './mcp-audit.mjs';
 import { phaseOf, featureNameOf } from './state-now.mjs';
@@ -815,6 +818,64 @@ function contextBlock(threads, launches, root) {
   };
 }
 
+// ---------- D19: the turn budget of a run ----------
+
+/**
+ * D19 of one launch thread (ADR-0032 decision 5): per run (`agentRuns()`: the launch and each
+ * resume) its `turns` (`turnsOf()`), its `limit` in force, its `notes` and whether it is a
+ * `limitStop`. The limit is `maxTurns` of the run's `agent-start` record (of the thread's agent,
+ * the one nearest the run's first record: SubagentStart may write it just before or just after that
+ * record), else of the run's first `turn-note` record, else `fallback`, the frontmatter today (runs
+ * before #60); null when none is known. A limit stop is a run whose turns reached its limit and
+ * which holds no delivered report (`deliveredReports()`). A `turn-note` record belongs to the last
+ * run started at or before it; `notes` counts its distinct turns, so a note the hook logged twice
+ * for one turn counts once. A live thread (no records) is one empty run.
+ * @param {object} th a launch thread of `threadOf()` or `liveThread()`
+ * @param {object[]} events event-log records (`agent-start`, `turn-note`; others are ignored)
+ * @param {number|null} fallback `maxTurns` of the agent type's definition today
+ * @returns {{ runs: { turns: number, limit: number|null, notes: number, limitStop: boolean }[],
+ *   turnNotes: number, limitStops: number }}
+ */
+export function threadTurns(th, events, fallback = null) {
+  const runs = agentRuns(th.records);
+  const firstTs = runs.map((run) => run.find((r) => Number.isFinite(r.ts))?.ts ?? null);
+  const mine = (name) =>
+    events
+      .filter((e) => e.event === name && e.agent === th.agent)
+      .map((e) => ({ e, t: Date.parse(e.ts) }))
+      .filter((x) => Number.isFinite(x.t));
+  const starts = mine('agent-start').filter((x) => Number.isInteger(x.e.maxTurns));
+  const notes = mine(TURN_NOTE_EVENT).filter((x) => Number.isInteger(x.e.turn));
+  // A note belongs to the last run started at or before it; run 0 has no lower bound.
+  const runOf = (t) => firstTs.reduce((k, s, i) => (i > 0 && s != null && s <= t ? i : k), 0);
+  const notesOf = runs.map(() => []);
+  for (const x of notes) notesOf[runOf(x.t)].push(x.e);
+  const out = runs.map((run, i) => {
+    const s = firstTs[i];
+    const start =
+      s == null
+        ? null
+        : starts.reduce(
+            (best, x) => (!best || Math.abs(x.t - s) < Math.abs(best.t - s) ? x : best),
+            null
+          );
+    const noted = notesOf[i].find((e) => Number.isInteger(e.maxTurns));
+    const limit = start?.e.maxTurns ?? noted?.maxTurns ?? fallback ?? null;
+    const turns = turnsOf(run);
+    return {
+      turns,
+      limit,
+      notes: new Set(notesOf[i].map((e) => e.turn)).size,
+      limitStop: limit != null && turns >= limit && deliveredReports(run).length === 0,
+    };
+  });
+  return {
+    runs: out,
+    turnNotes: out.reduce((n, r) => n + r.notes, 0),
+    limitStops: out.filter((r) => r.limitStop).length,
+  };
+}
+
 /**
  * A report over sessions already cut to the scope. Each session:
  * `{ sessionId, main, agents: [{ id, agentType, toolUseId, records }], events, audit,
@@ -995,6 +1056,15 @@ export function buildReport({
       warnings.add(`agent-stop-drift:${agent}`);
   }
 
+  // D19 per launch: its runs against the limit in force, the frontmatter today as the fallback.
+  const turnsBy = new Map(
+    launches.map((l) => [
+      l.thread,
+      threadTurns(l.thread, events, extras.maxTurns?.[l.agentType] ?? null),
+    ])
+  );
+  const turnSum = (list, key) => list.reduce((n, th) => n + (turnsBy.get(th)?.[key] ?? 0), 0);
+
   // Agent rows, per type; main first.
   const types = [MAIN, ...new Set(launches.map((l) => l.agentType))];
   const agents = types.map((type) => {
@@ -1008,6 +1078,8 @@ export function buildReport({
       activeMin: minutes(mine.reduce((s, th) => s + th.activeMs, 0)),
       calls: mine.reduce((s, th) => s + th.calls, 0),
       maxTurns: extras.maxTurns?.[type] ?? null,
+      turnNotes: type === MAIN ? null : turnSum(mine, 'turnNotes'),
+      limitStops: type === MAIN ? null : turnSum(mine, 'limitStops'),
       costUSD: usd(cost.costUSD),
       costPartial: cost.partial,
       reworkLaunches: mine.filter((th) => th.rework).length,
@@ -1112,6 +1184,9 @@ export function buildReport({
     launches: launches.length,
     resumes,
     relaunches,
+    // D19 over the launches: distinct noted turns and runs stopped at the limit without a report.
+    turnNotes: turnSum([...turnsBy.keys()], 'turnNotes'),
+    turnLimitStops: turnSum([...turnsBy.keys()], 'limitStops'),
     reworkUSD: usd(reworkUSD),
     reworkPartial: rework.partial,
     reworkShare,
@@ -1242,6 +1317,9 @@ export function historyLine(r, recordedAt) {
     calls: r.calls,
     launches: r.launches,
     resumes: r.resumes,
+    // D19 (ADR-0032): the figures #59 reads; no ratchet.
+    turnLimitStops: r.turnLimitStops,
+    turnNotes: r.turnNotes,
     reworkShare: r.reworkShare,
     gateBlocks: r.gateBlocks,
     review: r.review,
@@ -1591,11 +1669,11 @@ export function renderCard(r, bundle) {
   );
   const agentRows = r.agents.map(
     (a) =>
-      `| ${a.agentType} | ${a.launches ?? '-'} | ${a.resumes ?? '-'} | ${dur(a.activeMin)} | ${a.calls} / ${a.maxTurns ?? '-'} | ${money(a.costUSD, a.costPartial)} | ${a.reworkLaunches ? `${a.reworkLaunches} (${money(a.reworkUSD, a.reworkPartial)})` : '0'} |`
+      `| ${a.agentType} | ${a.launches ?? '-'} | ${a.resumes ?? '-'} | ${dur(a.activeMin)} | ${a.calls} / ${a.maxTurns ?? '-'} | ${a.turnNotes == null ? '-' : `${a.turnNotes} / ${a.limitStops}`} | ${money(a.costUSD, a.costPartial)} | ${a.reworkLaunches ? `${a.reworkLaunches} (${money(a.reworkUSD, a.reworkPartial)})` : '0'} |`
   );
   if (r.unattributedUSD != null)
     agentRows.push(
-      `| ${t(bundle, 'metrics.card.unattributed')} | | | | | ${fmtUSD(r.unattributedUSD)} | |`
+      `| ${t(bundle, 'metrics.card.unattributed')} | | | | | | ${fmtUSD(r.unattributedUSD)} | |`
     );
   const out = [
     `## ${title}`,
@@ -1609,7 +1687,7 @@ export function renderCard(r, bundle) {
     ...phaseRows,
     '',
     t(bundle, 'metrics.card.agentHeader'),
-    '|---|---|---|---|---|---|---|',
+    '|---|---|---|---|---|---|---|---|',
     ...agentRows,
     '',
     ...contextLines(r, bundle),

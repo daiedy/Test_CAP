@@ -165,6 +165,17 @@
           }
         ]
       }
+    ],
+    "PostToolBatch": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PATH=\"/opt/homebrew/opt/node@22/bin:/opt/homebrew/bin:$PATH\" node scripts/hooks/turn-budget.mjs",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   },
   "permissions": {

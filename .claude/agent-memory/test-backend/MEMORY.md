@@ -10,4 +10,5 @@
 - [Wiki temp projects](project-wiki-temp-projects.md) — check-docs-fresh --fix needs scripts/ + node_modules; export spawns strip GITHUB_*; mutation `from` must not hit a comment
 - [Live hook verification](project-live-hook-verification.md) — own agent id and transcript, brief record 3, read gate deny/pass/ledger, PIPELINE_LANG=en for metrics CLI
 - [Import tests placement](project-import-tests-placement.md) — action-level import tests go in catalog-service even if a plan names products-import; new rules break hidden writers; regenerate only the invalid xlsx
+- [Open agent-start defers Stop](project-open-agent-start-defers-stop.md) — agent-start without agent-stop in a shared sandbox session defers later Stop-gate tests; own session_id
 - [Hook test mutation check](hook-test-mutation-check.md) — scratch-root table harness (-t, JSON reporter, control run); mutate an allow-on-error rule to deny; offline npx eslint = cheap lint finding

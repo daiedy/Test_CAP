@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-11-13
-- Branch: main
-- Feature: none
-- Phase: none (retro of products-validations #10 merged into main, not pushed)
-- Last commit: 334a5ff Merge branch 'chore/retro-products-validations'
-- Next: push `main`; `/spec #60` (P1, turn-count hook); `/feature #26`; Dependabot PR #48 waits
+- Branch: feature/agent-turn-budget
+- Feature: agent-turn-budget (#60)
+- Phase: 2: probe, hook, metrics (PLAN step 1 live probe first, then steps 2-6)
+- Last commit: 02422a5 docs: agent-turn-budget spec and ADR-0032
+- Next: probe results in `research/hook-probe.md`; then the hook, card fields and tests; `/feature #26`; Dependabot PR #48 waits
 
 ## Open debt
 

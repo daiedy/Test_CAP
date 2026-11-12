@@ -115,6 +115,27 @@ export function sessionFiles(dir, sessionId) {
   return { sessionId, main: fs.existsSync(main) ? main : null, agents };
 }
 
+/**
+ * The transcript file of a subagent from a hook input: a subagent's hook carries the main
+ * session's `transcript_path` (context-hygiene probe F3; turn-budget probe P4), and the agent file
+ * is that path without `.jsonl` plus `/subagents/agent-<id>.jsonl`, a leading `~/` expanded and a
+ * leading `agent-` stripped from the id. The file may not exist yet.
+ * @param {unknown} transcriptPath the hook input's `transcript_path`
+ * @param {unknown} agentId the hook input's `agent_id`, bare or `agent-` prefixed
+ * @returns {string|null} null without a `.jsonl` main path or without an id
+ */
+export function subagentTranscript(transcriptPath, agentId) {
+  const main = String(transcriptPath || '').replace(/^~(?=\/)/, os.homedir());
+  const id = typeof agentId === 'string' ? agentId.trim().replace(/^agent-/, '') : '';
+  if (!main.endsWith('.jsonl') || !id) return null;
+  return path.join(
+    path.dirname(main),
+    path.basename(main, '.jsonl'),
+    'subagents',
+    `agent-${id}.jsonl`
+  );
+}
+
 // ---------- records ----------
 
 function usageOf(u) {
@@ -345,6 +366,44 @@ export function requests(records) {
     mergeUsage(q, r.usage, r.ts, r.model);
   }
   return [...byId.values()].map(finalizeSplit);
+}
+
+/**
+ * The runs of one agent file (ADR-0032, D19), the one split rule of a file into runs: the launch
+ * opens the first run and every `coordinator` resume record (`resume`, D18) opens the next one, so
+ * a run holds its opening resume record and every record up to the next resume.
+ * @param {object[]} records slim records of one agent file, in file order
+ * @returns {object[][]} the runs in file order; at least one (the launch), possibly empty
+ */
+export function agentRuns(records) {
+  const out = [[]];
+  for (const r of records) {
+    if (r.resume === true) out.push([]);
+    out.at(-1).push(r);
+  }
+  return out;
+}
+
+/**
+ * Turns of a run: its D1 requests (distinct `requestId` of `assistant` records, through
+ * `requests()`). `api-request*` records never reach here (`slim()` drops them) and a repeated
+ * request id counts once, so a request is one turn.
+ * @param {object[]} run slim records of one run (`agentRuns()`)
+ * @returns {number}
+ */
+export function turnsOf(run) {
+  return requests(run).length;
+}
+
+/**
+ * Turns of the current run of a subagent (ADR-0032): `turnsOf()` the last run of `agentRuns()`,
+ * the whole file when it holds no resume. Measured exact at PostToolBatch time (turn-budget probe
+ * P4: the current request's record is on disk).
+ * @param {object[]} records slim records of one agent file, in file order
+ * @returns {number}
+ */
+export function runTurns(records) {
+  return turnsOf(agentRuns(records).at(-1));
 }
 
 function mergeUsage(q, usage, ts, model) {

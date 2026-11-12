@@ -896,6 +896,72 @@ export function writeFixture(dir) {
   return dir;
 }
 
+// ---------- turn budget (ADR-0032) ----------
+
+/**
+ * The records of one subagent file for the turn-budget hook (test/hooks-turn-budget.test.js), in
+ * the shapes of a real agent file: the delegation, then per turn two `assistant` records of one
+ * `requestId` (a text block, then a tool use), an `api-request` record with a request id of its
+ * own and an `api-request-blob` repeating the tool use (both dropped by `slim()`), and the tool
+ * result. Every run after the first opens with a `coordinator` resume record (a `SendMessage`
+ * delivery). A count of `assistant` records, or of the distinct request ids of every record, finds
+ * twice the turns.
+ * @param {string} agentId the agent id, used for the record ids
+ * @param {number[]} runs turns per run: `[28, 5]` is a launch of 28 turns and a resume of 5
+ * @returns {object[]}
+ */
+export function turnRecords(agentId, runs) {
+  const t = thread(9, 'feature/fixture-turns', agentId);
+  const out = [];
+  let step = 0;
+  const next = () => ++step / 10;
+  let n = 0;
+  runs.forEach((turns, run) => {
+    out.push(
+      run === 0
+        ? t.user(next(), `${agentId}-start`)
+        : t.user(next(), `${agentId}-resume-${run}`, { origin: 'coordinator' })
+    );
+    for (let i = 0; i < turns; i++) {
+      n++;
+      const req = `${agentId}-r${n}`;
+      const toolId = `${agentId}-tu${n}`;
+      out.push(
+        t.assistant(next(), `${req}-a`, req, OUT(10)),
+        t.assistant(next(), `${req}-b`, req, OUT(20), { content: [use('Bash', toolId)] }),
+        {
+          type: 'api-request',
+          timestamp: iso(9, next()),
+          uuid: `${req}-api`,
+          requestId: `${req}-api`,
+        },
+        t.blob(next(), `${req}-blob`, [use('Bash', toolId)]),
+        t.user(next(), `${req}-u`, { results: [toolResult(toolId, 10)] })
+      );
+    }
+  });
+  return out;
+}
+
+/**
+ * Writes `records` as the file of subagent `agentId` of session `sessionId` under `dir`, at the
+ * path `subagentTranscript()` derives (`<dir>/<sessionId>/subagents/agent-<agentId>.jsonl`).
+ * @param {string} dir the directory of the main session transcript
+ * @param {string} sessionId the main session id
+ * @param {string} agentId the bare agent id
+ * @param {object[]} records the agent file's records (`turnRecords()`)
+ * @returns {string} the main transcript path, the hook input's `transcript_path`
+ */
+export function writeAgentFile(dir, sessionId, agentId, records) {
+  const sub = path.join(dir, sessionId, 'subagents');
+  fs.mkdirSync(sub, { recursive: true });
+  fs.writeFileSync(
+    path.join(sub, `agent-${agentId}.jsonl`),
+    records.map((r) => JSON.stringify(r)).join('\n') + '\n'
+  );
+  return path.join(dir, `${sessionId}.jsonl`);
+}
+
 // ---------- expected figures, by hand ----------
 
 export const EXPECTED = {

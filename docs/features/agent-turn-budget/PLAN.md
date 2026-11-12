@@ -10,19 +10,19 @@ Contract rule: no step changes the OData model; `metadata.xml` and the `$metadat
 
 ### Phase 2: probe, hook, metrics
 - [x] Probe P1-P7 are recorded in `research/hook-probe.md` "Results" before any file of steps 2-6 changes, each failed fact with its CONTEXT fallback applied, verified by the step 1 gate
-- [ ] On the main thread the hook prints nothing and writes no record, verified by `test/hooks-turn-budget.test.js` "main thread is silent"
-- [ ] Below turn `M - reserve(M)` the hook is silent, verified by `test/hooks-turn-budget.test.js` "silent below the threshold"
-- [ ] From turn `M - reserve(M)` on, every turn returns `Turn N of M (K left)` as `additionalContext` and appends one `turn-note` record, verified by `test/hooks-turn-budget.test.js` "notes from the threshold"
-- [ ] At `K <= 3` the note asks for the handback in this turn, verified by `test/hooks-turn-budget.test.js` "last turns ask for the handback"
-- [ ] A `coordinator` resume restarts the count, verified by `test/hooks-turn-budget.test.js` "a resume restarts the run"
-- [ ] `api-request*` records and repeated `requestId` records add no turn, verified by `test/hooks-turn-budget.test.js` "counts each request once"
-- [ ] An agent type without a definition or `maxTurns`, a missing transcript and malformed input stay silent with exit 0, verified by `test/hooks-turn-budget.test.js` "silent on unknowns"
-- [ ] `reserve()` returns 6, 6, 7, 8 for 30, 60, 70, 80, verified by `test/hooks-turn-budget.test.js` "reserve by maxTurns"
-- [ ] `agentMaxTurns()` is the only frontmatter reader and `scripts/metrics.mjs` uses it, verified by `test/hooks-turn-budget.test.js` "agentMaxTurns reads the frontmatter" and `test/metrics.test.js` (card maxTurns unchanged)
-- [ ] The `agent-start` record carries `maxTurns` of the agent type, verified by `test/hooks-metrics.test.js` "agent-start carries maxTurns"
-- [ ] D19: a run at its limit without a delivered report is a limit stop, a run with a report or below the limit is not, verified by `test/metrics.test.js` "limit stops per run"
-- [ ] The card shows turn notes and limit stops per agent type in `en` and `ru`, and the history line carries `turnLimitStops` and `turnNotes`, verified by `test/metrics.test.js` "turn fields on the card and the history line"
-- [ ] `.claude/settings.json` registers `turn-budget.mjs` on the event step 1 confirmed, verified by `test/hooks-turn-budget.test.js` "registered in settings"
+- [x] On the main thread the hook prints nothing and writes no record, verified by `test/hooks-turn-budget.test.js` "main thread is silent"
+- [x] Below turn `M - reserve(M)` the hook is silent, verified by `test/hooks-turn-budget.test.js` "silent below the threshold"
+- [x] From turn `M - reserve(M)` on, every turn returns `Turn N of M (K left)` as `additionalContext` and appends one `turn-note` record, verified by `test/hooks-turn-budget.test.js` "notes from the threshold"
+- [x] At `K <= 3` the note asks for the handback in this turn, verified by `test/hooks-turn-budget.test.js` "last turns ask for the handback"
+- [x] A `coordinator` resume restarts the count, verified by `test/hooks-turn-budget.test.js` "a resume restarts the run"
+- [x] `api-request*` records and repeated `requestId` records add no turn, verified by `test/hooks-turn-budget.test.js` "counts each request once"
+- [x] An agent type without a definition or `maxTurns`, a missing transcript and malformed input stay silent with exit 0, verified by `test/hooks-turn-budget.test.js` "silent on unknowns"
+- [x] `reserve()` returns 6, 6, 7, 8 for 30, 60, 70, 80, verified by `test/hooks-turn-budget.test.js` "reserve by maxTurns"
+- [x] `agentMaxTurns()` is the only frontmatter reader and `scripts/metrics.mjs` uses it, verified by `test/hooks-turn-budget.test.js` "agentMaxTurns reads the frontmatter" and `test/metrics.test.js` (card maxTurns unchanged)
+- [x] The `agent-start` record carries `maxTurns` of the agent type, verified by `test/hooks-metrics.test.js` "agent-start carries maxTurns"
+- [x] D19: a run at its limit without a delivered report is a limit stop, a run with a report or below the limit is not, verified by `test/metrics.test.js` "limit stops per run"
+- [x] The card shows turn notes and limit stops per agent type in `en` and `ru`, and the history line carries `turnLimitStops` and `turnNotes`, verified by `test/metrics.test.js` "turn fields on the card and the history line"
+- [x] `.claude/settings.json` registers `turn-budget.mjs` on the event step 1 confirmed, verified by `test/hooks-turn-budget.test.js` "registered in settings"
 - [ ] The protocol section 2 step 10 and the `feature` skill turn-budget line point to the note, `test/prompt-budget.json` re-recorded, verified by `test/prompt-budget.test.js`
 
 ### Phase 4: live check

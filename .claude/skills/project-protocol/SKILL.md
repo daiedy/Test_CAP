@@ -30,7 +30,7 @@ If MCP or the project documentation contradicts your knowledge, the document and
 7. Make the edits. Path rules (`.claude/rules/`) are loaded automatically, follow them.
 8. Check: linters and tests from section 6. Do not write "checked" if you did not run them.
 9. Update the documentation you are responsible for (section 7) and report in the form (section 8).
-10. A deliverable that is a document (CONTEXT, SCREENS, PLAN, VERIFICATION, REVIEW, SUMMARY) exists on disk before the research starts and grows as you go; your report repeats the file. A result that lives only in your transcript is lost at the turn limit or the stream watchdog (CHANGELOG 2026-09-23). Budget your turns; when the budget is nearly spent, stop cleanly and name the last completed item, so the work continues from it.
+10. A deliverable that is a document (CONTEXT, SCREENS, PLAN, VERIFICATION, REVIEW, SUMMARY) exists on disk before the research starts and grows as you go; your report repeats the file. A result that lives only in your transcript is lost at the turn limit or the stream watchdog (CHANGELOG 2026-09-23). Budget your turns; near `maxTurns` a hook note `Turn N of M` gives your count (ADR-0032, `turnNote()` in `scripts/lib/turn-budget.mjs`): follow it, stop cleanly and name the last completed item, so the work continues from it.
 
 In a worktree session (`.claude/worktrees/`) the Bash guard refuses compound commands (`&&` chains, pipes with `git` or `npx`, heredocs) as "too complex to verify": run single commands, or put the steps into a scratch `.mjs` file run as `node <file>`.
 

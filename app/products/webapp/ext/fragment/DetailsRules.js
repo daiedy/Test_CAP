@@ -1,6 +1,6 @@
 sap.ui.define(
-    ["sap/m/MessageToast", "sap/ui/core/InvisibleMessage", "sap/ui/core/library", "sap/ui/model/odata/type/Decimal"],
-    function (MessageToast, InvisibleMessage, coreLibrary, Decimal) {
+    ["sap/m/MessageToast", "sap/ui/core/library", "sap/ui/model/odata/type/Decimal"],
+    function (MessageToast, coreLibrary, Decimal) {
         "use strict";
 
         /**
@@ -280,7 +280,7 @@ sap.ui.define(
         }
 
         /**
-         * Text of the toast and the announcement when a dependent row's value is cleared (R12, SCREENS Q6).
+         * Text of the toast when a dependent row's value is cleared (R12, SCREENS Q6).
          *
          * @param {sap.base.i18n.ResourceBundle} bundle the app bundle
          * @param {string} detail localized name of the cleared row's attribute
@@ -292,15 +292,14 @@ sap.ui.define(
         }
 
         /**
-         * Names a cleared value: an information toast (3 seconds, bottom centre, no action) and a polite
-         * announcement for screen readers (accessibility skill topic 6; SCREENS "Accessibility", V19 decides
-         * whether the toast alone is announced).
+         * Names a cleared value with an information toast (3 seconds, bottom centre, no action). The toast alone
+         * reaches screen readers: it renders with `role="alert"` (VERIFICATION V19), so an extra `InvisibleMessage`
+         * announcement would read the text twice (SCREENS "Accessibility").
          *
          * @param {string} text the text of `clearedText`
          */
         function announceCleared(text) {
             MessageToast.show(text, { duration: TOAST_DURATION });
-            InvisibleMessage.getInstance().announce(text, coreLibrary.InvisibleMessageMode.Polite);
         }
 
         return {

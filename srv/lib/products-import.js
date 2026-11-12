@@ -262,15 +262,17 @@ export async function readImportRows(bytes) {
 }
 
 /**
- * Row message of a per-row pre-check: PRODUCTS_IMPORT_ROW_INVALID with the row, the column and the
- * reason text, sorted by the column's header position.
+ * Build the row message PRODUCTS_IMPORT_ROW_INVALID ("Row {0}, column "{1}": {2}") of a rejected
+ * workbook cell. The single spelling of that shape: the per-row pre-checks of this module and of
+ * the service (subcategory pair) and the mapping of a rejected INSERT all build it here. `order`
+ * carries the column's header position, by which the import sorts the messages of one row.
  * @param {number} row sheet row, header = 1
  * @param {string} column documented column name
  * @param {(column: string) => number} order header position of a column
  * @param {string} text localized reason
  * @returns {{ row: number, order: number, code: string, args: Array<unknown> }} the row message
  */
-function rowInvalid(row, column, order, text) {
+export function rowInvalid(row, column, order, text) {
   return {
     row,
     order: order(column),

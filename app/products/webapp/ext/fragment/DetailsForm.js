@@ -539,7 +539,8 @@ sap.ui.define(
         /**
          * Clears the value a disabled dependent row still holds (R12, SCREENS Q6): writes null through the row
          * context (the form's proven write path), reads the draft messages as after any write, and names the clear in
-         * a toast and a screen reader announcement. Called only for a filled row of a draft in edit mode.
+         * a toast, which screen readers read through its `role="alert"`. Called only for a filled row of a draft in
+         * edit mode.
          *
          * @param {sap.m.Input} input the edit control of the dependent row
          * @param {string} detail localized name of the row's attribute

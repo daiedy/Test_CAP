@@ -1,5 +1,5 @@
 {
-  "x-sources": "64c4d8896603c78b",
+  "x-sources": "0656a7497d7554f2",
   "nodes": [
     {
       "path": "docs/wiki/Glossary.md",
@@ -691,7 +691,7 @@
       "status": null,
       "sources": [],
       "verified": "c15310dcf3b59fd3",
-      "codeHash": "d8fc4c6d4072eb58",
+      "codeHash": "7898f3a04ad09fba",
       "aliases": [],
       "adr": []
     },
@@ -764,7 +764,7 @@
       "status": null,
       "sources": [],
       "verified": "8d05d526116df7e7",
-      "codeHash": "f743fe54e87bebbb",
+      "codeHash": "45177399580c068a",
       "aliases": [],
       "adr": []
     },
@@ -812,7 +812,7 @@
       "status": null,
       "sources": [],
       "verified": "28732f57355b4bb6",
-      "codeHash": "0ad745d603b03576",
+      "codeHash": "f53b7eb6a2dd6b34",
       "aliases": [],
       "adr": []
     },
@@ -871,7 +871,7 @@
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
       "verified": "19aaf72ce352aa0d",
-      "codeHash": "5b98a79409aefd39",
+      "codeHash": "b45ba9e346fe24a0",
       "aliases": [
         "R10"
       ],
@@ -910,7 +910,7 @@
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
       "verified": "19aaf72ce352aa0d",
-      "codeHash": "5b98a79409aefd39",
+      "codeHash": "b45ba9e346fe24a0",
       "aliases": [
         "R8"
       ],
@@ -1039,7 +1039,7 @@
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
       "verified": "e5c192f21561f408",
-      "codeHash": "52f7a33c7b8f2deb",
+      "codeHash": "e84e970165a0304a",
       "aliases": [
         "R4"
       ],
@@ -1108,7 +1108,7 @@
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
       "verified": "e5c192f21561f408",
-      "codeHash": "52f7a33c7b8f2deb",
+      "codeHash": "e84e970165a0304a",
       "aliases": [
         "R6"
       ],
@@ -1270,7 +1270,7 @@
         "docs/features/products-details-section/SUMMARY.md"
       ],
       "verified": "28732f57355b4bb6",
-      "codeHash": "0ad745d603b03576",
+      "codeHash": "f53b7eb6a2dd6b34",
       "aliases": [],
       "adr": []
     },
@@ -1396,7 +1396,7 @@
         "docs/features/products-excel-upload/SUMMARY.md"
       ],
       "verified": "731b552dff67dc09",
-      "codeHash": "9bfb44232efa1da5",
+      "codeHash": "b9a68dbdf650154f",
       "aliases": [],
       "adr": []
     },
@@ -1425,7 +1425,7 @@
         "docs/features/products-excel-upload/SUMMARY.md"
       ],
       "verified": "1d1391d18bdf4588",
-      "codeHash": "10194516174a99c4",
+      "codeHash": "512f69e0a5e30e73",
       "aliases": [],
       "adr": []
     },
@@ -1459,7 +1459,7 @@
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
       "verified": "19aaf72ce352aa0d",
-      "codeHash": "5b98a79409aefd39",
+      "codeHash": "b45ba9e346fe24a0",
       "aliases": [
         "R12"
       ],
@@ -1527,7 +1527,7 @@
         "docs/features/products-subcategory-cascade/SUMMARY.md"
       ],
       "verified": "dbefcaaf7ed5f83c",
-      "codeHash": "590b0031e152e5dc",
+      "codeHash": "427c3dec448a36e3",
       "aliases": [],
       "adr": []
     },
@@ -1584,7 +1584,7 @@
         "docs/features/products-details-section/SUMMARY.md"
       ],
       "verified": "6d885966c2b05733",
-      "codeHash": "a79d3c3e498d4855",
+      "codeHash": "248c8745d649de3d",
       "aliases": [],
       "adr": []
     },
@@ -1615,7 +1615,7 @@
         "docs/features/products-subcategory-cascade/SUMMARY.md"
       ],
       "verified": "731b552dff67dc09",
-      "codeHash": "9bfb44232efa1da5",
+      "codeHash": "b9a68dbdf650154f",
       "aliases": [],
       "adr": []
     },
@@ -1774,7 +1774,7 @@
         "docs/features/products-subcategory-cascade/SUMMARY.md"
       ],
       "verified": "9de3a1665a6a7215",
-      "codeHash": "dbff97220c8a76a0",
+      "codeHash": "e15cd25257a1a14a",
       "aliases": [],
       "adr": []
     },
@@ -1806,7 +1806,7 @@
         "docs/features/products-excel-upload/SUMMARY.md"
       ],
       "verified": "731b552dff67dc09",
-      "codeHash": "9bfb44232efa1da5",
+      "codeHash": "b9a68dbdf650154f",
       "aliases": [],
       "adr": []
     },
@@ -1840,7 +1840,7 @@
         "docs/features/products-subcategory-cascade/SUMMARY.md"
       ],
       "verified": "303b97c760587c79",
-      "codeHash": "274aa9cde4f6e250",
+      "codeHash": "2f41f19adb5a62dc",
       "aliases": [],
       "adr": []
     },
@@ -1900,7 +1900,7 @@
         "docs/features/products-excel-upload/SUMMARY.md"
       ],
       "verified": "cdbf90be0de33e60",
-      "codeHash": "80e3aad2651af59b",
+      "codeHash": "7c0f44fd43d01759",
       "aliases": [],
       "adr": []
     }

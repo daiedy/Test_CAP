@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-11-12
 - Branch: feature/products-validations
 - Feature: products-validations (#10)
-- Phase: 4: Verification (phase 3 and rework round 1 green: `npm test` 310, `test:ui` 97/97, `metadata.xml` 1781)
-- Last commit: 03ede92 fix: products-validations R3 closed price bound, mock currencies
-- Next: ui-verifier step 8, `VERIFICATION.md` V1-V24 en and ru; then reviewer step 9; Dependabot PR #48 waits
+- Phase: 5: Review (verification ready for review: V1-V25 en, ru repeats, no defect; 6 verifier runs)
+- Last commit: f6eece4 docs: products-validations verification, ready for review
+- Next: reviewer step 9, `REVIEW.md`, zero blocking findings; then docs-keeper step 10; Dependabot PR #48 waits
 
 ## Open debt
 

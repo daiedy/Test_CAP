@@ -5,6 +5,7 @@ import {
   descriptionViolations,
   minorUnitViolations,
   readImportRows,
+  rowInvalid,
 } from './lib/products-import.js';
 
 const LOG = cds.log('catalog');
@@ -351,12 +352,7 @@ async function subcategoryMismatches(rows, order, locale) {
       const category = categoryOf.get(entry.subcategory_code);
       return category !== undefined && category !== entry.category_code;
     })
-    .map(({ row }) => ({
-      row,
-      order: order('subcategory'),
-      code: 'PRODUCTS_IMPORT_ROW_INVALID',
-      args: [row, 'subcategory', reason],
-    }));
+    .map(({ row }) => rowInvalid(row, 'subcategory', order, reason));
 }
 
 /**
@@ -411,12 +407,7 @@ function validationErrors(err, row, locale, order) {
     if (byColumn.has(column)) continue;
     const custom = typeof message === 'string' ? messageText(message, locale, args) : undefined;
     const reason = custom ?? messageText(code, locale, args) ?? code;
-    byColumn.set(column, {
-      row,
-      order: order(column),
-      code: 'PRODUCTS_IMPORT_ROW_INVALID',
-      args: [row, column, reason],
-    });
+    byColumn.set(column, rowInvalid(row, column, order, reason));
   }
   return [...byColumn.values()];
 }

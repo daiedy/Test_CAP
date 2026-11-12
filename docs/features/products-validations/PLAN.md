@@ -61,7 +61,7 @@ Contract rule: a step that changes the OData model (`db/*.cds`, `srv/**/*.cds`, 
 - [x] Verification: every SCREENS scenario (V1-V24) is reproduced in `en` and `ru` with screenshots in `VERIFICATION.md`, with every browser proof and the console check of step 8
 
 ### Phase 5: review
-- [ ] Review: zero blocking findings in `REVIEW.md`; no `@assert.unique` for a user-facing rule, no handler for a rule an annotation expresses, every catalogue rule names its preventing control or "none"
+- [x] Review: zero blocking findings in `REVIEW.md`; no `@assert.unique` for a user-facing rule, no handler for a rule an annotation expresses, every catalogue rule names its preventing control or "none"
 
 ### Phase 6: documentation
 - [ ] Documentation: every file of step 10 updated, `check-docs-fresh.mjs` and `wiki.mjs audit` clean

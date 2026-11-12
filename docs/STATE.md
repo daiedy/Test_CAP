@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-11-12
-- Branch: main
-- Feature: none
-- Phase: none (context-hygiene #44 merged via PR #54; its retro transferred 5 lessons, uncommitted, 2026-11-12)
-- Last commit: e112a7a Merge pull request #54 from daiedy/feature/context-hygiene
-- Next: `/feature #10` with the before/after context card (`node scripts/metrics.mjs context`); Dependabot PR #48 (msal-node major) waits for a human
+- Branch: feature/products-validations
+- Feature: products-validations (#10)
+- Phase: 2: Backend (plan re-approved 2026-11-12 with the import-text fix and two debt rows, autonomous gates)
+- Last commit: f383e60 docs: context-hygiene retro and upstream re-measure on cds 10.2.2
+- Next: cap-backend-dev steps 2-4, then test-backend steps 3 and 5; gate `npm run lint`, `npm test` (about 312); Dependabot PR #48 (msal-node major) waits for a human
 
 ## Open debt
 

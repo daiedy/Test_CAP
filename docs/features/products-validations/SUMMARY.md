@@ -72,3 +72,7 @@ Gates: 0 blocks; review 0 blocking / 3 findings; criteria 46/46; MCP 566 queries
 - `DetailsForm.js` still carries the `eslint-disable` for `max-params` and `max-statements` (71 against 40, 14 parameters) (STATE).
 - The `ru` wording of R11 (`PRODUCTS_DETAIL_VALUE_BELOW_OTHER`) reads stiff, a wording remark of the verifier (VERIFICATION.md).
 - `coalesce()` in a constraint on HANA stays an accepted plan risk (not verified on HANA).
+
+## Full record
+
+Pruned to this file (ADR-0019). CONTEXT.md, PLAN.md, REVIEW.md, SCREENS.md, VERIFICATION.md, research, screenshots of this feature stay in git history at https://github.com/daiedy/Test_CAP/tree/263b989f0897b6bd82a45b7779bf262152041620/docs/features/products-validations (commit `263b989`).

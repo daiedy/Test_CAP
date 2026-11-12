@@ -6,10 +6,10 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 - Date: 2026-11-12
 - Branch: feature/products-validations
-- Feature: products-validations (#10)
-- Phase: 6: Documentation (step 10 done; `npm test` 310, wiki audit clean)
-- Last commit: 50f740b fix: products-validations review findings, review approved
-- Next: orchestrator commits the docs, closes #10 and merges; Dependabot PR #48 waits
+- Feature: none
+- Phase: none (products-validations #10 done and closed 2026-11-12, branch not pushed)
+- Last commit: 263b989 docs: products-validations summary and registry
+- Next: push `feature/products-validations` and open the pull request on the user's word, merge after green CI; Dependabot PR #48 waits
 
 ## Open debt
 

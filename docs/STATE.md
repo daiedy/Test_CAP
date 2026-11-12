@@ -6,10 +6,10 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 - Date: 2026-11-13
 - Branch: feature/agent-turn-budget
-- Feature: agent-turn-budget (#60)
-- Phase: 6: documentation (PLAN step 9)
-- Last commit: 1403f35 docs: agent-turn-budget re-review, zero blocking findings
-- Next: the RU/EN manual pages; then close #60 and prune; `/feature #26`; Dependabot PR #48 waits
+- Feature: none
+- Phase: none (agent-turn-budget #60 done and closed, branch not pushed)
+- Last commit: bcd8906 docs: agent-turn-budget summary and registry
+- Next: push the branch and open a pull request on the user's word; `/retro`; `/feature #26`; Dependabot PR #48 waits
 
 ## Open debt
 

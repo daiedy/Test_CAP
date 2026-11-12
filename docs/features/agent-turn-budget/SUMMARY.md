@@ -26,7 +26,41 @@ Phases 2, 4 and 5 are ticked by the named tests, `VERIFICATION.md` checks 1-4 an
 Hook `scripts/hooks/turn-budget.mjs`; library `scripts/lib/turn-budget.mjs` (`agentMaxTurns`, `reserve`, `runTurns`, `turnNote`); `agentRuns()` in `scripts/lib/transcript-usage.mjs`; the registry is regenerated.
 
 ## Cost
-The orchestrator records the history line and pastes the card of `PIPELINE_LANG=en node scripts/metrics.mjs feature agent-turn-budget` here in phase 7.
+Sessions 1 (2026-11-12 .. 2026-11-12), lead 2h 19m, active 2h 18m, waiting 1m, agent-minutes 3h 37m (parallelism 1.6); idle cap 5 min, tool cap 10 min; phases: markers; rework: plan; pricing 2026-09-29; Claude Code 2.1.322
+
+Cost $35.80 (no cost-state record); tokens in 1.3K / cache write 2.3M / cache read 62.3M / out 601K; cache hit 96%; context avg 107K, peak 309K
+
+| Phase | Rounds | Active | Waiting | Calls | Cost | Rework cost |
+|---|---|---|---|---|---|---|
+| 0 | - | 6m | 0m | 6 | $0.44 | $0.00 |
+| 1 | 1 | 22m | 0m | 64 | $4.37 | $0.00 |
+| 2 | 1 | 51m | 0m | 206 | $11.14 | $0.29 |
+| 4 | 1 | 9m | 0m | 32 | $1.93 | $0.00 |
+| 5 | 1 | 34m | 0m | 161 | $8.83 | $4.92 |
+| 6 | 1 | 17m | 0m | 135 | $8.99 | $0.00 |
+| 7 | 1 | 0m | 0m | 1 | $0.10 | $0.00 |
+
+| Agent | Launches | Resumes | Active | Calls / maxTurns | Turn notes / limit stops | Cost | Rework |
+|---|---|---|---|---|---|---|---|
+| main | - | - | 1h 39m | 111 / - | - | $7.60 | 0 |
+| architect | 4 | 0 | 21m | 74 / 60 | 0 / 0 | $5.48 | 2 ($1.63) |
+| cap-backend-dev | 4 | 0 | 38m | 158 / 60 | 3 / 0 | $7.53 | 1 ($1.35) |
+| test-backend | 5 | 0 | 35m | 123 / 60 | 0 / 0 | $7.18 | 2 ($2.23) |
+| reviewer | 2 | 0 | 9m | 46 / 70 | 0 / 0 | $2.60 | 0 |
+| docs-keeper | 8 | 0 | 8m | 58 / 80 | 0 / 0 | $1.55 | 0 |
+| general-purpose | 1 | 0 | 8m | 35 / - | 0 / 0 | $3.85 | 0 |
+
+Context per agent type (characters; node scripts/metrics.mjs context for each launch):
+- architect: launches 4, resumes 0, compactions 0; startup max 26.6K, peak max 197.6K tokens; tool results 340.6K, brief 0, repeat reads 0
+- cap-backend-dev: launches 4, resumes 0, compactions 0; startup max 23.7K, peak max 149.7K tokens; tool results 448.3K, brief 59.7K, repeat reads 0
+- test-backend: launches 5, resumes 0, compactions 0; startup max 24.1K, peak max 123.3K tokens; tool results 385.7K, brief 67.6K, repeat reads 0
+- reviewer: launches 2, resumes 0, compactions 0; startup max 23.2K, peak max 118.6K tokens; tool results 201.7K, brief 0, repeat reads 0
+- docs-keeper: launches 8, resumes 0, compactions 0; startup max 26.5K, peak max 76.5K tokens; tool results 175.2K, brief 52.0K, repeat reads 0
+- general-purpose: launches 1, resumes 0, compactions 0; startup max 43.7K, peak max 288.3K tokens; tool results 415.2K, brief 0, repeat reads 0
+- main: compactions 0, peak 308.6K tokens
+Resumes after a report (0): none
+
+Gates: 1 blocks (state-budget 1); review 0 blocking / 7 findings; criteria 31/31; MCP 1 queries, 0 unjustified, 0 failed; rule-covered edits with a query 0/0; prompts 2, hand-backs 24, notifications 25; lines +2382 / -181
 
 ## Lessons
 Moved to `docs/LESSONS.md` Pending (2026-11-13) with the place where each acts: a probe fact on one patch does not hold on the next; a hook rate from its own records understates misses; code moved to `scripts/lib` comes under the relay scan; the hook sandbox needs an own `session_id`; a kept report can be overwritten by a later plain-text note; launch sizing. The 2026-11-13 entry "agents cannot see their turn count" is closed by this feature.
@@ -34,3 +68,7 @@ Moved to `docs/LESSONS.md` Pending (2026-11-13) with the place where each acts: 
 ## Open debt
 - A kept report `.pipeline/logs/report-<type>-<id>.md` was overwritten by the agent's plain-text note after its handback (a `cap-backend-dev` launch of this feature: 387 bytes). Owner `cap-backend-dev`; STATE open debt.
 - `resume-gate.mjs` keeps its own transcript path lookup; moving it onto `subagentTranscript()` is a follow-up candidate (REVIEW Minor 1); STATE open debt.
+
+## Full record
+
+Pruned to this file (ADR-0019). CONTEXT.md, PLAN.md, REVIEW.md, VERIFICATION.md, research of this feature stay in git history at https://github.com/daiedy/Test_CAP/tree/bcd89065385df9d71070d2ae19c6919cb8bf4de4/docs/features/agent-turn-budget (commit `bcd8906`).

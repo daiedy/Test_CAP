@@ -4,6 +4,11 @@ This file is an inbox, not an archive. A lesson lives here only until `/retro` t
 
 ## Pending
 
+- 2026-11-12. `products-validations` (#10), a rule between two child rows of a draft that starts at an entity outside the draft tree (a backlink from `DetailAttributes` to its rows) reads the active rows (lean draft), so a draft edit of the sibling row is invisible to the rule and no message appears while the user edits (research section 10.3). Status: Transferred to PATTERNS "Rule between two child rows" and TESTING "cds 10 specifics"; kept here until `/retro` decides on a test helper that asserts the draft form.
+- 2026-11-12. `products-validations` (#10), in `srv/lib/*.js` a private helper with a JSDoc placed before an export gives that export the helper's summary in `docs/registry/REUSE-CATALOG.md` (the generator spans from the first `/**` to the next `export function`). Status: Pending `scripts/gen-registry.mjs` (take the JSDoc block adjacent to the export) or a CONVENTIONS line; until then export the helper or place it after the exports.
+- 2026-11-12. `products-validations` (#10), a criterion added late is part of every brief of the docs-keeper (its brief contains all criteria) and pushed the brief over its ceiling; a step-row addition costs only the briefs of that step's agent. Status: Pending `architect` prompt (budget criterion growth against docs-keeper first).
+- 2026-11-12. `products-validations` (#10), `JourneyRunner` runs with `autoWait: true`, so an OPA assertion never matches a disabled control (use `mustBeEnabled(false)`), and under `--split-opa` each QUnit module gets the 150 s `--page-timeout`, so a journey of about 9 Object Page cases is split in two modules. Status: Pending `test-ui` agent memory or TESTING.
+
 - 2026-10-27. `business-rules-wiki` (#28), an ADR digest in `docs/wiki/decisions/` has no stamp over its ADR, so an amendment leaves it stale unnoticed. Status: Pending `scripts/wiki.mjs` (`confirm` writes a `sources` stamp, `audit` checks it); queued as #55 `wiki-digest-stamp` (P2); until then `docs-keeper` step 6 restates the digest by hand.
 
 ## Pending upstream

@@ -1,9 +1,9 @@
 ---
 title: A detail number stays within the bounds of its subcategory
-summary: A subcategory will be able to narrow the bounds of a number attribute for its own products.
+summary: A subcategory can narrow the bounds of a number attribute for its own products.
 tags: [products, details, number, range, subcategory]
 id: BR-DETAILS-008
-status: planned
+status: active
 since: 2026-10-14
 aliases: [R10]
 code:
@@ -16,14 +16,14 @@ messages: [PRODUCTS_DETAIL_VALUE_OUT_OF_SUBCATEGORY_RANGE]
 elements: [ProductDetails.numberValue]
 sources:
   - docs/decisions/ADR-0028-validation-toolkit.md
-verified: 19aaf72ce352aa0d
+verified: b45ba9e346fe24a0
 ---
 
 # A detail number stays within the bounds of its subcategory
 
 ## Rule
 
-Once #10 is implemented, the assignment of a number attribute to a subcategory will be able to carry its own minimum and maximum. They narrow the bounds of the attribute for the products of that subcategory only. A laptop screen, for example, will be between 10 and 18 inches, although the attribute allows 1 to 100 for any product.
+The assignment of a number attribute to a subcategory can carry its own minimum and maximum. They narrow the bounds of the attribute for the products of that subcategory only. A laptop screen, for example, is between 10 and 18 inches, although the attribute allows 1 to 100 for any product.
 
 ## Why
 
@@ -31,10 +31,10 @@ The bounds of an attribute must suit every product it is used for, so they stay 
 
 ## Where it fires
 
-This rule is planned with #10 and is not in the code yet. What the user will see:
+What the user sees:
 
-- Object Page, before anything is wrong: the empty number line will show its range as a placeholder, for example 10-18, with the unit in the line description, and the line will refuse a value outside the range on the client, with the framework's text.
-- Object Page, in a draft, at Save and on a direct API write: a value outside the range of the subcategory will be refused with its own message, so a test or an API client can tell it from the global bounds.
+- Object Page, before anything is wrong: the empty number line shows its range as a placeholder, for example 10-18, with the unit in the line description, and the line refuses a value outside the range on the client, with the framework's text.
+- Object Page, in a draft, at Save and on a direct API write: a value outside the range of the subcategory is refused with its own message, so a test or an API client can tell it from the global bounds.
 - Excel import: not affected, because the import creates products without detail rows.
 
 See also:
@@ -46,4 +46,5 @@ See also:
 
 | Date | Change | Source |
 |---|---|---|
-| 2026-10-14 | Planned: the rule was approved in the specification of #10 (alias R10) and is not implemented yet. | [ADR-0028](../../decisions/ADR-0028-validation-toolkit.md) |
+| 2026-10-14 | Planned: the rule was approved in the specification of #10 (alias R10). | [ADR-0028](../../decisions/ADR-0028-validation-toolkit.md) |
+| 2026-11-12 | Implemented and verified in `en` and `ru` (alias R10). | [Feature summary](../../features/products-validations/SUMMARY.md), [ADR-0028](../../decisions/ADR-0028-validation-toolkit.md) |

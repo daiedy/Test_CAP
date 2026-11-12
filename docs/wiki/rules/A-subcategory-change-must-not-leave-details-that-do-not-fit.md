@@ -14,7 +14,7 @@ sources:
   - docs/decisions/ADR-0026-product-details-composition.md
   - docs/decisions/ADR-0027-typed-product-details-form.md
   - docs/features/products-details-section/SUMMARY.md
-verified: 28732f57355b4bb6
+verified: f53b7eb6a2dd6b34
 ---
 
 # A subcategory change must not leave details that do not fit

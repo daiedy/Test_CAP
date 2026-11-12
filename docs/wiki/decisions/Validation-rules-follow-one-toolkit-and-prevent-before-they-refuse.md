@@ -13,7 +13,7 @@ sources:
 
 The decision has eleven parts, grouped here by what the user sees.
 
-**Messages.** A format or range rule whose default text would not explain the reason carries its own message key, with texts in English and Russian; the error code stays the same, so the import and the screen handle it as before. An open bound is written with an open end, and the global platform texts are not overridden. When a rule reads two fields the user edits, the message names both fields, so the screen marks both; text arguments may be read from the row, and a translated text falls back to the base text.
+**Messages.** A format or range rule whose default text would not explain the reason carries its own message key, with texts in English and Russian; the error code stays the same, so the import and the screen handle it as before. An open bound is written with an open end, but the Fiori Elements form ignores an open bound on the client (amendment A, 2026-11-12), so a lower bound that the form must enforce is written closed at the smallest step of the type; the price is therefore at least 0.01 and the form refuses 0 before any request. The global platform texts are not overridden. When a rule reads two fields the user edits, the message names both fields, so the screen marks both; text arguments may be read from the row, and a translated text falls back to the base text.
 
 **Uniqueness.** A uniqueness rule that a user must see is a self-association on the product that finds the other products with the same name, ignoring letter case and spaces at both ends, plus a constraint on the product. While editing a draft the message appears against the saved products, excluding the product itself; at Save the saved product is checked against the others. A database uniqueness constraint stays only for writers that bypass the screen.
 
@@ -35,13 +35,13 @@ The rules of #10 needed texts that explain the reason, rules over several fields
 
 ## What it means for the catalog
 
-The eleven approved rules are planned and not yet in the code; each page says what the user will see.
+The eleven approved rules are active in the code and verified in the browser in English and Russian; each page says what the user sees.
 
 | Rule | Page |
 |---|---|
 | A product name has at least three characters | [BR-PRODUCTS-009](../rules/A-product-name-has-at-least-three-characters.md) |
 | A product name is unique in the catalog | [BR-PRODUCTS-010](../rules/A-product-name-is-unique-in-the-catalog.md) |
-| A price is above zero | [BR-PRODUCTS-011](../rules/A-price-is-above-zero.md) |
+| A price is at least 0.01 (page title: A price is above zero) | [BR-PRODUCTS-011](../rules/A-price-is-above-zero.md) |
 | A price in a currency without minor units has no decimals | [BR-PRODUCTS-012](../rules/A-price-in-a-currency-without-minor-units-has-no-decimals.md) |
 | An image address uses https and has no spaces | [BR-PRODUCTS-013](../rules/An-image-address-uses-https-and-has-no-spaces.md) |
 | A product in stock needs a description | [BR-PRODUCTS-014](../rules/A-product-in-stock-needs-a-description.md) |

@@ -1,9 +1,9 @@
 ---
 title: A price in a currency without minor units has no decimals
-summary: A price in a currency without minor units, such as JPY or KRW, will have to be a whole amount.
+summary: A price in a currency without minor units, such as JPY or KRW, has to be a whole amount.
 tags: [products, price, currency]
 id: BR-PRODUCTS-012
-status: planned
+status: active
 since: 2026-10-14
 aliases: [R4]
 code:
@@ -16,14 +16,14 @@ messages: [PRODUCTS_PRICE_MINOR_UNIT]
 elements: [Products.price, Products.currency]
 sources:
   - docs/decisions/ADR-0028-validation-toolkit.md
-verified: e5c192f21561f408
+verified: e84e970165a0304a
 ---
 
 # A price in a currency without minor units has no decimals
 
 ## Rule
 
-Once #10 is implemented, when the currency of a product has no minor units (the Japanese yen and the Korean won are examples), the price must have no decimals. 1,500 JPY will be accepted, 10.50 JPY will not.
+When the currency of a product has no minor units (the Japanese yen and the Korean won are examples), the price must have no decimals. 1,500 JPY is accepted, 10.50 JPY is refused.
 
 ## Why
 
@@ -31,11 +31,11 @@ A currency without a minor unit has no coins below the whole unit, so a fraction
 
 ## Where it fires
 
-This rule is planned with #10 and is not in the code yet. What the user will see:
+What the user sees:
 
-- Object Page, before anything is wrong: the currency list will tell the price field the minor units of the chosen currency, so the field itself will refuse 10.50 with JPY on the client. The text that appears is recorded in the browser proof of #10.
-- Object Page, when the currency is changed to one without minor units after a price with decimals was entered, and on every direct API write: a message will be shown on both the Price and the Currency fields, or returned with HTTP 400.
-- Excel import: each row will be checked before anything is written, and a row that breaks the rule will be reported with its row number (see [Every imported row follows the rules of a product](Every-imported-row-follows-the-rules-of-a-product.md)).
+- Object Page, before anything is wrong: the currency list tells the price field the minor units of the chosen currency, so the field itself refuses 10.50 with JPY on the client, with the framework text "Enter a number without decimals." and without a request to the server.
+- Object Page, when the currency is changed to one without minor units after a price with decimals was entered, and on every direct API write: a message ("Enter the price as a whole number. This currency has no decimal places.") is shown on both the Price and the Currency fields, or returned with HTTP 400 for the price.
+- Excel import: each row is checked before anything is written, and a row that breaks the rule is reported with its row number (see [Every imported row follows the rules of a product](Every-imported-row-follows-the-rules-of-a-product.md)).
 
 See also:
 
@@ -46,4 +46,5 @@ See also:
 
 | Date | Change | Source |
 |---|---|---|
-| 2026-10-14 | Planned: the rule was approved in the specification of #10 (alias R4) and is not implemented yet. | [ADR-0028](../../decisions/ADR-0028-validation-toolkit.md) |
+| 2026-10-14 | Planned: the rule was approved in the specification of #10 (alias R4). | [ADR-0028](../../decisions/ADR-0028-validation-toolkit.md) |
+| 2026-11-12 | Implemented and verified in `en` and `ru` (alias R4). | [Feature summary](../../features/products-validations/SUMMARY.md), [ADR-0028](../../decisions/ADR-0028-validation-toolkit.md) |

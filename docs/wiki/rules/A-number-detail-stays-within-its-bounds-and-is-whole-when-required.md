@@ -12,7 +12,7 @@ elements: [ProductDetails.numberValue]
 sources:
   - docs/decisions/ADR-0027-typed-product-details-form.md
   - docs/features/products-details-section/SUMMARY.md
-verified: 67cd0aade310debd
+verified: a74f7cd16ebfa442
 ---
 
 # A number detail stays within its bounds and is whole when required
@@ -29,7 +29,7 @@ The bounds say what a sensible value is, for example a screen size of at least 1
 
 - A value outside the bounds is refused with "Enter a value within the allowed range."; a fraction in an INTEGER attribute with "Enter a whole number." Both messages are on the Number value field.
 - Draft: the form shows the allowed range and the unit of the attribute next to the input; the server check stays as the guard of the API.
-- Planned with #10: [A detail number stays within the bounds of its subcategory](A-detail-number-stays-within-the-bounds-of-its-subcategory.md) will let a subcategory narrow these bounds for its own products.
+- [A detail number stays within the bounds of its subcategory](A-detail-number-stays-within-the-bounds-of-its-subcategory.md) lets a subcategory narrow these bounds for its own products.
 - Something that is not a number, or a number with more than three decimals, is refused earlier by the framework with its own text. The number of decimals set on the attribute is checked on the screen only, not on the server.
 - Which attribute holds a number is decided by its value type; see [A detail value matches the value type of its attribute](A-detail-value-matches-the-value-type-of-its-attribute.md).
 

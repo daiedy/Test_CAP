@@ -1,9 +1,9 @@
 ---
 title: Storage is not below memory
-summary: The storage of a laptop will not be allowed to be below its memory.
+summary: The storage of a laptop must not be below its memory.
 tags: [products, details, number, laptops]
 id: BR-DETAILS-009
-status: planned
+status: active
 since: 2026-10-14
 aliases: [R11]
 code:
@@ -15,14 +15,14 @@ messages: [PRODUCTS_DETAIL_VALUE_BELOW_OTHER]
 elements: [ProductDetails.numberValue]
 sources:
   - docs/decisions/ADR-0028-validation-toolkit.md
-verified: 13880a0e9e127e07
+verified: b0c2bdc749663910
 ---
 
 # Storage is not below memory
 
 ## Rule
 
-Once #10 is implemented, an attribute can name another attribute whose value must not be larger. For laptops, the Storage value of a product must not be below its Memory value. The message names both attributes in the language of the user.
+An attribute can name another attribute whose value must not be larger. For laptops, the Storage value of a product must not be below its Memory value. The message names both attributes in the language of the user.
 
 ## Why
 
@@ -30,9 +30,9 @@ A laptop whose drive is smaller than its memory is a data entry error. The rule 
 
 ## Where it fires
 
-This rule is planned with #10 and is not in the code yet. What the user will see:
+What the user sees:
 
-- Object Page, in a draft: when the Storage line is changed, a message will appear on it if the value is below the Memory value. There is no preventing control, because a comparison of two lines on the client would only repeat the server rule.
+- Object Page, in a draft: when the Storage line is changed, a message appears on it if the value is below the Memory value. There is no preventing control, because a comparison of two lines on the client would only repeat the server rule.
 - Save: the check is repeated, and it also finds the case where only the Memory value was changed. A direct API write is checked the same way.
 - Excel import: not affected, because the import creates products without detail rows.
 
@@ -45,4 +45,5 @@ See also:
 
 | Date | Change | Source |
 |---|---|---|
-| 2026-10-14 | Planned: the rule was approved in the specification of #10 (alias R11) and is not implemented yet. | [ADR-0028](../../decisions/ADR-0028-validation-toolkit.md) |
+| 2026-10-14 | Planned: the rule was approved in the specification of #10 (alias R11). | [ADR-0028](../../decisions/ADR-0028-validation-toolkit.md) |
+| 2026-11-12 | Implemented and verified in `en` and `ru` (alias R11). | [Feature summary](../../features/products-validations/SUMMARY.md), [ADR-0028](../../decisions/ADR-0028-validation-toolkit.md) |

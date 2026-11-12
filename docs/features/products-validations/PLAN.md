@@ -40,8 +40,8 @@ Contract rule: a step that changes the OData model (`db/*.cds`, `srv/**/*.cds`, 
 
 ### Every phase
 - [x] Contract: `$metadata` carries `Validation.Pattern` on `Products/name` and `Products/imageUrl`, the navigation properties `Products/namesakes`, `DetailAttributes/atLeast`, `DetailAttributes/enabledBy` and `DetailListValues/enables`, the properties `SubcategoryAttributes/required`, `minValue` and `maxValue` and, after phase 3, `Validation.Minimum` 0.01 without `Validation.Exclusive` on `Products/price` (D1), the `If`/`Gt` `Common.FieldControl` on `Products/description`, `CodeList.CurrencyCodes` on the entity container and `Common.UnitSpecificScale` with path `minorUnit` on `Currencies/code`, verified by `test/metadata.test.js` "declares the validation vocabulary, the detail rule elements, the conditional field control and the currency code list"
-- [ ] Contract: `metadata.xml` is regenerated and the snapshot updated in phase 2 (1763 lines, historical) and again in phase 3 (1781 after D1), each recorded in `docs/CHANGELOG.md`, verified by the sync test of `test/metadata.test.js` at both gates
-- [ ] `npm test` is green at every gate, the actual count in each gate record (phase 2: step 5)
+- [x] Contract: `metadata.xml` is regenerated and the snapshot updated in phase 2 (1763 lines, historical) and again in phase 3 (1781 after D1), each recorded in `docs/CHANGELOG.md`, verified by the sync test of `test/metadata.test.js` at both gates
+- [x] `npm test` is green at every gate, the actual count in each gate record (phase 2: step 5)
 
 ### Phase 3: UI
 - [x] UI R1/R2: on a new product the Name field shows the too-short message after leaving the field with `AB`, and the duplicate message after entering `Backpack`, verified by OPA5 `ProductValidationsJourney` "Name rules show on the field while editing"
@@ -64,7 +64,7 @@ Contract rule: a step that changes the OData model (`db/*.cds`, `srv/**/*.cds`, 
 - [x] Review: zero blocking findings in `REVIEW.md`; no `@assert.unique` for a user-facing rule, no handler for a rule an annotation expresses, every catalogue rule names its preventing control or "none"
 
 ### Phase 6: documentation
-- [ ] Documentation: every file of step 10 updated, `check-docs-fresh.mjs` and `wiki.mjs audit` clean
+- [x] Documentation: every file of step 10 updated, `check-docs-fresh.mjs` and `wiki.mjs audit` clean
 
 ## Steps
 

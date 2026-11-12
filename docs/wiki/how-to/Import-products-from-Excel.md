@@ -5,7 +5,7 @@ tags: [products, import, excel]
 code:
   - srv/catalog-service.js
   - srv/annotations/Products.cds
-verified: 28732f57355b4bb6
+verified: f53b7eb6a2dd6b34
 ---
 
 # Import products from Excel
@@ -36,6 +36,6 @@ A sample file with three correct rows is `test/fixtures/products-import-valid.xl
 - [The header row names known columns once and includes the mandatory ones](../rules/The-header-row-names-known-columns-once-and-includes-the-mandatory-ones.md): unknown, repeated or missing columns are rejected.
 - [An imported product name must be new](../rules/An-imported-product-name-must-be-new.md): a name already in the catalog or earlier in the file is rejected.
 - [Every imported row follows the rules of a product](../rules/Every-imported-row-follows-the-rules-of-a-product.md): each row follows the rules of a product.
-- [A price in a currency without minor units has no decimals](../rules/A-price-in-a-currency-without-minor-units-has-no-decimals.md) (planned with #10).
-- [A product in stock needs a description](../rules/A-product-in-stock-needs-a-description.md) (planned with #10).
+- [A price in a currency without minor units has no decimals](../rules/A-price-in-a-currency-without-minor-units-has-no-decimals.md) (BR-PRODUCTS-012).
+- [A product in stock needs a description](../rules/A-product-in-stock-needs-a-description.md) (BR-PRODUCTS-014).
 - Why the import works this way: [Products are imported from an Excel workbook](../decisions/Products-are-imported-from-an-Excel-workbook.md).

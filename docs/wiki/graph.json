@@ -1,5 +1,5 @@
 {
-  "x-sources": "0656a7497d7554f2",
+  "x-sources": "a47a44aac9a460fb",
   "nodes": [
     {
       "path": "docs/wiki/Glossary.md",
@@ -469,7 +469,7 @@
       "elements": [],
       "status": null,
       "sources": [],
-      "verified": "aed00709548302f9",
+      "verified": "b28c2cb8048b33ba",
       "codeHash": "b28c2cb8048b33ba",
       "aliases": [],
       "adr": []
@@ -494,7 +494,7 @@
       "elements": [],
       "status": null,
       "sources": [],
-      "verified": "cf17b555eda7e9d6",
+      "verified": "88b4a3696e7ddb33",
       "codeHash": "88b4a3696e7ddb33",
       "aliases": [],
       "adr": []
@@ -519,7 +519,7 @@
       "elements": [],
       "status": null,
       "sources": [],
-      "verified": "f862332b051ef747",
+      "verified": "201d018ea1b995f0",
       "codeHash": "201d018ea1b995f0",
       "aliases": [],
       "adr": []
@@ -544,7 +544,7 @@
       "elements": [],
       "status": null,
       "sources": [],
-      "verified": "71d8a751eaa9d04e",
+      "verified": "7f1f8ff9565a0cf4",
       "codeHash": "7f1f8ff9565a0cf4",
       "aliases": [],
       "adr": []
@@ -568,7 +568,7 @@
       "elements": [],
       "status": null,
       "sources": [],
-      "verified": "1df104c6439638cc",
+      "verified": "4641bdd6fc349c2d",
       "codeHash": "4641bdd6fc349c2d",
       "aliases": [],
       "adr": []
@@ -592,7 +592,7 @@
       "elements": [],
       "status": null,
       "sources": [],
-      "verified": "1df104c6439638cc",
+      "verified": "4641bdd6fc349c2d",
       "codeHash": "4641bdd6fc349c2d",
       "aliases": [],
       "adr": []
@@ -615,7 +615,7 @@
       "elements": [],
       "status": null,
       "sources": [],
-      "verified": "5d108315b067bf1e",
+      "verified": "3a5a3dd1b1064349",
       "codeHash": "3a5a3dd1b1064349",
       "aliases": [],
       "adr": []
@@ -640,7 +640,7 @@
       "elements": [],
       "status": null,
       "sources": [],
-      "verified": "d97c40c842ed3b79",
+      "verified": "6d84cea942c1484e",
       "codeHash": "6d84cea942c1484e",
       "aliases": [],
       "adr": []
@@ -665,7 +665,7 @@
       "elements": [],
       "status": null,
       "sources": [],
-      "verified": "0dc4e525061a5e32",
+      "verified": "3fd5a6e49d45f36a",
       "codeHash": "3fd5a6e49d45f36a",
       "aliases": [],
       "adr": []
@@ -690,7 +690,7 @@
       "elements": [],
       "status": null,
       "sources": [],
-      "verified": "c15310dcf3b59fd3",
+      "verified": "7898f3a04ad09fba",
       "codeHash": "7898f3a04ad09fba",
       "aliases": [],
       "adr": []
@@ -714,7 +714,7 @@
       "elements": [],
       "status": null,
       "sources": [],
-      "verified": "cd17f8f8027a7ad1",
+      "verified": "dd20495a2af02cbf",
       "codeHash": "dd20495a2af02cbf",
       "aliases": [],
       "adr": []
@@ -738,7 +738,7 @@
       "elements": [],
       "status": null,
       "sources": [],
-      "verified": "1d1f813ca4b00860",
+      "verified": "2efadbabc93caf3d",
       "codeHash": "2efadbabc93caf3d",
       "aliases": [],
       "adr": []
@@ -763,7 +763,7 @@
       "elements": [],
       "status": null,
       "sources": [],
-      "verified": "8d05d526116df7e7",
+      "verified": "45177399580c068a",
       "codeHash": "45177399580c068a",
       "aliases": [],
       "adr": []
@@ -787,7 +787,7 @@
       "elements": [],
       "status": null,
       "sources": [],
-      "verified": "5ff37f05d760e0d3",
+      "verified": "80b8e04b843498e5",
       "codeHash": "80b8e04b843498e5",
       "aliases": [],
       "adr": []
@@ -811,7 +811,7 @@
       "elements": [],
       "status": null,
       "sources": [],
-      "verified": "28732f57355b4bb6",
+      "verified": "f53b7eb6a2dd6b34",
       "codeHash": "f53b7eb6a2dd6b34",
       "aliases": [],
       "adr": []
@@ -835,7 +835,7 @@
       "elements": [],
       "status": null,
       "sources": [],
-      "verified": "1d1f813ca4b00860",
+      "verified": "2efadbabc93caf3d",
       "codeHash": "2efadbabc93caf3d",
       "aliases": [],
       "adr": []
@@ -845,7 +845,7 @@
       "folder": "rules",
       "id": "BR-DETAILS-008",
       "title": "A detail number stays within the bounds of its subcategory",
-      "summary": "A subcategory will be able to narrow the bounds of a number attribute for its own products.",
+      "summary": "A subcategory can narrow the bounds of a number attribute for its own products.",
       "tags": [
         "products",
         "details",
@@ -866,11 +866,11 @@
       "elements": [
         "ProductDetails.numberValue"
       ],
-      "status": "planned",
+      "status": "active",
       "sources": [
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
-      "verified": "19aaf72ce352aa0d",
+      "verified": "b45ba9e346fe24a0",
       "codeHash": "b45ba9e346fe24a0",
       "aliases": [
         "R10"
@@ -882,7 +882,7 @@
       "folder": "rules",
       "id": "BR-DETAILS-007",
       "title": "A detail that the subcategory requires must be filled",
-      "summary": "A subcategory will be able to mark an attribute as required, and a product of that subcategory will need a value for it.",
+      "summary": "A subcategory can mark an attribute as required, and a product of that subcategory needs a value for it.",
       "tags": [
         "products",
         "details",
@@ -905,11 +905,11 @@
         "ProductDetails.listValue",
         "ProductDetails.attribute"
       ],
-      "status": "planned",
+      "status": "active",
       "sources": [
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
-      "verified": "19aaf72ce352aa0d",
+      "verified": "b45ba9e346fe24a0",
       "codeHash": "b45ba9e346fe24a0",
       "aliases": [
         "R8"
@@ -941,7 +941,7 @@
         "docs/decisions/ADR-0027-typed-product-details-form.md",
         "docs/features/products-details-section/SUMMARY.md"
       ],
-      "verified": "67cd0aade310debd",
+      "verified": "a74f7cd16ebfa442",
       "codeHash": "a74f7cd16ebfa442",
       "aliases": [],
       "adr": []
@@ -972,7 +972,7 @@
         "docs/decisions/ADR-0027-typed-product-details-form.md",
         "docs/features/products-details-section/SUMMARY.md"
       ],
-      "verified": "67cd0aade310debd",
+      "verified": "a74f7cd16ebfa442",
       "codeHash": "a74f7cd16ebfa442",
       "aliases": [],
       "adr": []
@@ -1004,7 +1004,7 @@
         "docs/decisions/ADR-0027-typed-product-details-form.md",
         "docs/features/products-details-section/SUMMARY.md"
       ],
-      "verified": "67cd0aade310debd",
+      "verified": "a74f7cd16ebfa442",
       "codeHash": "a74f7cd16ebfa442",
       "aliases": [],
       "adr": []
@@ -1014,7 +1014,7 @@
       "folder": "rules",
       "id": "BR-PRODUCTS-012",
       "title": "A price in a currency without minor units has no decimals",
-      "summary": "A price in a currency without minor units, such as JPY or KRW, will have to be a whole amount.",
+      "summary": "A price in a currency without minor units, such as JPY or KRW, has to be a whole amount.",
       "tags": [
         "products",
         "price",
@@ -1034,11 +1034,11 @@
         "Products.price",
         "Products.currency"
       ],
-      "status": "planned",
+      "status": "active",
       "sources": [
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
-      "verified": "e5c192f21561f408",
+      "verified": "e84e970165a0304a",
       "codeHash": "e84e970165a0304a",
       "aliases": [
         "R4"
@@ -1050,7 +1050,7 @@
       "folder": "rules",
       "id": "BR-PRODUCTS-011",
       "title": "A price is above zero",
-      "summary": "A price will have to be above zero, so a free product is refused.",
+      "summary": "A price has to be above zero, so a free product is refused.",
       "tags": [
         "products",
         "price",
@@ -1067,11 +1067,11 @@
       "elements": [
         "Products.price"
       ],
-      "status": "planned",
+      "status": "active",
       "sources": [
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
-      "verified": "e0d6b58590ac81a7",
+      "verified": "1481ff0feae3a5a0",
       "codeHash": "1481ff0feae3a5a0",
       "aliases": [
         "R3"
@@ -1083,7 +1083,7 @@
       "folder": "rules",
       "id": "BR-PRODUCTS-014",
       "title": "A product in stock needs a description",
-      "summary": "A product with stock above zero will need a description.",
+      "summary": "A product with stock above zero needs a description.",
       "tags": [
         "products",
         "description",
@@ -1103,11 +1103,11 @@
         "Products.description",
         "Products.stock"
       ],
-      "status": "planned",
+      "status": "active",
       "sources": [
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
-      "verified": "e5c192f21561f408",
+      "verified": "e84e970165a0304a",
       "codeHash": "e84e970165a0304a",
       "aliases": [
         "R6"
@@ -1138,7 +1138,7 @@
         "docs/decisions/ADR-0015-list-report-draft-marker.md",
         "docs/features/products-draft-marker/SUMMARY.md"
       ],
-      "verified": "1d1f813ca4b00860",
+      "verified": "2efadbabc93caf3d",
       "codeHash": "2efadbabc93caf3d",
       "aliases": [],
       "adr": []
@@ -1148,7 +1148,7 @@
       "folder": "rules",
       "id": "BR-PRODUCTS-009",
       "title": "A product name has at least three characters",
-      "summary": "A product name will need at least three characters once leading and trailing spaces are removed.",
+      "summary": "A product name needs at least three characters once leading and trailing spaces are removed.",
       "tags": [
         "products",
         "name",
@@ -1165,11 +1165,11 @@
       "elements": [
         "Products.name"
       ],
-      "status": "planned",
+      "status": "active",
       "sources": [
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
-      "verified": "e0d6b58590ac81a7",
+      "verified": "1481ff0feae3a5a0",
       "codeHash": "1481ff0feae3a5a0",
       "aliases": [
         "R1"
@@ -1181,7 +1181,7 @@
       "folder": "rules",
       "id": "BR-PRODUCTS-010",
       "title": "A product name is unique in the catalog",
-      "summary": "A product name will have to be new in the catalog, ignoring capital letters and spaces at both ends.",
+      "summary": "A product name has to be new in the catalog, ignoring capital letters and spaces at both ends.",
       "tags": [
         "products",
         "name",
@@ -1199,11 +1199,11 @@
       "elements": [
         "Products.name"
       ],
-      "status": "planned",
+      "status": "active",
       "sources": [
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
-      "verified": "c45d03ff2a141221",
+      "verified": "80644c7eb862ce26",
       "codeHash": "80644c7eb862ce26",
       "aliases": [
         "R2"
@@ -1237,7 +1237,7 @@
         "docs/decisions/ADR-0004-annotation-split.md",
         "docs/features/products-subcategory-cascade/SUMMARY.md"
       ],
-      "verified": "dbca884ae8598da1",
+      "verified": "11076205bbd1b102",
       "codeHash": "11076205bbd1b102",
       "aliases": [],
       "adr": []
@@ -1269,7 +1269,7 @@
         "docs/decisions/ADR-0027-typed-product-details-form.md",
         "docs/features/products-details-section/SUMMARY.md"
       ],
-      "verified": "28732f57355b4bb6",
+      "verified": "f53b7eb6a2dd6b34",
       "codeHash": "f53b7eb6a2dd6b34",
       "aliases": [],
       "adr": []
@@ -1300,7 +1300,7 @@
         "docs/decisions/ADR-0027-typed-product-details-form.md",
         "docs/features/products-details-section/SUMMARY.md"
       ],
-      "verified": "67cd0aade310debd",
+      "verified": "a74f7cd16ebfa442",
       "codeHash": "a74f7cd16ebfa442",
       "aliases": [],
       "adr": []
@@ -1332,7 +1332,7 @@
         "docs/decisions/ADR-0026-product-details-composition.md",
         "docs/features/products-details-section/SUMMARY.md"
       ],
-      "verified": "67cd0aade310debd",
+      "verified": "a74f7cd16ebfa442",
       "codeHash": "a74f7cd16ebfa442",
       "aliases": [],
       "adr": []
@@ -1342,7 +1342,7 @@
       "folder": "rules",
       "id": "BR-PRODUCTS-013",
       "title": "An image address uses https and has no spaces",
-      "summary": "The image address of a product will have to start with https and contain no spaces.",
+      "summary": "The image address of a product has to start with https and contain no spaces.",
       "tags": [
         "products",
         "image",
@@ -1359,11 +1359,11 @@
       "elements": [
         "Products.imageUrl"
       ],
-      "status": "planned",
+      "status": "active",
       "sources": [
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
-      "verified": "e0d6b58590ac81a7",
+      "verified": "1481ff0feae3a5a0",
       "codeHash": "1481ff0feae3a5a0",
       "aliases": [
         "R5"
@@ -1395,7 +1395,7 @@
         "docs/decisions/ADR-0021-products-excel-import.md",
         "docs/features/products-excel-upload/SUMMARY.md"
       ],
-      "verified": "731b552dff67dc09",
+      "verified": "b9a68dbdf650154f",
       "codeHash": "b9a68dbdf650154f",
       "aliases": [],
       "adr": []
@@ -1424,7 +1424,7 @@
         "docs/decisions/ADR-0021-products-excel-import.md",
         "docs/features/products-excel-upload/SUMMARY.md"
       ],
-      "verified": "1d1391d18bdf4588",
+      "verified": "512f69e0a5e30e73",
       "codeHash": "512f69e0a5e30e73",
       "aliases": [],
       "adr": []
@@ -1434,7 +1434,7 @@
       "folder": "rules",
       "id": "BR-DETAILS-010",
       "title": "Battery life is available only for a wireless device",
-      "summary": "The battery life of a product will be enabled only while the product has a wireless connection value selected.",
+      "summary": "The battery life of a product is enabled only while the product has a wireless connection value selected.",
       "tags": [
         "products",
         "details",
@@ -1454,11 +1454,11 @@
       "elements": [
         "ProductDetails.numberValue"
       ],
-      "status": "planned",
+      "status": "active",
       "sources": [
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
-      "verified": "19aaf72ce352aa0d",
+      "verified": "b45ba9e346fe24a0",
       "codeHash": "b45ba9e346fe24a0",
       "aliases": [
         "R12"
@@ -1494,7 +1494,7 @@
         "docs/features/products-subcategories/SUMMARY.md",
         "docs/features/catalog-hygiene/SUMMARY.md"
       ],
-      "verified": "dbca884ae8598da1",
+      "verified": "11076205bbd1b102",
       "codeHash": "11076205bbd1b102",
       "aliases": [],
       "adr": []
@@ -1526,7 +1526,7 @@
         "docs/features/products-subcategories/SUMMARY.md",
         "docs/features/products-subcategory-cascade/SUMMARY.md"
       ],
-      "verified": "dbefcaaf7ed5f83c",
+      "verified": "427c3dec448a36e3",
       "codeHash": "427c3dec448a36e3",
       "aliases": [],
       "adr": []
@@ -1583,7 +1583,7 @@
         "docs/decisions/ADR-0027-typed-product-details-form.md",
         "docs/features/products-details-section/SUMMARY.md"
       ],
-      "verified": "6d885966c2b05733",
+      "verified": "248c8745d649de3d",
       "codeHash": "248c8745d649de3d",
       "aliases": [],
       "adr": []
@@ -1614,7 +1614,7 @@
         "docs/features/products-excel-upload/SUMMARY.md",
         "docs/features/products-subcategory-cascade/SUMMARY.md"
       ],
-      "verified": "731b552dff67dc09",
+      "verified": "b9a68dbdf650154f",
       "codeHash": "b9a68dbdf650154f",
       "aliases": [],
       "adr": []
@@ -1624,7 +1624,7 @@
       "folder": "rules",
       "id": "BR-DETAILS-011",
       "title": "Memory is a power of two",
-      "summary": "The memory of a laptop will have to be a power of two.",
+      "summary": "The memory of a laptop has to be a power of two.",
       "tags": [
         "products",
         "details",
@@ -1642,11 +1642,11 @@
       "elements": [
         "ProductDetails.numberValue"
       ],
-      "status": "planned",
+      "status": "active",
       "sources": [
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
-      "verified": "622516bc0195056f",
+      "verified": "cadbc1509634cc73",
       "codeHash": "cadbc1509634cc73",
       "aliases": [
         "R13"
@@ -1683,7 +1683,7 @@
       "folder": "rules",
       "id": "BR-PRODUCTS-004",
       "title": "Price, stock and rating stay within their bounds",
-      "summary": "The price is from 0 to 99,999,999.99, the stock from 0 to 1,000,000 and the rating from 0 to 5.",
+      "summary": "The price is from 0.01 to 99,999,999.99, the stock from 0 to 1,000,000 and the rating from 0 to 5.",
       "tags": [
         "products",
         "price",
@@ -1706,7 +1706,7 @@
         "docs/features/products-rating-column/SUMMARY.md",
         "docs/features/catalog-hygiene/SUMMARY.md"
       ],
-      "verified": "dbca884ae8598da1",
+      "verified": "11076205bbd1b102",
       "codeHash": "11076205bbd1b102",
       "aliases": [],
       "adr": []
@@ -1716,7 +1716,7 @@
       "folder": "rules",
       "id": "BR-DETAILS-009",
       "title": "Storage is not below memory",
-      "summary": "The storage of a laptop will not be allowed to be below its memory.",
+      "summary": "The storage of a laptop must not be below its memory.",
       "tags": [
         "products",
         "details",
@@ -1735,11 +1735,11 @@
       "elements": [
         "ProductDetails.numberValue"
       ],
-      "status": "planned",
+      "status": "active",
       "sources": [
         "docs/decisions/ADR-0028-validation-toolkit.md"
       ],
-      "verified": "13880a0e9e127e07",
+      "verified": "b0c2bdc749663910",
       "codeHash": "b0c2bdc749663910",
       "aliases": [
         "R11"
@@ -1773,7 +1773,7 @@
         "docs/features/products-excel-upload/SUMMARY.md",
         "docs/features/products-subcategory-cascade/SUMMARY.md"
       ],
-      "verified": "9de3a1665a6a7215",
+      "verified": "e15cd25257a1a14a",
       "codeHash": "e15cd25257a1a14a",
       "aliases": [],
       "adr": []
@@ -1805,7 +1805,7 @@
         "docs/decisions/ADR-0021-products-excel-import.md",
         "docs/features/products-excel-upload/SUMMARY.md"
       ],
-      "verified": "731b552dff67dc09",
+      "verified": "b9a68dbdf650154f",
       "codeHash": "b9a68dbdf650154f",
       "aliases": [],
       "adr": []
@@ -1839,7 +1839,7 @@
         "docs/decisions/ADR-0025-dynamic-field-control.md",
         "docs/features/products-subcategory-cascade/SUMMARY.md"
       ],
-      "verified": "303b97c760587c79",
+      "verified": "2f41f19adb5a62dc",
       "codeHash": "2f41f19adb5a62dc",
       "aliases": [],
       "adr": []
@@ -1868,7 +1868,7 @@
         "docs/decisions/ADR-0025-dynamic-field-control.md",
         "docs/features/products-subcategory-cascade/SUMMARY.md"
       ],
-      "verified": "d2045634c236e2ab",
+      "verified": "ed09675c9c8e9882",
       "codeHash": "ed09675c9c8e9882",
       "aliases": [],
       "adr": []
@@ -1899,7 +1899,7 @@
         "docs/decisions/ADR-0021-products-excel-import.md",
         "docs/features/products-excel-upload/SUMMARY.md"
       ],
-      "verified": "cdbf90be0de33e60",
+      "verified": "7c0f44fd43d01759",
       "codeHash": "7c0f44fd43d01759",
       "aliases": [],
       "adr": []
@@ -2663,12 +2663,12 @@
     },
     {
       "from": "docs/wiki/domain/Detail-attributes.md",
-      "to": "docs/wiki/domain/Subcategory-attributes.md",
+      "to": "docs/wiki/domain/Detail-list-values.md",
       "type": "link"
     },
     {
       "from": "docs/wiki/domain/Detail-attributes.md",
-      "to": "docs/wiki/domain/Detail-list-values.md",
+      "to": "docs/wiki/domain/Subcategory-attributes.md",
       "type": "link"
     },
     {
@@ -3879,6 +3879,21 @@
     {
       "from": "docs/wiki/rules/Every-imported-row-follows-the-rules-of-a-product.md",
       "to": "docs/wiki/rules/The-subcategory-belongs-to-the-products-category.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Every-imported-row-follows-the-rules-of-a-product.md",
+      "to": "docs/wiki/rules/A-product-name-has-at-least-three-characters.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Every-imported-row-follows-the-rules-of-a-product.md",
+      "to": "docs/wiki/rules/A-product-in-stock-needs-a-description.md",
+      "type": "link"
+    },
+    {
+      "from": "docs/wiki/rules/Every-imported-row-follows-the-rules-of-a-product.md",
+      "to": "docs/wiki/rules/A-price-in-a-currency-without-minor-units-has-no-decimals.md",
       "type": "link"
     },
     {

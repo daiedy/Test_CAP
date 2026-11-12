@@ -17,7 +17,7 @@ sources:
   - docs/features/catalog-hygiene/SUMMARY.md
   - docs/decisions/ADR-0021-products-excel-import.md
   - docs/features/products-excel-upload/SUMMARY.md
-verified: cdbf90be0de33e60
+verified: 7c0f44fd43d01759
 ---
 
 # Viewers read, editors change

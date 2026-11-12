@@ -12,7 +12,7 @@ elements: [ProductDetails.attribute]
 sources:
   - docs/decisions/ADR-0026-product-details-composition.md
   - docs/features/products-details-section/SUMMARY.md
-verified: 67cd0aade310debd
+verified: a74f7cd16ebfa442
 ---
 
 # An attribute is used once per product and belongs to the subcategory

@@ -5,14 +5,14 @@ tags: [details, products, domain]
 code:
   - db/schema.cds
   - srv/annotations/ProductDetails.cds
-verified: 1df104c6439638cc
+verified: 4641bdd6fc349c2d
 ---
 
 # Product details
 
 ## What it is
 
-A detail row is one fact about one product: an attribute (for example Colour) and its value (Black). A product has one row for each attribute of its subcategory, in a fixed order. The rows are created for you when you choose the subcategory on a draft, and you fill in the values; you do not add or remove rows. The values are optional. The fields are in the [domain model](../../registry/DOMAIN-MODEL.md).
+A detail row is one fact about one product: an attribute (for example Colour) and its value (Black). A product has one row for each attribute of its subcategory, in a fixed order. The rows are created for you when you choose the subcategory on a draft, and you fill in the values; you do not add or remove rows. The values are optional, except those that the subcategory requires. The fields are in the [domain model](../../registry/DOMAIN-MODEL.md).
 
 ## Fields that matter
 
@@ -28,11 +28,11 @@ A detail row is one fact about one product: an attribute (for example Colour) an
 - [A number detail stays within its bounds and is whole when required](../rules/A-number-detail-stays-within-its-bounds-and-is-whole-when-required.md): a number stays within the attribute's minimum and maximum, and a whole-number attribute takes no decimals.
 - [A list detail value belongs to the list of its attribute](../rules/A-list-detail-value-belongs-to-the-list-of-its-attribute.md): a list value must belong to the attribute's list.
 - [Detail rows follow the attributes of the subcategory](../rules/Detail-rows-follow-the-attributes-of-the-subcategory.md): the rows follow the subcategory.
-- [A detail that the subcategory requires must be filled](../rules/A-detail-that-the-subcategory-requires-must-be-filled.md) (planned with #10).
-- [A detail number stays within the bounds of its subcategory](../rules/A-detail-number-stays-within-the-bounds-of-its-subcategory.md) (planned with #10).
-- [Storage is not below memory](../rules/Storage-is-not-below-memory.md) (planned with #10).
-- [Battery life is available only for a wireless device](../rules/Battery-life-is-available-only-for-a-wireless-device.md) (planned with #10).
-- [Memory is a power of two](../rules/Memory-is-a-power-of-two.md) (planned with #10).
+- [A detail that the subcategory requires must be filled](../rules/A-detail-that-the-subcategory-requires-must-be-filled.md) (BR-DETAILS-007).
+- [A detail number stays within the bounds of its subcategory](../rules/A-detail-number-stays-within-the-bounds-of-its-subcategory.md) (BR-DETAILS-008).
+- [Storage is not below memory](../rules/Storage-is-not-below-memory.md) (BR-DETAILS-009).
+- [Battery life is available only for a wireless device](../rules/Battery-life-is-available-only-for-a-wireless-device.md) (BR-DETAILS-010).
+- [Memory is a power of two](../rules/Memory-is-a-power-of-two.md) (BR-DETAILS-011).
 
 ## Related
 

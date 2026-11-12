@@ -5,7 +5,7 @@ tags: [products, draft, create]
 code:
   - srv/annotations/Products.cds
   - app/products/annotations/Products.cds
-verified: cd17f8f8027a7ad1
+verified: dd20495a2af02cbf
 ---
 
 # Create a product through a draft
@@ -18,7 +18,7 @@ Add a new product to the catalog.
 
 1. Sign in as a user with the CatalogEditor role. Other users do not see the Create button; see [Who may do what](Who-may-do-what.md).
 2. In the product list, choose Create. The catalog opens an empty **draft** of a product, a private working copy that nobody else sees (see the [Glossary](../Glossary.md)).
-3. Fill the mandatory fields: name, price, currency, stock, category and subcategory. Description, rating and image address are optional. Choose the subcategory after the category; see [Choose a category and subcategory](Choose-a-category-and-subcategory.md).
+3. Fill the mandatory fields: name, price, currency, stock, category and subcategory. Description is required while the stock is above 0; rating and image address are optional. The name needs three characters and must be new, the price at least 0.01 (a whole amount in JPY), the image address starts with https. Fields turn red as you leave them, with a message that says what to enter. Choose the subcategory after the category; see [Choose a category and subcategory](Choose-a-category-and-subcategory.md).
 4. Fill the details of the product if you want to; see [Fill the details of a product](Fill-the-details-of-a-product.md).
 5. Choose Save. The catalog checks the whole product. If something is wrong it shows a message next to the field and keeps the draft, so you can fix it and save again.
 6. After a successful save the draft becomes an active product and shows in the list.
@@ -32,10 +32,10 @@ To create many products at once, see [Import products from Excel](Import-product
 - [A product needs a name, price, currency, stock, category and subcategory](../rules/A-product-needs-a-name-price-currency-stock-category-and-subcategory.md).
 - [Price, stock and rating stay within their bounds](../rules/Price-stock-and-rating-stay-within-their-bounds.md): the price is between 0 and 99,999,999.99, the stock between 0 and 1,000,000, the rating between 0 and 5.
 - [Category, subcategory and currency must exist](../rules/Category-subcategory-and-currency-must-exist.md).
-- [A product name has at least three characters](../rules/A-product-name-has-at-least-three-characters.md) (planned with #10).
-- [A product name is unique in the catalog](../rules/A-product-name-is-unique-in-the-catalog.md) (planned with #10).
-- [A price is above zero](../rules/A-price-is-above-zero.md) (planned with #10).
-- [A price in a currency without minor units has no decimals](../rules/A-price-in-a-currency-without-minor-units-has-no-decimals.md) (planned with #10).
-- [An image address uses https and has no spaces](../rules/An-image-address-uses-https-and-has-no-spaces.md) (planned with #10).
-- [A product in stock needs a description](../rules/A-product-in-stock-needs-a-description.md) (planned with #10).
+- [A product name has at least three characters](../rules/A-product-name-has-at-least-three-characters.md) (BR-PRODUCTS-009).
+- [A product name is unique in the catalog](../rules/A-product-name-is-unique-in-the-catalog.md) (BR-PRODUCTS-010).
+- [A price is above zero](../rules/A-price-is-above-zero.md) (BR-PRODUCTS-011).
+- [A price in a currency without minor units has no decimals](../rules/A-price-in-a-currency-without-minor-units-has-no-decimals.md) (BR-PRODUCTS-012).
+- [An image address uses https and has no spaces](../rules/An-image-address-uses-https-and-has-no-spaces.md) (BR-PRODUCTS-013).
+- [A product in stock needs a description](../rules/A-product-in-stock-needs-a-description.md) (BR-PRODUCTS-014).
 - Why a draft: [Products are edited through drafts](../decisions/Products-are-edited-through-drafts.md).

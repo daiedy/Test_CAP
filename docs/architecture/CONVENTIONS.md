@@ -31,6 +31,7 @@ app/<app>/webapp/manifest.json    only through Fiori MCP or Fiori tools
 app/<app>/webapp/ext/controller/<Page>Ext.js   FE controller extensions, no .controller. in the name
 app/<app>/webapp/ext/fragment/<Name>.fragment.xml
 app/<app>/webapp/ext/fragment/<Name>.js       named pure functions the fragment's core:require binds to
+app/<app>/webapp/ext/fragment/<Name>Rules.js  sibling module of a section that edits data: pure row rules, re-exported by <Name>.js for QUnit (example DetailsRules.js)
 app/<app>/webapp/model/formatter.js
 app/<app>/webapp/i18n/i18n.properties, i18n_ru.properties
 app/<app>/webapp/test/            testsuite.qunit.*, unit/, integration/ (OPA5)

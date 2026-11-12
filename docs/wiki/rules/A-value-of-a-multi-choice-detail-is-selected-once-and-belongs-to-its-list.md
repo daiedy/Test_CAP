@@ -12,7 +12,7 @@ elements: [ProductDetailSelections.value]
 sources:
   - docs/decisions/ADR-0027-typed-product-details-form.md
   - docs/features/products-details-section/SUMMARY.md
-verified: 67cd0aade310debd
+verified: a74f7cd16ebfa442
 ---
 
 # A value of a multi-choice detail is selected once and belongs to its list

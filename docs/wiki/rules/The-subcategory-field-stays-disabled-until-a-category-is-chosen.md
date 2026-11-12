@@ -12,7 +12,7 @@ elements: [Products.subcategory]
 sources:
   - docs/decisions/ADR-0025-dynamic-field-control.md
   - docs/features/products-subcategory-cascade/SUMMARY.md
-verified: d2045634c236e2ab
+verified: ed09675c9c8e9882
 ---
 
 # The subcategory field stays disabled until a category is chosen

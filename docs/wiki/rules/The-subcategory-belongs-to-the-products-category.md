@@ -16,7 +16,7 @@ sources:
   - docs/features/products-subcategories/SUMMARY.md
   - docs/decisions/ADR-0025-dynamic-field-control.md
   - docs/features/products-subcategory-cascade/SUMMARY.md
-verified: 303b97c760587c79
+verified: 2f41f19adb5a62dc
 ---
 
 # The subcategory belongs to the product's category

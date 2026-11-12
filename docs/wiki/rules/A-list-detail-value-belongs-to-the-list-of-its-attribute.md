@@ -13,7 +13,7 @@ sources:
   - docs/decisions/ADR-0026-product-details-composition.md
   - docs/decisions/ADR-0027-typed-product-details-form.md
   - docs/features/products-details-section/SUMMARY.md
-verified: 67cd0aade310debd
+verified: a74f7cd16ebfa442
 ---
 
 # A list detail value belongs to the list of its attribute

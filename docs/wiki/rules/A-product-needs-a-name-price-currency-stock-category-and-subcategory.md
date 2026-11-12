@@ -18,7 +18,7 @@ elements:
 sources:
   - docs/decisions/ADR-0004-annotation-split.md
   - docs/features/products-subcategory-cascade/SUMMARY.md
-verified: dbca884ae8598da1
+verified: 11076205bbd1b102
 ---
 
 # A product needs a name, price, currency, stock, category and subcategory

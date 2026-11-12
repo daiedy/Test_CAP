@@ -14,14 +14,14 @@ sources:
   - docs/decisions/ADR-0021-products-excel-import.md
   - docs/features/products-excel-upload/SUMMARY.md
   - docs/features/products-subcategory-cascade/SUMMARY.md
-verified: 731b552dff67dc09
+verified: b9a68dbdf650154f
 ---
 
 # Every imported row follows the rules of a product
 
 ## Rule
 
-An imported row is held to the rules of any product: the required fields are filled, price, stock and rating are within their bounds, the category, subcategory and currency exist, and the subcategory belongs to the row's category. The category, subcategory and currency cells hold codes, not displayed names. A cell of a number column that reads as a number is taken as a number.
+An imported row is held to the rules of any product: the required fields are filled, price, stock and rating are within their bounds, a name has at least three characters, an image address uses https, a product in stock has a description, a price in a currency without minor units has no decimals, the category, subcategory and currency exist, and the subcategory belongs to the row's category. The category, subcategory and currency cells hold codes, not displayed names. A cell of a number column that reads as a number is taken as a number.
 
 ## Why
 
@@ -33,6 +33,8 @@ The import is another way to create a product, not a way around the rules. Using
 - The row number counts the header as row 1.
 - The rules come from [A product needs a name, price, currency, stock, category and subcategory](A-product-needs-a-name-price-currency-stock-category-and-subcategory.md), [Price, stock and rating stay within their bounds](Price-stock-and-rating-stay-within-their-bounds.md) and [Category, subcategory and currency must exist](Category-subcategory-and-currency-must-exist.md).
 - The subcategory-category pair of [The subcategory belongs to the product's category](The-subcategory-belongs-to-the-products-category.md) is checked for each row before the rows are written, because the product's own check reports no row; the mismatch is reported on the column `subcategory`.
+- A rule with its own text reports that text, not the framework's generic one: a name of two letters gives the text of [A product name has at least three characters](A-product-name-has-at-least-three-characters.md) on the column `name`.
+- The rules that the product checks only when it is saved as a whole, a description for a product in stock ([A product in stock needs a description](A-product-in-stock-needs-a-description.md)) and a whole price in a currency without minor units ([A price in a currency without minor units has no decimals](A-price-in-a-currency-without-minor-units-has-no-decimals.md)), are checked for each row before the rows are written, like the subcategory pair; they are reported on the columns `description` and `price`.
 - Empty cells are left out of the row; the report is part of [An import creates all products or none](An-import-creates-all-products-or-none.md).
 
 ## History
@@ -41,3 +43,4 @@ The import is another way to create a product, not a way around the rules. Using
 |---|---|---|
 | 2026-09-29 | Introduced: one insert per row through the service, so the product's checks report per row. | [products-excel-upload](../../features/products-excel-upload/SUMMARY.md), [ADR-0021](../../decisions/ADR-0021-products-excel-import.md) |
 | 2026-10-10 | The subcategory-category pair is checked per row before the inserts. | [products-subcategory-cascade](../../features/products-subcategory-cascade/SUMMARY.md), [ADR-0021](../../decisions/ADR-0021-products-excel-import.md) |
+| 2026-11-12 | The rules of #10 reach the import: the project texts of the format rules and the per-row checks for the description and the minor-unit rule; every row message is built in one place. | [products-validations](../../features/products-validations/SUMMARY.md), [ADR-0028](../../decisions/ADR-0028-validation-toolkit.md) |

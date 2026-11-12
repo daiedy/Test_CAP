@@ -5,7 +5,7 @@ tags: [details, selections, domain]
 code:
   - db/schema.cds
   - srv/annotations/ProductDetails.cds
-verified: 1df104c6439638cc
+verified: 4641bdd6fc349c2d
 ---
 
 # Product detail selections

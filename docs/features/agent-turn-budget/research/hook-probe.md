@@ -39,4 +39,37 @@ P1 or P2 failed without its fallback, or P4 more than one short: phase 2 does no
 
 ## Results
 
-Not run yet (2026-11-13).
+Run 2026-11-13 by `cap-backend-dev` (phase 2, step 1) from the main checkout, not a worktree: an agent's Bash could spawn `claude -p`. Claude Code 2.1.322 (`claude --version`, and `version` of every record in the three main and three agent transcripts). Model `claude-haiku-5-5` on the main thread and, through `model: inherit`, in the probe agent.
+
+Deviations from "Procedure" step 2:
+- `env -u`: `env | grep -E '^(CLAUDE|PIPELINE)'` listed 14 variables. Besides the four of the procedure, these were also unset: `CLAUDE_CODE_HOST_SHORT_TEMP_DIRS`, `CLAUDE_JOB_DIR`, `CLAUDE_CODE_MESSAGING_SOCKET`, `CLAUDE_CODE_MESSAGING_TOKEN`, `CLAUDE_CODE_EXECPATH`, `CLAUDE_CODE_SESSION_ID`, `CLAUDE_CODE_CHILD_SESSION`, `CLAUDE_CODE_SESSION_ATTENDED`, `CLAUDE_PID`, `CLAUDE_EFFORT`.
+- Flags: `claude --help` lists every flag of the command except `--max-turns`. The CLI accepted that flag as a hidden option (exit 0, empty stderr, main `num_turns` 2), so all three runs kept it. Each run wrote stdout to `out.json` and stderr to `err.txt` in its temp directory; stderr stayed empty in all three runs.
+
+| # | Verdict | Evidence | Fallback applied |
+|---|---|---|---|
+| P1 | pass | `deliver`: `PostToolBatch.jsonl` has 6 rows, 5 of them in the subagent (`agent_type` `turn-probe`). Keys: `agent_id, agent_type, cwd, effort, hook_event_name, permission_mode, prompt_id, session_id, tool_calls, transcript_path`. The main-thread row (the batch of `Agent`) has no `agent_id` key. The agent transcript holds 4 `hook_additional_context` attachments with `hookEvent: PostToolBatch` for turns 1-4. Their `toolUseID` is `hook-<uuid>`, not a tool id. The report quotes `PROBE-BATCH-N1-K1`, `-N2-K1`, `-N3-K2`, `-N4-K1`. The fifth batch (turn 5, the `SubagentHandback`) ran and left a `hook_success` but no context attachment, because the agent had ended | none needed |
+| P2 | pass | `deliver`: an attachment with `hookEvent: PostToolUse` whose `toolUseID` is the turn-2 `mcp__cds-mcp__search_docs` call, content `PROBE-POST-mcp-N2`. The report quotes `PROBE-POST-mcp-N2` after turn 2 | none needed |
+| P3 | pass | `deliver`: `PostToolUseFailure.jsonl` has 1 row (`Bash`, subagent). Its keys add `error` and `is_interrupt` and lack `tool_response`. The `PostToolBatch` row of the same `Bash` follows 0.25 s later (n 4, batch of 1). Both contexts were attached (`PROBE-FAIL-Bash-N4`, `PROBE-BATCH-N4-K1`) and quoted by the report | none needed |
+| P4 | pass, exact | 27 subagent hook rows over the three runs (`deliver` 11, `limit` 12, `limit-last` 4). On every row the count at hook time equals the true turn. That includes the parallel batch (3 of 3) and the turn-`M` batch of `limit` (6 of 6). There is no lag: the current request's `assistant` record is on disk when PostToolUse and PostToolBatch run. `transcript_path` is the main session file, and `<main without .jsonl>/subagents/agent-<agent_id>.jsonl` resolved the agent file on every row | none needed |
+| P5 | pass | `deliver` turn 3: two `PostToolUse` rows (`Read`, `Read`, 0.11 s apart, n 3 each) and one `PostToolBatch` row with 2 `tool_calls` (`PROBE-BATCH-N3-K2`) | none (cost figure confirmed: one batch call per turn, one PostToolUse per tool call) |
+| P6 | not exercised | `limit-last`: the agent called `SubagentHandback` on its own in turn 2 (2 requests, `turn 2 delivered`, main `toolUseResult.handback: send`). The turn-5 note never fired, and no handback was made in turn 6. Indirect evidence only. In `limit` the turn-6 (= `M`) tool call still ran and fired PostToolUse and PostToolBatch (n 6). In `deliver` the `SubagentHandback` was delivered (`handback: send`, `status: completed`) and no request followed it | P6 fallback, applied conservatively: the `K <= 2` text applies from `K <= 3`, unless a re-run of `limit-last` prints `turn 6 delivered` |
+| P7 | fail (haiku) | `limit`: 3 notes (`Turn 4 of 6`, `Turn 5 of 6`, `Turn 6 of 6`) were attached as `hook_additional_context:PostToolBatch`. The agent called `Read` in turns 5 and 6. Turn 6 also held a 317-character text block that mentions the handback, followed by `Read`. 6 requests, no `SubagentHandback`. The main transcript holds `stopped at its 6-turn limit`, `toolUseResult.handback: withheld` and no `handbackReport` key; the main result is "no report". The turn-6 note was attached after the last request and reached no model call | P7 fallback: record, do not block; the phase 4 check on a real launch decides |
+
+Observations for steps 2-3:
+- PostToolBatch also fires on the main thread, in a row without the `agent_id` key. So the hook's early exit on a missing `agent_id` runs once per main-thread tool turn.
+- A note on the turn-`M` batch is written into the transcript, but no request reads it. The last note a model can act on is the turn `M - 1` note (`K = 1`).
+- `hook_success` attachments appear only for hook calls that printed output (`limit`: 3 batch, 0 PostToolUse).
+- Agent files hold `api-request`, `api-request-blob` and `api-request-shape` records (`deliver` 5, 10, 1). The probe's own counter reads only `assistant` records and matched the true turn on every row.
+- The probe agent's `tools:` list does not name `SubagentHandback`, yet it was called and delivered twice (`deliver`, `limit-last`). An agent's `tools` does not gate the handback.
+
+| Run | Duration | Main turns | Cost (USD) |
+|---|---|---|---|
+| `deliver` | 20.7 s | 2 | 0.0042 |
+| `limit` | 16.9 s | 2 | 0.0031 |
+| `limit-last` | 8.1 s | 2 | 0.0023 |
+
+Total: $0.0096, against the accepted $0.15.
+
+Cleanup: the three temp directories are deleted after this section was written. No process the probe started is left running. The `@cap-js/mcp-server@0.0.5` processes that remain belong to sessions started on 2026-11-11 and 2026-11-12. The transcripts stay under `~/.claude/projects/-private-tmp-atb-probe-*`; they hold probe tokens only.
+
+Gate: P1 and P2 pass, and P4 is exact, so phase 2 proceeds with fallback P6: the last-turn text applies from `K <= 3`, because P6 was not exercised. P7 is recorded as failed on haiku; the phase 4 check decides. Per "Gate", the orchestrator writes the P6 fallback into CONTEXT "Turn note"; this launch changes nothing outside `research/`.

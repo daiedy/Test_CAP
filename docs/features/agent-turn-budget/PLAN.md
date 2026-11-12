@@ -9,11 +9,11 @@ Contract rule: no step changes the OData model; `metadata.xml` and the `$metadat
 ## Acceptance criteria
 
 ### Phase 2: probe, hook, metrics
-- [ ] Probe P1-P7 are recorded in `research/hook-probe.md` "Results" before any file of steps 2-6 changes, each failed fact with its CONTEXT fallback applied, verified by the step 1 gate
+- [x] Probe P1-P7 are recorded in `research/hook-probe.md` "Results" before any file of steps 2-6 changes, each failed fact with its CONTEXT fallback applied, verified by the step 1 gate
 - [ ] On the main thread the hook prints nothing and writes no record, verified by `test/hooks-turn-budget.test.js` "main thread is silent"
 - [ ] Below turn `M - reserve(M)` the hook is silent, verified by `test/hooks-turn-budget.test.js` "silent below the threshold"
 - [ ] From turn `M - reserve(M)` on, every turn returns `Turn N of M (K left)` as `additionalContext` and appends one `turn-note` record, verified by `test/hooks-turn-budget.test.js` "notes from the threshold"
-- [ ] At `K <= 2` the note asks for the handback in this turn, verified by `test/hooks-turn-budget.test.js` "last turns ask for the handback"
+- [ ] At `K <= 3` the note asks for the handback in this turn, verified by `test/hooks-turn-budget.test.js` "last turns ask for the handback"
 - [ ] A `coordinator` resume restarts the count, verified by `test/hooks-turn-budget.test.js` "a resume restarts the run"
 - [ ] `api-request*` records and repeated `requestId` records add no turn, verified by `test/hooks-turn-budget.test.js` "counts each request once"
 - [ ] An agent type without a definition or `maxTurns`, a missing transcript and malformed input stay silent with exit 0, verified by `test/hooks-turn-budget.test.js` "silent on unknowns"
@@ -71,7 +71,7 @@ Contract rule: no step changes the OData model; `metadata.xml` and the `$metadat
 ## Open questions
 None. Q1-Q8 decided by the user 2026-11-13 as recommended:
 - Q1 Threshold: `reserve = max(6, ceil(maxTurns / 10))`.
-- Q2 Frequency: a note on every turn from the threshold, sharper at the last two.
+- Q2 Frequency: a note on every turn from the threshold, sharper at the last three (P6 fallback).
 - Q3 Event: `PostToolBatch` primary with the whole transcript read; PostToolUse the fallback.
 - Q4 MCP delivery: the probe runs as step 1 at the start of phase 2, a `cap-backend-dev` launch.
 - Q5 #59: separate; this feature delivers `turnLimitStops` and `turnNotes` for it.

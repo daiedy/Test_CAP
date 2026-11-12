@@ -39,3 +39,36 @@ None.
 ## Verdict
 
 ready to commit. There are no blocking findings, so the phase 5 criterion is met. The three Important findings should be closed before PLAN step 9, because the D19 text, data-flow.md and ADR-0032 decision 4 depend on them. They need the comment wording and the note counting rule (`cap-backend-dev`, `test-backend`), plus an architect decision on the `K <= 3` margin or an exact count by `tool_calls` ids.
+
+## Re-review
+
+Scope: the fixed items only, `git diff f34af18..HEAD` (4b48fff spec amendment, e2a933a code and tests, 0d3445e VERIFICATION check 4). Reviewer, 2026-11-13. Complete.
+
+### Per item
+- Important 1 (comments say "exact"): closed. scripts/hooks/turn-budget.mjs:8-12 and scripts/lib/transcript-usage.mjs:399-407 now say "the file alone is exact or one short" and "the batch-id rule makes the count exact or one high". A grep for `exact` in the hook and both libraries finds no other runtime claim; the one left is the `reserve()` arithmetic at turn-budget.mjs:60. The remaining part, "exact or one high" in D19 and data-flow.md, belongs to `docs-keeper` in PLAN step 9.
+- Important 2 (`TURN_LAST_CALL = 3` vs a one-short read): closed with option two. ADR-0032:13 records the decision 4 amendment: the batch-id rule, `TURN_LAST_CALL` stays 3, and an input without ids keeps the file count. ADR-0032:11 (decision 2), CONTEXT:31 and :42, and PLAN steps 8a-8c with their six phase 5 criteria match it. The code is scripts/lib/transcript-usage.mjs:411-421 and the hook at :40-42. Live evidence: VERIFICATION check 4 has the batch-id count equal to the true turn on 7 of 7 batches, against 4 of 7 one short for the file alone. Reviewer cross-check on the surviving check 4 transcript (`~/.claude/projects/-private-tmp-atb-check4/2688287a-.../subagents/agent-a7bc485f011357e10.jsonl`): 1 run, 7 requests, 7 tool uses, one `hook_additional_context` (PostToolBatch, 190 chars). A worst-case replay read each batch just before its `tool_use` record. It gives 6 of 7 exact, plus the documented "one high" on the `SubagentHandback` turn, where a text record of the same request precedes the tool use. That high read errs on the safe side, as ADR-0032:13 and the JSDoc say. It is not a finding.
+- Important 3 (`turnNotes` deduped on `turn`): closed. scripts/lib/pipeline-metrics.mjs:870 is `notes: notesOf[i].length`. The JSDoc at :830-834 gives the reason (one record per batch, and a lagged read logs the turn of the batch before). The test's duplicate note at the old :1811 is gone, and test/metrics.test.js:1829 "each turn-note record counts" expects 2 for an equal `turn` with a different `ts`. The rule is also written into CONTEXT:50. The D19 text is `docs-keeper` work in PLAN step 9.
+- Minor 1 (CONTEXT:59 `resume-gate.mjs`): closed. CONTEXT:60 now says that only `runningAgents()` moved onto `subagentTranscript()`, which matches scripts/lib/metrics-log.mjs:108. It also says `resume-gate.mjs` keeps its own lookup and names it a follow-up candidate. CONTEXT:30, "same derivation as", still holds, because the derived path is the same.
+- Minor 2 (PLAN:26 unticked): closed. It is ticked in 4b48fff.
+- Minor 3 (ADR quote without "(mark an unfinished row)"): closed. ADR-0032:13 now quotes the text of scripts/lib/turn-budget.mjs:85 word for word.
+- Minor 4 (`docs/codemie/` untracked): closed for the branch. No commit in `git log main..HEAD --name-only` names a `docs/codemie` path (grep exit 1). The file is still untracked in the working tree, so phase commits keep using `git add` by path.
+
+### Hand-off checks
+- The batch-id rule reads only `tool_use_id` strings. The hook reads `input.tool_calls` only through `c?.tool_use_id`, filtered to strings (turn-budget.mjs:40-41). `runTurns()` compares them with `tools[].id` of the slim records (transcript-usage.mjs:191, :417-419). The `turn-note` record keeps its 5 keys, and the hook logs no id and no `tool_response`. The test "a batch not yet on disk counts" pins this: an on-disk id placed inside `tool_input` and `tool_response` does not make the batch count as on disk, and neither SENTINEL nor any `-tu<n>` id reaches stdout or the event log. Met.
+- `agentRuns()` stays the only split rule. Its only callers are `runTurns()` (transcript-usage.mjs:412) and `threadTurns()` (pipeline-metrics.mjs:842). pipeline-metrics.mjs:722 is the context-block resume count that existed before this change. No new split was added. Met.
+- The new tests pin the rule. These mutations go red:
+  - Dropping the `+1` fails test/hooks-turn-budget.test.js:264 (the threshold batch, the 60-turn batch, the `K <= 3` edge, the resume).
+  - Always adding 1 fails :311.
+  - Counting one turn per call fails the parallel case at :264.
+  - Reading a nested id fails the nested case at :264.
+  - Accepting a non-string id or a non-array `tool_calls` fails :333.
+  - Going back to the `Set` dedupe fails test/metrics.test.js:1829.
+  - One detail is not pinned: the "of that run" scope of the id lookup, versus the whole file. A `tool_use` id is unique per request, so the scope cannot change a result. This is not a finding.
+- Gates, run by the reviewer: `npm test` passed 19 files and 331 tests, exit 0 (`.pipeline/logs/rereview-npm-test.log`). `npm run lint` ended with 0 errors and 2 warnings, exit 0 (`.pipeline/logs/rereview-lint.log`). Both warnings are `no-console` in the gitignored `.pipeline/verify/build-verify-workbooks.mjs`, as in the first review.
+- Language: the added lines of `git diff f34af18..HEAD` contain no Cyrillic. The CHANGELOG top section (2026-11-13) has lines for steps 8a, 8b and 8c. STATE `Now` still names check 4 as next, and the orchestrator moves it at the phase 5 commit.
+
+### Blocking count
+0. All three Important and all four Minor findings are closed. Two parts move to PLAN step 9 as planned: the D19 and data-flow wording ("exact or one high", one note per record), and the `resume-gate.mjs` follow-up candidate. The PLAN phase 5 criterion "REVIEW.md has zero blocking findings" holds and is ticked.
+
+### Verdict
+ready to commit

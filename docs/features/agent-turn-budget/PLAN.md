@@ -31,7 +31,7 @@ Contract rule: no step changes the OData model; `metadata.xml` and the `$metadat
 - [x] Hook cost over 20 runs: a main-thread input at most 0.3 s median, a subagent input on the 11 MB #10 transcript at most 0.5 s median, verified by `VERIFICATION.md` check 3
 
 ### Phase 5: review
-- [ ] `REVIEW.md` has zero blocking findings, verified by `REVIEW.md`
+- [x] `REVIEW.md` has zero blocking findings, verified by `REVIEW.md`
 - [x] A batch whose request is not yet in the agent file counts as its turn, so a lagged read at the threshold notes, verified by `test/hooks-turn-budget.test.js` "a batch not yet on disk counts"
 - [x] A batch whose `tool_use_id` is in the agent file adds no turn, verified by `test/hooks-turn-budget.test.js` "a batch on disk counts once"
 - [x] An input without a `tool_calls[].tool_use_id` string counts the file alone, verified by `test/hooks-turn-budget.test.js` "no batch ids counts the file"

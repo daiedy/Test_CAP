@@ -5,7 +5,7 @@ tags: [products, draft, edit]
 code:
   - srv/catalog-service.cds
   - app/products/annotations/Products.cds
-verified: 1d1f813ca4b00860
+verified: 2efadbabc93caf3d
 ---
 
 # Edit, save, keep or discard a draft

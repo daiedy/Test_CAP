@@ -312,6 +312,7 @@ sap.ui.define(
         iSeeTheStoredValue: function (sLabel, vValue) {
           return editControl(this, sLabel)
             .mustBeVisible(false)
+            .mustBeEnabled(false)
             .has(function (oControl) {
               return sameValue(storedValue(oControl), vValue) && hasNoPendingChanges(oControl);
             })
@@ -344,6 +345,55 @@ sap.ui.define(
             })
             .description("The field '" + sLabel + "' shows the tokens " + aNames.join(', '))
             .execute();
+        },
+        // The label of a field carries the required marker or not (R8: from the assignment).
+        iSeeTheLabelRequired: function (sLabel, bRequired) {
+          return OpaBuilder.create(this)
+            .hasType('sap.m.Label')
+            .hasId(IN_FRAGMENT)
+            .hasProperties({ text: sLabel, required: bRequired })
+            .description(
+              "The Details label '" + sLabel + "' is " + (bRequired ? 'required' : 'not required')
+            )
+            .execute();
+        },
+        // The edit control of a field is enabled or disabled (R12: a dependent row). The JourneyRunner
+        // runs with autoWait, which matches enabled controls only: mustBeEnabled(false) lifts that.
+        iSeeTheFieldEnabled: function (sLabel, bEnabled) {
+          return editControl(this, sLabel)
+            .mustBeEnabled(false)
+            .hasProperties({ enabled: bEnabled })
+            .description(
+              "The Details field '" + sLabel + "' is " + (bEnabled ? 'enabled' : 'disabled')
+            )
+            .execute();
+        },
+        // The placeholder of the edit control and, when given, its description (the unit, R10).
+        iSeeThePlaceholder: function (sLabel, sText, sDescription) {
+          const mProperties = { placeholder: sText };
+          if (sDescription !== undefined) {
+            mProperties.description = sDescription;
+          }
+          return editControl(this, sLabel)
+            .mustBeEnabled(false)
+            .hasProperties(mProperties)
+            .description("The Details field '" + sLabel + "' shows the placeholder '" + sText + "'")
+            .execute();
+        },
+        // A message toast with this text is shown (a sap.m.MessageToast is DOM only, no control).
+        iSeeTheToast: function (sText) {
+          return this.waitFor({
+            check: function () {
+              const aToasts = Opa5.getWindow().document.querySelectorAll('.sapMMessageToast');
+              return Array.prototype.some.call(aToasts, function (oToast) {
+                return oToast.textContent === sText;
+              });
+            },
+            success: function () {
+              Opa5.assert.ok(true, "The toast '" + sText + "' is shown");
+            },
+            errorMessage: "No toast '" + sText + "' is shown",
+          });
         },
         // Save was refused on the client: the message popover opened with the error of the field.
         iSeeSaveBlockedBy: function (sText) {

@@ -59,7 +59,8 @@ export const VALID_ROWS = [
  * 3 missing name, 4 stock -1, 5 unknown category, 6 non-numeric price, 7 duplicate of the
  * seeded product "Yoga Mat" (different case, surrounding spaces), 8 missing subcategory,
  * 9 subcategory of another category (ADR-0021 amendment 4). Row 5 keeps a KITCHEN subcategory, so
- * it is also reported as a subcategory of another category than "NOPE" (measured).
+ * it is also reported as a subcategory of another category than "NOPE" (measured). Every row in
+ * stock carries a description, so each row fails for its one reason only (R6, ADR-0028).
  */
 export const INVALID_ROWS = [
   [
@@ -75,11 +76,11 @@ export const INVALID_ROWS = [
   ],
   [null, 'Row without a name', 10, 'USD', 1, 'KITCHEN', 'APPLIANCES', null, null],
   ['Import Negative Stock', null, 10, 'USD', -1, 'KITCHEN', 'APPLIANCES', null, null],
-  ['Import Unknown Category', null, 10, 'USD', 1, 'NOPE', 'APPLIANCES', null, null],
-  ['Import Bad Price', null, 'abc', 'USD', 1, 'KITCHEN', 'APPLIANCES', null, null],
-  ['  yoga MAT ', null, 10, 'USD', 1, 'SPORTS', 'FITNESS', null, null],
-  ['Import No Subcategory', null, 10, 'USD', 1, 'KITCHEN', null, null, null],
-  ['Import Lamp In Kitchen', null, 10, 'USD', 1, 'KITCHEN', 'LIGHTING', null, null],
+  ['Import Unknown Category', 'Unknown category', 10, 'USD', 1, 'NOPE', 'APPLIANCES', null, null],
+  ['Import Bad Price', 'Bad price', 'abc', 'USD', 1, 'KITCHEN', 'APPLIANCES', null, null],
+  ['  yoga MAT ', 'Duplicate name', 10, 'USD', 1, 'SPORTS', 'FITNESS', null, null],
+  ['Import No Subcategory', 'No subcategory', 10, 'USD', 1, 'KITCHEN', null, null, null],
+  ['Import Lamp In Kitchen', 'Lamp in a kitchen', 10, 'USD', 1, 'KITCHEN', 'LIGHTING', null, null],
 ];
 
 /**
@@ -91,7 +92,8 @@ export const INVALID_ROWS = [
 export function generatedRow(i, overrides = {}) {
   const row = {
     name: `Bulk Product ${String(i).padStart(4, '0')}`,
-    description: null,
+    // In stock, so a description is required (R6, ADR-0028 decision 4).
+    description: 'Generated product of the bulk import tests',
     price: 1.5,
     currency: 'USD',
     stock: 1,

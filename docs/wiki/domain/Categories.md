@@ -5,7 +5,7 @@ tags: [category, domain, code-list]
 code:
   - db/schema.cds
   - srv/annotations/Categories.cds
-verified: aed00709548302f9
+verified: b28c2cb8048b33ba
 ---
 
 # Categories

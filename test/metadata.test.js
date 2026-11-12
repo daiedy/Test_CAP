@@ -477,4 +477,80 @@ describe('OData contract of CatalogService', () => {
       cds.compile.to.edmx(withProtocol, options)
     );
   });
+
+  // products-validations, ADR-0028 decisions 1, 2, 4, 5, 8-11: format and range rules reach the
+  // contract as Validation terms (the closed lower bound 0.01 of price as a plain Validation.Minimum
+  // without Validation.Exclusive, which Fiori Elements ignores: amendment A, D1), the rule
+  // elements of the products and the details as properties and navigation properties, the R6
+  // marker as the If/Gt Common.FieldControl on Products/description (7 Mandatory while stock > 0,
+  // else 3 Optional) and the R4 control as the currency code list: CodeList.CurrencyCodes on the
+  // entity container and Common.UnitSpecificScale (Path minorUnit) on Currencies/code.
+  it('declares the validation vocabulary, the detail rule elements, the conditional field control and the currency code list', async () => {
+    const { status, data } = await test.get('/odata/v4/catalog/$metadata', {
+      headers: { 'Accept-Language': 'en' },
+    });
+    expect(status).toBe(200);
+    // The EDMX is pretty-printed, so compare without the whitespace between the tags.
+    const compact = data.replace(/>\s+</g, '><');
+    const price = annotationsOf(compact, 'CatalogService.Products/price');
+    expect(price).toContain('<Annotation Term="Validation.Minimum" Float="0.01"/>');
+    expect(price).not.toContain('Validation.Exclusive');
+    expect(annotationsOf(compact, 'CatalogService.Products/name')).toContain(
+      '<Annotation Term="Validation.Pattern" String="^\\s*\\S.+\\S\\s*$"/>'
+    );
+    expect(annotationsOf(compact, 'CatalogService.Products/imageUrl')).toContain(
+      '<Annotation Term="Validation.Pattern" String="^https://\\S+$"/>'
+    );
+
+    // Each element inside its own entity type.
+    const entityType = (name) => {
+      const found = compact.match(new RegExp(`<EntityType Name="${name}">.*?</EntityType>`));
+      expect(found, name).not.toBeNull();
+      return found[0];
+    };
+    expect(entityType('Products')).toContain(
+      '<NavigationProperty Name="namesakes" Type="Collection(CatalogService.Products)"/>'
+    );
+    const attributes = entityType('DetailAttributes');
+    expect(attributes).toContain(
+      '<NavigationProperty Name="atLeast" Type="CatalogService.DetailAttributes">'
+    );
+    expect(attributes).toContain(
+      '<NavigationProperty Name="enabledBy" Type="Collection(CatalogService.DetailListValues)" Partner="enables"/>'
+    );
+    expect(entityType('DetailListValues')).toContain(
+      '<NavigationProperty Name="enables" Type="CatalogService.DetailAttributes" Partner="enabledBy">'
+    );
+    const assignments = entityType('SubcategoryAttributes');
+    for (const property of [
+      '<Property Name="required" Type="Edm.Boolean"/>',
+      '<Property Name="minValue" Type="Edm.Decimal" Precision="15" Scale="3"/>',
+      '<Property Name="maxValue" Type="Edm.Decimal" Precision="15" Scale="3"/>',
+    ]) {
+      expect(assignments).toContain(property);
+    }
+
+    // R6: the required marker of the description follows the stock on the client.
+    const description = annotationsOf(compact, 'CatalogService.Products/description');
+    expect(description).toContain(
+      '<Annotation Term="Common.FieldControl">' +
+        '<If><Gt><Path>stock</Path><Int>0</Int></Gt><Int>7</Int><Int>3</Int></If>' +
+        '</Annotation>'
+    );
+    // Exactly one FieldControl on the description, the dynamic one.
+    expect(description.match(/Term="Common\.FieldControl"/g) ?? []).toHaveLength(1);
+
+    // R4 control: the Fiori currency type reads the minor units from the currency code list.
+    expect(annotationsOf(compact, 'CatalogService.EntityContainer')).toContain(
+      '<Annotation Term="CodeList.CurrencyCodes">' +
+        '<Record Type="CodeList.CodeListSource">' +
+        '<PropertyValue Property="CollectionPath" String="Currencies"/>' +
+        '<PropertyValue Property="Url" String="./$metadata"/>' +
+        '</Record>' +
+        '</Annotation>'
+    );
+    expect(annotationsOf(compact, 'CatalogService.Currencies/code')).toContain(
+      '<Annotation Term="Common.UnitSpecificScale" Path="minorUnit"/>'
+    );
+  });
 });

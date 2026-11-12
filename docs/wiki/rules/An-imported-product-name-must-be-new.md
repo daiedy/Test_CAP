@@ -12,7 +12,7 @@ elements: []
 sources:
   - docs/decisions/ADR-0021-products-excel-import.md
   - docs/features/products-excel-upload/SUMMARY.md
-verified: 1d1391d18bdf4588
+verified: 512f69e0a5e30e73
 ---
 
 # An imported product name must be new

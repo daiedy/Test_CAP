@@ -1,9 +1,9 @@
 ---
 title: A price is above zero
-summary: A price will have to be above zero, so a free product is refused.
+summary: A price has to be above zero, so a free product is refused.
 tags: [products, price, range]
 id: BR-PRODUCTS-011
-status: planned
+status: active
 since: 2026-10-14
 aliases: [R3]
 code:
@@ -14,14 +14,14 @@ messages: [PRODUCTS_PRICE_POSITIVE]
 elements: [Products.price]
 sources:
   - docs/decisions/ADR-0028-validation-toolkit.md
-verified: e0d6b58590ac81a7
+verified: 1481ff0feae3a5a0
 ---
 
 # A price is above zero
 
 ## Rule
 
-Once #10 is implemented, the price must be greater than zero. Zero will no longer be accepted; the upper bound of 99,999,999.99 stays.
+The price must be at least 0.01, the smallest amount the price column holds with its two decimals, so 0 and negative prices are refused; the upper bound of 99,999,999.99 stays.
 
 ## Why
 
@@ -29,11 +29,11 @@ A catalog has no free products, so a price of 0 is a data entry mistake. This ti
 
 ## Where it fires
 
-This rule is planned with #10 and is not in the code yet. What the user will see:
+What the user sees:
 
-- Object Page, in a draft: the price field will refuse 0 on the client at once, with the framework's own text and without a request to the server, because the open lower bound reaches the field as an exclusive minimum. The text that appears is recorded in the browser proof of #10.
-- Save, or a direct write through the API: a price of 0 will be refused with HTTP 400 and a message that says the price must be above zero.
-- Excel import: a row with a price of 0 will be reported with its row number and the column (see [Every imported row follows the rules of a product](Every-imported-row-follows-the-rules-of-a-product.md)).
+- Object Page, in a draft: the price field refuses 0 on the client at once, with the framework text "Enter a number with a minimum value of 0.01" and without a request to the server. The bound is written closed at 0.01 because Fiori Elements ignores an open (exclusive) bound on the client; the user accepted this on 2026-11-12 (ADR-0028 amendment A).
+- Save, or a direct write through the API: a price of 0 is refused with HTTP 400 and the message "Enter a price greater than 0."; an API value between 0 and 0.01 (for example 0.005) is refused too.
+- Excel import: a row with a price of 0 is reported with its row number and the column (see [Every imported row follows the rules of a product](Every-imported-row-follows-the-rules-of-a-product.md)).
 
 See also:
 
@@ -44,4 +44,5 @@ See also:
 
 | Date | Change | Source |
 |---|---|---|
-| 2026-10-14 | Planned: the rule was approved in the specification of #10 (alias R3) and is not implemented yet. | [ADR-0028](../../decisions/ADR-0028-validation-toolkit.md) |
+| 2026-10-14 | Planned: the rule was approved in the specification of #10 (alias R3). | [ADR-0028](../../decisions/ADR-0028-validation-toolkit.md) |
+| 2026-11-12 | Implemented and verified in `en` and `ru` (alias R3). | [Feature summary](../../features/products-validations/SUMMARY.md), [ADR-0028](../../decisions/ADR-0028-validation-toolkit.md) |

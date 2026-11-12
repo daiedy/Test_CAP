@@ -20,6 +20,7 @@ paths:
 - Rows a test creates are deleted in a per-`it` `afterEach`, not only at the end of the `describe`, so a red assertion leaves no rows that shift the counts of later tests.
 - A hook or script test runs the hook from `createSandbox()` of `test/fixtures/hook-sandbox.mjs` (a realpath temp git repository with copies of `scripts/`, `PIPELINE_ALLOW_PROTECTED` and `PIPELINE_SKIP_GATE` unset), never the live `scripts/` of the repo: a live hook writes the real `.pipeline/`, and the session's exemption answers instead of the guard. A protected path appears only inside a file the test writes, never in Bash command text next to a write, or the Bash guard denies the probe.
 - A criterion that names verbs gets one `it` per verb (`POST`, `PATCH`, `DELETE`; top-level and through the root separately): lean draft treats them differently (TESTING "cds 10 specifics"). A matcher or report reader in `scripts/` gets one `it` per syntax its JSDoc promises and one for the crash path (an exit code without a report is a failure, not an empty result).
+- A mutation proof mutates every branch of the rule under test: a fallback branch ("else the highest") needs a fixture that reaches it; safety cases behind an allow-on-error `try/catch` and denied-attempt fixtures as in TESTING "Context-hygiene hooks".
 - The metadata snapshot is updated only with `npx vitest -u`, with the reason recorded in `docs/CHANGELOG.md`.
 - Templates: `templates/service.test.js`, `templates/metadata.test.js`.
 

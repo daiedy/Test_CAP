@@ -1,7 +1,6 @@
 sap.ui.define(
     [
         "sap/base/Log",
-        "sap/ui/core/library",
         "sap/ui/core/Item",
         "sap/ui/core/Messaging",
         "sap/ui/core/message/ControlMessageProcessor",
@@ -9,17 +8,16 @@ sap.ui.define(
         "sap/ui/core/message/MessageType",
         "sap/ui/layout/form/ColumnElementData",
         "sap/ui/layout/form/FormElement",
-        "sap/ui/model/odata/type/Decimal",
         "sap/m/ComboBox",
         "sap/m/Input",
         "sap/m/Label",
         "sap/m/MultiComboBox",
-        "sap/m/Text"
+        "sap/m/Text",
+        "products/ext/fragment/DetailsRules"
     ],
     // eslint-disable-next-line max-params, max-statements -- one parameter per UI5 class the factory creates, one statement per named function of the section module (ADR-0027 decision 5)
     function (
         Log,
-        coreLibrary,
         Item,
         Messaging,
         ControlMessageProcessor,
@@ -27,12 +25,12 @@ sap.ui.define(
         MessageType,
         ColumnElementData,
         FormElement,
-        Decimal,
         ComboBox,
         Input,
         Label,
         MultiComboBox,
-        Text
+        Text,
+        DetailsRules
     ) {
         "use strict";
 
@@ -40,6 +38,8 @@ sap.ui.define(
          * Module of the custom section "Details" (ADR-0027 decision 5 and its amendment "Browser proof of the
          * fragment"): a factory builds one form element per detail row of the product by the attribute's value
          * type; the fragment names no attribute. Rows come from the server in `position` order (no client sorter).
+         * The row rules (counter, type settings, required marker, range hint, dependency on a list value) are the
+         * pure functions of `DetailsRules.js`; this module applies them to the controls (ADR-0028 decisions 5, 8, 10).
          */
 
         /** Custom data key that marks the fragment controls this module looks up (root, form, counter, noAttributes). */
@@ -50,20 +50,12 @@ sap.ui.define(
         const VALUE_CODE = "value_code";
         /** Aggregation of the multi combo box that holds the row's own `selections` binding (not rendered). */
         const SELECTIONS = "dependents";
-        /** Precision of `ProductDetails.numberValue` (Decimal(15, 3)). */
-        const PRECISION = 15;
         /** No-break space between a value and its unit, so they never wrap apart (SCREENS "Fields per value type"). */
         const NBSP = String.fromCharCode(0xa0);
         /** i18n key of the error of a list field whose text matches no item (SCREENS "Value states" row 5). */
         const NOT_IN_LIST = "ProductsObjectPage.details.valueNotInList";
         /** Log component of this module. */
         const LOG_COMPONENT = "products.ext.fragment.DetailsForm";
-        /** Value states of the counter (the `ValueState` enum of the core library, no string literals). */
-        const ValueState = coreLibrary.ValueState;
-        /** Icon of the counter when every field is filled. */
-        const ICON_COMPLETE = "sap-icon://sys-enter-2";
-        /** Icon of the counter while a field is empty. */
-        const ICON_INCOMPLETE = "sap-icon://alert";
         /** The `details` list binding keeps its identity across Object Page contexts, so its handler is attached once. */
         const wiredBindings = new WeakSet();
         /** Draft product contexts whose rows were re-read after Edit (ruling B2); a new Edit brings a new context. */
@@ -93,62 +85,6 @@ sap.ui.define(
          */
         function isDisplayMode(editable) {
             return editable !== true;
-        }
-
-        /**
-         * Whether a detail row counts as filled for the counter (SCREENS "Title, counter, layout").
-         *
-         * @param {object} row detail row as read by the section binding, with `attribute`
-         * @param {number} [selectionCount] number of selections of a MULTI_LIST row, read from its own binding
-         * @returns {boolean} TEXT non-empty after trimming, a number, a list value, or at least one selection
-         */
-        function isFilled(row, selectionCount) {
-            const type = row && row.attribute ? row.attribute.valueType_code : undefined;
-            switch (type) {
-                case "TEXT":
-                    return typeof row.textValue === "string" && row.textValue.trim() !== "";
-                case "INTEGER":
-                case "DECIMAL":
-                    return row.numberValue !== null && row.numberValue !== undefined && row.numberValue !== "";
-                case "LIST":
-                    return Boolean(row[LIST_VALUE]);
-                case "MULTI_LIST":
-                    return typeof selectionCount === "number" && selectionCount > 0;
-                default:
-                    return false;
-            }
-        }
-
-        /**
-         * Counts filled rows.
-         *
-         * @param {object[]} rows detail rows of one product
-         * @param {Array<number|undefined>} [selectionCounts] selections per row, same order as `rows`
-         * @returns {{filled: number, total: number}} N and M of "Filled N of M"
-         */
-        function countFilled(rows, selectionCounts) {
-            const list = Array.isArray(rows) ? rows : [];
-            const counts = Array.isArray(selectionCounts) ? selectionCounts : [];
-            const filled = list.filter(function (row, index) {
-                return isFilled(row, counts[index]);
-            });
-            return { filled: filled.length, total: list.length };
-        }
-
-        /**
-         * Semantic state and icon of the counter "Filled N of M" (SCREENS "Title, counter, layout", variant A):
-         * Success with a check mark when every field is filled, Warning with an alert sign otherwise, 0 filled
-         * included. With no fields (M = 0) the counter is hidden; the result is then Warning.
-         *
-         * @param {number} filled N, the number of filled fields
-         * @param {number} total M, the number of fields shown
-         * @returns {{state: sap.ui.core.ValueState, icon: string}} `state` and `icon` of the `sap.m.ObjectStatus`
-         */
-        function counterStatus(filled, total) {
-            if (total > 0 && filled === total) {
-                return { state: ValueState.Success, icon: ICON_COMPLETE };
-            }
-            return { state: ValueState.Warning, icon: ICON_INCOMPLETE };
         }
 
         /**
@@ -263,28 +199,6 @@ sap.ui.define(
         }
 
         /**
-         * Format options and constraints of the per-row Decimal type (PLAN D19): the attribute's scale for
-         * DECIMAL, 0 for INTEGER, bounds from the attribute; no padding zeros in the display ("15", not "15.0").
-         *
-         * @param {object} attribute `valueType_code`, `scale`, `minValue`, `maxValue` of the row's attribute
-         * @returns {{formatOptions: object, constraints: object}} settings for `sap.ui.model.odata.type.Decimal`
-         */
-        function numberTypeSettings(attribute) {
-            const scale = attribute.valueType_code === "DECIMAL" ? Number(attribute.scale) || 0 : 0;
-            const constraints = { precision: PRECISION, scale: scale };
-            if (attribute.minValue !== null && attribute.minValue !== undefined) {
-                constraints.minimum = String(attribute.minValue);
-            }
-            if (attribute.maxValue !== null && attribute.maxValue !== undefined) {
-                constraints.maximum = String(attribute.maxValue);
-            }
-            return {
-                formatOptions: { minFractionDigits: 0, maxFractionDigits: scale, preserveDecimals: false },
-                constraints: constraints
-            };
-        }
-
-        /**
          * Rejection handler of a request whose failure the OData model has already put into the message model.
          *
          * @param {Error} error the rejection reason
@@ -354,36 +268,57 @@ sap.ui.define(
         }
 
         /**
-         * Points the label of a row at its edit control in edit mode only (PLAN criterion 70): in display mode the
-         * edit control is not rendered, so the label falls back to the form element's first field, the display
-         * text, which writes no `for` attribute (`sap.m.Text` has no labelable HTML element).
+         * The edit control of a row's form element: the field that is not the display text.
          *
          * @param {sap.ui.layout.form.FormElement} formElement the form element of a row
-         * @param {boolean} editable whether the page is in edit mode
+         * @returns {sap.ui.core.Control|undefined} the input, combo box or multi combo box; none for an unknown type
          */
-        function applyLabelTarget(formElement, editable) {
-            const label = formElement.getLabel();
-            const edit = formElement.getFields().find(function (field) {
+        function editControlOf(formElement) {
+            return formElement.getFields().find(function (field) {
                 return !field.isA("sap.m.Text");
             });
+        }
+
+        /**
+         * Points the label of a row at its edit control in edit mode only (PLAN criterion 70 of #9): in display mode
+         * the edit control is not rendered, so the label falls back to the form element's first field, the display
+         * text, which writes no `for` attribute (`sap.m.Text` has no labelable HTML element). The required marker
+         * of a detail the subcategory requires (R8) follows the same rule: edit mode only, like the Fiori elements
+         * sections; through `labelFor` the input gets `aria-required` (SCREENS "Accessibility").
+         *
+         * @param {sap.ui.layout.form.FormElement} formElement the form element of a row, with its row context
+         * @param {boolean} editable whether the page is in edit mode
+         * @param {string} [subcategoryCode] the product's `subcategory_code`
+         */
+        function applyLabelTarget(formElement, editable, subcategoryCode) {
+            const label = formElement.getLabel();
+            const edit = editControlOf(formElement);
+            const context = formElement.getBindingContext();
             if (label && typeof label.setLabelFor === "function") {
                 label.setLabelFor(editable && edit ? edit : null);
+                label.setRequired(
+                    editable &&
+                        Boolean(edit) &&
+                        DetailsRules.isRequired(context ? context.getObject() : null, subcategoryCode)
+                );
             }
         }
 
         /**
-         * Applies the label targets of all rows for the current edit state.
+         * Applies the label targets and required markers of all rows for the current edit state.
          *
          * @param {sap.m.VBox} root the fragment root
          */
         function applyLabelTargets(root) {
             const container = getContainer(root);
+            const product = root.getBindingContext();
             if (!container) {
                 return;
             }
             const editable = isEditableRoot(root);
+            const subcategoryCode = product ? product.getProperty("subcategory_code") : undefined;
             container.getFormElements().forEach(function (formElement) {
-                applyLabelTarget(formElement, editable);
+                applyLabelTarget(formElement, editable, subcategoryCode);
             });
         }
 
@@ -516,12 +451,31 @@ sap.ui.define(
          * @returns {number|undefined} the count, undefined for other value types
          */
         function selectionCountOf(formElement) {
-            const multiComboBox = formElement
-                ? formElement.getFields().find(function (field) {
-                      return field.isA("sap.m.MultiComboBox");
-                  })
-                : undefined;
-            return multiComboBox ? selectedCodes(multiComboBox).length : undefined;
+            const edit = formElement ? editControlOf(formElement) : undefined;
+            return edit && edit.isA("sap.m.MultiComboBox") ? selectedCodes(edit).length : undefined;
+        }
+
+        /**
+         * Selected codes of the product's MULTI_LIST rows by attribute code (R12): the codes of a row whose
+         * selections are read, null for a row whose selections are still loading (`isLengthFinal` false before the
+         * first read and after a reset), so a dependent row is never cleared on a partial read.
+         *
+         * @param {sap.ui.layout.form.FormElement[]} formElements the form elements of the rows
+         * @returns {{[attributeCode: string]: (string[]|null)}} codes per attribute code of a MULTI_LIST row
+         */
+        function selectedCodesByAttribute(formElements) {
+            const selected = {};
+            formElements.forEach(function (formElement) {
+                const edit = editControlOf(formElement);
+                const context = formElement.getBindingContext();
+                const code = context ? context.getProperty("attribute/code") : undefined;
+                if (!code || !edit || !edit.isA("sap.m.MultiComboBox")) {
+                    return;
+                }
+                const binding = edit.getBinding(SELECTIONS);
+                selected[code] = binding && binding.isLengthFinal() ? selectedCodes(edit) : null;
+            });
+            return selected;
         }
 
         /**
@@ -544,17 +498,23 @@ sap.ui.define(
             const rows = contexts.map(function (context) {
                 return context.getObject();
             });
-            const selectionCounts = contexts.map(function (context) {
-                return selectionCountOf(
-                    formElements.find(function (formElement) {
-                        return formElement.getBindingContext() === context;
-                    })
-                );
+            const elements = contexts.map(function (context) {
+                return formElements.find(function (formElement) {
+                    return formElement.getBindingContext() === context;
+                });
             });
-            const result = countFilled(rows, selectionCounts);
+            const selectionCounts = elements.map(function (formElement) {
+                return selectionCountOf(formElement);
+            });
+            // a disabled dependent row (R12) is outside N and M (SCREENS Q7)
+            const enabledFlags = elements.map(function (formElement) {
+                const edit = formElement ? editControlOf(formElement) : undefined;
+                return !edit || edit.getEnabled();
+            });
+            const result = DetailsRules.countFilled(rows, selectionCounts, enabledFlags);
             const product = root.getBindingContext();
             const hasSubcategory = Boolean(product && product.getProperty("subcategory_code"));
-            const status = counterStatus(result.filled, result.total);
+            const status = DetailsRules.counterStatus(result.filled, result.total);
             counter.setVisible(hasSubcategory && result.total > 0);
             counter.setState(status.state);
             counter.setIcon(status.icon);
@@ -574,6 +534,103 @@ sap.ui.define(
             if (root) {
                 updateCounter(root);
             }
+        }
+
+        /**
+         * Clears the value a disabled dependent row still holds (R12, SCREENS Q6): writes null through the row
+         * context (the form's proven write path), reads the draft messages as after any write, and names the clear in
+         * a toast, which screen readers read through its `role="alert"`. Called only for a filled row of a draft in
+         * edit mode.
+         *
+         * @param {sap.m.Input} input the edit control of the dependent row
+         * @param {string} detail localized name of the row's attribute
+         * @param {string} enabler localized name of the attribute whose values enable it
+         */
+        function clearDependentValue(input, detail, enabler) {
+            const context = input.getBindingContext();
+            const binding = input.getBinding("value");
+            if (!context || !binding) {
+                return;
+            }
+            context.setProperty(binding.getPath(), null).then(function () {
+                updateCounterFrom(input);
+            }, ignoreReported);
+            requestDraftMessages(input);
+            withBundle(input, function (bundle) {
+                DetailsRules.announceCleared(DetailsRules.clearedText(bundle, detail, enabler));
+            });
+        }
+
+        /**
+         * Applies the state of one text or number row: enabled unless it depends on a list value none of which is
+         * selected in the product (R12); the placeholder, the range hint of the row's bounds (R10, SCREENS Q5) while
+         * enabled and "Depends on {0}" while disabled; on a draft in edit mode, the clear of a value a disabled row
+         * still holds, once the enabling selections are read. A dependent LIST or MULTI_LIST row is not handled
+         * (none is seeded and the server guard covers `numberValue` only).
+         *
+         * @param {sap.ui.layout.form.FormElement} formElement the form element of a row
+         * @param {{rows: Array<object|null>, subcategoryCode: string, selected: object, clearable: boolean}} state
+         *   the product's rows, its subcategory, the selected codes by attribute (`selectedCodesByAttribute`) and
+         *   whether a clear may be written
+         */
+        function applyRowState(formElement, state) {
+            const edit = editControlOf(formElement);
+            const context = formElement.getBindingContext();
+            const row = context ? context.getObject() : null;
+            if (!edit || !edit.isA("sap.m.Input") || !row || !row.attribute) {
+                return;
+            }
+            const type = row.attribute.valueType_code;
+            const settings =
+                type === "INTEGER" || type === "DECIMAL"
+                    ? DetailsRules.numberTypeSettings(row.attribute, DetailsRules.assignmentOf(row, state.subcategoryCode))
+                    : null;
+            const enabled = DetailsRules.isEnabled(row, state.selected);
+            const enabler = DetailsRules.enablerName(row, state.rows);
+            edit.setEnabled(enabled);
+            if (
+                !enabled &&
+                state.clearable &&
+                DetailsRules.enablersLoaded(row, state.selected) &&
+                DetailsRules.isFilled(row)
+            ) {
+                clearDependentValue(edit, row.attribute.name, enabler);
+            }
+            withBundle(edit, function (bundle) {
+                if (!edit.isDestroyed()) {
+                    edit.setPlaceholder(
+                        enabled ? DetailsRules.rangeHint(settings, bundle) : DetailsRules.dependsOnHint(bundle, enabler)
+                    );
+                }
+            });
+        }
+
+        /**
+         * Applies the row states of all rows (`applyRowState`) from the product's subcategory, its rows and the
+         * selections of its MULTI_LIST rows; runs when the rows are built and after every change of a row's
+         * selections (`syncSelections`, which follows `selectionFinish`), SCREENS "R12".
+         *
+         * @param {sap.m.VBox} root the fragment root
+         */
+        function applyRowStates(root) {
+            const container = getContainer(root);
+            const product = root.getBindingContext();
+            if (!container || !product) {
+                return;
+            }
+            const formElements = container.getFormElements();
+            const state = {
+                rows: formElements.map(function (formElement) {
+                    const context = formElement.getBindingContext();
+                    return context ? context.getObject() : null;
+                }),
+                subcategoryCode: product.getProperty("subcategory_code"),
+                selected: selectedCodesByAttribute(formElements),
+                clearable: isEditableRoot(root) && product.getProperty("IsActiveEntity") === false
+            };
+            formElements.forEach(function (formElement) {
+                applyRowState(formElement, state);
+            });
         }
 
         /**
@@ -718,8 +775,10 @@ sap.ui.define(
         }
 
         /**
-         * Aligns a multi combo box, its display text and the counter with the row's selections (ruling B7).
-         * Runs on every change of the selections binding; the keys are set only when they differ.
+         * Aligns a multi combo box, its display text, the rows that depend on its values (R12) and the counter with
+         * the row's selections (ruling B7). Runs on every change of the selections binding, so after the first read,
+         * after each `selectionFinish` write and after a failed write restores a selection; the keys are set only
+         * when they differ.
          *
          * @param {sap.m.MultiComboBox} multiComboBox the edit control of a MULTI_LIST row
          */
@@ -736,10 +795,14 @@ sap.ui.define(
             }
             const display = displayOf(multiComboBox);
             const row = multiComboBox.getBindingContext();
+            const root = findRoot(multiComboBox);
             if (display) {
                 display.setText(joinSelectedNames(row ? row.getObject("attribute/values") : [], codes));
             }
-            updateCounterFrom(multiComboBox);
+            if (root) {
+                applyRowStates(root);
+                updateCounter(root);
+            }
         }
 
         /**
@@ -866,7 +929,9 @@ sap.ui.define(
         }
 
         /**
-         * Edit control of an INTEGER or DECIMAL row, with the per-row Decimal type (browser proof B5).
+         * Edit control of an INTEGER or DECIMAL row, with the per-row Decimal type (browser proof B5); its bounds
+         * are the assignment's where it has them (R10), and `applyRowState` sets the placeholder and the enabled
+         * state.
          *
          * @param {string} id id of the form element
          * @param {string} unit unit of the attribute, or ""
@@ -875,7 +940,7 @@ sap.ui.define(
          */
         function createNumberInput(id, unit, settings) {
             return new Input(id + "-edit", {
-                value: { path: "numberValue", type: new Decimal(settings.formatOptions, settings.constraints) },
+                value: { path: "numberValue", type: DetailsRules.createNumberType(settings) },
                 textAlign: "End",
                 description: unit,
                 fieldWidth: unit ? "75%" : "100%",
@@ -946,9 +1011,10 @@ sap.ui.define(
          *
          * @param {string} id id of the form element
          * @param {object} attribute the row's attribute
+         * @param {object|null} assignment the attribute's assignment to the product's subcategory (`assignmentOf`)
          * @returns {{edit: (sap.ui.core.Control|undefined), display: sap.m.Text}} the controls of the row
          */
-        function createFields(id, attribute) {
+        function createFields(id, attribute, assignment) {
             const unit = attribute.unit || "";
             switch (attribute.valueType_code) {
                 case "TEXT":
@@ -969,12 +1035,12 @@ sap.ui.define(
                     };
                 case "INTEGER":
                 case "DECIMAL": {
-                    const settings = numberTypeSettings(attribute);
+                    const settings = DetailsRules.numberTypeSettings(attribute, assignment);
                     return {
                         edit: createNumberInput(id, unit, settings),
                         display: createDisplay(id, {
                             path: "numberValue",
-                            type: new Decimal(settings.formatOptions, settings.constraints),
+                            type: DetailsRules.createNumberType(settings),
                             /**
                              * Display text of an INTEGER or DECIMAL row.
                              *
@@ -1007,11 +1073,12 @@ sap.ui.define(
          *
          * @param {string} id id of the form element
          * @param {sap.ui.model.odata.v4.Context} context the row context
+         * @param {string} [subcategoryCode] the product's `subcategory_code`, whose assignment gives the bounds (R10)
          * @returns {sap.ui.layout.form.FormElement} the form element of the row
          */
-        function createFormElement(id, context) {
+        function createFormElement(id, context, subcategoryCode) {
             const row = context.getObject() || {};
-            const fields = createFields(id, row.attribute || {});
+            const fields = createFields(id, row.attribute || {}, DetailsRules.assignmentOf(row, subcategoryCode));
             return new FormElement(id, {
                 label: new Label(id + "-label", { text: { path: "attribute/name" } }),
                 fields: fields.edit ? [fields.display, fields.edit] : [fields.display]
@@ -1023,16 +1090,20 @@ sap.ui.define(
          * row that stays is kept with its controls, its focus, its own `selections` binding and its list message;
          * a new row gets a new element, a row that is gone loses its element, and the order follows the server's
          * `position` order. A list binding with a factory would destroy and rebuild every element on each change
-         * of the binding (`ManagedObject#updateAggregation` without extended change detection).
+         * of the binding (`ManagedObject#updateAggregation` without extended change detection). The row states
+         * (enabled, placeholder) follow at once (`applyRowStates`); a subcategory change rebuilds the rows, so the
+         * bounds and the required markers always belong to the product's current subcategory.
          *
          * @param {sap.m.VBox} root the fragment root
          */
         function syncFormElements(root) {
             const container = getContainer(root);
             const binding = getRowsBinding(root);
+            const product = root.getBindingContext();
             if (!container || !binding) {
                 return;
             }
+            const subcategoryCode = product ? product.getProperty("subcategory_code") : undefined;
             const contexts = binding.getCurrentContexts().filter(Boolean);
             container.getFormElements().forEach(function (formElement) {
                 if (!contexts.includes(formElement.getBindingContext())) {
@@ -1047,15 +1118,16 @@ sap.ui.define(
                 });
                 if (!formElement) {
                     rowSerial += 1;
-                    formElement = createFormElement(container.getId() + "-row" + rowSerial, context);
+                    formElement = createFormElement(container.getId() + "-row" + rowSerial, context, subcategoryCode);
                     formElement.setBindingContext(context);
-                    applyLabelTarget(formElement, editable);
+                    applyLabelTarget(formElement, editable, subcategoryCode);
                     container.insertFormElement(formElement, index);
                 } else if (container.indexOfFormElement(formElement) !== index) {
                     container.removeFormElement(formElement);
                     container.insertFormElement(formElement, index);
                 }
             });
+            applyRowStates(root);
         }
 
         /**
@@ -1113,11 +1185,12 @@ sap.ui.define(
             updateCounter(root);
         }
 
+        // the row rules of DetailsRules.js are re-exported, so the section has one public module (QUnit, PATTERNS)
         return {
             onModelContextChange: onModelContextChange,
-            isFilled: isFilled,
-            countFilled: countFilled,
-            counterStatus: counterStatus,
+            isFilled: DetailsRules.isFilled,
+            countFilled: DetailsRules.countFilled,
+            counterStatus: DetailsRules.counterStatus,
             joinValueAndUnit: joinValueAndUnit,
             listValueName: listValueName,
             joinSelectedNames: joinSelectedNames,
@@ -1125,7 +1198,13 @@ sap.ui.define(
             resolveListText: resolveListText,
             isDifferentKey: isDifferentKey,
             isDraftWithSubcategory: isDraftWithSubcategory,
-            numberTypeSettings: numberTypeSettings
+            numberTypeSettings: DetailsRules.numberTypeSettings,
+            assignmentOf: DetailsRules.assignmentOf,
+            isRequired: DetailsRules.isRequired,
+            isEnabled: DetailsRules.isEnabled,
+            enablersLoaded: DetailsRules.enablersLoaded,
+            enablerName: DetailsRules.enablerName,
+            rangeHint: DetailsRules.rangeHint
         };
     }
 );

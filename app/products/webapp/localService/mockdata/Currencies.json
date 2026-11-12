@@ -1,0 +1,23 @@
+[
+  {
+    "code": "EUR",
+    "name": "Euro",
+    "descr": "European Euro",
+    "symbol": null,
+    "minorUnit": 2
+  },
+  {
+    "code": "JPY",
+    "name": "Yen",
+    "descr": "Japanese Yen",
+    "symbol": null,
+    "minorUnit": 0
+  },
+  {
+    "code": "USD",
+    "name": "US Dollar",
+    "descr": "United States Dollar",
+    "symbol": null,
+    "minorUnit": 2
+  }
+]

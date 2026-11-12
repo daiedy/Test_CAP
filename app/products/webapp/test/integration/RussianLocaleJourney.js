@@ -10,13 +10,16 @@
 // products-details-section (plan revision 2, PLAN step 9): the Details form of Coffee Maker shows the
 // Russian section title, counter and field labels and the ru decimal comma (the unit stays Latin);
 // Wireless Mouse shows its Connectivity values with their Russian names (pages/ProductDetailsForm.js).
-sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts', './data/RatingTexts', './data/ImportTexts', './data/SubcategoryTexts', './data/DetailAttributeTexts'], function (
+// products-validations (PLAN step 7): on Wireless Earbuds (129.99 USD) the change of the currency to
+// JPY shows the R4 message of the server on the Price field in Russian; the draft is discarded.
+sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts', './data/RatingTexts', './data/ImportTexts', './data/SubcategoryTexts', './data/DetailAttributeTexts', './data/ValidationTexts'], function (
   opaTest,
   CategoryTexts,
   RatingTexts,
   ImportTexts,
   SubcategoryTexts,
-  DetailAttributeTexts
+  DetailAttributeTexts,
+  ValidationTexts
 ) {
   'use strict';
 
@@ -115,6 +118,30 @@ sap.ui.define(['sap/ui/test/opaQunit', './data/CategoryTexts', './data/RatingTex
         detailNames.CONNECTIVITY,
         valueNames.BLUETOOTH_5_0 + ', ' + valueNames.WIRELESS_2_4_GHZ
       );
+    });
+
+    opaTest('The Object Page shows a validation message in Russian', function (Given, When, Then) {
+      const pricingStock = { section: 'PricingStock' };
+      Given.iTearDownMyApp();
+      Given.iStartMyApp('products-display', { 'sap-ui-language': 'ru' });
+      When.onTheProductsList.onTable().iPressRow({ name: 'Wireless Earbuds' });
+      Then.onTheProductsObjectPage.iSeeThisPage();
+      When.onTheProductsObjectPage.onHeader().iExecuteEdit();
+      Then.onTheProductsObjectPage.iSeeObjectPageInEditMode();
+      When.onTheProductsObjectPage.onForm(pricingStock).iChangeField({ property: 'currency_code' }, 'JPY');
+      Then.onTheProductsObjectPage.onForm(pricingStock).iCheckField({ property: 'price' }, undefined, {
+        valueState: 'Error',
+        valueStateText: ValidationTexts.messages.priceMinorUnit.ru,
+      });
+      // Discard the draft in English: iConfirmCancel matches the English text of the discard button
+      // (measured: it never matches the Russian popover). The own draft opens in edit mode.
+      Given.iTearDownMyApp();
+      Given.iStartMyApp('products-display');
+      When.onTheProductsList.onTable().iPressRow({ name: 'Wireless Earbuds' });
+      Then.onTheProductsObjectPage.iSeeObjectPageInEditMode();
+      When.onTheProductsObjectPage.onFooter().iExecuteCancel();
+      When.onTheProductsObjectPage.onFooter().iConfirmCancel();
+      Then.onTheProductsObjectPage.iSeeObjectPageInDisplayMode();
     });
 
     opaTest('Teardown', function (Given) {

@@ -1,9 +1,9 @@
 ---
 title: A detail that the subcategory requires must be filled
-summary: A subcategory will be able to mark an attribute as required, and a product of that subcategory will need a value for it.
+summary: A subcategory can mark an attribute as required, and a product of that subcategory needs a value for it.
 tags: [products, details, required, subcategory]
 id: BR-DETAILS-007
-status: planned
+status: active
 since: 2026-10-14
 aliases: [R8]
 code:
@@ -16,14 +16,14 @@ messages: [PRODUCTS_DETAIL_VALUE_REQUIRED]
 elements: [ProductDetails.textValue, ProductDetails.numberValue, ProductDetails.listValue, ProductDetails.attribute]
 sources:
   - docs/decisions/ADR-0028-validation-toolkit.md
-verified: 19aaf72ce352aa0d
+verified: b45ba9e346fe24a0
 ---
 
 # A detail that the subcategory requires must be filled
 
 ## Rule
 
-Once #10 is implemented, the assignment of an attribute to a subcategory will say whether the attribute is required. A product of that subcategory must then have a value for the attribute, whatever its value type. Seven assignments are required: the screen size of laptops, the resolution of mice (DPI), the maximum load of seating, the power and the capacity of appliances, the capacity of drinkware and the thickness of fitness equipment.
+The assignment of an attribute to a subcategory says whether the attribute is required. A product of that subcategory must then have a value for the attribute, whatever its value type. Seven assignments are required: the screen size of laptops, the resolution of mice (DPI), the maximum load of seating, the power and the capacity of appliances, the capacity of drinkware and the thickness of fitness equipment.
 
 ## Why
 
@@ -31,11 +31,11 @@ A laptop with no screen size or a chair with no maximum load is an incomplete li
 
 ## Where it fires
 
-This rule is planned with #10 and is not in the code yet. What the user will see:
+What the user sees:
 
-- Object Page, before anything is wrong: the label of a required detail will carry the required marker. The Details form has no client check of its own, so an empty required line is reported by the server.
-- Object Page, in a draft: after a required value is cleared, a message will appear on the line. At Save, an empty required line stops the Save with the same message.
-- Direct write through the API: a required detail with no value will be refused with HTTP 400. A required multi-choice attribute is checked too, but no seeded assignment uses one.
+- Object Page, before anything is wrong: the label of a required detail carries the required marker. The Details form has no client check of its own, so an empty required line is reported by the server.
+- Object Page, in a draft: after a required value is cleared, a message appears on the line. At Save, an empty required line stops the Save with the same message.
+- Direct write through the API: a required detail with no value is refused with HTTP 400. A required multi-choice attribute is checked too, but no seeded assignment uses one.
 - Excel import: not affected, because the import creates products without detail rows.
 
 See also:
@@ -47,4 +47,5 @@ See also:
 
 | Date | Change | Source |
 |---|---|---|
-| 2026-10-14 | Planned: the rule was approved in the specification of #10 (alias R8) and is not implemented yet. | [ADR-0028](../../decisions/ADR-0028-validation-toolkit.md) |
+| 2026-10-14 | Planned: the rule was approved in the specification of #10 (alias R8). | [ADR-0028](../../decisions/ADR-0028-validation-toolkit.md) |
+| 2026-11-12 | Implemented and verified in `en` and `ru` (alias R8). | [Feature summary](../../features/products-validations/SUMMARY.md), [ADR-0028](../../decisions/ADR-0028-validation-toolkit.md) |

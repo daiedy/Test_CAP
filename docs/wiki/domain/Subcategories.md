@@ -5,7 +5,7 @@ tags: [subcategory, category, domain, code-list]
 code:
   - db/schema.cds
   - srv/annotations/Subcategories.cds
-verified: d97c40c842ed3b79
+verified: 6d84cea942c1484e
 ---
 
 # Subcategories

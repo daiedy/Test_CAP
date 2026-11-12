@@ -15,7 +15,7 @@ sources:
   - docs/features/products-draft-edit/SUMMARY.md
   - docs/decisions/ADR-0015-list-report-draft-marker.md
   - docs/features/products-draft-marker/SUMMARY.md
-verified: 1d1f813ca4b00860
+verified: 2efadbabc93caf3d
 ---
 
 # A product is created and changed through a draft

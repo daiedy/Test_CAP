@@ -9,4 +9,5 @@
 - [Turn budget and write-first](feedback_turn_budget.md) — 60-turn limit; write the test file first, no exploration, minimal hook runs, report added npm test time
 - [Wiki temp projects](project-wiki-temp-projects.md) — check-docs-fresh --fix needs scripts/ + node_modules; export spawns strip GITHUB_*; mutation `from` must not hit a comment
 - [Live hook verification](project-live-hook-verification.md) — own agent id and transcript, brief record 3, read gate deny/pass/ledger, PIPELINE_LANG=en for metrics CLI
+- [Import tests placement](project-import-tests-placement.md) — action-level import tests go in catalog-service even if a plan names products-import; new rules break hidden writers; regenerate only the invalid xlsx
 - [Hook test mutation check](hook-test-mutation-check.md) — scratch-root table harness (-t, JSON reporter, control run); mutate an allow-on-error rule to deny; offline npx eslint = cheap lint finding

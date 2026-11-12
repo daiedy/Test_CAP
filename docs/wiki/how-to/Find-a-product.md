@@ -5,7 +5,7 @@ tags: [products, list, filter]
 code:
   - app/products/annotations/Products.cds
   - app/products/webapp/ext/fragment/RatingRangeFilter.fragment.xml
-verified: 5ff37f05d760e0d3
+verified: 80b8e04b843498e5
 ---
 
 # Find a product

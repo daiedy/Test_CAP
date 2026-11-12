@@ -83,9 +83,9 @@ The decisions that shape the product, in plain language. The [decisions folder](
 - [An imported product name must be new](rules/An-imported-product-name-must-be-new.md)
 - [Every imported row follows the rules of a product](rules/Every-imported-row-follows-the-rules-of-a-product.md)
 
-### Planned with #10
+### Validation rules of #10
 
-These rules are approved and not in the code yet; each page says what the user will see.
+These rules are active since 2026-11-12 (feature products-validations); each page says what the user sees.
 
 - [A product name has at least three characters](rules/A-product-name-has-at-least-three-characters.md)
 - [A product name is unique in the catalog](rules/A-product-name-is-unique-in-the-catalog.md)

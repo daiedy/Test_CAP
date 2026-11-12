@@ -6,6 +6,9 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
   <edmx:Reference Uri="https://oasis-tcs.github.io/odata-vocabularies/vocabularies/Org.OData.Capabilities.V1.xml">
     <edmx:Include Alias="Capabilities" Namespace="Org.OData.Capabilities.V1"/>
   </edmx:Reference>
+  <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/CodeList.xml">
+    <edmx:Include Alias="CodeList" Namespace="com.sap.vocabularies.CodeList.v1"/>
+  </edmx:Reference>
   <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/Common.xml">
     <edmx:Include Alias="Common" Namespace="com.sap.vocabularies.Common.v1"/>
   </edmx:Reference>
@@ -37,6 +40,7 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
           <NavigationPropertyBinding Path="category" Target="Categories"/>
           <NavigationPropertyBinding Path="subcategory" Target="Subcategories"/>
           <NavigationPropertyBinding Path="details" Target="ProductDetails"/>
+          <NavigationPropertyBinding Path="namesakes" Target="Products"/>
           <NavigationPropertyBinding Path="SiblingEntity" Target="Products"/>
         </EntitySet>
         <EntitySet Name="ProductDetails" EntityType="CatalogService.ProductDetails">
@@ -62,8 +66,10 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         </EntitySet>
         <EntitySet Name="DetailAttributes" EntityType="CatalogService.DetailAttributes">
           <NavigationPropertyBinding Path="valueType" Target="DetailValueTypes"/>
+          <NavigationPropertyBinding Path="atLeast" Target="DetailAttributes"/>
           <NavigationPropertyBinding Path="subcategories" Target="SubcategoryAttributes"/>
           <NavigationPropertyBinding Path="values" Target="DetailListValues"/>
+          <NavigationPropertyBinding Path="enabledBy" Target="DetailListValues"/>
           <NavigationPropertyBinding Path="texts" Target="DetailAttributes_texts"/>
           <NavigationPropertyBinding Path="localized" Target="DetailAttributes_texts"/>
         </EntitySet>
@@ -73,6 +79,7 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         </EntitySet>
         <EntitySet Name="DetailListValues" EntityType="CatalogService.DetailListValues">
           <NavigationPropertyBinding Path="attribute" Target="DetailAttributes"/>
+          <NavigationPropertyBinding Path="enables" Target="DetailAttributes"/>
           <NavigationPropertyBinding Path="texts" Target="DetailListValues_texts"/>
           <NavigationPropertyBinding Path="localized" Target="DetailListValues_texts"/>
         </EntitySet>
@@ -123,6 +130,7 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         <NavigationProperty Name="details" Type="Collection(CatalogService.ProductDetails)" Partner="product">
           <OnDelete Action="Cascade"/>
         </NavigationProperty>
+        <NavigationProperty Name="namesakes" Type="Collection(CatalogService.Products)"/>
         <Property Name="IsActiveEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="true"/>
         <Property Name="HasActiveEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="false"/>
         <Property Name="HasDraftEntity" Type="Edm.Boolean" Nullable="false" DefaultValue="false"/>
@@ -229,8 +237,13 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         <Property Name="minValue" Type="Edm.Decimal" Precision="15" Scale="3"/>
         <Property Name="maxValue" Type="Edm.Decimal" Precision="15" Scale="3"/>
         <Property Name="scale" Type="Edm.Int32"/>
+        <NavigationProperty Name="atLeast" Type="CatalogService.DetailAttributes">
+          <ReferentialConstraint Property="atLeast_code" ReferencedProperty="code"/>
+        </NavigationProperty>
+        <Property Name="atLeast_code" Type="Edm.String" MaxLength="30"/>
         <NavigationProperty Name="subcategories" Type="Collection(CatalogService.SubcategoryAttributes)" Partner="attribute"/>
         <NavigationProperty Name="values" Type="Collection(CatalogService.DetailListValues)" Partner="attribute"/>
+        <NavigationProperty Name="enabledBy" Type="Collection(CatalogService.DetailListValues)" Partner="enables"/>
         <NavigationProperty Name="texts" Type="Collection(CatalogService.DetailAttributes_texts)">
           <OnDelete Action="Cascade"/>
         </NavigationProperty>
@@ -264,6 +277,10 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         </NavigationProperty>
         <Property Name="attribute_code" Type="Edm.String" MaxLength="30"/>
         <Property Name="position" Type="Edm.Int32"/>
+        <NavigationProperty Name="enables" Type="CatalogService.DetailAttributes" Partner="enabledBy">
+          <ReferentialConstraint Property="enables_code" ReferencedProperty="code"/>
+        </NavigationProperty>
+        <Property Name="enables_code" Type="Edm.String" MaxLength="30"/>
         <NavigationProperty Name="texts" Type="Collection(CatalogService.DetailListValues_texts)">
           <OnDelete Action="Cascade"/>
         </NavigationProperty>
@@ -285,6 +302,9 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         </NavigationProperty>
         <Property Name="attribute_code" Type="Edm.String" MaxLength="30"/>
         <Property Name="position" Type="Edm.Int32"/>
+        <Property Name="required" Type="Edm.Boolean"/>
+        <Property Name="minValue" Type="Edm.Decimal" Precision="15" Scale="3"/>
+        <Property Name="maxValue" Type="Edm.Decimal" Precision="15" Scale="3"/>
       </EntityType>
       <EntityType Name="Permissions">
         <Key>
@@ -428,6 +448,12 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
       <Annotation Term="Core.SchemaVersion" String="1.0.0"/>
       <Annotations Target="CatalogService.EntityContainer">
         <Annotation Term="Core.Description" String="Reads and maintains catalog products with their categories, subcategories and typed details, and imports products from an Excel workbook."/>
+        <Annotation Term="CodeList.CurrencyCodes">
+          <Record Type="CodeList.CodeListSource">
+            <PropertyValue Property="CollectionPath" String="Currencies"/>
+            <PropertyValue Property="Url" String="./$metadata"/>
+          </Record>
+        </Annotation>
         <Annotation Term="Common.AddressViaNavigationPath" Bool="true"/>
         <Annotation Term="Common.Label" String="Product Catalog API"/>
       </Annotations>
@@ -747,9 +773,20 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
       <Annotations Target="CatalogService.Products/name">
         <Annotation Term="Common.Label" String="{i18n>Products.name}"/>
         <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
+        <Annotation Term="Validation.Pattern" String="^\\s*\\S.+\\S\\s*$"/>
         <Annotation Term="Core.Description" String="Name of the product."/>
       </Annotations>
       <Annotations Target="CatalogService.Products/description">
+        <Annotation Term="Common.FieldControl">
+          <If>
+            <Gt>
+              <Path>stock</Path>
+              <Int>0</Int>
+            </Gt>
+            <Int>7</Int>
+            <Int>3</Int>
+          </If>
+        </Annotation>
         <Annotation Term="Common.Label" String="{i18n>Products.description}"/>
         <Annotation Term="Core.Description" String="Free-text description of the product."/>
       </Annotations>
@@ -757,7 +794,7 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         <Annotation Term="Measures.ISOCurrency" Path="currency_code"/>
         <Annotation Term="Common.Label" String="{i18n>Products.price}"/>
         <Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
-        <Annotation Term="Validation.Minimum" Int="0"/>
+        <Annotation Term="Validation.Minimum" Float="0.01"/>
         <Annotation Term="Validation.Maximum" Float="99999999.99"/>
         <Annotation Term="Core.Description" String="Unit price of the product in its currency."/>
       </Annotations>
@@ -873,11 +910,16 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
       </Annotations>
       <Annotations Target="CatalogService.Products/imageUrl">
         <Annotation Term="Common.Label" String="{i18n>Products.imageUrl}"/>
+        <Annotation Term="Validation.Pattern" String="^https://\\S+$"/>
         <Annotation Term="Core.Description" String="URL of the product image."/>
       </Annotations>
       <Annotations Target="CatalogService.Products/details">
         <Annotation Term="Common.Label" String="{i18n>Products.details}"/>
         <Annotation Term="Core.Description" String="Detail rows of the product, one per attribute assigned to its subcategory."/>
+      </Annotations>
+      <Annotations Target="CatalogService.Products/namesakes">
+        <Annotation Term="Common.Label" String="{i18n>Products.namesakes}"/>
+        <Annotation Term="Core.Description" String="Other products whose name equals this product's name, ignoring case and leading or trailing spaces."/>
       </Annotations>
       <Annotations Target="CatalogService.Products/IsActiveEntity">
         <Annotation Term="UI.Hidden" Bool="true"/>
@@ -1350,11 +1392,39 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         <Annotation Term="Common.Label" String="{i18n>DetailAttributes.scale}"/>
         <Annotation Term="Core.Description" String="Number of decimal places of a DECIMAL attribute."/>
       </Annotations>
+      <Annotations Target="CatalogService.DetailAttributes/atLeast">
+        <Annotation Term="Common.Label" String="{i18n>DetailAttributes.atLeast}"/>
+        <Annotation Term="Core.Description" String="Attribute whose value in the same product this attribute's value must not be below."/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailAttributes/atLeast_code">
+        <Annotation Term="Common.Label" String="{i18n>DetailAttributes.atLeast}"/>
+        <Annotation Term="Common.ValueList">
+          <Record Type="Common.ValueListType">
+            <PropertyValue Property="Label" String="{i18n>DetailAttributes.atLeast}"/>
+            <PropertyValue Property="CollectionPath" String="DetailAttributes"/>
+            <PropertyValue Property="Parameters">
+              <Collection>
+                <Record Type="Common.ValueListParameterInOut">
+                  <PropertyValue Property="LocalDataProperty" PropertyPath="atLeast_code"/>
+                  <PropertyValue Property="ValueListProperty" String="code"/>
+                </Record>
+                <Record Type="Common.ValueListParameterDisplayOnly">
+                  <PropertyValue Property="ValueListProperty" String="name"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+      </Annotations>
       <Annotations Target="CatalogService.DetailAttributes/subcategories">
         <Annotation Term="Core.Description" String="Subcategory assignments of the attribute."/>
       </Annotations>
       <Annotations Target="CatalogService.DetailAttributes/values">
         <Annotation Term="Core.Description" String="Allowed values of a LIST or MULTI_LIST attribute."/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailAttributes/enabledBy">
+        <Annotation Term="Common.Label" String="{i18n>DetailAttributes.enabledBy}"/>
+        <Annotation Term="Core.Description" String="List values that make the attribute available when one of them is selected in the same product."/>
       </Annotations>
       <Annotations Target="CatalogService.DetailValueTypes">
         <Annotation Term="UI.Identification">
@@ -1465,6 +1535,30 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         <Annotation Term="Common.Label" String="{i18n>DetailListValues.position}"/>
         <Annotation Term="Core.Description" String="Display order of the value in its attribute's list."/>
       </Annotations>
+      <Annotations Target="CatalogService.DetailListValues/enables">
+        <Annotation Term="Common.Label" String="{i18n>DetailListValues.enables}"/>
+        <Annotation Term="Core.Description" String="Attribute that becomes available in a product when this value is selected."/>
+      </Annotations>
+      <Annotations Target="CatalogService.DetailListValues/enables_code">
+        <Annotation Term="Common.Label" String="{i18n>DetailListValues.enables}"/>
+        <Annotation Term="Common.ValueList">
+          <Record Type="Common.ValueListType">
+            <PropertyValue Property="Label" String="{i18n>DetailListValues.enables}"/>
+            <PropertyValue Property="CollectionPath" String="DetailAttributes"/>
+            <PropertyValue Property="Parameters">
+              <Collection>
+                <Record Type="Common.ValueListParameterInOut">
+                  <PropertyValue Property="LocalDataProperty" PropertyPath="enables_code"/>
+                  <PropertyValue Property="ValueListProperty" String="code"/>
+                </Record>
+                <Record Type="Common.ValueListParameterDisplayOnly">
+                  <PropertyValue Property="ValueListProperty" String="name"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+      </Annotations>
       <Annotations Target="CatalogService.SubcategoryAttributes">
         <Annotation Term="Core.Description" String="Detail attribute assigned to a subcategory, with the position of its field in a product's details."/>
       </Annotations>
@@ -1540,6 +1634,18 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         <Annotation Term="Common.Label" String="{i18n>SubcategoryAttributes.position}"/>
         <Annotation Term="Core.Description" String="Position of the attribute's field in a product's details."/>
       </Annotations>
+      <Annotations Target="CatalogService.SubcategoryAttributes/required">
+        <Annotation Term="Common.Label" String="{i18n>SubcategoryAttributes.required}"/>
+        <Annotation Term="Core.Description" String="Whether a product of the subcategory needs a value for the attribute."/>
+      </Annotations>
+      <Annotations Target="CatalogService.SubcategoryAttributes/minValue">
+        <Annotation Term="Common.Label" String="{i18n>SubcategoryAttributes.minValue}"/>
+        <Annotation Term="Core.Description" String="Lowest allowed value of the attribute for products of the subcategory, inside the attribute's own minimum."/>
+      </Annotations>
+      <Annotations Target="CatalogService.SubcategoryAttributes/maxValue">
+        <Annotation Term="Common.Label" String="{i18n>SubcategoryAttributes.maxValue}"/>
+        <Annotation Term="Core.Description" String="Highest allowed value of the attribute for products of the subcategory, inside the attribute's own maximum."/>
+      </Annotations>
       <Annotations Target="CatalogService.Permissions">
         <Annotation Term="Core.Description" String="Tells the caller whether the current user may change the catalog."/>
       </Annotations>
@@ -1574,6 +1680,7 @@ exports[`OData contract of CatalogService > matches the EDMX snapshot 1`] = `
         <Annotation Term="Common.Label" String="{i18n>Description}"/>
       </Annotations>
       <Annotations Target="CatalogService.Currencies/code">
+        <Annotation Term="Common.UnitSpecificScale" Path="minorUnit"/>
         <Annotation Term="Common.Text" Path="name"/>
         <Annotation Term="Common.Label" String="{i18n>CurrencyCode}"/>
       </Annotations>

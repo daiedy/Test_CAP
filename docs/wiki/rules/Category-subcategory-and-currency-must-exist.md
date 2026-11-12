@@ -17,7 +17,7 @@ sources:
   - docs/decisions/ADR-0010-code-list-codes.md
   - docs/features/products-subcategories/SUMMARY.md
   - docs/features/catalog-hygiene/SUMMARY.md
-verified: dbca884ae8598da1
+verified: 11076205bbd1b102
 ---
 
 # Category, subcategory and currency must exist

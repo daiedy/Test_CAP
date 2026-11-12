@@ -5,7 +5,7 @@ tags: [details, value-types, domain, code-list]
 code:
   - db/schema.cds
   - srv/annotations/DetailValueTypes.cds
-verified: 71d8a751eaa9d04e
+verified: 7f1f8ff9565a0cf4
 ---
 
 # Detail value types

@@ -12,7 +12,7 @@ elements: [ProductDetails.textValue]
 sources:
   - docs/decisions/ADR-0027-typed-product-details-form.md
   - docs/features/products-details-section/SUMMARY.md
-verified: 67cd0aade310debd
+verified: a74f7cd16ebfa442
 ---
 
 # A detail value matches the value type of its attribute

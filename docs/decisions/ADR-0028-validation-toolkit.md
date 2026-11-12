@@ -1,6 +1,6 @@
 # ADR-0028: Validation toolkit: custom texts, uniqueness, two-target constraints, conditional requirement, rules on detail rows, prevent before validate
 
-Date: 2026-10-13, amended 2026-10-14. Status: accepted (user, 2026-10-14, feature `products-validations`).
+Date: 2026-10-13, amended 2026-10-14 and 2026-11-12. Status: accepted (user, 2026-10-14, feature `products-validations`).
 <!-- On acceptance replace the whole Status sentence with the accepted form; never append to the proposed one. -->
 
 ## Context
@@ -23,6 +23,9 @@ Evidence: `docs/features/products-validations/research/validation-facts.md` (cap
 
 First application: feature `products-validations` (#10), rules R1-R6, R8 and R10-R13 of its `CONTEXT.md` (R7 not included, R9 and R14 rejected; approved 2026-10-14 with the currency code list as the R4 control and without a suggestion list for R13).
 
+## Amendment A: R3 as a closed bound (accepted by the user 2026-11-12, feature `products-validations`, phase 3 rework round 1)
+Decision 1 stands; its first application to R3 changes. Fiori Elements V4 (UI5 1.154.0) does not apply `Validation.Exclusive` on the client: `setUpConstraints` in `sap/fe/base/BindingToolkit` and `getTypeConfig` in `sap/fe/core/templating/UIFormatters` read only `Validation.Minimum` and `Validation.Maximum`, so the open bound `[(0), max]` gives the price field a `Decimal` part with `minimum: 0` and a price of `0` reaches the server (research section 9, measured in the browser). R3 is therefore `@assert.range: [0.01, 99999999.99]` with `@assert.range.message: 'PRODUCTS_PRICE_POSITIVE'` in `srv/annotations/Products.cds`: the EDMX carries `Validation.Minimum` 0.01 without `Validation.Exclusive` (`metadata.xml` 1783 to 1781 at phase 3) and the client refuses `0` with the UI5 text "Enter a number with a minimum value of 0.01" before any request, which is decision 11's preventing control. For `Decimal(15, 2)` the accepted set is unchanged; API values 0.001-0.009 are now refused. For later features: a lower bound the client must enforce is written closed at the type's smallest step when the scale allows it; an open bound still guards the server and the import but prevents nothing on a Fiori Elements form. The Consequences on `Validation.Exclusive` (+2 EDMX, "the client may apply `Validation.Exclusive`") describe the open bound, no longer R3.
+
 ## Alternatives
 | Option | Why rejected |
 |---|---|
@@ -44,6 +47,9 @@ First application: feature `products-validations` (#10), rules R1-R6, R8 and R10
 | Counting rule "at most N selections" (R14) | aggregates and subqueries are not allowed in `@assert`, `exists` cannot count; a handler would be the only way and the domain gives no reason |
 | Plain `String(30)` code columns instead of the associations `atLeast` and `enables` | +3 EDMX each instead of +28 (the generated `Common.ValueList` cannot be switched off per element, measured), but no foreign key and against PATTERNS "Reference to another entity" |
 | Client-only checks (UI5 type constraints, disabled controls) without the server branch | the server must guard the API (invariant 6, ADR-0027 split); the import and a direct `POST` bypass the form |
+| Amendment A: keep the open bound of R3 and accept the server message after leaving the field | the user chose the client refusal (2026-11-12, option B over A) |
+| Amendment A: hand-written `@Validation.Minimum: 0.01` in `app/products/annotations/` | the compiler keeps the generated `Validation.Exclusive` under it (the contract then says "greater than 0.01"); a semantic term in the presentation layer and a second way to state a range (invariants 4, 5) |
+| Amendment A: a custom price field fragment with a `Decimal` of `minimumExclusive` | replaces the Fiori Elements field (currency value help, side effects, field control, message handling) and needs a manifest change, for one bound an annotation can state |
 
 ## Consequences
 - `PATTERNS.md`: "Format or range check" gets the `.message` key and open bounds (decision 1); "Cross-field consistency check" gets the self-association uniqueness form (decision 2), the `error()` two-target and path-argument forms (decision 3) and the `$self` value compared inside an infix filter (decision 8); new rows "Conditionally required field" (decision 4), "Rule between two child rows" (decision 9) and "Dependent field as a control plus guard" (decision 10); "Typed attribute values" gets the required and bounds branches (decisions 5 and 8); "Bulk create from a file" gets "every root constraint needs a per-row pre-check" (decision 6); a note above the validation rows states decision 11 ("prevent before validate": name the control, keep the guard). Examples: `srv/annotations/Products.cds`, `srv/annotations/ProductDetails.cds`, `app/products/annotations/Products.cds`, `srv/lib/products-import.js`, `app/products/webapp/ext/fragment/DetailsForm.js`.

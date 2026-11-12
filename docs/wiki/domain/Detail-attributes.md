@@ -5,7 +5,7 @@ tags: [details, attributes, domain, code-list]
 code:
   - db/schema.cds
   - srv/annotations/DetailAttributes.cds
-verified: cf17b555eda7e9d6
+verified: 88b4a3696e7ddb33
 ---
 
 # Detail attributes
@@ -21,6 +21,8 @@ An attribute is a kind of fact about a product, such as Colour or Weight. One at
 - **Unit**: the unit of measure shown with the value, such as kg.
 - **Minimum**, **maximum**: the lowest and highest allowed number of a whole-number or decimal attribute.
 - **Scale**: the number of decimal places of a decimal attribute.
+- **Not below**: an attribute can name another attribute whose value in the same product it must not be below (Storage names Memory).
+- **Enabled by**: the list values (see [Detail list values](Detail-list-values.md)) that switch the attribute on (Battery Life is enabled by the wireless connectivity values).
 - **Subcategories**: where the attribute is offered; see [Subcategory attributes](Subcategory-attributes.md).
 - **Values**: the allowed choices of a list attribute; see [Detail list values](Detail-list-values.md).
 
@@ -28,9 +30,9 @@ An attribute is a kind of fact about a product, such as Colour or Weight. One at
 
 - [Code lists are readable by every signed-in user](../rules/Code-lists-are-readable-by-every-signed-in-user.md): the list is read-only for every role.
 - [A number detail stays within its bounds and is whole when required](../rules/A-number-detail-stays-within-its-bounds-and-is-whole-when-required.md): a number outside the minimum and maximum is refused.
-- [Storage is not below memory](../rules/Storage-is-not-below-memory.md) (planned with #10).
-- [Battery life is available only for a wireless device](../rules/Battery-life-is-available-only-for-a-wireless-device.md) (planned with #10).
-- [Memory is a power of two](../rules/Memory-is-a-power-of-two.md) (planned with #10).
+- [Storage is not below memory](../rules/Storage-is-not-below-memory.md) (BR-DETAILS-009).
+- [Battery life is available only for a wireless device](../rules/Battery-life-is-available-only-for-a-wireless-device.md) (BR-DETAILS-010).
+- [Memory is a power of two](../rules/Memory-is-a-power-of-two.md) (BR-DETAILS-011).
 
 ## Related
 

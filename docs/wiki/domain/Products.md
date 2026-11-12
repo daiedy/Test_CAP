@@ -5,7 +5,7 @@ tags: [products, domain]
 code:
   - db/schema.cds
   - srv/annotations/Products.cds
-verified: 5d108315b067bf1e
+verified: 3a5a3dd1b1064349
 ---
 
 # Products
@@ -17,11 +17,12 @@ A product is an item sold in the catalog. Everyone who may read the catalog sees
 ## Fields that matter
 
 - **Name**, **price**, **currency**, **stock**, **category** and **subcategory** are mandatory: a product without them cannot be saved.
-- **Price** is a money amount between 0 and 99999999.99. It is given in the product's **currency**, which is a code such as USD taken from the standard SAP list of currencies (ISO 4217). The catalog does not keep its own currency list: it reuses the SAP code list, which is read-only, and shows each currency with its name in the user's language.
+- **Price** is a money amount between 0.01 and 99999999.99, without decimals in a currency that has no minor units (such as JPY). It is given in the product's **currency**, which is a code such as USD taken from the standard SAP list of currencies (ISO 4217). The catalog does not keep its own currency list: it reuses the SAP code list, which is read-only, and shows each currency with its name in the user's language.
 - **Stock** is the number of units in stock, a whole number from 0 to 1000000.
 - **Rating** is optional, a whole number from 0 to 5.
 - **Category** and **subcategory** place the product in the catalog. The subcategory must belong to the category; see [Categories](Categories.md) and [Subcategories](Subcategories.md).
-- **Description** and **image URL** are optional free text.
+- **Name** has at least three characters and is unique in the catalog, ignoring capital letters and spaces at both ends.
+- **Description** is free text, required while the stock is above 0. **Image URL** is optional and, when given, starts with https and has no spaces.
 - **Details** are the typed facts of the product, one per attribute of its subcategory; see [Product details](Product-details.md).
 
 ## Rules
@@ -35,12 +36,12 @@ A product is an item sold in the catalog. Everyone who may read the catalog sees
 - [Changing the category clears a subcategory that no longer fits](../rules/Changing-the-category-clears-a-subcategory-that-no-longer-fits.md) (BR-PRODUCTS-007).
 - [A subcategory change must not leave details that do not fit](../rules/A-subcategory-change-must-not-leave-details-that-do-not-fit.md) (BR-PRODUCTS-008): a draft drops the rows with a warning, a direct write is refused.
 - [Viewers read, editors change](../rules/Viewers-read-editors-change.md) (BR-ACCESS-002): only a CatalogEditor changes a product.
-- [A product name has at least three characters](../rules/A-product-name-has-at-least-three-characters.md) (planned with #10).
-- [A product name is unique in the catalog](../rules/A-product-name-is-unique-in-the-catalog.md) (planned with #10).
-- [A price is above zero](../rules/A-price-is-above-zero.md) (planned with #10).
-- [A price in a currency without minor units has no decimals](../rules/A-price-in-a-currency-without-minor-units-has-no-decimals.md) (planned with #10).
-- [An image address uses https and has no spaces](../rules/An-image-address-uses-https-and-has-no-spaces.md) (planned with #10).
-- [A product in stock needs a description](../rules/A-product-in-stock-needs-a-description.md) (planned with #10).
+- [A product name has at least three characters](../rules/A-product-name-has-at-least-three-characters.md) (BR-PRODUCTS-009).
+- [A product name is unique in the catalog](../rules/A-product-name-is-unique-in-the-catalog.md) (BR-PRODUCTS-010).
+- [A price is above zero](../rules/A-price-is-above-zero.md) (BR-PRODUCTS-011).
+- [A price in a currency without minor units has no decimals](../rules/A-price-in-a-currency-without-minor-units-has-no-decimals.md) (BR-PRODUCTS-012).
+- [An image address uses https and has no spaces](../rules/An-image-address-uses-https-and-has-no-spaces.md) (BR-PRODUCTS-013).
+- [A product in stock needs a description](../rules/A-product-in-stock-needs-a-description.md) (BR-PRODUCTS-014).
 
 ## Related
 

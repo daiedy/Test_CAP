@@ -61,7 +61,9 @@
                      every side-effect request of the product (ODataContextBinding#requestSideEffects ends with
                      refreshDependentListBindingsWithoutCache), also after each DraftMessages read; with its own cache
                      the rows are refreshed only by a side effect that names details (#SubcategoryChanged, the module's
-                     Edit re-read of ruling B2) or read again for a new product context (Edit, Save, Discard) -->
+                     Edit re-read of ruling B2) or read again for a new product context (Edit, Save, Discard).
+                     The attribute brings its assignments (required marker R8, bounds R10; DetailsRules.assignmentOf picks
+                     the one of the product's subcategory) and the list values that enable it (R12, enabledBy), ADR-0028 -->
                 <form:FormContainer
                     id="detailsFormContainer"
                     dependents="{
@@ -69,7 +71,7 @@
                         parameters: {
                             $$ownRequest: true,
                             $select: 'ID,IsActiveEntity,position,textValue,numberValue,listValue_code',
-                            $expand: 'attribute($select=code,name,unit,valueType_code,minValue,maxValue,scale;$expand=values($select=code,name,position;$orderby=position))',
+                            $expand: 'attribute($select=code,name,unit,valueType_code,minValue,maxValue,scale;$expand=values($select=code,name,position;$orderby=position),subcategories($select=subcategory_code,required,minValue,maxValue),enabledBy($select=code,attribute_code))',
                             $orderby: 'position'
                         }
                     }"

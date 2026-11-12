@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-11-12
 - Branch: feature/products-validations
 - Feature: products-validations (#10)
-- Phase: 3: UI (gate green: ui5lint clean, `npm test` 310, `npm run test:ui` 97/97, `metadata.xml` 1783; autonomous gates)
-- Last commit: 732fdcf feat(app): products-validations ui
-- Next: rework round 1 (R3 closed bound 0.01, R12 criterion text, `Currencies.json`), then ui-verifier step 8; Dependabot PR #48 waits
+- Phase: 4: Verification (phase 3 and rework round 1 green: `npm test` 310, `test:ui` 97/97, `metadata.xml` 1781)
+- Last commit: 03ede92 fix: products-validations R3 closed price bound, mock currencies
+- Next: ui-verifier step 8, `VERIFICATION.md` V1-V24 en and ru; then reviewer step 9; Dependabot PR #48 waits
 
 ## Open debt
 

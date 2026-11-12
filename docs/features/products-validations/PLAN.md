@@ -58,7 +58,7 @@ Contract rule: a step that changes the OData model (`db/*.cds`, `srv/**/*.cds`, 
 - [x] `npm run test:ui` against `npx cds serve --in-memory --port 4004` is green and leaves no draft (about 68 `opaTest`s and 28 QUnit, actual figure in the gate record)
 
 ### Phase 4: verification
-- [ ] Verification: every SCREENS scenario (V1-V24) is reproduced in `en` and `ru` with screenshots in `VERIFICATION.md`, with every browser proof and the console check of step 8
+- [x] Verification: every SCREENS scenario (V1-V24) is reproduced in `en` and `ru` with screenshots in `VERIFICATION.md`, with every browser proof and the console check of step 8
 
 ### Phase 5: review
 - [ ] Review: zero blocking findings in `REVIEW.md`; no `@assert.unique` for a user-facing rule, no handler for a rule an annotation expresses, every catalogue rule names its preventing control or "none"

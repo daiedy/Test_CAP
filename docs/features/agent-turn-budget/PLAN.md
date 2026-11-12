@@ -40,14 +40,14 @@ Contract rule: no step changes the OData model; `metadata.xml` and the `$metadat
 - [x] The changed hook keeps the 0.3 s main-thread and 0.5 s 11 MB medians over 20 runs, verified by `VERIFICATION.md` check 3 re-run
 
 ### Phase 6: documentation
-- [ ] ADR-0032 accepted, PATTERNS row "Turn budget note", `docs/metrics/definitions.md` D19 and `data-flow.md` sections 2 and 4 updated, verified by `node scripts/check-docs-fresh.mjs`
-- [ ] `CLAUDE.md` hooks line, README "How the pipeline works" and `docs/images/pipeline-flow.svg` name the PostToolBatch hook, `test/prompt-budget.json` re-recorded, verified by `test/prompt-budget.test.js`
-- [ ] The ADR-0032 digest in `docs/wiki/decisions/Pipeline-decisions.md`, verified by `node scripts/wiki.mjs audit`
-- [ ] The RU and EN manual pages are republished with the same hook text as the README, verified by the orchestrator's step 9 note in `SUMMARY.md`
-- [ ] LESSONS 2026-11-13 entry closed, STATE, CHANGELOG and `SUMMARY.md` updated, verified by `node scripts/check-docs-fresh.mjs`
+- [x] ADR-0032 accepted, PATTERNS row "Turn budget note", `docs/metrics/definitions.md` D19 and `data-flow.md` sections 2 and 4 updated, verified by `node scripts/check-docs-fresh.mjs`
+- [x] `CLAUDE.md` hooks line, README "How the pipeline works" and `docs/images/pipeline-flow.svg` name the PostToolBatch hook, `test/prompt-budget.json` re-recorded, verified by `test/prompt-budget.test.js`
+- [x] The ADR-0032 digest in `docs/wiki/decisions/Pipeline-decisions.md`, verified by `node scripts/wiki.mjs audit`
+- [x] The RU and EN manual pages are republished with the same hook text as the README, verified by the orchestrator's step 9 note in `SUMMARY.md`
+- [x] LESSONS 2026-11-13 entry closed, STATE, CHANGELOG and `SUMMARY.md` updated, verified by `node scripts/check-docs-fresh.mjs`
 
 ### Every phase
-- [ ] `npm test` and `npm run lint` are green at every gate
+- [x] `npm test` and `npm run lint` are green at every gate
 
 ## Steps
 

@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-11-13
 - Branch: feature/agent-turn-budget
 - Feature: agent-turn-budget (#60)
-- Phase: 5: review (PLAN step 8)
-- Last commit: e2a933a fix(pipeline): agent-turn-budget review rework, batch ids complete the count
-- Next: VERIFICATION check 4 (step 8c), re-review of the fixed items; then docs and the RU/EN manual pages; `/feature #26`; Dependabot PR #48 waits
+- Phase: 6: documentation (PLAN step 9)
+- Last commit: 1403f35 docs: agent-turn-budget re-review, zero blocking findings
+- Next: the RU/EN manual pages; then close #60 and prune; `/feature #26`; Dependabot PR #48 waits
 
 ## Open debt
 
@@ -33,11 +33,13 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 | One `--force` of `metrics.mjs record` bypasses the duplicate and the `resumesAfterReport` refusals alike | Print the ratchet finding on a forced record | cap-backend-dev |
 | `post-edit.mjs` joins notes that together can exceed `HOOK_OUTPUT_MAX`; Claude Code then saves a file with a preview | Pass the joined text through `relay()` | cap-backend-dev |
 | The `brief` record has no current-phase field, so the card cannot tell a fallback brief | Add the field and show it on the card | architect |
+| A kept report `.pipeline/logs/report-<type>-<id>.md` is overwritten by a plain-text note written after the handback (387 bytes, #60) | Keep the handback report, append a later text end separately | cap-backend-dev |
+| `resume-gate.mjs` keeps its own transcript path lookup (#60 REVIEW Minor 1) | Use `subagentTranscript()` | cap-backend-dev |
 | Briefs and gates measured on #10: tool results 3,711.2K characters in 25 launches (#28: 2,597.4K in 21), 0 resumes (#28: 5), 0 compactions; Q4 `autoCompactWindow` waits | Decide Q4 from the card, `node scripts/metrics.mjs context products-validations` | user |
 
 ## What works
 
-- Backend on cds 10.2.2, Node 22: `npm run watch` (`cds watch`, port 4004), `npm run lint`, `npm run lint:js` (ESLint with the jsdoc rules), `npm test` (310 tests in 18 files: `test/catalog-service.test.js`, `test/metadata.test.js` with the `$metadata` snapshot, `test/products-import.test.js`, `test/api-docs.test.js`, `test/backlog.test.js`, `test/wiki.test.js`, `test/lockfile.test.js`, `test/doc-shapes.test.js`, `test/metrics.test.js`, `test/prompt-budget.test.js`, the hook tests `test/hooks-*.test.js`, and since #44 `test/feature-brief.test.js` and `test/hooks-context.test.js`), `npm run docs:registry`
+- Backend on cds 10.2.2, Node 22: `npm run watch` (`cds watch`, port 4004), `npm run lint`, `npm run lint:js` (ESLint with the jsdoc rules), `npm test` (331 tests in 19 files: `test/catalog-service.test.js`, `test/metadata.test.js` with the `$metadata` snapshot, `test/products-import.test.js`, `test/api-docs.test.js`, `test/backlog.test.js`, `test/wiki.test.js`, `test/lockfile.test.js`, `test/doc-shapes.test.js`, `test/metrics.test.js`, `test/prompt-budget.test.js`, the hook tests `test/hooks-*.test.js`, and since #44 `test/feature-brief.test.js` and `test/hooks-context.test.js`), `npm run docs:registry`
 - UI: `npm start` (proxy, :8080) and `npm run start-mock` in `app/products` both open the app from the FLP sandbox; `ui5lint` 0 problems; `npm run lint:js` (Fiori tools ESLint) 0 errors
 - Object Page editing of `Products` through drafts (ADR-0012): Edit, Save, Cancel with discard confirmation, Create and Delete on the List Report, Editing Status filter, draft lock across users
 - List Report row shows a draft/lock marker (ADR-0015, feature `products-draft-marker`): `Common.SemanticKey: [ name ]` renders a `sap.m.ObjectMarker` in the `Product Name` cell — text-only `Draft` for an own draft, icon-plus-text `LockedBy`/`UnsavedBy` for another user's draft; verified in `en` and `ru`, keyboard-reachable, with the Editing Status filter narrowing to the marked row

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg viewBox="0 0 1280 992" role="img" aria-label="Flow diagram of a task through the pipeline: eight phases in rows; the lead agent on the left, worker agents and what they deliver in the middle, further right what is checked before the next phase, in the right column the automatic checks and the moment they fire, including the brief at a worker's start, the read gate, the hand-over gate and the resume gate; a dashed loop returns defects and blocking findings to a fresh worker of phase 2 or 3" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 1280 1098" role="img" aria-label="Flow diagram of a task through the pipeline: eight phases in rows; the lead agent on the left, worker agents and what they deliver in the middle, further right what is checked before the next phase, in the right column the automatic checks and the moment they fire, including the brief at a worker's start, the read gate, the hand-over gate, the turn note and the resume gate; a dashed loop returns defects and blocking findings to a fresh worker of phase 2 or 3" xmlns="http://www.w3.org/2000/svg">
 <style>
   svg {
     --bg:#f4f7f8; --surface:#ffffff; --ink:#1c252b; --muted:#5e6a73; --line:#d8dfe4;
@@ -16,7 +16,7 @@
     }
   }
 </style>
-<rect x="0" y="0" width="1280" height="992" style="fill:var(--bg)"/>
+<rect x="0" y="0" width="1280" height="1098" style="fill:var(--bg)"/>
 <defs>
   <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
   <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--warn)"/></marker>
@@ -122,14 +122,15 @@
 
 <g stroke-width="1.5" style="fill:var(--hook-soft);stroke:var(--hook)">
   <rect x="975" y="56" width="285" height="68" rx="6"/>
-  <rect x="975" y="148" width="285" height="656" rx="6" stroke-dasharray="4 3" style="fill:none;stroke:var(--hook)"/>
+  <rect x="975" y="148" width="285" height="762" rx="6" stroke-dasharray="4 3" style="fill:none;stroke:var(--hook)"/>
   <rect x="985" y="178" width="265" height="90" rx="6"/>
   <rect x="985" y="284" width="265" height="90" rx="6"/>
   <rect x="985" y="390" width="265" height="90" rx="6"/>
   <rect x="985" y="496" width="265" height="130" rx="6"/>
-  <rect x="985" y="642" width="265" height="150" rx="6"/>
-  <rect x="975" y="820" width="285" height="68" rx="6"/>
-  <rect x="975" y="904" width="285" height="68" rx="6"/>
+  <rect x="985" y="642" width="265" height="90" rx="6"/>
+  <rect x="985" y="748" width="265" height="150" rx="6"/>
+  <rect x="975" y="926" width="285" height="68" rx="6"/>
+  <rect x="975" y="1010" width="285" height="68" rx="6"/>
   <rect x="20" y="888" width="900" height="84" rx="6" stroke-dasharray="4 3" style="fill:none;stroke:var(--hook)"/>
 </g>
 <g font-size="11.5" font-weight="600" fill="currentColor">
@@ -139,9 +140,10 @@
   <text x="997" y="300">Before a file read</text>
   <text x="997" y="406">Before a file edit</text>
   <text x="997" y="512">After a file edit</text><text x="997" y="580">On a reference call</text>
-  <text x="997" y="658">When a worker hands over</text>
-  <text x="987" y="836">Before a message to a worker</text>
-  <text x="987" y="920">Final gate</text>
+  <text x="997" y="658">Every turn near the limit</text>
+  <text x="997" y="764">When a worker hands over</text>
+  <text x="987" y="942">Before a message to a worker</text>
+  <text x="987" y="1026">Final gate</text>
 </g>
 <g font-family="IBM Plex Mono, ui-monospace, monospace" font-size="10" style="fill:var(--hook)">
   <text x="987" y="87">SessionStart · session-start.mjs</text>
@@ -150,10 +152,11 @@
   <text x="997" y="421">PreToolUse · protect-files*.mjs</text>
   <text x="997" y="527">PostToolUse · post-edit.mjs</text>
   <text x="997" y="595">PostToolUse · mcp-audit.mjs</text>
-  <text x="997" y="673">PreToolUse SubagentHandback</text><text x="997" y="687">· handback-gate.mjs</text>
-  <text x="997" y="761">SubagentStop · subagent-stop.mjs</text>
-  <text x="987" y="851">PreToolUse SendMessage · resume-gate.mjs</text>
-  <text x="987" y="935">Stop · stop-gate.mjs</text>
+  <text x="997" y="673">PostToolBatch · turn-budget.mjs</text>
+  <text x="997" y="779">PreToolUse SubagentHandback</text><text x="997" y="793">· handback-gate.mjs</text>
+  <text x="997" y="867">SubagentStop · subagent-stop.mjs</text>
+  <text x="987" y="957">PreToolUse SendMessage · resume-gate.mjs</text>
+  <text x="987" y="1041">Stop · stop-gate.mjs</text>
 </g>
 <g font-size="10.5" style="fill:var(--muted)">
   <text x="987" y="103">briefing: queue, what to do;</text><text x="987" y="117">STATE.md (Now, Open debt), Node, cds</text>
@@ -162,10 +165,11 @@
   <text x="997" y="437">forbids edits to protected files (pipeline</text><text x="997" y="451">settings, manifest, registry, deploy);</text><text x="997" y="465">in terminal: worker denied, human asked</text>
   <text x="997" y="543">cds compile, eslint, ui5lint, i18n pairs,</text><text x="997" y="557">STATE/PLAN shape; edit entry in the log</text>
   <text x="997" y="611">the same log: who called which MCP</text>
-  <text x="997" y="703">refuses the report on lint errors, files</text><text x="997" y="717">written around the checks, protected files</text><text x="997" y="731">or a missing MCP query; after 3 refusals</text><text x="997" y="745">it passes; report saved to .pipeline/logs/</text>
-  <text x="997" y="777">the same checks for a plain-text end</text>
-  <text x="987" y="867">refuses to wake a worker that has reported;</text><text x="987" y="881">the rework goes to a fresh worker</text>
-  <text x="987" y="951">STATE valid, registry fresh, CHANGELOG updated,</text><text x="987" y="965">npm test green; a red run names its log</text>
-  <text x="32" y="918">Whenever the chat memory overflows and Claude Code compacts the history: PreCompact event, script pre-compact.mjs appends a line "date, branch, number</text><text x="32" y="934">of changed files" to the session log .pipeline/sessions.log and lets the main chat read its files whole again.</text><text x="32" y="950">All eight checks, with event and script names, are described below under "Automatic checks".</text>
+  <text x="997" y="689">Turn note: from 6 to 8 turns before the limit,</text><text x="997" y="703">a worker is told each turn how many are left,</text><text x="997" y="717">so it hands back its report in time</text>
+  <text x="997" y="809">refuses the report on lint errors, files</text><text x="997" y="823">written around the checks, protected files</text><text x="997" y="837">or a missing MCP query; after 3 refusals</text><text x="997" y="851">it passes; report saved to .pipeline/logs/</text>
+  <text x="997" y="883">the same checks for a plain-text end</text>
+  <text x="987" y="973">refuses to wake a worker that has reported;</text><text x="987" y="987">the rework goes to a fresh worker</text>
+  <text x="987" y="1057">STATE valid, registry fresh, CHANGELOG updated,</text><text x="987" y="1071">npm test green; a red run names its log</text>
+  <text x="32" y="918">Whenever the chat memory overflows and Claude Code compacts the history: PreCompact event, script pre-compact.mjs appends a line "date, branch, number</text><text x="32" y="934">of changed files" to the session log .pipeline/sessions.log and lets the main chat read its files whole again.</text><text x="32" y="950">All nine checks, with event and script names, are described below under "Automatic checks".</text>
 </g>
 </svg>

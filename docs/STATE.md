@@ -5,11 +5,11 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 ## Now
 
 - Date: 2026-11-13
-- Branch: feature/agent-turn-budget
+- Branch: main
 - Feature: none
-- Phase: none (agent-turn-budget #60 done and closed, branch not pushed)
-- Last commit: bcd8906 docs: agent-turn-budget summary and registry
-- Next: push the branch and open a pull request on the user's word; `/retro`; `/feature #26`; Dependabot PR #48 waits
+- Phase: none (agent-turn-budget #60 merged via PR #61, CI green)
+- Last commit: 771d40c Merge pull request #61 from daiedy/feature/agent-turn-budget
+- Next: `/retro` of #60; `/feature #26`; Dependabot PR #48 waits
 
 ## Open debt
 

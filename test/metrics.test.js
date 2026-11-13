@@ -18,7 +18,11 @@ import {
   usageByModel,
   timelinePoints,
   deliveredReports,
+  agentRuns,
+  turnsOf,
+  runTurns,
 } from '../scripts/lib/transcript-usage.mjs';
+import { agentMaxTurns } from '../scripts/lib/turn-budget.mjs';
 import {
   IDLE_MS,
   TOOL_MS,
@@ -52,8 +56,9 @@ import {
   renderCompare,
   renderReconcile,
   renderContext,
+  threadTurns,
 } from '../scripts/lib/pipeline-metrics.mjs';
-import { loadBundle } from '../scripts/lib/backlog.mjs';
+import { loadBundle, t } from '../scripts/lib/backlog.mjs';
 import {
   SESSIONS,
   EXPECTED,
@@ -74,6 +79,8 @@ import {
   writeFixture,
   CONTEXT_ROOT,
   CONTEXT_EXPECTED,
+  turnRecords,
+  writeAgentFile,
 } from './fixtures/transcript-fixture.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
@@ -142,6 +149,8 @@ const HISTORY_KEYS = [
   'calls',
   'launches',
   'resumes',
+  'turnLimitStops',
+  'turnNotes',
   'reworkShare',
   'gateBlocks',
   'review',
@@ -1638,5 +1647,317 @@ describe('pipeline metrics (ADR-0022)', () => {
     expect(slimmed[2]).toMatchObject({ type: 'user', toolResult: true });
     expect(slimmed[3]).toMatchObject({ subtype: 'stop_hook_summary', stopHookBlocked: true });
     expect(slimmed[4]).toMatchObject({ type: 'attachment', input: 'task-notification' });
+  });
+});
+
+// D19 (ADR-0032): the runs of an agent file, their turns against the limit in force, the card
+// column and the history keys. Agent files come from `turnRecords()` (fixture day 9, half a minute
+// per turn: a run of `[3, 2]` opens its resume record at minute 1.7).
+describe('turn budget (D19, ADR-0032)', () => {
+  const slimAll = (raw) => raw.map(slim).filter(Boolean);
+  const thread = (agent, raw) => ({ agent, records: slimAll(raw) });
+  /** A `SubagentHandback` as one more turn at minute `min`; `denied` gives its result an error. */
+  const handback = (agentId, min, denied = false) => {
+    const id = `${agentId}-hb`;
+    return [
+      {
+        type: 'assistant',
+        timestamp: iso(9, min),
+        uuid: `${id}-a`,
+        requestId: `${id}-r`,
+        agentId,
+        message: {
+          model: OPUS,
+          usage: { input_tokens: 0, output_tokens: 10 },
+          content: [{ type: 'tool_use', name: 'SubagentHandback', id }],
+        },
+      },
+      {
+        type: 'user',
+        timestamp: iso(9, min + 0.05),
+        uuid: `${id}-u`,
+        agentId,
+        toolUseResult: true,
+        message: {
+          content: [
+            {
+              type: 'tool_result',
+              tool_use_id: id,
+              content: 'x',
+              ...(denied ? { is_error: true } : {}),
+            },
+          ],
+        },
+      },
+    ];
+  };
+  const start = (agent, min, maxTurns) => ({
+    ts: iso(9, min),
+    event: 'agent-start',
+    agent,
+    agentType: 'test-backend',
+    ...(maxTurns ? { maxTurns } : {}),
+  });
+  const note = (agent, min, turn, maxTurns) => ({
+    ts: iso(9, min),
+    event: 'turn-note',
+    agent,
+    agentType: 'test-backend',
+    turn,
+    maxTurns,
+  });
+
+  it('splits an agent file into runs and counts each request once', () => {
+    const one = slimAll(turnRecords('u1', [4]));
+    // Two assistant records per turn and an api-request record: still 4 turns, one run.
+    expect(agentRuns(one)).toEqual([one]);
+    expect(turnsOf(one)).toBe(4);
+    // A copy of a request under a new uuid and an assistant record without usage add no turn.
+    const copy = { ...one.find((r) => r.type === 'assistant'), uuid: 'u1-copy' };
+    const bare = slim({
+      type: 'assistant',
+      timestamp: iso(9, 40),
+      uuid: 'u1-bare',
+      requestId: 'u1-bare',
+      message: { model: OPUS, content: [{ type: 'text' }] },
+    });
+    expect(turnsOf([...one, copy, bare])).toBe(4);
+
+    // Each resume record opens the next run and belongs to it.
+    const three = slimAll(turnRecords('u2', [3, 2, 1]));
+    const runs = agentRuns(three);
+    expect(runs.map(turnsOf)).toEqual([3, 2, 1]);
+    expect(runs.map((r) => r[0].resume === true)).toEqual([false, true, true]);
+    expect(runs.map((r) => r.filter((x) => x.resume).length)).toEqual([0, 1, 1]);
+    expect(runs.flat()).toEqual(three);
+    expect(runTurns(three)).toBe(turnsOf(runs.at(-1)));
+    expect(runTurns(three)).toBe(1);
+    expect(runTurns(one)).toBe(4);
+
+    // No records: one empty run, no turn.
+    expect(agentRuns([])).toEqual([[]]);
+    expect(runTurns([])).toBe(0);
+  });
+
+  it('limit stops per run', () => {
+    // At the limit without a delivered report: a stop.
+    expect(threadTurns(thread('s1', turnRecords('s1', [5])), [start('s1', 0.05, 5)])).toEqual({
+      runs: [{ turns: 5, limit: 5, notes: 0, limitStop: true }],
+      turnNotes: 0,
+      limitStops: 1,
+    });
+    // At the limit with a delivered report: no stop.
+    const delivered = thread('s2', [...turnRecords('s2', [4]), ...handback('s2', 30)]);
+    expect(threadTurns(delivered, [start('s2', 0.05, 5)])).toEqual({
+      runs: [{ turns: 5, limit: 5, notes: 0, limitStop: false }],
+      turnNotes: 0,
+      limitStops: 0,
+    });
+    // A denied handback (an error result) delivered nothing: a stop.
+    const denied = thread('s3', [...turnRecords('s3', [4]), ...handback('s3', 30, true)]);
+    expect(threadTurns(denied, [start('s3', 0.05, 5)]).runs).toEqual([
+      { turns: 5, limit: 5, notes: 0, limitStop: true },
+    ]);
+    // Below the limit: no stop.
+    expect(threadTurns(thread('s4', turnRecords('s4', [4])), [start('s4', 0.05, 5)]).runs).toEqual([
+      { turns: 4, limit: 5, notes: 0, limitStop: false },
+    ]);
+    // Per run: a launch stopped at the limit, its resume below it.
+    expect(threadTurns(thread('s5', turnRecords('s5', [5, 2])), [start('s5', 0.05, 5)])).toEqual({
+      runs: [
+        { turns: 5, limit: 5, notes: 0, limitStop: true },
+        { turns: 2, limit: 5, notes: 0, limitStop: false },
+      ],
+      turnNotes: 0,
+      limitStops: 1,
+    });
+    // A live thread (no records yet) is never a stop.
+    const live = threadTurns({ agent: 's6', records: [] }, [start('s6', 0, 3)], 3);
+    expect(live.runs).toMatchObject([{ turns: 0, limitStop: false }]);
+    expect(live.limitStops).toBe(0);
+  });
+
+  it('limit in force: agent-start, then turn-note, then the frontmatter', () => {
+    const five = thread('p1', turnRecords('p1', [5]));
+    const limitOf = (events, fallback) => {
+      const { limit, limitStop } = threadTurns(five, events, fallback).runs[0];
+      return { limit, limitStop };
+    };
+    const noted = note('p1', 2, 4, 9);
+    expect(limitOf([start('p1', 0.05, 5), noted], 7)).toEqual({ limit: 5, limitStop: true });
+    expect(limitOf([noted], 7)).toEqual({ limit: 9, limitStop: false });
+    // An agent-start record written before #60 carries no maxTurns: the note decides.
+    expect(limitOf([start('p1', 0.05), noted], 7)).toEqual({ limit: 9, limitStop: false });
+    expect(limitOf([], 5)).toEqual({ limit: 5, limitStop: true });
+    expect(limitOf([], 7)).toEqual({ limit: 7, limitStop: false });
+    // No limit known: no stop.
+    expect(limitOf([], null)).toEqual({ limit: null, limitStop: false });
+    expect(limitOf([])).toEqual({ limit: null, limitStop: false });
+  });
+
+  it('assigns agent-start and turn-note records to their runs', () => {
+    // The resume record of `[3, 2]` is at minute 1.7. SubagentStart may write the resume's
+    // agent-start just before or just after it: the nearest record wins either way.
+    expect(slimAll(turnRecords('r0', [3, 2])).find((r) => r.resume).ts).toBe(ms(9, 1.7));
+    for (const [agent, resumeStart] of [
+      ['r1', 1.65],
+      ['r2', 1.75],
+    ]) {
+      const events = [
+        start(agent, 0.05, 3),
+        start(agent, resumeStart, 2),
+        note(agent, 0, 1, 3), // before the first record: the launch
+        note(agent, 1.0, 2, 3),
+        note(agent, 1.7, 1, 2), // at the resume record: the resume
+        note(agent, 2.5, 2, 2),
+        // Another agent's records are ignored.
+        start('x9', 1.7, 1),
+        note('x9', 1.8, 5, 1),
+        note('x9', 0.5, 7, 1),
+      ];
+      expect(threadTurns(thread(agent, turnRecords(agent, [3, 2])), events, 60), agent).toEqual({
+        runs: [
+          { turns: 3, limit: 3, notes: 2, limitStop: true },
+          { turns: 2, limit: 2, notes: 2, limitStop: true },
+        ],
+        turnNotes: 4,
+        limitStops: 2,
+      });
+    }
+  });
+
+  it('each turn-note record counts', () => {
+    // Under PostToolBatch one record is one noted batch. A read one short logs two batches with
+    // the same `turn` (VERIFICATION check 1); a dedupe on `turn` would merge them (REVIEW
+    // Important 3). Equal `turn`, different `ts`: two notes; a third, identical record: three.
+    const five = thread('e1', turnRecords('e1', [5]));
+    const twice = [start('e1', 0.05, 5), note('e1', 2.0, 4, 5), note('e1', 2.1, 4, 5)];
+    expect(threadTurns(five, twice, 60)).toEqual({
+      runs: [{ turns: 5, limit: 5, notes: 2, limitStop: true }],
+      turnNotes: 2,
+      limitStops: 1,
+    });
+    const thrice = [...twice, note('e1', 2.1, 4, 5)];
+    expect(threadTurns(five, thrice, 60)).toMatchObject({ runs: [{ notes: 3 }], turnNotes: 3 });
+    // Equal `turn` in two runs: one note in each.
+    const resumed = thread('e2', turnRecords('e2', [3, 2]));
+    const split = [note('e2', 1.0, 2, 3), note('e2', 2.5, 2, 3)];
+    expect(threadTurns(resumed, split, 60)).toMatchObject({
+      runs: [{ notes: 1 }, { notes: 1 }],
+      turnNotes: 2,
+    });
+  });
+
+  it('turn fields on the card and the history line', () => {
+    // One session: test-backend tb1 stopped at its limit with three noted turns,
+    // test-backend tb2 at its limit with a delivered report, docs-keeper dk1 far below its limit.
+    const project = fs.mkdtempSync(path.join(home, 'turns-'));
+    const sid = 's-turns';
+    const agents = {
+      tb1: ['test-backend', turnRecords('tb1', [5])],
+      tb2: ['test-backend', [...turnRecords('tb2', [4]), ...handback('tb2', 30)]],
+      dk1: ['docs-keeper', turnRecords('dk1', [2])],
+    };
+    const main = {
+      type: 'assistant',
+      timestamp: iso(9, 0),
+      uuid: 'tm-a1',
+      requestId: 'tm-r1',
+      message: {
+        model: OPUS,
+        usage: { input_tokens: 1, output_tokens: 1 },
+        content: Object.entries(agents).map(([id, [type]]) => ({
+          type: 'tool_use',
+          name: 'Agent',
+          id: `toolu_${id}`,
+          input: { subagent_type: type },
+        })),
+      },
+    };
+    fs.writeFileSync(path.join(project, `${sid}.jsonl`), JSON.stringify(main) + '\n');
+    for (const [id, [agentType, records]] of Object.entries(agents)) {
+      writeAgentFile(project, sid, id, records);
+      fs.writeFileSync(
+        path.join(project, sid, 'subagents', `agent-${id}.meta.json`),
+        JSON.stringify({ agentType, toolUseId: `toolu_${id}` })
+      );
+    }
+    const session = {
+      ...loadSession(project, sid),
+      events: [
+        start('tb1', 0.05, 5),
+        note('tb1', 1.5, 3, 5),
+        note('tb1', 2.0, 4, 5),
+        note('tb1', 2.5, 5, 5),
+        start('tb2', 0.05, 5),
+        { ...start('dk1', 0.05, 80), agentType: 'docs-keeper' },
+      ],
+    };
+    const report = sessionReport(session, {
+      pricing,
+      extras: { maxTurns: { 'test-backend': 60, 'docs-keeper': 80 } },
+    });
+    const row = (type) => report.agents.find((a) => a.agentType === type);
+    expect(report).toMatchObject({ turnNotes: 3, turnLimitStops: 1 });
+    expect(row('main')).toMatchObject({ turnNotes: null, limitStops: null });
+    expect(row('test-backend')).toMatchObject({
+      launches: 2,
+      maxTurns: 60,
+      turnNotes: 3,
+      limitStops: 1,
+    });
+    expect(row('docs-keeper')).toMatchObject({ launches: 1, turnNotes: 0, limitStops: 0 });
+
+    // The agent table: 8 columns, the new one after "Calls / maxTurns", in en and ru.
+    const cells = (line) =>
+      line
+        .split('|')
+        .slice(1, -1)
+        .map((c) => c.trim());
+    const ru = loadBundle('ru', root);
+    const header = t(bundle, 'metrics.card.agentHeader');
+    expect(cells(header)).toEqual([
+      'Agent',
+      'Launches',
+      'Resumes',
+      'Active',
+      'Calls / maxTurns',
+      'Turn notes / limit stops',
+      'Cost',
+      'Rework',
+    ]);
+    expect(cells(t(ru, 'metrics.card.agentHeader'))).toHaveLength(8);
+    expect(t(ru, 'metrics.card.agentHeader')).not.toBe(header);
+    for (const b of [bundle, ru]) {
+      const lines = renderCard(report, b).split('\n');
+      expect(lines).toContain(t(b, 'metrics.card.agentHeader'));
+      const cardRow = (type) => cells(lines.find((l) => l.startsWith(`| ${type} |`)));
+      expect(cardRow('test-backend')).toHaveLength(8);
+      expect(cardRow('test-backend')[4]).toBe(`${row('test-backend').calls} / 60`);
+      expect(cardRow('test-backend')[5]).toBe('3 / 1');
+      expect(cardRow('docs-keeper')[5]).toBe('0 / 0');
+      expect(cardRow('main')[5]).toBe('-');
+    }
+
+    // The history line carries both figures, the fields #59 reads.
+    const line = historyLine(report, '2026-11-13');
+    expect(Object.keys(line).sort()).toEqual([...HISTORY_KEYS].sort());
+    expect(line).toMatchObject({ turnLimitStops: 1, turnNotes: 3 });
+  });
+
+  it('card maxTurns comes from agentMaxTurns', () => {
+    // scripts/metrics.mjs reads the limits through agentMaxTurns(): the card's "Calls / maxTurns"
+    // shows the frontmatter value of each agent type, as before the move.
+    const limits = agentMaxTurns(root);
+    const shown = cli(['feature', 'fixture-demo', '--json']);
+    expect(shown.status, shown.stderr).toBe(0);
+    const report = JSON.parse(shown.stdout);
+    const subs = report.agents.filter((a) => a.agentType !== 'main');
+    expect(subs.length).toBeGreaterThan(0);
+    for (const a of subs) expect(a.maxTurns, a.agentType).toBe(limits[a.agentType] ?? null);
+    expect(subs.some((a) => Number.isInteger(a.maxTurns))).toBe(true);
+    const card = cli(['feature', 'fixture-demo']);
+    expect(card.status, card.stderr).toBe(0);
+    for (const a of subs) expect(card.stdout).toContain(`| ${a.calls} / ${a.maxTurns ?? '-'} |`);
   });
 });

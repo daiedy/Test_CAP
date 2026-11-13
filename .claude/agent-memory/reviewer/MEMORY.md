@@ -1,2 +1,3 @@
 - [Pipeline review conventions](pipeline-review-conventions.md) — what is intentionally unfinished before docs-keeper, per-lens severity, and how to adjudicate PLAN prose vs its code block when refuting a finding
 - [Verifying test guard strength](verifying-test-guard-strength.md) — read-only ways to prove a contract test or OPA5 assertion would really go red; UI5 CDN source paths
+- [Verifying hook runtime from transcripts](verifying-hook-runtime-from-transcripts.md) — join .pipeline records with subagent transcripts; silent hook runs leave no record, so record-based rates understate misses

@@ -10,6 +10,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { repoRoot, readJsonl, exists } from './hook-utils.mjs';
 import { TOOL_MS } from './pipeline-metrics.mjs';
+import { subagentTranscript } from './transcript-usage.mjs';
 import {
   AUDIT_DIR,
   agentKey,
@@ -89,8 +90,8 @@ export function internalAgent(input) {
 /**
  * The agent types of the session's subagents still at work when the main thread stops: the last
  * record of the agent in the event log is `agent-start` (a launch or a resume), and its transcript
- * `<session>/subagents/agent-<id>.jsonl` next to the hook's `transcript_path` (the start itself
- * while the file does not exist yet) was written within TOOL_MS, the longest tool call. An agent
+ * (`subagentTranscript()` of the hook's `transcript_path`; the start itself while the file does
+ * not exist yet) was written within TOOL_MS, the longest tool call. An agent
  * killed without a SubagentStop stops counting once its file is that old. Never throws.
  * @param {object} input Stop hook input (session_id, transcript_path)
  */
@@ -101,13 +102,12 @@ export function runningAgents(root, input, now = Date.now()) {
       if (r.event === 'agent-start' && r.agentType !== 'main') open.set(r.agent, r);
       else if (r.event === 'agent-stop') open.delete(r.agent);
     }
-    const main = String(input?.transcript_path || '').replace(/^~(?=\/)/, os.homedir());
-    const dir = main && path.join(path.dirname(main), path.basename(main, '.jsonl'), 'subagents');
     const types = [];
     for (const [agent, r] of open) {
       let last = Date.parse(r.ts) || 0;
+      const file = subagentTranscript(input?.transcript_path, agent);
       try {
-        if (dir) last = Math.max(last, fs.statSync(path.join(dir, `agent-${agent}.jsonl`)).mtimeMs);
+        if (file) last = Math.max(last, fs.statSync(file).mtimeMs);
       } catch {
         // no transcript yet: the start time stands
       }

@@ -17,7 +17,7 @@
     ".claude/rules/deploy.md": 977,
     ".claude/rules/docs-wiki.md": 3494,
     ".claude/rules/i18n.md": 1783,
-    ".claude/rules/pipeline-config.md": 5982,
+    ".claude/rules/pipeline-config.md": 6225,
     ".claude/rules/srv-handlers.md": 2249,
     ".claude/rules/srv-services.md": 2926,
     ".claude/rules/tests-backend.md": 3464,
@@ -27,9 +27,9 @@
     ".claude/skills/add-entity/SKILL.md": 1875,
     ".claude/skills/backlog/SKILL.md": 2664,
     ".claude/skills/debug-after-upgrade/SKILL.md": 4940,
-    ".claude/skills/feature/SKILL.md": 8761,
+    ".claude/skills/feature/SKILL.md": 8832,
     ".claude/skills/gen-docs/SKILL.md": 1287,
-    ".claude/skills/project-protocol/SKILL.md": 10570,
+    ".claude/skills/project-protocol/SKILL.md": 10666,
     ".claude/skills/retro/SKILL.md": 4017,
     ".claude/skills/review/SKILL.md": 760,
     ".claude/skills/run-app/SKILL.md": 1275,
@@ -37,6 +37,6 @@
     ".claude/skills/test-all/SKILL.md": 2021,
     ".claude/skills/upgrade-cds/SKILL.md": 1480,
     ".claude/skills/upstream-check/SKILL.md": 4590,
-    "CLAUDE.md": 10666
+    "CLAUDE.md": 10761
   }
 }

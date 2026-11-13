@@ -115,6 +115,27 @@ export function sessionFiles(dir, sessionId) {
   return { sessionId, main: fs.existsSync(main) ? main : null, agents };
 }
 
+/**
+ * The transcript file of a subagent from a hook input: a subagent's hook carries the main
+ * session's `transcript_path` (context-hygiene probe F3; turn-budget probe P4), and the agent file
+ * is that path without `.jsonl` plus `/subagents/agent-<id>.jsonl`, a leading `~/` expanded and a
+ * leading `agent-` stripped from the id. The file may not exist yet.
+ * @param {unknown} transcriptPath the hook input's `transcript_path`
+ * @param {unknown} agentId the hook input's `agent_id`, bare or `agent-` prefixed
+ * @returns {string|null} null without a `.jsonl` main path or without an id
+ */
+export function subagentTranscript(transcriptPath, agentId) {
+  const main = String(transcriptPath || '').replace(/^~(?=\/)/, os.homedir());
+  const id = typeof agentId === 'string' ? agentId.trim().replace(/^agent-/, '') : '';
+  if (!main.endsWith('.jsonl') || !id) return null;
+  return path.join(
+    path.dirname(main),
+    path.basename(main, '.jsonl'),
+    'subagents',
+    `agent-${id}.jsonl`
+  );
+}
+
 // ---------- records ----------
 
 function usageOf(u) {
@@ -345,6 +366,58 @@ export function requests(records) {
     mergeUsage(q, r.usage, r.ts, r.model);
   }
   return [...byId.values()].map(finalizeSplit);
+}
+
+/**
+ * The runs of one agent file (ADR-0032, D19), the one split rule of a file into runs: the launch
+ * opens the first run and every `coordinator` resume record (`resume`, D18) opens the next one, so
+ * a run holds its opening resume record and every record up to the next resume.
+ * @param {object[]} records slim records of one agent file, in file order
+ * @returns {object[][]} the runs in file order; at least one (the launch), possibly empty
+ */
+export function agentRuns(records) {
+  const out = [[]];
+  for (const r of records) {
+    if (r.resume === true) out.push([]);
+    out.at(-1).push(r);
+  }
+  return out;
+}
+
+/**
+ * Turns of a run: its D1 requests (distinct `requestId` of `assistant` records, through
+ * `requests()`). `api-request*` records never reach here (`slim()` drops them) and a repeated
+ * request id counts once, so a request is one turn.
+ * @param {object[]} run slim records of one run (`agentRuns()`)
+ * @returns {number}
+ */
+export function turnsOf(run) {
+  return requests(run).length;
+}
+
+/**
+ * Turns of the current run of a subagent (ADR-0032 decision 4 with its amendment): `turnsOf()` the
+ * last run of `agentRuns()` (the whole file when it holds no resume), plus 1 when `batchIds` holds
+ * a string and no `assistant` record of that run has a `tools[].id` among them. At PostToolBatch
+ * time the current request's record is usually on disk, but on Claude Code 2.1.323 it can land
+ * after the hook reads the file (VERIFICATION check 1: the file count one short), so a batch whose
+ * tool uses are not in the file yet counts as its own turn. The result is exact or one high (a
+ * record of the batch's request already on disk without its tool use: the note a turn early, the
+ * safe side); without batch ids it is the file count, exact or one short.
+ * @param {object[]} records slim records of one agent file, in file order
+ * @param {string[]} [batchIds] the `tool_use_id` values of the current batch (`tool_calls`)
+ * @returns {number}
+ */
+export function runTurns(records, batchIds = []) {
+  const run = agentRuns(records).at(-1);
+  const ids = new Set(
+    (Array.isArray(batchIds) ? batchIds : []).filter((id) => typeof id === 'string')
+  );
+  if (!ids.size) return turnsOf(run);
+  const onDisk = run.some(
+    (r) => r.type === 'assistant' && (r.tools || []).some((t) => ids.has(t.id))
+  );
+  return turnsOf(run) + (onDisk ? 0 : 1);
 }
 
 function mergeUsage(q, usage, ts, model) {

@@ -2,8 +2,10 @@
  * SubagentStart hook: marks a subagent launch or resume in the metrics event log (ADR-0022,
  * docs/metrics/data-flow.md section 2) and hands the agent its role brief (ADR-0031 decision 2).
  * Records:
- *   { event: 'agent-start', agent, agentType }                         every launch and resume
+ *   { event: 'agent-start', agent, agentType, maxTurns? }              every launch and resume
  *   { event: 'brief', agent, agentType, feature, phase, bytes, mode, hash }   a brief handed
+ * `maxTurns` is the limit of the agent type at this start (`agentMaxTurns()`, ADR-0032), the limit
+ * in force for the run; left out for a type without a definition or without `maxTurns`.
  * Claude Code fires it on a launch and again on every resume of the same agent. `agent` is the bare
  * id (`metricsAgent`), so it joins the `agent-stop` record, the read ledger and the transcript file.
  * The brief follows the `Feature:` and `Phase:` lines of docs/STATE.md (`activeFeature()`): it holds
@@ -22,6 +24,7 @@
 import { readStdinJson, repoRoot, emitJson, HOOK_OUTPUT_MAX } from '../lib/hook-utils.mjs';
 import { appendMetric, metricsAgent, readMetrics } from '../lib/metrics-log.mjs';
 import { activeFeature } from '../lib/state-now.mjs';
+import { agentMaxTurns } from '../lib/turn-budget.mjs';
 
 /** Builds, writes and records the brief; returns the `additionalContext`, or null for silence. */
 async function handBrief(root, input, agent, agentType) {
@@ -62,8 +65,20 @@ try {
 } catch {
   // an unreadable log counts as a launch: the brief is handed as before
 }
+let maxTurns;
 try {
-  appendMetric(root, input.session_id, { event: 'agent-start', agent, agentType });
+  const limits = agentMaxTurns(root);
+  if (Object.hasOwn(limits, agentType)) maxTurns = limits[agentType];
+} catch {
+  // no limit known: the record goes without it
+}
+try {
+  appendMetric(root, input.session_id, {
+    event: 'agent-start',
+    agent,
+    agentType,
+    ...(maxTurns !== undefined && { maxTurns }),
+  });
 } catch {
   // metrics are best effort: never block a subagent
 }

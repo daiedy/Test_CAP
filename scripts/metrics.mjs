@@ -53,6 +53,7 @@ import {
   HISTORY_FILE,
 } from './lib/pipeline-metrics.mjs';
 import { readBudget, BUDGET_FILE } from './lib/feature-brief.mjs';
+import { agentMaxTurns } from './lib/turn-budget.mjs';
 import { pickLang, readLocalSettings, loadBundle, t } from './lib/i18n.mjs';
 import { fetchIssues, readIssuesCache } from './lib/backlog.mjs';
 
@@ -99,19 +100,6 @@ function load(sessionId, dir) {
   const events = readMetrics(root, sessionId);
   const session = loadSession(dir ?? dirOf(events), sessionId);
   return session && { ...session, events, audit: readAudit(root, sessionId) };
-}
-
-/** `maxTurns` of every agent definition, from its frontmatter. */
-function maxTurns() {
-  const dir = path.join(root, '.claude', 'agents');
-  const out = {};
-  for (const name of fs.existsSync(dir) ? fs.readdirSync(dir) : []) {
-    if (!name.endsWith('.md')) continue;
-    const head = fs.readFileSync(path.join(dir, name), 'utf8').match(/^---\n([\s\S]*?)\n---/);
-    const n = head?.[1].match(/^maxTurns:\s*(\d+)/m);
-    if (n) out[name.slice(0, -3)] = Number(n[1]);
-  }
-  return out;
 }
 
 /**
@@ -219,7 +207,7 @@ function featureOf(arg) {
       review: reviewCounts(featureDoc(name, 'REVIEW.md')),
       criteria: criteriaCounts(featureDoc(name, 'PLAN.md')),
       lines: gitLines(name),
-      maxTurns: maxTurns(),
+      maxTurns: agentMaxTurns(root),
       planCommit: approved.commit,
     },
   });
@@ -271,7 +259,7 @@ function sessionCard(id) {
     root,
     ...caps,
     extras: {
-      maxTurns: maxTurns(),
+      maxTurns: agentMaxTurns(root),
       compactions: compactionsOf(session),
       planCommit: approved.commit,
     },

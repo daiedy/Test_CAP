@@ -188,6 +188,53 @@ describe('metrics records of the hooks (ADR-0022)', () => {
     ]);
   });
 
+  it('agent-start carries maxTurns', () => {
+    // Agent definitions in the working tree only: resetTree() removes them for the later tests.
+    put({
+      '.claude/agents/cap-backend-dev.md':
+        '---\nname: cap-backend-dev\nmaxTurns: 60\n---\n\nBody.\n',
+      '.claude/agents/no-limit.md': '---\nname: no-limit\n---\n\nmaxTurns: 40\n',
+    });
+    // A session of its own: agent-start records without an agent-stop in SESSION would read as
+    // running subagents and defer the Stop gate of the later tests.
+    const own = `${SESSION}-max-turns`;
+    const lines = () => {
+      const file = metricsFile(sandbox, own);
+      return fs.existsSync(file) ? fs.readFileSync(file, 'utf8').trim().split('\n') : [];
+    };
+    try {
+      const start = (agentId, agentType) => {
+        const before = lines().length;
+        const res = hook('subagent-start.mjs', {
+          session_id: own,
+          hook_event_name: 'SubagentStart',
+          agent_id: agentId,
+          agent_type: agentType,
+        });
+        expect(res.status).toBe(0);
+        // eslint-disable-next-line no-unused-vars
+        const records = lines().map((l) => (({ ts, ...r }) => r)(JSON.parse(l)));
+        return { res, records: records.slice(before) };
+      };
+      const launch = start('agent-mt1', 'cap-backend-dev');
+      expect(launch.records).toEqual([
+        { event: 'agent-start', agent: 'mt1', agentType: 'cap-backend-dev', maxTurns: 60 },
+      ]);
+      // A resume carries the limit in force for its run as well.
+      expect(start('mt1', 'cap-backend-dev').records).toEqual(launch.records);
+      // A definition without `maxTurns` (a body line is no frontmatter) and an internal type
+      // without a definition: the record goes without the key.
+      expect(start('mt2', 'no-limit').records).toEqual([
+        { event: 'agent-start', agent: 'mt2', agentType: 'no-limit' },
+      ]);
+      expect(start('mt3', 'general-purpose').records).toEqual([
+        { event: 'agent-start', agent: 'mt3', agentType: 'general-purpose' },
+      ]);
+    } finally {
+      resetTree();
+    }
+  });
+
   it('writes a phase record on a docs/STATE.md edit only', () => {
     const edit = (rel) =>
       appended(() =>

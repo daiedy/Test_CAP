@@ -27,7 +27,7 @@
     "@ui5/cli": "^4",
     "@ui5/linter": "^1",
     "eslint": "^10",
-    "eslint-plugin-jsdoc": "^65.4.2",
+    "eslint-plugin-jsdoc": "^65.4.5",
     "ui5-test-runner": "^5.14.2"
   },
   "ui5": {

@@ -8,7 +8,7 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Branch: chore/pipeline-app-neutral
 - Feature: none
 - Phase: none (#65 by hand: steps 1-4 done)
-- Last commit: 1befedb docs: pipeline-plugin-repo steps 1 to 3, audit, knowledge sorting, trial plugin
+- Last commit: be7a3d8 Merge origin/main into chore/pipeline-app-neutral (Dependabot updates)
 - Next: #65 step 5: create `capline` (`docs/plugin-extraction/`); `/retro` of #60; `/feature #26`; Dependabot PR #48 waits
 
 ## Open debt

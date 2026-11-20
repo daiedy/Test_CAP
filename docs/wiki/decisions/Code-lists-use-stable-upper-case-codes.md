@@ -17,7 +17,7 @@ Every list of values that the catalog keeps itself is identified by a code of up
 
 The first own list, the categories, held display texts as values. Without a rule, the next list, such as statuses or units, would have received a different code format.
 
-## What it means for the catalog
+## What it means for the application
 
 - A product refers to its category by a code such as `ELECTRONICS`; renaming a category name never breaks the products that use it.
 - An Excel import expects codes, not names, in the columns `category`, `subcategory` and `currency`. See [Import products from Excel](../how-to/Import-products-from-Excel.md).

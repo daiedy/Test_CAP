@@ -15,7 +15,7 @@ Result of `mcp__cds-mcp__search_model` and `docs/registry/DOMAIN-MODEL.md`, `SER
 
 | Object | Exists now | What changes |
 |---|---|---|
-| `CatalogService.Products` | projection, fields ... | add ... |
+| `<Service>.<Entity>` | projection, fields ... | add ... |
 
 ### Backend: <topic>
 Design that only `cap-backend-dev` and `test-backend` need: rules, message keys, seed data, the contract.

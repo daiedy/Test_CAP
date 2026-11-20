@@ -3,7 +3,7 @@
 // equals the element @title. Reference from app/<app>/annotations.cds with `using from './annotations/<Entity>';`.
 using { cuid, managed, Currency, sap.common.CodeList } from '@sap/cds/common';
 
-namespace my.catalog.tpl.ui;
+namespace tpl.ui;
 
 entity Categories : CodeList { key code : String(20); }
 entity Orders : cuid, managed {

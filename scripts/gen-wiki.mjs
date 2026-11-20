@@ -34,6 +34,7 @@ import {
   wikiFileName,
   wikiPageShapeErrors,
 } from './lib/doc-shapes.mjs';
+import { wikiRuleAreas } from './lib/project-config.mjs';
 
 /** Folder of the wiki, relative to the project root. */
 export const WIKI_DIR = 'docs/wiki';
@@ -47,7 +48,7 @@ export const WIKI_INDEXES = {
     file: 'Domain-model.md',
     title: 'Domain model',
     intro:
-      'One page per entity of the catalog in plain language: what it is, the fields that matter and the rules that apply.',
+      'One page per entity of the application in plain language: what it is, the fields that matter and the rules that apply.',
   },
   rules: {
     file: 'Business-rules.md',
@@ -57,17 +58,17 @@ export const WIKI_INDEXES = {
   'how-to': {
     file: 'How-to.md',
     title: 'How-to',
-    intro: 'What a user of the catalog does, step by step, and the rules each step meets.',
+    intro: 'What a user of the application does, step by step, and the rules each step meets.',
   },
   decisions: {
     file: 'Decisions.md',
     title: 'Decisions',
-    intro: 'The decisions that shape the catalog in plain language, each linking its ADR.',
+    intro: 'The decisions that shape the application in plain language, each linking its ADR.',
   },
   api: {
     file: 'API.md',
     title: 'API',
-    intro: 'The OData API of the catalog, generated from the committed OpenAPI documents.',
+    intro: 'The OData API of the application, generated from the committed OpenAPI documents.',
   },
 };
 const OPENAPI_SUFFIX = '.openapi3.json';
@@ -428,7 +429,7 @@ const titleOf = (page) => asText(page.meta.title) || posix.basename(page.path, '
 const linkFrom = (from, to, text) => `[${cell(text)}](${posix.relative(posix.dirname(from), to)})`;
 const byTitle = (a, b) => byText(titleOf(a).toLowerCase(), titleOf(b).toLowerCase());
 
-/** `CatalogService` as words in sentence case: `Catalog service`. */
+/** A service name as words in sentence case: `OrdersService` gives `Orders service`. */
 const sentence = (name) => {
   const [first, ...rest] = name.replace(/([a-z0-9])([A-Z])/g, '$1 $2').split(' ');
   return [first, ...rest.map((w) => w.toLowerCase())].join(' ');
@@ -699,9 +700,10 @@ function groupedBy(items, key) {
 function wikiLint(root, files) {
   const pages = readPages(root);
   const written = files.filter((f) => !f.generated);
+  const areas = wikiRuleAreas(root);
   const reasons = [];
   for (const p of pages)
-    for (const e of wikiPageShapeErrors(p.text, p.path)) reasons.push(`${p.path}: ${e}`);
+    for (const e of wikiPageShapeErrors(p.text, p.path, areas)) reasons.push(`${p.path}: ${e}`);
   for (const [id, paths] of groupedBy(pages, (p) => asText(p.meta.id)))
     reasons.push(`${paths.join(', ')}: rule id ${id} is used more than once`);
   reasons.push(...brokenLinks(root, written));

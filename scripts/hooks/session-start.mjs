@@ -33,6 +33,7 @@ import {
 import { stateShapeErrors, capped, STATE_PRINT_BUDGET } from '../lib/doc-shapes.mjs';
 import { collectBriefing, renderBriefing } from '../lib/backlog.mjs';
 import { driftKey, writeDriftKey } from '../lib/state-now.mjs';
+import { projectName } from '../lib/project-config.mjs';
 
 /** `cds --version` colors its output even when piped; the codes break the version regex. */
 // eslint-disable-next-line no-control-regex -- ESC (\x1b) is intended: strips ANSI color codes
@@ -97,7 +98,9 @@ try {
   await pruneContextFiles(root);
   recordSession(root, input);
 
-  out.push(`# Test_CAP project context (SessionStart, source=${input.source || 'unknown'})`);
+  out.push(
+    `# ${projectName(root)} project context (SessionStart, source=${input.source || 'unknown'})`
+  );
   // ADR-0019: the briefing comes first, in PIPELINE_LANG; the queue comes from GitHub Issues with a cache.
   // ADR-0022: collectBriefing passes the last history line, renderBriefing prints it (none: no line).
   // ADR-0023: it also passes the STATE drift, printed as the last line; the key of a printed drift is

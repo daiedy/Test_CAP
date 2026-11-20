@@ -33,7 +33,7 @@ The first use is the feature products-validations (#10), the rules R1-R6, R8 and
 
 The rules of #10 needed texts that explain the reason, rules over several fields and rows, and a consistent answer to the question of what stops the user before the error. One toolkit means the next rule is built the same way.
 
-## What it means for the catalog
+## What it means for the application
 
 The eleven approved rules are active in the code and verified in the browser in English and Russian; each page says what the user sees.
 

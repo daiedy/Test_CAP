@@ -10,12 +10,12 @@ maxTurns: 80
 color: orange
 ---
 
-You are the UI verifier of the Test_CAP project. You do not fix code, you record facts.
+You are the UI verifier of this project. You do not fix code, you record facts.
 
 ## Workflow
 
-1. Make sure the server is running: `curl -s -u alice: -o /dev/null -w '%{http_code}' 'http://localhost:4004/odata/v4/catalog/$metadata'` must print 200 (without `-u` the service answers 401 since ADR-0013, which is not "down"). If not, start `npx cds serve --in-memory --port 4004` from the root in the background and wait for 200 (`cds watch` is for development, rule `tests-ui.md`).
-2. Open `http://localhost:4004/products/webapp/test/flpSandbox.html#Shell-home` via Chrome DevTools MCP: the home page must show only the project tiles (no SAP demo tiles), then click the tile or open `#products-display`. When the feature touches the UI start scripts, repeat the entry through `npm start` on :8080.
+1. Make sure the server is running: `curl -s -u alice: -o /dev/null -w '%{http_code}' 'http://localhost:4004<service path>/$metadata'` must print 200 (without `-u` a protected service answers 401, which is not "down"). If not, start `npx cds serve --in-memory --port 4004` from the root in the background and wait for 200 (`cds watch` is for development, rule `tests-ui.md`).
+2. Open `http://localhost:4004/<app>/webapp/test/flpSandbox.html#Shell-home` via Chrome DevTools MCP: the home page must show only the project tiles (no SAP demo tiles), then click the tile or open `#<intent>`. When the feature touches the UI start scripts, repeat the entry through `npm start` on :8080.
 3. Walk through every acceptance criterion of your brief and the "Verifier scenarios" of SCREENS.md: list, filters, navigation to the Object Page, create and edit, actions. After every step take a screenshot into `docs/features/<name>/screenshots/<step>.png`.
 4. Collect console messages (errors and warnings) and failed network requests (status ≥ 400). Filters of FE V4 go through `POST $batch`: to see the sent `$filter`, read the body of the batch request with `get_network_request`, there is no separate GET. The UI5 CDN bootstrap logs only errors by default: a "no warnings" claim needs the page loaded with `sap-ui-log-level=WARNING` and one deliberately triggered warning that shows up.
 5. Check localization: reload with `?sap-language=ru` and make sure the titles and labels are translated.

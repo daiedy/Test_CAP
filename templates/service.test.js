@@ -5,66 +5,64 @@ import cds from '@sap/cds';
 
 const { GET, POST, PATCH, DELETE, expect, defaults } = cds.test(import.meta.dirname + '/..');
 defaults.auth = { username: 'alice' };
-const base = '/odata/v4/catalog';
+const base = '/odata/v4/orders';
 
-describe('CatalogService.Products', () => {
-  it('lists seeded products with price as string', async () => {
-    const { data } = await GET(`${base}/Products?$top=2&$orderby=name`);
+describe('OrdersService.Orders', () => {
+  it('lists seeded orders with the total as string', async () => {
+    const { data } = await GET(`${base}/Orders?$top=2&$orderby=orderNo`);
     expect(data.value).to.have.length(2);
     expect(data.value).to.containSubset([
-      { name: 'Backpack', price: '59.99', currency_code: 'USD' },
+      { orderNo: 'ORD-000001', total: '59.99', currency_code: 'USD' },
     ]);
   });
 
-  it('creates a product with mandatory fields', async () => {
-    // ADR-0012: on a draft-enabled entity a POST without IsActiveEntity creates a draft, so
-    // an active record is requested explicitly.
-    const { status, data } = await POST(`${base}/Products`, {
+  it('creates an order with mandatory fields', async () => {
+    // On a draft-enabled entity a POST without IsActiveEntity creates a draft, so an active
+    // record is requested explicitly; an entity without drafts takes no IsActiveEntity.
+    const { status, data } = await POST(`${base}/Orders`, {
       IsActiveEntity: true,
-      name: 'Test Lamp',
-      price: '10.00',
+      orderNo: 'ORD-900001',
+      customer: 'Test Customer',
       currency_code: 'USD',
-      stock: 5,
-      category_code: 'FURNITURE',
+      quantity: 5,
     });
     expect(status).to.equal(201);
-    expect(data).to.containSubset({ name: 'Test Lamp', stock: 5 });
-    await DELETE(`${base}/Products(ID=${data.ID},IsActiveEntity=true)`);
+    expect(data).to.containSubset({ orderNo: 'ORD-900001', quantity: 5 });
+    await DELETE(`${base}/Orders(ID=${data.ID},IsActiveEntity=true)`);
   });
 
-  it('rejects a product without a name', async () => {
+  it('rejects an order without a customer', async () => {
     await expect(
-      POST(`${base}/Products`, {
+      POST(`${base}/Orders`, {
         IsActiveEntity: true,
-        price: '1.00',
+        orderNo: 'ORD-900002',
         currency_code: 'USD',
-        stock: 1,
-        category_code: 'X',
+        quantity: 1,
       })
     ).to.be.rejectedWith(/400/);
   });
 
-  it('rejects negative stock via @assert.range', async () => {
-    const { data } = await GET(`${base}/Products?$top=1`);
-    // ADR-0012: PATCH addresses the active record explicitly by its (ID, IsActiveEntity) key.
+  it('rejects a negative quantity via @assert.range', async () => {
+    const { data } = await GET(`${base}/Orders?$top=1`);
+    // PATCH addresses the active record explicitly by its (ID, IsActiveEntity) key.
     await expect(
-      PATCH(`${base}/Products(ID=${data.value[0].ID},IsActiveEntity=true)`, { stock: -1 })
+      PATCH(`${base}/Orders(ID=${data.value[0].ID},IsActiveEntity=true)`, { quantity: -1 })
     ).to.be.rejectedWith(/400/);
   });
 });
 
 describe('authorization', () => {
   it('denies anonymous access', async () => {
-    // { auth: null } overrides defaults.auth and sends no Authorization header (ADR-0013);
+    // { auth: null } overrides defaults.auth and sends no Authorization header;
     // the error carries a numeric status/code 401.
-    const err = await expect(GET(`${base}/Products`, { auth: null })).to.be.rejectedWith(/401/);
+    const err = await expect(GET(`${base}/Orders`, { auth: null })).to.be.rejectedWith(/401/);
     expect(err.status).to.equal(401);
   });
 
   it('denies a user without the required role', async () => {
-    // A denied role carries a string code '403', unlike the numeric 401 above (ADR-0013).
+    // A denied role carries a string code '403', unlike the numeric 401 above.
     const err = await expect(
-      GET(`${base}/Products`, { auth: { username: 'carol' } })
+      GET(`${base}/Orders`, { auth: { username: 'carol' } })
     ).to.be.rejectedWith(/403/);
     expect(err).to.containSubset({ code: '403' });
   });

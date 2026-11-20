@@ -17,7 +17,7 @@ A field that is editable only while another field of the same record has a value
 
 At the plan gate on 2026-10-10 the user required that category and subcategory are both mandatory and that the subcategory field is disabled until a category is chosen.
 
-## What it means for the catalog
+## What it means for the application
 
 - In edit mode the Subcategory field is greyed out until a category is chosen, then it shows the required marker. See [The subcategory field stays disabled until a category is chosen](../rules/The-subcategory-field-stays-disabled-until-a-category-is-chosen.md) and [Choose a category and subcategory](../how-to/Choose-a-category-and-subcategory.md).
 - The server still refuses a missing subcategory on every path, including the API and the Excel import, because the screen setting is a convenience and not the rule. See [A product needs a name, price, currency, stock, category and subcategory](../rules/A-product-needs-a-name-price-currency-stock-category-and-subcategory.md).

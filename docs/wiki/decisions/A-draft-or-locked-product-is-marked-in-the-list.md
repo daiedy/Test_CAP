@@ -17,7 +17,7 @@ The marker in the product list is produced by one presentation setting: the prod
 
 Once products are edited through drafts, a user needs to see in the list which products have an unsaved draft or are being edited by somebody else.
 
-## What it means for the catalog
+## What it means for the application
 
 - A product with a draft shows a draft marker beside its name, and a product that someone else is editing shows a lock marker. See [Edit, save, keep or discard a draft](../how-to/Edit-save-keep-or-discard-a-draft.md).
 - At the time of this decision two products may still have the same name; a rule that forbids it was added later (feature products-validations): [A product name is unique in the catalog](../rules/A-product-name-is-unique-in-the-catalog.md).

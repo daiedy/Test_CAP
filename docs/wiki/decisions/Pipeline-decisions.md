@@ -21,6 +21,7 @@ adr:
   - ADR-0030
   - ADR-0031
   - ADR-0032
+  - ADR-0033
 sources:
   - docs/decisions/ADR-0001-node22-cds10.md
   - docs/decisions/ADR-0002-vitest-cds-test.md
@@ -40,6 +41,7 @@ sources:
   - docs/decisions/ADR-0030-business-rules-wiki.md
   - docs/decisions/ADR-0031-context-hygiene.md
   - docs/decisions/ADR-0032-agent-turn-budget.md
+  - docs/decisions/ADR-0033-application-neutral-pipeline.md
 ---
 
 # Pipeline decisions
@@ -64,6 +66,7 @@ These decisions do not change what a user of the catalog sees. They fix how the 
 - ADR-0018: [Context budget by structure, not by line counts; marked units, commands as writers and a brief instead of a reading list since ADR-0031](../../decisions/ADR-0018-context-budget.md)
 - ADR-0031: [Context hygiene: a role brief from marked feature documents, a soft gate on repeated reads, no resume after a report, check output relayed whole or by log path, a context card](../../decisions/ADR-0031-context-hygiene.md)
 - ADR-0032: [A hook tells a subagent its turn against `maxTurns`: a note from the last 6 to 8 turns on, counted from the agent file, limit stops on the cost card](../../decisions/ADR-0032-agent-turn-budget.md)
+- ADR-0033: [Pipeline files name no application: placeholders, the registry as the source of names, project configuration for the rest](../../decisions/ADR-0033-application-neutral-pipeline.md)
 
 ## Backlog, metrics and state
 

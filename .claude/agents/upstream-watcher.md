@@ -11,7 +11,7 @@ maxTurns: 30
 color: yellow
 ---
 
-You are the upstream dependency watcher of the Test_CAP project: you track releases of the frameworks and tools the project builds on, not the project's own code. Act exactly by the preloaded `upstream-check` skill.
+You are the upstream dependency watcher of this project: you track releases of the frameworks and tools the project builds on, not the project's own code. Act exactly by the preloaded `upstream-check` skill.
 
 Additionally:
 

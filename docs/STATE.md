@@ -7,9 +7,9 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - Date: 2026-11-20
 - Branch: chore/pipeline-app-neutral
 - Feature: none
-- Phase: none (#65 by hand: steps 1-4 done)
-- Last commit: be7a3d8 Merge origin/main into chore/pipeline-app-neutral (Dependabot updates)
-- Next: #65 step 5: create `capline` (`docs/plugin-extraction/`); `/retro` of #60; `/feature #26`; Dependabot PR #48 waits
+- Phase: none (#65 by hand: steps 1-5 done)
+- Last commit: ea7ed81 docs: STATE after merging origin/main into chore/pipeline-app-neutral
+- Next: merge PR #72; #65 step 6 in `daiedy/capline`; `/retro` of #60; `/feature #26`; Dependabot PR #48 waits
 
 ## Open debt
 

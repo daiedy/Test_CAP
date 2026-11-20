@@ -17,7 +17,7 @@ Working record of issue #65 `pipeline-plugin-repo`: moving the agentic pipeline 
 | 2. Sort the knowledge | Done at the level of whole ADRs and pattern rows; the rewrite of the rows is part of step 4 |
 | 3. Trial plugin | Done; three points left open in `SPIKE.md` |
 | 4. Remove the application names | Done in this repository on the branch `chore/pipeline-app-neutral` (ADR-0033): placeholders in the agents, skills and rules, names from `docs/registry`, `.claude/pipeline.json` for the wiki rule areas, templates on the Orders example, a ratchet test |
-| 5. Create the repository | Not started; decided: private during the extraction, public from the first working version, Apache-2.0 after the rights check. Name decided on 2026-11-20: `capline` for the repository and the plugin. Waits for the decision on the git history |
+| 5. Create the repository | Done on 2026-11-20: `daiedy/capline`, private, a fresh history. Its import commit `91b90ca` holds the pipeline files of this repository at `ea7ed81` (pull request 72, CI green) as a marketplace with one plugin `capline`; this folder is copied there as `docs/extraction/`. Not installable yet. Public from the first working version, Apache-2.0 after the rights check |
 | 6 to 10 | Not started |
 
 Decided with the user on 2026-11-20: the first version keeps this project's defaults and opens three switches (languages, test command, tracker), with a warning where a project differs; CI gets the pipeline scripts by a checkout of the plugin repository at a tag (`AUDIT.md`, finding 1).

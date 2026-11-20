@@ -2,6 +2,10 @@
 
 Format: date, area, what changed. Maintained by `docs-keeper`, all agents add to it. New entries on top.
 
+## 2026-11-19
+
+- docs: **`pipeline-plugin-repo` (#65) steps 1 to 3, recorded in `docs/plugin-extraction/`; no code changed.** Semantic audit of 881 rule statements of `CLAUDE.md`, the path rules, the agent prompts, the skills, `PATTERNS.md`, `CONVENTIONS.md`, `TESTING.md` and the tables in `scripts/` (`AUDIT.md`, ledgers in `audit/`): 387 pipeline mechanics, 41 stack facts, 122 facts under a condition, 289 choices of this project, 15 application details; 234 of the 304 choices and details do not name the application. The 32 ADRs and the 77 pattern rows are sorted in `KNOWLEDGE.md`. A trial plugin on Claude Code 2.1.326 (`SPIKE.md`) showed: a hook sees a plugin agent as `<plugin>:<agent>`, `memory: project` writes to `.claude/agent-memory/<plugin>-<agent>/`, a bundled MCP tool is `mcp__plugin_<plugin>_<server>__<tool>`, plugin hooks hand `additionalContext` on every event the pipeline uses.
+
 ## 2026-11-13
 
 - docs: **`agent-turn-budget` (#60) step 9, the feature documented (ADR-0032 accepted, decision 4 amended).** PATTERNS row "Turn budget note", `docs/metrics/definitions.md` D19 and `data-flow.md`, the PostToolBatch hook in `CLAUDE.md`, README Check 9 and `docs/images/pipeline-flow.svg`, the ADR-0032 digest in `Pipeline-decisions.md`, `test/prompt-budget.json` re-recorded; `docs/features/agent-turn-budget/SUMMARY.md`; LESSONS: the 2026-11-13 entry on unseen turn counts is closed by this feature and six lessons of the feature are added; STATE: two open-debt rows (overwritten kept report, `resume-gate.mjs` own path lookup).

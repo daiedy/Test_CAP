@@ -17,7 +17,7 @@ The product list is draft-enabled. Edit, Save and Cancel (with a confirmation be
 
 The product page had no edit mode, because the platform shows Edit, Save and Cancel only for a draft-enabled list. The project had no rule on whether an editable screen uses drafts or inline edit.
 
-## What it means for the catalog
+## What it means for the application
 
 - Nobody changes a product directly: Edit opens a private draft, Save checks every rule and publishes it, Cancel throws it away. See [A product is created and changed through a draft](../rules/A-product-is-created-and-changed-through-a-draft.md).
 - While one person has a draft, another person cannot start a second one; the row shows that the product is locked. See [The draft and lock marker](A-draft-or-locked-product-is-marked-in-the-list.md).

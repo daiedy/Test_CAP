@@ -1,5 +1,5 @@
 {
-  "x-sources": "66060e90d1a0a10b",
+  "x-sources": "a90e747d5bc463fc",
   "nodes": [
     {
       "path": "docs/wiki/Glossary.md",
@@ -248,7 +248,8 @@
         "docs/decisions/ADR-0023-pipeline-state-hygiene.md",
         "docs/decisions/ADR-0030-business-rules-wiki.md",
         "docs/decisions/ADR-0031-context-hygiene.md",
-        "docs/decisions/ADR-0032-agent-turn-budget.md"
+        "docs/decisions/ADR-0032-agent-turn-budget.md",
+        "docs/decisions/ADR-0033-application-neutral-pipeline.md"
       ],
       "verified": null,
       "codeHash": null,
@@ -271,7 +272,8 @@
         "ADR-0023",
         "ADR-0030",
         "ADR-0031",
-        "ADR-0032"
+        "ADR-0032",
+        "ADR-0033"
       ]
     },
     {

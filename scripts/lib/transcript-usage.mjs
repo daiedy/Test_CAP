@@ -57,8 +57,8 @@ export function claudeHome(env = process.env) {
 
 /**
  * Transcript directory of a working directory: `<home>/projects/<slug>`, slug = the cwd with every
- * character outside [A-Za-z0-9] replaced by `-` (measured: `/Users/a_b/Test_CAP` gives
- * `-Users-a-b-Test-CAP`).
+ * character outside [A-Za-z0-9] replaced by `-` (measured: `/Users/a_b/My_App` gives
+ * `-Users-a-b-My-App`).
  */
 export function projectDir(cwd, home = claudeHome()) {
   return path.join(home, 'projects', String(cwd).replace(/[^A-Za-z0-9]/g, '-'));

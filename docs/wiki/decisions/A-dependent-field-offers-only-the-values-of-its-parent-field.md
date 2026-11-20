@@ -23,7 +23,7 @@ The first use is the subcategory of a product.
 
 A subcategory refines a category. Offering only fitting subcategories prevents the error before it can be made, and the constraint is the guard on every other path.
 
-## What it means for the catalog
+## What it means for the application
 
 - The Subcategory dropdown lists only the subcategories of the chosen category. See [Choose a category and subcategory](../how-to/Choose-a-category-and-subcategory.md).
 - A pair from two categories is never stored: [The subcategory belongs to the product's category](../rules/The-subcategory-belongs-to-the-products-category.md) (BR-PRODUCTS-001).

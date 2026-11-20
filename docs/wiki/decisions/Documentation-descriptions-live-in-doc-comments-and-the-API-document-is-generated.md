@@ -23,7 +23,7 @@ The first use is the documentation toolchain feature.
 
 Issue #27 asked that the documentation already written in the sources reaches its readers. The compiler dropped doc comments unless the setting is on, no API document existed, and JSDoc was required by the conventions but checked by nobody.
 
-## What it means for the catalog
+## What it means for the application
 
 - The catalog API document is generated and is shown as a [page of this wiki](../api/API.md), so a person who connects another system reads it here.
 - The descriptions in the [Catalog service API](../api/Catalog-service-API.md) come from the same comments as the registry, so they cannot drift from the code.

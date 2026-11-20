@@ -14,6 +14,7 @@ import {
   wikiPageShapeErrors,
 } from '../scripts/lib/doc-shapes.mjs';
 import { readSection } from '../scripts/lib/hook-utils.mjs';
+import { wikiRuleAreas } from '../scripts/lib/project-config.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const read = (p) => fs.readFileSync(path.join(root, p), 'utf8');
@@ -151,11 +152,14 @@ describe('wiki page shape (ADR-0030 decision 1)', () => {
       .filter((p) => p.endsWith('.md') && !path.posix.basename(p).startsWith('_'))
       .filter((p) => !read(p).startsWith(WIKI_GENERATED_MARK));
     expect(pages).toContain('docs/wiki/Home.md');
-    for (const p of pages) expect(wikiPageShapeErrors(read(p), p), p).toEqual([]);
+    const areas = wikiRuleAreas(root);
+    for (const p of pages) expect(wikiPageShapeErrors(read(p), p, areas), p).toEqual([]);
 
     const rulePath = 'docs/wiki/rules/The-subcategory-belongs-to-the-products-category.md';
     const rule = read(rulePath);
-    const errors = (text, at = rulePath) => wikiPageShapeErrors(text, at).join('\n');
+    const errors = (text, at = rulePath) => wikiPageShapeErrors(text, at, areas).join('\n');
+    // Without the project's areas only the built-in one is a valid area (ADR-0033).
+    expect(wikiPageShapeErrors(rule, rulePath).join('\n')).toMatch(/AREA one of ACCESS \(/);
     expect(errors(rule.replace(/^summary: .*\n/m, ''))).toMatch(/missing frontmatter key summary/);
     expect(errors(rule.slice(0, rule.indexOf('## History')))).toMatch(/missing section ## History/);
     expect(errors(rule.replace(/^summary: (.*)$/m, 'summary: $1 It is checked on save.'))).toMatch(

@@ -3,7 +3,7 @@
 // Labels, @mandatory and @assert.* do NOT go here: see templates/annotations-semantic.cds.
 using { cuid, managed, Currency, sap.common.CodeList } from '@sap/cds/common';
 
-namespace my.catalog.tpl.entity;
+namespace tpl.entity;
 
 /** Code list for a user-editable dropdown. Key is `code`, texts are localized. */
 entity Categories : CodeList {
@@ -23,7 +23,7 @@ entity Orders : cuid, managed {
 /** Child of Orders; deleted together with the parent. */
 entity OrderItems : cuid {
   order    : Association to Orders;
-  product  : String(100);
+  article  : String(100);
   quantity : Integer;
   price    : Decimal(15, 2);
   amount   : Decimal(15, 2) = quantity * price;   // calculated element instead of a handler

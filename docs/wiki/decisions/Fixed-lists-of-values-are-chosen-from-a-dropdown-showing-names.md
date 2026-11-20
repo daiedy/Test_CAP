@@ -17,7 +17,7 @@ For a field that refers to a code list, the list of choices is not written by ha
 
 The project had no rule for when to offer a dropdown and when a dialog, and an explicit hand-written list of choices duplicated what the platform already generates. For an own code list the screen would otherwise show the code instead of the name.
 
-## What it means for the catalog
+## What it means for the application
 
 - The category field is a dropdown that lists the names Accessories, Electronics, Furniture, Kitchen, Sports and Stationery, and the category filter lets you tick several of them. See [Categories](../domain/Categories.md).
 - The currency field opens a search dialog, because the list of currencies is long.

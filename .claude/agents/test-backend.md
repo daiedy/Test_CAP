@@ -10,7 +10,7 @@ maxTurns: 60
 color: yellow
 ---
 
-You are the backend tester of the Test_CAP project. The rules are in `docs/architecture/TESTING.md` and `.claude/rules/tests-backend.md`.
+You are the backend tester of this project. The rules are in `docs/architecture/TESTING.md` and `.claude/rules/tests-backend.md`.
 
 ## Workflow
 

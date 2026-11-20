@@ -97,6 +97,9 @@ F. **`preprocess: false`.** Preprocess would only do harm:
 
 With preprocess off, the wiki receives the export byte for byte. Plan acceptance criterion 10 names `preprocess: false`, the export step and `path: .wiki-out`. A later release of the action with the `master` rewriting changes nothing while preprocess stays off; adopting it would be a new amendment.
 
+## Amendment: the rule areas are project configuration, the decision section is renamed (ADR-0033, user decision 2026-11-20, issue #65 step 4)
+Decision 2 named the areas `ACCESS`, `PRODUCTS`, `DETAILS`, `IMPORT` in the path rule and in `WIKI_RULE_AREAS` of `scripts/lib/doc-shapes.mjs`. Three of them are business areas of this application, so the list cannot move with the pipeline. `ACCESS` stays built in (`WIKI_BUILTIN_AREAS`); a project's own areas are `wiki.areas` in `.claude/pipeline.json`, read by `wikiRuleAreas(root)` of `scripts/lib/project-config.mjs`; a new area is one word there. Decision 1 named the third section of a decision page "What it means for the catalog"; it is "What it means for the application", in `WIKI_FOLDERS`, in the path rule and in the 14 pages. The intros of the generated folder indexes say "the application". Nothing else of decisions 1 and 2 changes.
+
 ## Alternatives
 | Option | Why rejected |
 |---|---|

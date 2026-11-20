@@ -5,7 +5,7 @@ paths:
 # Test data (db/data/)
 
 ## Rules
-- File name `<namespace>-<Entity>.csv`, for example `my.catalog-Products.csv`. For texts: `<namespace>-<Entity>.texts.csv`.
+- File name `<namespace>-<Entity>.csv`, for example `my.shop-Orders.csv`. For texts: `<namespace>-<Entity>.texts.csv`.
 - Files are created with the command `cds add data --filter <Entity> --records <N>`, then the placeholders (`name-29894036`) are replaced with meaningful values. Generated IDs and foreign keys are kept.
 - `cds add data` also merges a facet into the protected `mta.yaml`: run `git status` after it and report the `mta.yaml` change under Open questions (a subagent cannot revert it); the orchestrator restores the file before the commit.
 - Separator `;`, as in the existing file. The header matches the element names exactly; foreign keys in the form `<assoc>_<key>` (`currency_code`, `category_ID`).

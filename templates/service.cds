@@ -6,7 +6,7 @@
 // Semantic annotations are imported at the end from srv/annotations/<Entity>.cds.
 using { cuid, managed, Currency } from '@sap/cds/common';
 
-namespace my.catalog.tpl.svc;
+namespace tpl.svc;
 
 entity Orders : cuid, managed {
   orderNo  : String(20);

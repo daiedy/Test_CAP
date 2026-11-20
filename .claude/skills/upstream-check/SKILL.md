@@ -23,7 +23,7 @@ If the diff is empty (`No changes since the last run.`), add a one-line section 
 
 For every item in the diff sections decide whether it affects the project:
 
-1. Open `docs/architecture/STACK.md` and `package.json` (root and `app/products`), as well as `.mcp.json`.
+1. Open `docs/architecture/STACK.md` and `package.json` (root and `app/<app>`), as well as `.mcp.json`.
 2. The package is in the project and a new version is out → **affects**. A major → affects strongly, a separate task is needed.
 3. The package is planned for a future phase (see STACK.md, section "Planned") → affects, note "consider when installing".
 4. The package is not used and not planned → **does not affect**.

@@ -17,7 +17,7 @@ Every kind of record in the catalog gets a generated identity and records who cr
 
 Different working sessions had modelled the same situation in different ways: identity keys, enumerations against code tables, decimal precision. One way per situation keeps the catalog consistent.
 
-## What it means for the catalog
+## What it means for the application
 
 - Every product, detail row and other record has a hidden generated identity plus "created" and "changed" information, which is why a record can be traced to a person and a time.
 - A user picks a category, subcategory or currency from a list of values, never types free text for them. See [Categories](../domain/Categories.md) and [Subcategories](../domain/Subcategories.md).

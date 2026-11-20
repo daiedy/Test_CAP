@@ -21,7 +21,7 @@ When the subcategory of a draft changes while rows exist, nothing is deleted aut
 
 Issue #9 asked for a Details section whose content depends on the product's subcategory. The user chose dynamic attributes over fixed typed fields, with attributes reusable across subcategories through an assignment, edited inside the product draft by an editor and read-only for a viewer.
 
-## What it means for the catalog
+## What it means for the application
 
 - A product of a subcategory can hold only the attributes that subcategory offers, each once. See [An attribute is used once per product and belongs to the subcategory](../rules/An-attribute-is-used-once-per-product-and-belongs-to-the-subcategory.md).
 - Changing the subcategory of a product that has detail rows does not silently delete data: [A subcategory change must not leave details that do not fit](../rules/A-subcategory-change-must-not-leave-details-that-do-not-fit.md).

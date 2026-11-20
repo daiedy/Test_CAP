@@ -36,7 +36,8 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSy
 import { dirname, isAbsolute, join, posix, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isUnder } from './lib/hook-utils.mjs';
-import { WIKI_RULE_AREAS, parseFrontmatter } from './lib/doc-shapes.mjs';
+import { parseFrontmatter } from './lib/doc-shapes.mjs';
+import { CONFIG_FILE, wikiRuleAreas } from './lib/project-config.mjs';
 import {
   GRAPH,
   WIKI_DIR,
@@ -54,7 +55,7 @@ const USAGE = `usage: node scripts/wiki.mjs <command>
   find <term>         pages naming the term in their frontmatter, title or summary
   related <page>      pages the page links to and pages linking to it
   for-path <file>     pages whose code names the file (read them before editing it)
-  next-id <AREA>      next free rule id, AREA one of ${WIKI_RULE_AREAS.join(', ')}
+  next-id <AREA>      next free rule id; AREA is ACCESS or an area of wiki.areas in ${CONFIG_FILE}
   confirm <page>...   stamp verified with the current hash of the page's code files
   audit               stale pages, uncovered message keys and constrained elements
   export <dir> [--ref <ref>] [--repo-url <url>]
@@ -241,15 +242,19 @@ export function pagesForPath(graph, file) {
  * pages. A rule is retired, never deleted (ADR-0030 decision 2), so its number is never given
  * again; an id quoted in prose (an example) does not count.
  * @param {string} root project root
- * @param {string} area one of WIKI_RULE_AREAS, any case
+ * @param {string} area one of wikiRuleAreas(root), any case
  * @returns {string} `BR-<AREA>-NNN`
  */
 export function nextId(root, area) {
   const a = String(area).toUpperCase();
-  if (!WIKI_RULE_AREAS.includes(a))
-    throw new Error(`unknown area ${area}; areas: ${WIKI_RULE_AREAS.join(', ')}`);
-  // Without the pages every id looks free: never answer for a root without a wiki.
+  // Without the pages every id looks free: never answer for a root without a wiki. First, because
+  // the areas are those of the project and a folder without a wiki has none to name.
   requireWiki(root);
+  const areas = wikiRuleAreas(root);
+  if (!areas.includes(a))
+    throw new Error(
+      `unknown area ${area}; areas: ${areas.join(', ')} (a project's own areas are wiki.areas in ${CONFIG_FILE})`
+    );
   const pattern = new RegExp(`^BR-${a}-(\\d{3})$`);
   let max = 0;
   for (const f of readWikiFiles(root)) {

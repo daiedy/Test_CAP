@@ -7,8 +7,8 @@ allowed-tools: Bash, Read
 
 Mode: `$ARGUMENTS` (default `full`).
 
-- **full**: from the root `npm run watch` in the background; wait for `curl -sf -u alice: 'http://localhost:4004/odata/v4/catalog/$metadata'` (anonymous callers get 401 since ADR-0013); UI address `http://localhost:4004/products/webapp/test/flpSandbox.html#products-display`.
-- **proxy**: the same plus `npm start` in `app/products` in the background; address `http://localhost:8080/test/flpSandbox.html#products-display`.
-- **mock**: only `npm run start-mock` in `app/products`; the address is the same, data from `webapp/localService`.
+- **full**: from the root `npm run watch` in the background; wait for `curl -sf -u alice: 'http://localhost:4004<service path>/$metadata'` (anonymous callers of a protected service get 401); UI address `http://localhost:4004/<app>/webapp/test/flpSandbox.html#<intent>`.
+- **proxy**: the same plus `npm start` in `app/<app>` in the background; address `http://localhost:8080/test/flpSandbox.html#<intent>`.
+- **mock**: only `npm run start-mock` in `app/<app>`; the address is the same, data from `webapp/localService`.
 
-After the start check: `$metadata` responds 200, `Products/$count` returns a number, the FLP page returns 200. Report the addresses and how to stop (`pkill -f 'cds serve'`, `pkill -f 'fiori run'`). For a visual check delegate to `ui-verifier`.
+After the start check: `$metadata` responds 200, `<EntitySet>/$count` returns a number, the FLP page returns 200. Report the addresses and how to stop (`pkill -f 'cds serve'`, `pkill -f 'fiori run'`). For a visual check delegate to `ui-verifier`.

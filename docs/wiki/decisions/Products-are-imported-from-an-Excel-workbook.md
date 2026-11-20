@@ -21,7 +21,7 @@ The import is all or nothing with a complete report: every row is checked, and i
 
 Creating many products one draft at a time is slow, and a partly imported file is hard to repair. Reusing the normal checks keeps an imported product to the same rules as a typed one.
 
-## What it means for the catalog
+## What it means for the application
 
 - An editor can create many products in one step. See [Import products from Excel](../how-to/Import-products-from-Excel.md).
 - The file is rejected as a whole when a header is wrong or a row is bad. See [An import creates all products or none](../rules/An-import-creates-all-products-or-none.md), [The header row names known columns once and includes the mandatory ones](../rules/The-header-row-names-known-columns-once-and-includes-the-mandatory-ones.md) and [The import file is an xlsx workbook with product rows within the size limits](../rules/The-import-file-is-an-xlsx-workbook-with-product-rows-within-the-size-limits.md).

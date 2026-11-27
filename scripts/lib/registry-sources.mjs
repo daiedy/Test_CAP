@@ -46,6 +46,7 @@ export function collectSourceFiles(root) {
         const keep =
           rel.endsWith('.cds') ||
           rel === 'webapp/manifest.json' ||
+          rel === 'webapp/appconfig/fioriSandboxConfig.json' ||
           rel.startsWith('webapp/ext/') ||
           rel.startsWith('webapp/model/') ||
           rel.startsWith('webapp/i18n/') ||

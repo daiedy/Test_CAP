@@ -2,17 +2,17 @@
 // no access to req/res or cds.context. Check docs/registry/REUSE-CATALOG.md before adding a new module.
 
 /**
- * Calculate the stock level after a reorder.
- * @param {number} currentStock current quantity on hand
- * @param {number} amount quantity to add, must be positive
- * @returns {number} new stock level
- * @throws {RangeError} when amount is not a positive integer
+ * Calculate the total of an order.
+ * @param {number} quantity number of ordered units, must be positive
+ * @param {number} unitPrice price of one unit
+ * @returns {number} total, rounded to two decimals
+ * @throws {RangeError} when quantity is not a positive integer
  */
-export function reorderQuantity(currentStock, amount) {
-  if (!Number.isInteger(amount) || amount <= 0) {
-    throw new RangeError(`amount must be a positive integer, got ${amount}`);
+export function orderTotal(quantity, unitPrice) {
+  if (!Number.isInteger(quantity) || quantity <= 0) {
+    throw new RangeError(`quantity must be a positive integer, got ${quantity}`);
   }
-  return currentStock + amount;
+  return Math.round(quantity * unitPrice * 100) / 100;
 }
 
 /**

@@ -24,7 +24,8 @@ import {
   wikiStatus,
   writeWiki,
 } from '../scripts/gen-wiki.mjs';
-import { WIKI_GENERATED_MARK, WIKI_RULE_AREAS } from '../scripts/lib/doc-shapes.mjs';
+import { WIKI_GENERATED_MARK } from '../scripts/lib/doc-shapes.mjs';
+import { CONFIG_FILE, wikiRuleAreas } from '../scripts/lib/project-config.mjs';
 import { recordedHash, sourcesHash } from '../scripts/lib/registry-sources.mjs';
 import { exportWiki, nextId, pagesForPath, readGraph, wikiRoot } from '../scripts/wiki.mjs';
 import { parse as parseYaml } from 'yaml';
@@ -89,8 +90,16 @@ const wiki = (cwd, ...args) =>
   spawnSync(process.execPath, [CLI, ...args], { cwd, encoding: 'utf8' });
 
 /** A project folder under the OS temp dir (realpath: macOS tmpdir is a symlink). */
-function tempProject(prefix) {
+/** The rule areas of the temp projects: the test pages carry ids of these areas. */
+const TEST_CONFIG = { wiki: { areas: ['PRODUCTS', 'DETAILS', 'IMPORT'] } };
+
+/** A temp project with the configuration `config`; `null` leaves the project without one. */
+function tempProject(prefix, { config = TEST_CONFIG } = {}) {
   const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), `${prefix}-`)));
+  if (config) {
+    fs.mkdirSync(path.dirname(path.join(dir, CONFIG_FILE)), { recursive: true });
+    fs.writeFileSync(path.join(dir, CONFIG_FILE), JSON.stringify(config));
+  }
   const put = (entries) => {
     for (const [rel, text] of Object.entries(entries)) {
       fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
@@ -503,6 +512,7 @@ describe('Wiki lookup CLI (ADR-0030 decision 5)', () => {
       const unknown = wiki(p.dir, 'next-id', 'PRICES');
       expect(unknown.status).toBe(1);
       expect(unknown.stderr).toMatch(/unknown area PRICES/);
+      expect(unknown.stderr).toMatch(/areas: ACCESS, PRODUCTS, DETAILS, IMPORT \(/);
       const usage = wiki(p.dir, 'next-id');
       expect(usage.status).toBe(1);
       expect(usage.stderr).toMatch(/^usage: node scripts\/wiki\.mjs/);
@@ -510,12 +520,26 @@ describe('Wiki lookup CLI (ADR-0030 decision 5)', () => {
       p.remove();
     }
 
+    // A project without a configuration knows the built-in area only (ADR-0033).
+    const bare = tempProject('wiki-no-config', { config: null });
+    try {
+      bare.put({ [HOME]: page({ title: 'Home', summary: 'Entry page.', body: 'No rule yet.' }) });
+      expect(nextId(bare.dir, 'ACCESS')).toBe('BR-ACCESS-001');
+      expect(() => nextId(bare.dir, 'PRODUCTS')).toThrow(
+        /unknown area PRODUCTS; areas: ACCESS \(a project's own areas are wiki\.areas in \.claude\/pipeline\.json\)/
+      );
+    } finally {
+      bare.remove();
+    }
+
     const inUse = new Set(
       readGraph(root)
         .nodes.map((n) => n.id)
         .filter(Boolean)
     );
-    for (const area of WIKI_RULE_AREAS) {
+    // The areas of this project: the built-in one and those of its .claude/pipeline.json.
+    expect(wikiRuleAreas(root)).toEqual(['ACCESS', 'PRODUCTS', 'DETAILS', 'IMPORT']);
+    for (const area of wikiRuleAreas(root)) {
       const id = nextId(root, area);
       expect(id).toMatch(new RegExp(`^BR-${area}-\\d{3}$`));
       expect(inUse.has(id), id).toBe(false);

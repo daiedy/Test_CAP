@@ -17,7 +17,7 @@ The whole service requires a signed-in user; an anonymous request is refused. Th
 
 The catalog had no access control. The user decided that a viewer must not see actions that would fail.
 
-## What it means for the catalog
+## What it means for the application
 
 - A person who is not signed in sees nothing. See [Only signed-in users reach the catalog](../rules/Only-signed-in-users-reach-the-catalog.md).
 - A viewer reads products and cannot create, change, delete or import; an editor can. See [Viewers read, editors change](../rules/Viewers-read-editors-change.md).

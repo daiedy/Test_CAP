@@ -4,12 +4,12 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## Now
 
-- Date: 2026-11-13
-- Branch: feature/agent-turn-budget
+- Date: 2026-11-25
+- Branch: main
 - Feature: none
-- Phase: none (agent-turn-budget #60 done and closed, branch not pushed)
-- Last commit: bcd8906 docs: agent-turn-budget summary and registry
-- Next: push the branch and open a pull request on the user's word; `/retro`; `/feature #26`; Dependabot PR #48 waits
+- Phase: none (#65 by hand: steps 1-5 done)
+- Last commit: 30af67d Merge origin/main into chore/pipeline-app-neutral
+- Next: #65 step 6 in `daiedy/capline`; `/retro` of #60; `/feature #26`; Dependabot PR #48 waits
 
 ## Open debt
 
@@ -39,7 +39,7 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 
 ## What works
 
-- Backend on cds 10.2.2, Node 22: `npm run watch` (`cds watch`, port 4004), `npm run lint`, `npm run lint:js` (ESLint with the jsdoc rules), `npm test` (331 tests in 19 files: `test/catalog-service.test.js`, `test/metadata.test.js` with the `$metadata` snapshot, `test/products-import.test.js`, `test/api-docs.test.js`, `test/backlog.test.js`, `test/wiki.test.js`, `test/lockfile.test.js`, `test/doc-shapes.test.js`, `test/metrics.test.js`, `test/prompt-budget.test.js`, the hook tests `test/hooks-*.test.js`, and since #44 `test/feature-brief.test.js` and `test/hooks-context.test.js`), `npm run docs:registry`
+- Backend on cds 10.2.2, Node 22: `npm run watch` (`cds watch`, port 4004), `npm run lint`, `npm run lint:js` (ESLint with the jsdoc rules), `npm test` (337 tests in 20 files: `test/catalog-service.test.js`, `test/metadata.test.js` with the `$metadata` snapshot, `test/products-import.test.js`, `test/api-docs.test.js`, `test/backlog.test.js`, `test/wiki.test.js`, `test/lockfile.test.js`, `test/doc-shapes.test.js`, `test/metrics.test.js`, `test/prompt-budget.test.js`, the hook tests `test/hooks-*.test.js`, since #44 `test/feature-brief.test.js` and `test/hooks-context.test.js`, and since #65 `test/project-config.test.js`), `npm run docs:registry`
 - UI: `npm start` (proxy, :8080) and `npm run start-mock` in `app/products` both open the app from the FLP sandbox; `ui5lint` 0 problems; `npm run lint:js` (Fiori tools ESLint) 0 errors
 - Object Page editing of `Products` through drafts (ADR-0012): Edit, Save, Cancel with discard confirmation, Create and Delete on the List Report, Editing Status filter, draft lock across users
 - List Report row shows a draft/lock marker (ADR-0015, feature `products-draft-marker`): `Common.SemanticKey: [ name ]` renders a `sap.m.ObjectMarker` in the `Product Name` cell — text-only `Draft` for an own draft, icon-plus-text `LockedBy`/`UnsavedBy` for another user's draft; verified in `en` and `ru`, keyboard-reachable, with the Editing Status filter narrowing to the marked row
@@ -57,6 +57,7 @@ Dashboard of the project, kept in the shape of `templates/STATE.md` (ADR-0018): 
 - UI tests: `npm run test:ui` in `app/products` (`ui5-test-runner` against `npx cds serve --in-memory --port 4004`, credentials from `app/products/ui5-test-runner.json`): 97 passed of 97 (69 `opaTest`s + 28 QUnit; feature `products-validations`, CHANGELOG 2026-11-12 step 7)
 - Project-level Claude Code plugins: `ui5`, `cap-developer`; MCP in `.mcp.json`: `cds-mcp`, `fiori-mcp`, `chrome-devtools`, `ui5-mcp-server` (pinned 0.3.2 since 2026-10-07; the plugin's unpinned server `plugin:ui5:ui5-mcp-server` is toggled off in `/mcp` on each machine). Setup on a new machine: `docs/architecture/STACK.md`
 - Pipeline: 11 subagents in `.claude/agents`, 12 skills, 11 path-based rules, 9 hook events and 13 hook scripts in `.claude/settings.json` (incl. the MCP audit on PostToolUse and PostToolUseFailure), the `docs/registry` registry, the release watcher `scripts/watch-releases.mjs` and the `upstream-check.yml` and `ci.yml` workflows, `.github/dependabot.yml`
+- Application-neutral pipeline files (#65 step 4, ADR-0033): agents, skills, rules, scripts and templates write placeholders and take the names from `docs/registry`; the business areas of the wiki rule ids are `wiki.areas` in `.claude/pipeline.json`; the ratchet is `npx vitest run test/project-config.test.js`
 - `CatalogService` requires authentication (ADR-0013): logging in as `alice` or `bob` (`CatalogEditor`, browser Basic prompt, empty password) shows Create, Delete and Edit as before; logging in as `viewer` (`CatalogViewer`) shows the same 15-row List Report and Object Page but without those four actions - the read-only singleton `CatalogService.Permissions` drives `UI.CreateHidden`/`UpdateHidden`/`DeleteHidden` in `app/products/annotations/Products.cds` through the short singleton path `/Permissions/isEditor`, which opens the Object Page without the UI5 `$select` TypeError (ADR-0013 amendment).
 
 ## Decisions

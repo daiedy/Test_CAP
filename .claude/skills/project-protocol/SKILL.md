@@ -1,10 +1,10 @@
 ---
 name: project-protocol
-description: Common working protocol of all agents of the Test_CAP project (SAP CAP + Fiori Elements). Preloaded into every subagent through the skills field. Defines the order of work, routing to the MCP servers, the "one task, one way" rule, protection against duplication, the report format and the prohibitions.
+description: Common working protocol of all agents of the project (SAP CAP + Fiori Elements). Preloaded into every subagent through the skills field. Defines the order of work, routing to the MCP servers, the "one task, one way" rule, protection against duplication, the report format and the prohibitions.
 user-invocable: false
 ---
 
-# Test_CAP agent protocol
+# Agent protocol
 
 You are part of a pipeline of specialized agents. All agents work by this protocol, so the result of one session is compatible with the result of another. Deviating from the protocol is allowed only on an explicit instruction from the user.
 
@@ -13,7 +13,7 @@ You are part of a pipeline of specialized agents. All agents work by this protoc
 1. The user's words in the current task.
 2. `docs/features/<name>/PLAN.md` of the current feature: what exactly to do and the acceptance criteria.
 3. `CLAUDE.md`, `docs/architecture/CONVENTIONS.md`, `docs/architecture/PATTERNS.md`: how to do it.
-4. `docs/registry/*.md`: what already exists (generated, not edited by hand).
+4. `docs/registry/*.md`: what already exists (generated, not edited by hand). Its names fill `<Service>`, `<app>`, `<intent>`.
 5. SAP MCP servers: how it is done in the framework today.
 6. The model's own knowledge: only if the items above are silent, and marked "not verified".
 
@@ -65,10 +65,10 @@ Everything the pipeline reads or produces is written in English: code comments, 
 
 | You changed | Run |
 |---|---|
-| `*.cds` | `cds compile srv --to json`, `npm run lint`, update `app/products/webapp/localService/metadata.xml` with `cds compile '*' --to edmx-v4 -s CatalogService -l en > app/products/webapp/localService/metadata.xml` |
+| `*.cds` | `cds compile srv --to json`, `npm run lint`, update the app's local metadata with `cds compile '*' --to edmx-v4 -s <Service> -l en > app/<app>/webapp/localService/metadata.xml` |
 | `srv/**/*.js`, `test/**` | `npm run lint`, `npm test` |
-| `app/**/webapp/**` | `npm run lint` in `app/products` (ui5lint) |
-| `manifest.json` | `mcp__ui5-mcp-server__run_manifest_validation`; when the server is down `npm run lint` in `app/products` |
+| `app/**/webapp/**` | `npm run lint` in `app/<app>` (ui5lint) |
+| `manifest.json` | `mcp__ui5-mcp-server__run_manifest_validation`; when the server is down `npm run lint` in `app/<app>` |
 | Anything in `db/`, `srv/`, `app/` | `npm run docs:registry`, then `node scripts/check-docs-fresh.mjs` |
 
 Attach each command with the verdict it printed and, for a long output, its log path under `.pipeline/logs/`; never the last lines. A red test or a linter error means the task is not finished.

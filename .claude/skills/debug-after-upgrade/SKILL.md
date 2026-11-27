@@ -10,15 +10,15 @@ Principle: first find the changelog entry that explains the breakage, and only t
 
 ## Step 1. Capture the symptom
 
-Collect the error text and the stack trace into a search variable: function names, configuration keys, annotation names, HTTP codes. Run the failing command once yourself (`npm test`, `npm run lint`, `cd app/products && npm run lint`, `cds compile srv --to json`) to have fresh output.
+Collect the error text and the stack trace into a search variable: function names, configuration keys, annotation names, HTTP codes. Run the failing command once yourself (`npm test`, `npm run lint`, `cd app/<app> && npm run lint`, `cds compile srv --to json`) to have fresh output.
 
 ## Step 2. Determine the version range
 
 ```bash
-git diff HEAD -- package-lock.json app/products/package-lock.json | grep -E '^[-+]\s+"(version|resolved)"' -B2 | head -80
+git diff HEAD -- package-lock.json 'app/*/package-lock.json' | grep -E '^[-+]\s+"(version|resolved)"' -B2 | head -80
 ```
 
-If the lockfile is already committed, find the commit: `git log -5 --oneline -- package-lock.json app/products/package-lock.json` and take `git show <sha> -- package-lock.json`. Build a table "package: was → became". Take into account the transitive packages `@sap/cds-compiler`, `@cap-js/db-service`, `@sap/ux-specification`.
+If the lockfile is already committed, find the commit: `git log -5 --oneline -- package-lock.json 'app/*/package-lock.json'` and take `git show <sha> -- package-lock.json`. Build a table "package: was → became". Take into account the transitive packages `@sap/cds-compiler`, `@cap-js/db-service`, `@sap/ux-specification`.
 
 ## Step 3. Checklist of known cds 10 changes
 

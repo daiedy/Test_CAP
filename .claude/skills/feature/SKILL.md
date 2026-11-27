@@ -24,11 +24,11 @@ Delegate to `architect`: write CONTEXT.md (the implementers' brief), PLAN.md and
 
 ## Phase 2. Backend
 
-Delegate to `cap-backend-dev` with the plan steps that relate to db/srv/_i18n. Then `test-backend` for the backend acceptance criteria. Gate: `npm run lint` and `npm test` are green, the output is attached in the reports. If the phase changed the OData model, the snapshot (`npx vitest -u`) and `app/products/webapp/localService/metadata.xml` were regenerated in this same phase, so the sync test in `test/metadata.test.js` is green here and not deferred to phase 3. Commit `feat(srv): <name> backend`.
+Delegate to `cap-backend-dev` with the plan steps that relate to db/srv/_i18n. Then `test-backend` for the backend acceptance criteria. Gate: `npm run lint` and `npm test` are green, the output is attached in the reports. If the phase changed the OData model, the snapshot (`npx vitest -u`) and `app/<app>/webapp/localService/metadata.xml` were regenerated in this same phase, so the sync test in `test/metadata.test.js` is green here and not deferred to phase 3. Commit `feat(srv): <name> backend`.
 
 ## Phase 3. UI
 
-If the plan has a UI: delegate to `fiori-app-dev` (or `ui5-freestyle-dev` if the plan chose freestyle), then `test-ui`. Gate: `npm run lint` in `app/products` without errors, `npm test` green (the metadata snapshot updated deliberately). Commit `feat(app): <name> ui`.
+If the plan has a UI: delegate to `fiori-app-dev` (or `ui5-freestyle-dev` if the plan chose freestyle), then `test-ui`. Gate: `npm run lint` in `app/<app>` without errors, `npm test` green (the metadata snapshot updated deliberately). Commit `feat(app): <name> ui`.
 
 ## Phase 4. Verification
 

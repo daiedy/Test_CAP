@@ -19,6 +19,7 @@ import {
   STATE_PRINT_BUDGET,
   WIKI_GENERATED_MARK,
 } from './doc-shapes.mjs';
+import { wikiRuleAreas } from './project-config.mjs';
 
 const TIMEOUT = 60_000;
 const STALE_SCOPE = ['db/**', 'srv/**', 'app/**'];
@@ -230,8 +231,8 @@ function checkCyrillic(root, r) {
 
 // sap-fe-mockserver (@sap-ux/fe-mockserver-core) iterates every mockdata file with forEach, so a
 // singleton fixture is a one-element array too. The object form answers a bare GET correctly and
-// throws "tenantJsonData.forEach is not a function" on FE's $batch path (measured 2026-09-16,
-// catalog-authorization scenario 6: Create and Delete stayed, Edit vanished).
+// throws "tenantJsonData.forEach is not a function" on FE's $batch path (measured 2026-09-16 on
+// a draft-enabled Object Page: Create and Delete stayed, Edit vanished).
 function checkMockdata(root, r) {
   if (!isUnder(r, ['app/**/webapp/localService/mockdata/*.json'])) return null;
   let data;
@@ -261,9 +262,9 @@ function checkSandboxConfig(root, r) {
   if (!/webapp\/(test\/flpSandboxConfig|sandboxConfig)\.js$/.test(r)) return null;
   const src = fs.readFileSync(path.resolve(root, r), 'utf8');
   const notes = [];
-  if (/"url":\s*"\/products\/webapp"/.test(src))
+  if (/"url":\s*"\/[^"]*\/webapp\/?"/.test(src))
     notes.push(
-      `${r}: the app intent url must be relative ("../" or "./"), an absolute /products/webapp only works behind CAP.`
+      `${r}: the app intent url must be relative ("../" or "./"), an absolute /<app>/webapp only works behind CAP.`
     );
   if (/"LaunchPage"/.test(src))
     notes.push(
@@ -309,7 +310,7 @@ function checkTemplateNamespace(root, r) {
   const src = fs.readFileSync(path.resolve(root, r), 'utf8');
   const m = src.match(/^namespace\s+([\w.]+)\s*;/m);
   if (!m)
-    return `${r}: a standalone .cds template needs its own namespace (my.catalog.tpl.<name>); cds-mcp compiles every .cds in the project and fails on duplicate definitions.`;
+    return `${r}: a standalone .cds template needs its own namespace (tpl.<name>); cds-mcp compiles every .cds in the project and fails on duplicate definitions.`;
   const dir = path.join(root, 'templates');
   for (const f of fs.readdirSync(dir)) {
     if (!f.endsWith('.cds') || path.join(dir, f) === path.resolve(root, r)) continue;
@@ -369,7 +370,7 @@ function checkDocShapes(root, r) {
   if (isUnder(r, ['docs/wiki/**/*.md'])) {
     const t = text();
     if (path.posix.basename(r).startsWith('_') || t.startsWith(WIKI_GENERATED_MARK)) return null;
-    const errors = wikiPageShapeErrors(t, r);
+    const errors = wikiPageShapeErrors(t, r, wikiRuleAreas(root));
     return errors.length
       ? `${r} must keep the page shape of its wiki folder (ADR-0030 decision 1); node scripts/check-docs-fresh.mjs blocks until it does:\n  ${errors.join('\n  ')}`
       : null;

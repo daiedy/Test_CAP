@@ -184,6 +184,21 @@ const m = cds.linked(cds.compile.for.nodejs(csn));
 const isForeign = (n) => /^(sap\.common\.|cds\.|localized\.|DRAFT\.)/.test(n);
 const services = Object.values(m.definitions).filter((d) => d.kind === 'service');
 const svcPrefixes = services.map((s) => s.name + '.');
+/** The URL path a service is served at: an absolute `@path` as written, a relative one under the protocol prefix, else derived from the name. */
+const servicePath = (s) => {
+  const p = s['@path'];
+  if (p) return p.startsWith('/') ? p : `/odata/v4/${p}`;
+  return (
+    '/odata/v4/' +
+    s.name
+      .replace(/^.*\./, '')
+      .replace(/Service$/, '')
+      .replace(/^./, (c) => c.toLowerCase())
+  );
+};
+/** The service a data source URI points at, by its path; '' for a service of another system. */
+const serviceAt = (uri) =>
+  services.find((s) => servicePath(s) === String(uri ?? '').replace(/\/+$/, ''))?.name ?? '';
 const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
 
 // ---------- DOMAIN-MODEL.md ----------
@@ -278,13 +293,7 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
     'What is exposed: services, projections, actions, functions, UI annotations per entity. Before adding a projection or an action check whether a suitable one already exists.'
   );
   for (const s of services) {
-    const path =
-      s['@path'] ??
-      '/odata/v4/' +
-        s.name
-          .replace(/^.*\./, '')
-          .replace(/Service$/, '')
-          .replace(/^./, (c) => c.toLowerCase());
+    const path = servicePath(s);
     md += `## ${s.name}\n\nPath: \`${path}\`. File: \`${s.$location?.file ?? 'srv/'}\`. `;
     md += `Authorization: ${s['@requires'] ? '@requires ' + JSON.stringify(s['@requires']) : 'not set (open by default with mocked auth)'}.\n\n`;
     const ents = Object.values(m.definitions).filter(
@@ -458,7 +467,7 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
 {
   let md = header(
     'UI artifacts',
-    'Applications in `app/`: page templates, data sources, extensions, fragments, formatters, tests. Before creating an extension or a fragment check whether a suitable one already exists.'
+    'Applications in `app/`: page templates, data sources, start addresses, extensions, fragments, formatters, tests. Before creating an extension or a fragment check whether a suitable one already exists.'
   );
   const appDir = join(ROOT, 'app');
   const apps = existsSync(appDir)
@@ -474,14 +483,32 @@ const inService = (n) => svcPrefixes.find((p) => n.startsWith(p));
     md +=
       '### Data sources\n\n' +
       table(
-        ['Name', 'URI', 'OData'],
+        ['Name', 'URI', 'OData', 'Service', 'Local metadata'],
         Object.entries(mf['sap.app']?.dataSources || {}).map(([k, v]) => [
           k,
           v.uri,
           v.settings?.odataVersion ?? '',
+          serviceAt(v.uri),
+          v.settings?.localUri ? `app/${app}/webapp/${v.settings.localUri}` : '',
         ])
       ) +
       '\n';
+    // Where the application starts: the folder is served by the CAP server as it is, the intents
+    // are those of the FLP sandbox configuration and of the manifest inbounds.
+    const entries = ['test/flpSandbox.html', 'index.html'].filter((p) =>
+      existsSync(join(base, 'webapp', p))
+    );
+    const sandbox = join(base, 'webapp/appconfig/fioriSandboxConfig.json');
+    const intents = [
+      ...Object.keys(
+        existsSync(sandbox) ? JSON.parse(readFileSync(sandbox, 'utf8')).applications || {} : {}
+      ),
+      ...Object.values(mf['sap.app']?.crossNavigation?.inbounds || {}).map(
+        (i) => `${i.semanticObject}-${i.action}`
+      ),
+    ];
+    const code = (list) => list.map((x) => '`' + x + '`').join(', ') || 'none';
+    md += `### Start\n\nServed by the CAP server at \`/${app}/webapp/\`. Entry pages: ${code(entries)}. FLP intents: ${code([...new Set(intents)])}.\n\n`;
     const targets = mf['sap.ui5']?.routing?.targets || {};
     const routes = mf['sap.ui5']?.routing?.routes || [];
     md +=

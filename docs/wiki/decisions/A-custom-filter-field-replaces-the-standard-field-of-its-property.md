@@ -17,7 +17,7 @@ A custom filter field is a small screen fragment registered in the configuration
 
 The project needed a way to add a filter control that the platform does not offer for a plain number, and one rule that every later custom filter follows. The tooling for the screen configuration had no entry for it, so the first one was set by hand as a recorded exception.
 
-## What it means for the catalog
+## What it means for the application
 
 - The rating filter in the product list is a slider from 0 to 5; the user moves both ends to choose a range, and the list updates as the slider changes. See [Find a product](../how-to/Find-a-product.md).
 - Other filters, such as name, category and price, keep their standard fields.

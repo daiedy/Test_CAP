@@ -27,7 +27,7 @@ The earlier free-text value, the pick list of attributes in a table row, the Sav
 
 After the first screen the user rejected the table as clumsy and decided on 2026-10-12 that the details become form fields generated from the subcategory, typed by the attribute, with common values kept when the subcategory changes.
 
-## What it means for the catalog
+## What it means for the application
 
 - Choosing a subcategory fills the Details section with the right fields, and changing it keeps the common ones and drops the rest with a warning. See [Detail rows follow the attributes of the subcategory](../rules/Detail-rows-follow-the-attributes-of-the-subcategory.md) and [A subcategory change must not leave details that do not fit](../rules/A-subcategory-change-must-not-leave-details-that-do-not-fit.md).
 - A value must match the type of its attribute and stay within bounds: [A detail value matches the value type of its attribute](../rules/A-detail-value-matches-the-value-type-of-its-attribute.md), [A number detail stays within its bounds and is whole when required](../rules/A-number-detail-stays-within-its-bounds-and-is-whole-when-required.md), [A list detail value belongs to the list of its attribute](../rules/A-list-detail-value-belongs-to-the-list-of-its-attribute.md) and [A value of a multi-choice detail is selected once and belongs to its list](../rules/A-value-of-a-multi-choice-detail-is-selected-once-and-belongs-to-its-list.md).

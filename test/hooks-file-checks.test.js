@@ -269,7 +269,12 @@ describe('wiki pages in the file checks (ADR-0030 decision 6)', () => {
     const INDEX = 'docs/wiki/rules/Business-rules.md';
     const check = (r) => runFileChecks(sb.root, r, { markRegistryStale: false });
     try {
+      // The rule page carries an id of this project's areas; without the configuration the
+      // sandbox knows the built-in area only and reports the id (ADR-0033).
+      sb.put({ [RULE]: fs.readFileSync(path.join(root, RULE), 'utf8') });
+      expect(check(RULE).join('\n')).toMatch(/AREA one of ACCESS \(/);
       sb.put({
+        '.claude/pipeline.json': fs.readFileSync(path.join(root, '.claude/pipeline.json'), 'utf8'),
         'docs/wiki/rules/x.md': '# x\n\nA rule without frontmatter.\n',
         [RULE]: fs.readFileSync(path.join(root, RULE), 'utf8'),
         [INDEX]:

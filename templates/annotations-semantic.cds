@@ -5,7 +5,7 @@
 // Add every i18n key to _i18n/i18n.properties and _i18n/i18n_ru.properties in the same change.
 using { cuid, managed, Currency } from '@sap/cds/common';
 
-namespace my.catalog.tpl.semantic;
+namespace tpl.semantic;
 
 entity Orders : cuid, managed {
   orderNo  : String(20);

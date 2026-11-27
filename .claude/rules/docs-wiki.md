@@ -15,14 +15,14 @@ Frontmatter: `title`, `summary` (one sentence ending with a period), `tags`, plu
 | `domain/` | `code` (`verified`) | What it is, Fields that matter, Rules, Related |
 | `rules/` | `code`, `id`, `status`, `since`, `messages`, `elements`, `sources` (`verified`, `aliases`) | Rule, Why, Where it fires, History |
 | `how-to/` | `code` (`verified`) | Goal, Steps, Rules that apply |
-| `decisions/` | `adr` (`ADR-NNNN`), `sources` | Decision, Why, What it means for the catalog, Source (`Pipeline-decisions.md`: `adr` as a list, free) |
+| `decisions/` | `adr` (`ADR-NNNN`), `sources` | Decision, Why, What it means for the application, Source (`Pipeline-decisions.md`: `adr` as a list, free) |
 
 ## Rules
-- Rule id `BR-<AREA>-NNN`, `AREA` one of `ACCESS`, `PRODUCTS`, `DETAILS`, `IMPORT` (a new area is one word in `WIKI_RULE_AREAS` and here); the number comes from `node scripts/wiki.mjs next-id <AREA>` and is never reused. `status`: `planned`, `active` or `retired` (the page stays, History says why). Feature-local numbers (R1 of a spec) go to `aliases`.
-- `messages` names keys of `_i18n/messages.properties`, `elements` names `<Entity>.<element>` of the `CatalogService` projections; quote a key in the body and link `_i18n/messages.properties`, never copy the text.
+- Rule id `BR-<AREA>-NNN`, `AREA` is `ACCESS` or one of `wiki.areas` in `.claude/pipeline.json` (a new area is one word there); the number comes from `node scripts/wiki.mjs next-id <AREA>` and is never reused. `status`: `planned`, `active` or `retired` (the page stays, History says why). Feature-local numbers (R1 of a spec) go to `aliases`.
+- `messages` names keys of `_i18n/messages.properties`, `elements` names `<Entity>.<element>` of the service projections; quote a key in the body and link `_i18n/messages.properties`, never copy the text.
 - `code` names repository files or a `*.cds` glob of one folder, never a folder. `verified` is written only by `node scripts/wiki.mjs confirm`.
 - Frontmatter holds `key: value`, `key: [a, b]` or `key:` with `  - item` lines; a value containing `: ` (a `summary` too) is double-quoted.
-- File name = the title in sentence case with dashes, punctuation and apostrophes dropped (`The subcategory belongs to the product's category` is `The-subcategory-belongs-to-the-products-category.md`); basenames are unique across folders.
+- File name = the title in sentence case with dashes, punctuation and apostrophes dropped (`An order's total is never negative` is `An-orders-total-is-never-negative.md`); basenames are unique across folders.
 - Links are relative Markdown links (`../rules/X.md`, `../../decisions/ADR-0024-....md`); no `[[wikilinks]]`. Every page is linked from another hand-written page (`Home.md` counts).
 - The body is the current state: rewrite summary and sections when a rule changes; History is append-only, one row per change (`| YYYY-MM-DD | change | link to the feature SUMMARY.md or the ADR |`).
 - A digest paraphrases only the Decision paragraph of its ADR and links it; no copies of ADR text, registry tables, the OpenAPI document or PATTERNS rows.
